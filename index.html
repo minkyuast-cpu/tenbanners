@@ -1792,9 +1792,14 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '3.2.1';
+DS.VERSION = '3.2.2';
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '3.2.2', date: '2026-11-15', tag: '고침', title: '전멸 뒤 후계 의식이 멈추던 것',
+    lead: '지휘관 둘 이상이 한 싸움에서 쓰러졌을 때 두 번째 후계 의식에서 「정할 수 없습니다」만 뜨고 창이 닫히지 않던 문제를 고쳤습니다.',
+    items: [
+      ['고침', '전멸하거나 지휘관 여럿이 함께 쓰러진 뒤에도 후계 의식이 한 사람씩 끝까지 이어집니다. 이미 이어진 자리는 건너뜁니다.']
+    ] },
   { ver: '3.2.1', date: '2026-11-15', tag: '안내', title: '새 집 — 구글 로그인으로 어디서나 이어 하기',
     lead: '열 개의 깃발의 공식 주소는 minkyuast-cpu.github.io/tenbanners 입니다. 구글 계정으로 로그인하면 휴대폰과 컴퓨터 어디서나 같은 판을 이어 합니다. 이 판(claude.ai)도 계속 열립니다.',
     items: [
@@ -11393,7 +11398,7 @@ function placeParty(sim, x, y, starts) {
   s.party = s.party.filter(function (id) { return s.chars[id]; });
   if (!s.party.length) s.party = [DS.charList(s)[0].id];
   if (!s.party.some(function (id) { return !s.chars[id].down; })) reviveAll();
-  if (DS.linVacant && DS.linVacant(s).length) { (DS.linAutoAll(s) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(s, e.ev), 4200); }); }      // 안전망: 의식을 거치지 않은 빈자리는 출전 전에 채운다
+  if (!G.riteBusy && DS.linVacant && DS.linVacant(s).length) { (DS.linAutoAll(s) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(s, e.ev), 4200); }); }      // 안전망: 의식을 거치지 않은 빈자리는 출전 전에 채운다
   var specs = DS.partySpecs(s), first = null, keep = G.sel;
   specs.forEach(function (u, i) {
     var p = starts ? starts[i % starts.length] : [x, y];
@@ -11578,13 +11583,13 @@ function linEnd(win) {
 }
 // 쌓인 가계도 사건을 화면에 넘긴다. lineage_ui 의 DS.openLineageRite(queue, done) 가 있으면 그 창(후계 의식·관·출생 알림)이, 없으면 자동으로 후계를 정하고 토스트로.
 function lineageFlush(cb) {
-  var sv = G.save, q = G.lineageQ || [], fin = function () { if (DS.linVacant && DS.linVacant(sv).length) (DS.linAutoAll(sv) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(sv, e.ev), 4200); }); persist(); if (cb) cb(); };
+  var sv = G.save, q = G.lineageQ || [], fin = function () { G.riteBusy = false; if (DS.linVacant && DS.linVacant(sv).length) (DS.linAutoAll(sv) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(sv, e.ev), 4200); }); persist(); if (cb) cb(); };
   G.lineageQ = [];
   q.filter(function (e) { return e && e.t === 'streak'; }).forEach(function (e) { later(e.text, 5200); }); q = q.filter(function (e) { return !(e && e.t === 'streak'); });      // 나선 방지: 토스트 한 줄
   var AGEV = { adult: 1, elder: 1, mnat: 1, adultWait: 1 }, ag = q.filter(function (e) { return e && AGEV[e.t]; });      // 나이 소식: age_ui 의 DS.openAgeNews(목록) 가 있으면 그 창, 없으면 토스트
   if (ag.length) { q = q.filter(function (e) { return !(e && AGEV[e.t]); }); if (DS.openAgeNews) { try { DS.openAgeNews(ag); } catch (x) { if (DS.DEBUG) throw x; } } else ag.forEach(function (e) { var tx = e.text || (e.ev ? DS.linEvText(sv, e.ev) : ''); if (tx) later(tx, 4200); }); }
   if (!DS.linSettle || (!q.length && !(DS.linVacant && DS.linVacant(sv).length))) { if (cb) cb(); return; }
-  if (DS.openLineageRite) { try { DS.openLineageRite(q, fin); return; } catch (x) { if (DS.DEBUG) throw x; } }
+  if (DS.openLineageRite) { try { G.riteBusy = true; DS.openLineageRite(q, fin); return; } catch (x) { G.riteBusy = false; if (DS.DEBUG) throw x; } }      // 3.2.2: 후계 의식이 여럿 대기할 때(전멸) 첫 의식 뒤 rebuildParty 의 안전망이 남은 자리를 먼저 채워, 다음 의식이 「정할 수 없습니다」로 닫히지 않던 것
   q.forEach(function (e) { if (e.ev && e.t !== 'heir') later(DS.linEvText(sv, e.ev), 4200); });
   fin();
 }
@@ -14338,7 +14343,11 @@ function lgRite(ev, cb, griefs) {
     var kept = false;
     if (body === 'keep' && DS.linEntomb) kept = !!lgTry(function () { return DS.linEntomb(s, d.id); });
     var res = c ? lgTry(function () { return DS.linSucceed(s, chId, c); }) : (DS.linAutoHeir ? lgTry(function () { return DS.linAutoHeir(s, chId); }) : null);
-    if (c && !res) { A('cancel'); toast('정할 수 없습니다'); return; }
+    if (c && !res) {      // 이미 자리가 찼거나(안전망·다른 탭) 후보가 사라졌으면 갇히지 않게 닫고 넘어간다 (3.2.2)
+      var still = DS.linVacant ? DS.linVacant(s).some(function (x) { return x.id === chId; }) : true;
+      A('cancel'); if (still) { toast('정할 수 없습니다 — 다른 후보를 골라 주세요'); step = 'pick'; pick = null; draw(); return; }
+      toast('이 자리는 이미 이어졌습니다'); lgCache = null; o.close(); if (cb) cb(); return;
+    }
     lgCache = null; if (DS.rebuildParty) lgTry(function () { DS.rebuildParty(); }); U.persist(); o.close();
     var H = LGL(), kk = c ? lgHeirKind(c) : 'kin', ch = s.chars[chId], heir = ch ? DS.charName(ch) : (c && c.name) || '';
     // 글 자리표: {a} = 자리를 잇는 이, {b} = 떠난 이 (lore.js heir·adopt·kin). 관·무덤 글은 {a} = 떠난 이 — 3.2.1: 둘이 뒤바뀌어 「고인이 후계의 깃발을 이었다」로 나오던 것
