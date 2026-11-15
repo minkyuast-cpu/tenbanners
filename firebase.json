@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "tenbanners",
+    "public": ".",
+    "ignore": ["firebase.json", ".firebaserc", "README.md", ".nojekyll", ".github/**", "**/.*", "**/node_modules/**"],
+    "headers": [
+      { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+      { "source": "/firebase-config.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  }
+}
