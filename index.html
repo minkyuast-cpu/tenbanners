@@ -2527,6 +2527,181 @@ html #app .hch { height: 44px; }
 /* ⑤ 메뉴 창은 탭마다 같은 높이 — 짧은 탭(현황 등)에서 「닫기」가 화면 가운데 떠 있던 것 */
 .ov.menu .sheet { height: 88%; }
 .ov.menu .sheet .sb { flex: 1 1 auto; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   r25 dock — 아래 띠(#bot.dock) 한 벌 체계. 이 묶음이 아래 띠의 마지막 말이다 (앞의 r8·r15·r18·r19·r20·1.0.x 규칙은 두고 여기서 이긴다).
+   선택자 머리 `html body #app #s-game #bot.dock` (id 3 · class 1) — 앞 규칙 중 가장 센 `#s-game #bot:has(#bHunt:not([hidden]))`(3·1·0)보다 세다.
+   ・줄 셋: A 정보 줄(고른 가문 문장·이름 | 상태 글 | 버프 꼬리표 | 틱) · B 기술 줄(늘 자리를 잡는다, 넷이 한눈에, 더 있으면 가로로 민다) ·
+     C 조작 줄 [약초][마나초][기운초] · [조작][태세] · [전체 자동][속도][멈춤] — 묶음 사이는 틈 + 가는 세로 선. 파란 테 묶음은 없앴다.
+   ・모든 단추: 높이 44 · 둥글기 var(--r-2) · 1px 테 · bevel · 큰 글 13px 600 · 작은 글 10.5px 옅은 색.
+   ・높이는 마을·필드·싸움에서 같다 (세로 22+44+44 + 틈·여백 = 130px). 가로 휴대폰은 한 줄(44) + 위에 뜬 정보 줄.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+html body #app #s-game #bot.dock {
+  --dk-h: 44px; --dk-info: 22px; --dk-gap: 4px; --dk-sep: 2px; --dk-r: var(--r-2, 6px);
+  --dk-bd: var(--bd, #463a2b); --dk-bd-hi: var(--bd-strong, #5d4c35); --dk-acc: var(--bd-acc, #b39058); --dk-info-bd: var(--bd-info, #4d6a76);
+  --dk-fill: var(--g-hud, linear-gradient(180deg, rgba(37, 31, 24, .95), rgba(26, 22, 17, .95)));
+  --dk-fill-hi: var(--g-raise-hi, linear-gradient(180deg, #332a20, #261f18));
+  --dk-sunk: linear-gradient(180deg, #1d1813, #17130f);
+  --dk-tint: var(--g-acc-tint, linear-gradient(180deg, rgba(210, 176, 114, .16), rgba(210, 176, 114, .06)));
+  --dk-bevel: var(--bevel, inset 0 1px 0 rgba(255, 238, 204, .075), inset 0 -1px 0 rgba(0, 0, 0, .32));
+  --dk-txt: var(--bone, #ece2cc); --dk-sub: var(--mute, #c4b89e); --dk-dim: var(--dim, #ab9f86); --dk-acctxt: var(--acc-txt, #e8d09c);
+  --dk-line: rgba(236, 220, 186, .12);
+  display: grid; align-items: stretch; align-content: end; margin: 0;
+}
+html body #app #s-game #bot.dock #acts, html body #app #s-game #bot.dock #acts .arow.it, html body #app #s-game #bot.dock #sys, html body #app #s-game #bot.dock #selSeg { display: contents; }
+/* 묶음 사이의 가는 선 (#sys::before = 소모품|가문, #selSeg::after = 가문|부대) */
+html body #app #s-game #bot.dock #sys::before, html body #app #s-game #bot.dock #selSeg::after { content: ""; display: block; justify-self: center; align-self: center; width: 1px; height: 60%; background: var(--dk-line); pointer-events: none; }
+
+/* ── 단추 한 벌 (기술 · 소모품 · 조작) ── */
+html body #app #s-game #bot.dock :is(.act, .sy) {
+  box-sizing: border-box; min-width: 0; width: auto; min-height: var(--dk-h); height: var(--dk-h); margin: 0; padding: 2px 3px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  border: 1px solid var(--dk-bd); border-radius: var(--dk-r); background: var(--dk-fill); box-shadow: var(--dk-bevel);
+  color: var(--dk-txt); text-shadow: 0 1px 0 rgba(0, 0, 0, .55); line-height: 1.15; opacity: 1; filter: none; transform: none; transition: filter .08s, transform .08s;
+}
+html body #app #s-game #bot.dock :is(.act, .sy) > b { display: block; max-width: 100%; margin: 0; overflow: hidden; white-space: nowrap; text-overflow: clip;
+  font-family: var(--f-11); font-size: 13px; font-weight: 600; line-height: 16px; letter-spacing: -.01em; color: inherit; }
+html body #app #s-game #bot.dock :is(.act, .sy) > :is(small, span) { display: block; max-width: 100%; margin: 0; overflow: hidden; white-space: nowrap;
+  font-family: var(--f-9); font-size: 10.5px; font-weight: 400; line-height: 13px; letter-spacing: 0; color: var(--dk-sub); }
+html body #app #s-game #bot.dock :is(.act, .sy):active { transform: translateY(1px); filter: brightness(1.12); margin: 0; border-width: 1px; }
+html body #app #s-game #bot.dock :is(.act, .sy):focus-visible { outline: 2px solid var(--dk-acc); outline-offset: 1px; }
+/* 켜짐 = 황동 (조작 자동 · 전체 자동) */
+html body #app #s-game #bot.dock .sy.on { border-color: var(--dk-acc); background: var(--dk-tint), var(--dk-fill); box-shadow: var(--dk-bevel); }
+html body #app #s-game #bot.dock .sy.on > b { color: var(--dk-acctxt); }
+html body #app #s-game #bot.dock #bHunt.on > small { color: var(--dk-acctxt); font-weight: 600; }
+html body #app #s-game #bot.dock #bStance > b { color: #e3a08a; }
+html body #app #s-game #bot.dock #bStance.side > b { color: #9fc1de; }
+html body #app #s-game #bot.dock #bPause.on { border-color: #5e231c; background: var(--g-red, linear-gradient(180deg, #a04a40, #82372f)); }
+html body #app #s-game #bot.dock #bPause.on > b, html body #app #s-game #bot.dock #bPause.on > small { color: #fbefe6; }
+html body #app #s-game #bot.dock #bHunt > b { letter-spacing: -.03em; }
+html body #app #s-game #bot.dock #selSeg.none ~ * { opacity: 1; }
+html body #app #s-game #bot.dock #selSeg.none .sy { opacity: .45; pointer-events: none; }
+/* 소모품: 이름 + (그림) ×개수 */
+html body #app #s-game #bot.dock .act.item > b { letter-spacing: -.02em; }
+html body #app #s-game #bot.dock .act.item > .num { color: var(--dk-txt); font-variant-numeric: tabular-nums; }
+html body #app #s-game #bot.dock .act.item .num::before { width: 12px; height: 12px; margin: 0 2px -2px 0; background-size: 12px 12px; }
+html body #app #s-game #bot.dock .act.item.off { opacity: .45; }
+html body #app #s-game #bot.dock :is(.act, .act.item).on { border-color: var(--dk-info-bd); background: linear-gradient(180deg, #23363d, #1a282d); box-shadow: inset 0 0 0 1px rgba(134, 180, 196, .35); }
+html body #app #s-game #bot.dock :is(.act, .act.item).queued { border-color: var(--dk-acc); box-shadow: inset 0 0 0 1px rgba(179, 144, 88, .55); }
+html body #app #s-game #bot.dock :is(.act.item, .sy).hint { animation: r8hint .9s ease-in-out infinite; }
+
+/* ── B 기술 줄: 넷이 같은 너비로 한눈에, 다섯부터 가로로 민다. 틱은 바닥의 가는 황동 막대, 다 차면 판이 밝아진다 ── */
+html body #app #s-game #bot.dock #acts .arow.sk {
+  display: grid; grid-template-columns: none; grid-template-rows: var(--dk-h); grid-auto-flow: column; grid-auto-columns: calc((100% - 3 * var(--dk-gap)) / 4);
+  gap: var(--dk-gap); min-width: 0; margin: 0; padding: 0; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+  scrollbar-width: none; -webkit-mask-image: none; mask-image: none; animation: none;
+}
+html body #app #s-game #bot.dock #acts .arow.sk::-webkit-scrollbar { display: none; }
+html body #app #s-game #bot.dock #acts .arow.sk.scroll { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - var(--fadeR)), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - var(--fadeR)), transparent); }
+@supports (animation-timeline: scroll()) { html body #app #s-game #bot.dock #acts .arow.sk.scroll { animation: polFade linear both; animation-timeline: scroll(self inline); } }
+html body #app #s-game #bot.dock #acts .arow.sk > * { scroll-snap-align: start; }
+html body #app #s-game #bot.dock .arow.sk .act {
+  padding: 2px 4px 3px; gap: 0;
+  background: linear-gradient(90deg, rgba(210, 176, 114, .9), rgba(226, 197, 140, .9)) left bottom / var(--p, 0%) 2px no-repeat, var(--dk-sunk);
+}
+html body #app #s-game #bot.dock .arow.sk .act > b { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  font-size: 13px; line-height: 14px; letter-spacing: -.02em; color: #b9ad94; }
+html body #app #s-game #bot.dock .arow.sk .act > span { font-size: 10px; line-height: 12px; color: var(--dk-dim); }
+html body #app #s-game #bot.dock .arow.sk .act .m { color: #a9c0d2; } html body #app #s-game #bot.dock .arow.sk .act .t { color: #c9a96a; }
+/* 다 찼다(쓸 수 있다): 밝은 판 · 짙은 테 · 흰 글 */
+html body #app #s-game #bot.dock .arow.sk .act:not(.off) { border-color: var(--dk-bd-hi); background: var(--dk-fill-hi); box-shadow: inset 0 1px 0 rgba(255, 238, 204, .1), inset 0 0 0 1px rgba(210, 176, 114, .18); }
+html body #app #s-game #bot.dock .arow.sk .act:not(.off) > b { color: #f5ecd8; }
+html body #app #s-game #bot.dock .arow.sk .act.nomp > b { color: #8e836f; } html body #app #s-game #bot.dock .arow.sk .act.nomp .m { color: #e39a92; font-weight: 600; }
+html body #app #s-game #bot.dock .arow.sk .act.on { border-color: var(--dk-info-bd); background: linear-gradient(180deg, #23363d, #1a282d); }
+html body #app #s-game #bot.dock .arow.sk .act.queued { border-color: var(--dk-acc); }
+/* 빈 칸 (기술이 넷보다 적을 때) · 기술 없음 */
+html body #app #s-game #bot.dock .arow.sk .skg { display: block; border: 1px dashed rgba(236, 220, 186, .1); border-radius: var(--dk-r); background: rgba(0, 0, 0, .14); }
+html body #app #s-game #bot.dock #acts .arow.sk.none { grid-auto-columns: 100%; overflow: hidden; }
+html body #app #s-game #bot.dock .sknone { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; padding: 0 10px;
+  border: 1px dashed rgba(236, 220, 186, .14); border-radius: var(--dk-r); background: rgba(0, 0, 0, .18); pointer-events: none; }
+html body #app #s-game #bot.dock .sknone b { flex: none; font-family: var(--f-11); font-size: 13px; font-weight: 600; color: var(--dk-dim); }
+html body #app #s-game #bot.dock .sknone small { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: var(--f-9); font-size: 11px; color: rgba(196, 184, 158, .6); }
+
+/* ── A 정보 줄: [문장 이름] 상태 글 … [버프] [틱] — 한 줄 22px, 높이가 바뀌지 않는다 ── */
+html body #app #s-game #bot.dock #info {
+  box-sizing: border-box; height: var(--dk-info); min-height: var(--dk-info); margin: 0; padding: 0 8px 0 4px; display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--dk-bd); border-radius: var(--dk-r); background: rgba(20, 16, 12, .9); box-shadow: inset 0 1px 0 rgba(255, 238, 204, .04);
+  font-family: var(--f-11); font-size: 12.5px; line-height: 16px; color: var(--dk-txt); overflow: hidden;
+}
+html body #app #s-game #bot.dock #info.danger { border-color: var(--bd-danger, #7c3a33); background: linear-gradient(180deg, rgba(74, 26, 24, .95), rgba(56, 19, 18, .95)); }
+html body #app #s-game #bot.dock #selCtx { display: inline-flex; align-items: center; gap: 4px; flex: none; height: 100%; min-width: 0; padding-right: 8px; border-right: 1px solid var(--dk-line); cursor: pointer; }
+html body #app #s-game #bot.dock #selCrest { display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: 0; line-height: 0; }
+html body #app #s-game #bot.dock #selCrest svg { width: 16px; height: 16px; }
+html body #app #s-game #bot.dock #selName { max-width: 84px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; font-weight: 600; letter-spacing: -.01em;
+  color: color-mix(in srgb, var(--fc, #c9a96a) 35%, var(--dk-acctxt)); }
+html body #app #s-game #bot.dock #selName:empty { display: none; }
+html body #app #s-game #bot.dock #infoText { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+html body #app #s-game #bot.dock #infoFx { display: flex; flex: none; gap: 3px; }
+html body #app #s-game #bot.dock #infoFx:empty { display: none; }
+html body #app #s-game #bot.dock #infoFx i { height: 16px; padding: 0 4px; border-radius: var(--r-1, 4px); font-family: var(--f-9); font-size: 10.5px; font-weight: 600; line-height: 16px; letter-spacing: -.02em;
+  background: rgba(255, 238, 204, .07); box-shadow: inset 0 0 0 1px rgba(255, 238, 204, .06); }
+html body #app #s-game #bot.dock .tick { display: inline-flex; align-items: center; gap: 5px; flex: none; }
+html body #app #s-game #bot.dock .tick i { font-size: 11px; font-weight: 600; color: var(--c-gold, #d2b072); }
+html body #app #s-game #bot.dock #tick { width: 40px; height: 5px; border: 0; border-radius: 1px; background: #0b0907; box-shadow: 0 0 0 1px var(--dk-bd); }
+html body #app #s-game #bot.dock #tickN { width: 20px; font-size: 12px; text-align: right; color: var(--dk-txt); }
+
+/* ── 세로 (휴대폰 세로 · PC/태블릿의 가운데 기둥) ── 열 10 = 소모품 3 | 선 | 가문 2 | 선 | 부대 3(전체 자동 넓게, 속도·멈춤 좁게: 1.4 + .8 + .8 = 3) */
+@media (orientation: portrait), (orientation: landscape) and (min-height: 561px) {
+  html body #app #s-game #bot.dock {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) var(--dk-sep) repeat(2, minmax(0, 1fr)) var(--dk-sep) minmax(0, 1.4fr) minmax(0, .8fr) minmax(0, .8fr);
+    grid-template-rows: var(--dk-info) var(--dk-h) var(--dk-h); grid-template-areas: none; gap: 4px var(--dk-gap); padding: 6px 8px 6px;
+  }
+  html body #app #s-game #bot.dock #info { position: static; grid-row: 1; grid-column: 1 / -1; }
+  html body #app #s-game #bot.dock #acts .arow.sk { grid-row: 2; grid-column: 1 / -1; }
+  html body #app #s-game #bot.dock #acts .arow.it .act.item { grid-row: 3; }
+  html body #app #s-game #bot.dock #acts .arow.it .act.item:nth-child(1) { grid-column: 1; }
+  html body #app #s-game #bot.dock #acts .arow.it .act.item:nth-child(2) { grid-column: 2; }
+  html body #app #s-game #bot.dock #acts .arow.it .act.item:nth-child(3) { grid-column: 3; }
+  html body #app #s-game #bot.dock #sys::before { grid-row: 3; grid-column: 4; }
+  html body #app #s-game #bot.dock #bAutoU { grid-row: 3; grid-column: 5; }
+  html body #app #s-game #bot.dock #bStance { grid-row: 3; grid-column: 6; }
+  html body #app #s-game #bot.dock #selSeg::after { grid-row: 3; grid-column: 7; }
+  html body #app #s-game #bot.dock #bHunt { grid-row: 3; grid-column: 8; }
+  html body #app #s-game #bot.dock #bSpeed { grid-row: 3; grid-column: 9; }
+  html body #app #s-game #bot.dock #bPause { grid-row: 3; grid-column: 10; }
+}
+@media (orientation: portrait) and (max-width: 379px) {
+  html body #app #s-game #bot.dock { --dk-gap: 3px; padding-left: 6px; padding-right: 6px; }
+  html body #app #s-game #bot.dock :is(.act.item, .sy) > b { font-size: 12.5px; letter-spacing: -.04em; }
+  html body #app #s-game #bot.dock #bHunt > b { font-size: 12px; letter-spacing: -.05em; }
+  html body #app #s-game #bot.dock :is(.act, .sy) { padding-left: 1px; padding-right: 1px; }
+  html body #app #s-game #bot.dock #selName { display: none; }
+  html body #app #s-game #bot.dock #selCtx { padding-right: 6px; }
+  html body #app #s-game #bot.dock .tick > i { display: none; }
+  html body #app #s-game #bot.dock #info { gap: 6px; }
+}
+
+/* ── 가로 휴대폰 (844×390 등): 한 줄 = 기술(넷이 한눈에, 밀기) | 소모품 3 | 선 | 가문 2 | 선 | 부대 3. 정보 줄은 띠 위에 뜬다 ── */
+@media (orientation: landscape) and (max-height: 560px) {
+  html body #app #s-game #bot.dock {
+    grid-template-columns: minmax(0, 1fr) repeat(3, 58px) var(--dk-sep) repeat(2, 52px) var(--dk-sep) 70px 46px 46px;
+    grid-template-rows: var(--dk-h); grid-template-areas: none; gap: var(--dk-gap); padding: 6px var(--gut-r, 12px) 6px var(--gut-l, 12px);
+  }
+  html body #app #s-game #bot.dock #info { position: absolute; left: var(--gut-l, 12px); right: var(--gut-r, 12px); bottom: calc(100% + 2px); }
+  html body #app #s-game #bot.dock #acts .arow.sk { grid-row: 1; grid-column: 1; max-width: none; flex: none; }
+  html body #app #s-game #bot.dock #acts .arow.it .act.item { grid-row: 1; scroll-snap-align: none; }
+  html body #app #s-game #bot.dock #acts .arow.it .act.item:nth-child(1) { grid-column: 2; }
+  html body #app #s-game #bot.dock #acts .arow.it .act.item:nth-child(2) { grid-column: 3; }
+  html body #app #s-game #bot.dock #acts .arow.it .act.item:nth-child(3) { grid-column: 4; }
+  html body #app #s-game #bot.dock #sys::before { grid-row: 1; grid-column: 5; }
+  html body #app #s-game #bot.dock #bAutoU { grid-row: 1; grid-column: 6; }
+  html body #app #s-game #bot.dock #bStance { grid-row: 1; grid-column: 7; }
+  html body #app #s-game #bot.dock #selSeg::after { grid-row: 1; grid-column: 8; }
+  html body #app #s-game #bot.dock #bHunt { grid-row: 1; grid-column: 9; }
+  html body #app #s-game #bot.dock #bSpeed { grid-row: 1; grid-column: 10; }
+  html body #app #s-game #bot.dock #bPause { grid-row: 1; grid-column: 11; }
+  html body #app #s-game #toast { bottom: calc(var(--bot-h, 56px) + 30px); }
+}
+@media (orientation: landscape) and (max-height: 560px) and (max-width: 740px) {
+  html body #app #s-game #bot.dock { grid-template-columns: minmax(0, 1fr) repeat(3, 52px) var(--dk-sep) repeat(2, 48px) var(--dk-sep) 64px 40px 40px; --dk-gap: 3px; }
+  html body #app #s-game #bot.dock .arow.sk .act > b { font-size: 12px; line-height: 13px; letter-spacing: -.04em; }
+  html body #app #s-game #bot.dock .arow.sk .act > span { font-size: 9.5px; line-height: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { html body #app #s-game #bot.dock :is(.act, .sy) { transition: none; } html body #app #s-game #bot.dock :is(.act, .sy):active { transform: none; } }
+/* r25 dock: 마을에서는 「전체 자동」이 없다 — 그 칸을 빈 칸 자국으로 남겨 속도·멈춤 자리가 움직이지 않게 */
+html body #app #s-game #bot.dock:has(#bHunt[hidden])::after { content: ""; display: block; position: static; border: 1px dashed rgba(236, 220, 186, .1); border-radius: var(--dk-r); background: rgba(0, 0, 0, .14); pointer-events: none; }
+@media (orientation: portrait), (orientation: landscape) and (min-height: 561px) { html body #app #s-game #bot.dock:has(#bHunt[hidden])::after { grid-row: 3; grid-column: 8; } }
+@media (orientation: landscape) and (max-height: 560px) { html body #app #s-game #bot.dock:has(#bHunt[hidden])::after { grid-row: 1; grid-column: 9; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -2547,10 +2722,10 @@ html #app .hch { height: 44px; }
     <div id="banner"></div>
     <div id="mourn"></div>
     <div id="toast" role="status"></div>
-    <div id="bot">
-      <div id="info"><span id="infoText"></span><span class="tick"><i>틱</i><span id="tick"><u></u></span><b id="tickN" class="num">100</b></span></div>
+    <div id="bot" class="dock">
+      <div id="info"><span id="selCtx"><span id="selCrest"></span><b id="selName"></b></span><span id="infoText"></span><span class="tick"><i>틱</i><span id="tick"><u></u></span><b id="tickN" class="num">100</b></span></div>
       <div id="acts"></div>
-      <div id="sys"><div id="selSeg" role="group" aria-label="선택한 가문"><span id="selCrest"></span><button id="bAutoU" class="sy"><b>자동</b><small>조작</small></button></div><button id="bHunt" class="sy"><b>전체 자동</b><small>꺼짐</small></button><button id="bSpeed" class="sy"><b>1×</b><small>속도</small></button><button id="bPause" class="sy"><b>Ⅱ</b><small>멈춤</small></button></div>
+      <div id="sys"><div id="selSeg" role="group" aria-label="선택한 가문"><button id="bAutoU" class="sy"><b>자동</b><small>조작</small></button></div><button id="bHunt" class="sy"><b>전체 자동</b><small>꺼짐</small></button><button id="bSpeed" class="sy"><b>1×</b><small>속도</small></button><button id="bPause" class="sy"><b>Ⅱ</b><small>멈춤</small></button></div>
     </div>
   </section>
 </div>
@@ -3211,10 +3386,17 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '1.0.1';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '4.0.9';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '1.0.2';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '4.0.10';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '1.0.2', date: '2026-11-16', tag: '변경', title: '정돈된 하단',
+    lead: '아래 조작 칸을 새로 짰습니다. 화면이 더는 출렁이지 않습니다.',
+    items: [
+      ['변경', '아래 칸의 높이가 마을, 필드, 전투에서 늘 같습니다. 기술이 없을 때도 자리를 비워 둡니다.'],
+      ['변경', '모든 단추를 같은 모양으로 맞췄습니다. 약초 셋, 조작과 태세, 전체 자동과 속도와 멈춤을 한 줄에 둡니다.'],
+      ['변경', '고른 가문의 문장과 이름은 상태 줄 왼쪽에 보입니다. 공격↑ 같은 효과는 작은 표시로 바뀌어 글을 가리지 않습니다.']
+    ] },
   { ver: '1.0.1', date: '2026-11-16', tag: '변경', title: '이름의 무게',
     lead: '이야기를 다듬었습니다. 지워진 이름은 이제 다음 대로 이어집니다.',
     items: [
@@ -18304,10 +18486,12 @@ DS.useCtl = useCtl;
 // 명령 줄: 기술은 줄바꿈 격자(다섯까지 한 줄, 여섯부터 두 줄), 아이템은 그 아래 늘 보이는 낮은 줄
 function renderActs() {
   var box = $('#acts'), me = G.sim && G.sim.byId[G.sel]; if (!box) return; box.innerHTML = ''; G.actEls = [];
+  // r25 dock: 기술 줄은 늘 자리를 잡는다(기술이 없으면 「기술 없음」 빈 칸) — 마을·필드·싸움에서 아래 띠 높이가 같아 지도가 튀지 않는다
+  var n = me ? me.skills.length : 0;
+  if (!n) box.appendChild(h('<div class="arow sk none" style="--n:4"><span class="sknone"><b>기술 없음</b><small>' + (me ? '고른 가문이 아직 쓸 기술이 없다' : '가문을 고르면 기술이 보인다') + '</small></span></div>'));
   if (!me) return;
-  var n = me.skills.length;
   if (n) {
-    var row = h('<div class="arow sk' + (n > 5 ? ' two' : '') + '" style="--n:' + (n > 5 ? Math.ceil(n / 2) : Math.max(4, n)) + '"></div>');
+    var row = h('<div class="arow sk' + (n > 5 ? ' two' : '') + (n > 4 ? ' scroll' : '') + '" style="--n:' + (n > 5 ? Math.ceil(n / 2) : Math.max(4, n)) + '"></div>');
     me.skills.forEach(function (id) {
       var S = SK[id];
       var b = h('<button class="act" data-sk="' + id + '"><b>' + esc(S.name) + '</b><span><i class="m">MP ' + S.mp + '</i> <i class="t">틱 ' + S.tick + '</i></span></button>');
@@ -18324,6 +18508,7 @@ function renderActs() {
       row.appendChild(b);
       G.actEls.push({ b: b, S: S, id: id, p: -1 });
     });
+    for (var g = n; g < 4; g++) row.appendChild(h('<i class="skg" aria-hidden="true"></i>'));      // r25 dock: 넷보다 적으면 빈 칸으로 채워 칸 너비를 같게
     box.appendChild(row);
   }
   var plan = itemPlan(), irow = h('<div class="arow it r8' + (plan.n > 4 ? ' more' : '') + '" style="--n:' + plan.n + '"></div>'), tray = plan.open ? h('<div class="arow it more tray"></div>') : null;
@@ -18383,12 +18568,13 @@ function renderSys() {
   if (bs) { bs.classList.toggle('side', side); $('b', bs).textContent = side ? '호위' : '돌격'; bs.setAttribute('aria-label', hn + ' 가솔: ' + (side ? '호위' : '돌격')); }
   if (seg) {
     var ck = sch ? sch.cls + (sch.id === sv.hero ? 'L' : '') : '';
-    if (seg.dataset.ck !== ck) { seg.dataset.ck = ck; $('#selCrest').innerHTML = sch && DS.houseCrestOf ? DS.houseCrestOf(sv, sch, 20) : ''; seg.style.setProperty('--fc', sch ? (DS.FLAG[sch.cls] || '#c9a96a') : '#5a4a36'); }
+    if (seg.dataset.ck !== ck) { seg.dataset.ck = ck; $('#selCrest').innerHTML = sch && DS.houseCrestOf ? DS.houseCrestOf(sv, sch, 20) : ''; var fc = sch ? (DS.FLAG[sch.cls] || '#c9a96a') : '#5a4a36'; seg.style.setProperty('--fc', fc); $('#info').style.setProperty('--fc', fc); }
     seg.classList.toggle('none', !me); $('#selCrest').title = hn;
+    var sn = $('#selName'); if (sn && sn.textContent !== hn) sn.textContent = hn;      // r25 dock: 고른 가문은 정보 줄 왼쪽에 (문장 + 이름) — 아래 「조작」「태세」 칸이 이 가문 것이다
   }
   $('#bHunt').classList.toggle('on', !!G.sim.hunt); $('#bHunt').hidden = !!(G.zone && G.zone.town && !G.scn);
   $('#bHunt small').textContent = G.sim.hunt ? '켜짐' : '꺼짐'; $('#bHunt').setAttribute('aria-label', (G.scn ? '전체 자동 진행: ' : '전체 자동 사냥: ') + (G.sim.hunt ? '켜짐' : '꺼짐'));
-  $('#bSpeed b').textContent = Math.max(1, Math.min(3, sv.opt.speed || 1)) + '×'; $('#bPause').classList.toggle('on', G.pause); $('#bPause b').textContent = G.pause ? '▶' : 'Ⅱ'; $('#bPause small').textContent = G.pause ? '다시 진행' : '멈춤';
+  $('#bSpeed b').textContent = Math.max(1, Math.min(3, sv.opt.speed || 1)) + '×'; $('#bPause').classList.toggle('on', G.pause); $('#bPause b').textContent = G.pause ? '▶' : 'Ⅱ'; $('#bPause small').textContent = G.pause ? '재개' : '멈춤';
 }
 var infoT = 0, infoMsg = '', infoShown = null;
 function putInfo(text) { if (text === infoShown) return; var el = $('#infoText'); if (!el) return; el.textContent = text; infoShown = text; }
@@ -18426,7 +18612,7 @@ function updateHud(now) {
     var danger = !!(dz && !me.dead && dz[me.y * sim.w + me.x]), fx = fxList(me), sig = '';
     if (danger !== G.dangerOn) { G.dangerOn = danger; $('#info').classList.toggle('danger', danger); }
     for (i = 0; i < fx.length; i++) sig += fx[i][0] + fx[i][2] + '|';
-    if (sig !== G.fxSig) { G.fxSig = sig; var fe = $('#infoFx'); if (fe) fe.innerHTML = fx.map(function (f) { return '<i class="fx-' + f[0] + '">' + (fx.length > 2 ? f[3] : f[1] + ' ') + f[2] + '</i>'; }).join(''); }      // 셋부터는 한 글자로 줄여 글 자리를 남긴다
+    if (sig !== G.fxSig) { G.fxSig = sig; var fe = $('#infoFx'); if (fe) fe.innerHTML = fx.map(function (f) { return '<i class="fx-' + f[0] + '" title="' + f[1] + ' ' + f[2] + '">' + f[3] + f[2] + '</i>'; }).join(''); }      // r25 dock: 늘 짧은 꼬리표(공↑22) — 버프가 붙어도 상태 글이 덜 밀린다
     var idle = !!(G.scn && !sim.combat && !sim.hunt && !G.ending && !G.pause && !G.hold && !me.order && !me.dead && sim.units.some(function (x) { return x.side === 'enemy' && !x.dead; }));
     if (!idle) G.idleT = 0; else if (!G.idleT) G.idleT = now;
     if (danger) putInfo('붉은 칸 안이다. 비켜라.');
@@ -18899,7 +19085,7 @@ function onEvents(evs) {
       if (G.gain.exp) setInfo('전투 종료, EXP+' + G.gain.exp + ' G+' + G.gain.gold + (G.gain.loot && G.gain.loot.length ? ' 전리품' + G.gain.loot.length : ''), 2400);      // r8 hud: 토스트 → 아래 정보 줄 (자동 사냥에서 6초마다 글 상자가 뜨던 것)
       if (G.itemsOpen) { G.itemsOpen = null; }
       // 「자동이 둘」 안내는 첫 들판 싸움이 끝난 뒤에 (들판에 들어서자마자 띄우면 길 안내·첫 전투 안내가 1초 만에 덮었다)
-      if (!sv.seen.autoTip && !sv.cleared[1] && !sv.opt.hunt) { sv.seen.autoTip = 1; var hb = $('#bHunt'); if (hb) { hb.classList.add('hint'); setTimeout(function () { hb.classList.remove('hint'); }, 5600); } later('전체 자동을 켜면 모든 가문이 알아서 싸운다. 왼쪽 문장 칸은 고른 가문 하나만 바꾼다', 5200); }
+      if (!sv.seen.autoTip && !sv.cleared[1] && !sv.opt.hunt) { sv.seen.autoTip = 1; var hb = $('#bHunt'); if (hb) { hb.classList.add('hint'); setTimeout(function () { hb.classList.remove('hint'); }, 5600); } later('전체 자동을 켜면 모든 가문이 알아서 싸운다. 조작·태세 칸은 고른 가문 하나만 바꾼다', 5200); }
       setTimeout(function () { if (!G.scn && !(G.sim && G.sim.combat)) G.gain = { exp: 0, gold: 0, loot: [], relics: [] }; }, 2500);
       if (G.gain.exp) meritAll(2);
       linEnd(false);      // 필드에서 쓰러진 지휘관도 싸움이 끝나면 숨을 거둔다
@@ -19207,9 +19393,9 @@ DS.startGame = function () {
     // 판에 없는 HUD 칸은 여기서 덧붙인다: 버프·상태 칩, 보스 시전 막대와 한마디, 용병 태세 버튼
     $('#info').insertBefore(h('<span id="infoFx"></span>'), $('#info .tick'));
     $('#boss').insertBefore(h('<i class="bct"></i>'), $('#boss .bbar')); $('#boss').appendChild(h('<i class="cbar"><u></u></i>')); $('#boss').appendChild(h('<p id="bsay"></p>'));
-    var bs = h('<button id="bStance" class="sy"><b>돌격</b><small>가솔</small></button>');
+    var bs = h('<button id="bStance" class="sy"><b>돌격</b><small>태세</small></button>');
     $('#selSeg').appendChild(bs);
-    $('#selCrest').addEventListener('click', function () { var me = G.sim && G.sim.byId[G.sel], ch = me && G.save.chars[me.ch]; if (!ch) return; A('tap'); toast(DS.flagName(ch.cls) + ': 조작 ' + (me.auto ? '자동' : '수동') + ', 가솔 ' + (ch.st === 'side' ? '호위' : '돌격') + '. 위 초상화를 눌러 가문을 바꾼다', 3200); });
+    $('#selCtx').addEventListener('click', function () { var me = G.sim && G.sim.byId[G.sel], ch = me && G.save.chars[me.ch]; if (!ch) return; A('tap'); toast(DS.flagName(ch.cls) + ': 조작 ' + (me.auto ? '자동' : '수동') + ', 가솔 ' + (ch.st === 'side' ? '호위' : '돌격') + '. 위 초상화를 눌러 가문을 바꾼다', 3200); });
     bs.addEventListener('click', function () {
       var me = G.sim.byId[G.sel], ch = me && G.save.chars[me.ch]; if (!ch) return;
       if (ch.st === 'side') delete ch.st; else ch.st = 'side';
@@ -20963,9 +21149,9 @@ function tabHelp() {
       '지금 등급과 공훈은 인물 정보 맨 위 단계표에서 본다.']],
     ['조작', 0, [
       '<b>땅을 누르면 이동</b>, <b>적을 누르면 공격</b>. 선택한 가문이 앞장서고 나머지가 따라온다.',
-      '위쪽 초상화를 눌러 가문을 고른다. 아래 줄 <b>문장 칸</b>은 고른 가문 하나만 바꾼다.',
+      '위쪽 초상화를 눌러 가문을 고른다. 고른 가문은 아래 정보 줄 왼쪽에 문장과 이름으로 보이고, 맨 아래 줄 <b>조작·태세</b> 칸은 그 가문 하나만 바꾼다.',
       '<b>조작 자동/수동</b>: 자동이면 알아서 싸우고 기술도 쓴다. 수동이면 내가 누른 대로 움직인다.',
-      '<b>가솔 돌격/호위</b>: 돌격은 가솔이 먼저 달려든다. 호위는 가주 곁의 적만 상대한다.',
+      '<b>태세 돌격/호위</b>: 돌격은 가솔이 먼저 달려든다. 호위는 가주 곁의 적만 상대한다.',
       '<b>전체 자동</b>을 켜면 모든 가문이 자동이 되어 적을 찾아 싸운다. 오른쪽 끝은 속도와 멈춤.',
       '전투 중에 땅을 누르면 그 자리로 먼저 이동한다. 도착하면 잠시 그 자리를 지킨다.',
       '목표 줄을 누르면 <b>길 안내</b>가 시작된다. 지도에서 어느 지역이든 눌러 바로 이동한다. 위험한 곳은 ⚠ 표시가 붙고, 한 번 경고한 뒤 다시 누르면 들어간다.']],
