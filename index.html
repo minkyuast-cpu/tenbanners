@@ -2509,6 +2509,24 @@ html #app #selSeg #selCrest { border: 0; }
 @media (orientation: landscape) and (max-height: 560px) { #toast { bottom: calc(var(--bot-h, 156px) + 34px); } }
 /* ⑩ 가계도 사람 칸: 「여, 보병, 그레…」 직업이 잘리던 것 → 두 줄까지 */
 .lgn small { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.25; word-break: keep-all; }
+/* 1.0.0 마무리 — 점검에서 남겼던 다섯 가지 */
+/* ① 누르는 자리는 모두 44px: 켬/끔 단추, 정렬·필터, 관 보기, 선택 가문 묶음, 혼인 칩, 가문 칸 얼굴 */
+html #app .sheet .row .btn.small, html #app [data-opt], html #app .lt1 .seg button, html #app .lt2 button, html #app .lt2 select, html #app #s-game #wedtip .btn, html #s-game #wedtip .btn { min-height: 44px; }
+html #app #selSeg .sy, html #app #selSeg .sy.on { min-height: 44px; }
+html #app .hch { height: 44px; }
+/* ② 도움말·가방 바로가기 칩: 좁은 화면에서는 잘리지 않게 여러 줄로 */
+@media (max-width: 420px) { .hjump:not(.mjump), .hjump { flex-wrap: wrap; overflow: visible; } .hjump .chipbtn { min-height: 40px; } }
+/* ③ 휴대폰 가로 위 띠: 지역 이름과 목표 글을 두 줄까지 (말줄임 대신) */
+@media (orientation: landscape) and (max-height: 560px) {
+  #s-game .tbar .zn b { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.15; }
+  #s-game .tbar .zn small { display: none; }
+  #s-game #quest span { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; line-height: 15px; }
+}
+/* ④ 보스 막대: 이름·체력 막대가 「퇴각」 단추 밑으로 들어가지 않게 오른쪽 자리를 비운다 */
+#s-game #top:has(#boss:not([hidden])) #boss { padding-right: 88px; }
+/* ⑤ 메뉴 창은 탭마다 같은 높이 — 짧은 탭(현황 등)에서 「닫기」가 화면 가운데 떠 있던 것 */
+.ov.menu .sheet { height: 88%; }
+.ov.menu .sheet .sb { flex: 1 1 auto; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -20378,7 +20396,7 @@ DS.openNotes = function (after) {
         '<small>v' + n.ver + (n.date ? ', ' + n.date : '') + (n.ver === DS.VERSION && seen !== DS.VERSION ? ', <em>NEW</em>' : '') + '</small></summary>' +
         '<p class="lead">' + esc(n.lead) + '</p><ul>' + n.items.map(function (it) { return '<li><i class="k k-' + KIND[it[0]] + '">' + it[0] + '</i><span>' + esc(it[1]) + '</span></li>'; }).join('') + '</ul></details>';
     });
-    html += '<h4>저장 안내</h4><p class="hint">저장은 이 브라우저에 남습니다. 로그인한 claude.ai 에서는 설정의 클라우드 저장으로 계정에도 올립니다. 버전이 올라가면 저장을 새 구조로 바꾸고, 바꾸기 전 원본을 백업해 둡니다.' +
+    html += '<h4>저장 안내</h4><p class="hint">저장은 이 브라우저에 남습니다. 로그인하면 설정의 클라우드 저장으로 계정에도 올립니다. 버전이 올라가면 저장을 새 구조로 바꾸고, 바꾸기 전 원본을 백업해 둡니다.' +
       (sv ? ' 지금 저장: 구조 ' + sv.v + '번, 마지막으로 저장한 버전 v' + esc(sv.ver || DS.VERSION) + (sv.perk ? ', ' + esc(sv.perk.rank) + ' 특전 적용 중' : '') + '.' : '') + '</p>';
     return html;
   }, 'notes');
@@ -23678,16 +23696,16 @@ function cloudSum(d) { var r = d && d.sum && typeof d.sum === 'object' ? row('x'
 
 // ── 백엔드별 글: 기본(claude.ai). web 판은 BE.T 로 덮는다 ──
 var T = {
-  nope: '<p class="hint onl-no">여기서는 현황이 안 보입니다. 로그인한 claude.ai 에서 열면 보입니다. 게임은 그대로 됩니다.</p>',
+  nope: '<p class="hint onl-no">여기서는 현황이 안 보입니다. 로그인한 상태로 열면 보입니다. 게임은 그대로 됩니다.</p>',
   pubNoId: '이 보기에서는 계정을 몰라 못 올립니다. 목록은 보입니다.',
-  pubOff: 'claude.ai 에 로그인한 계정으로 열면 내 기록도 올라갑니다.',
+  pubOff: '로그인한 상태로 열면 내 기록도 올라갑니다.',
   pubDenied: '보기 전용 링크라 기록은 못 올립니다. 목록은 보입니다.',
   pubWho: '대장 이름과 진행이 이 링크를 가진 모두에게 보입니다.',
-  cloudNoId: '이 보기에서는 계정을 몰라 못 씁니다. 게임을 만든 조직의 claude.ai 계정으로 여세요.',
-  cloudOff: '로그인한 claude.ai 에서 열면 저장이 계정에 올라가, 다른 기기에서 이어 합니다.',
+  cloudNoId: '이 화면에서는 계정을 알 수 없어 쓸 수 없습니다. 로그인한 상태로 여세요.',
+  cloudOff: '로그인한 상태로 열면 저장이 계정에 올라가 다른 기기에서 이어 합니다.',
   cloudDenied: '보기 전용 링크라 클라우드 저장을 못 씁니다.',
-  foot: '모험가의 대장 이름과 진행만 보입니다. claude.ai 계정 이름은 올리지 않습니다.',
-  askWho: '이 게임 링크를 가진 모든 사람에게', askNot: 'claude.ai 계정 이름, 사진, 메일은 올리지 않습니다.',
+  foot: '모험가의 대장 이름과 진행만 보입니다. 계정 이름은 올리지 않습니다.',
+  askWho: '이 게임 링크를 가진 모든 사람에게', askNot: '계정 이름, 사진, 메일은 올리지 않습니다.',
   liveN: function (n) { return n ? '지금 다른 ' + n + '명이 게임을 열어 두었습니다' : '지금 게임을 연 다른 사람은 없습니다'; }
 };
 // claude.ai 런타임: claude.use('db'/'user'/'room') — uid 는 열 때 한 번 정해진다
@@ -24728,7 +24746,7 @@ M.open = function () {
     if (!q.isConnected) return;
     var loc = lraw ? DS.Save.peek(lraw) : null, cs = c ? DS.Save.peek(c.raw) : null;
     if (!loc && !cs) {
-      body.innerHTML = (WEB && o && o.uid ? '<p>이 기기에는 저장이 없습니다. 공식 주소에서 같은 계정으로 로그인하면 클라우드 저장으로 이어집니다.</p>' : '<p>옮길 저장이 없습니다. ' + NM() + '에서 새로 시작하세요.</p>' + (noId ? '<p class="dim">이 보기에서는 claude 클라우드 저장을 못 읽습니다. 게임을 만든 조직의 claude.ai 계정으로 열면 옮길 수 있습니다.</p>' : '')) + '<a class="btn gold wide" id="mvGo" href="' + esc(DS.WEB_URL) + '" target="_blank" rel="noopener">' + NM() + ' 열기 ↗</a>';
+      body.innerHTML = (WEB && o && o.uid ? '<p>이 기기에는 저장이 없습니다. 공식 주소에서 같은 계정으로 로그인하면 클라우드 저장으로 이어집니다.</p>' : '<p>옮길 저장이 없습니다. ' + NM() + '에서 새로 시작하세요.</p>' + (noId ? '<p class="dim">이 보기에서는 claude 클라우드 저장을 못 읽습니다. 로그인한 상태로 열면 옮길 수 있습니다.</p>' : '')) + '<a class="btn gold wide" id="mvGo" href="' + esc(DS.WEB_URL) + '" target="_blank" rel="noopener">' + NM() + ' 열기 ↗</a>';
       return;
     }
     var cloudNewer = loc && cs && c.raw !== lraw && c.at > (+meta().cloudAt2 || 0) + 1000;
