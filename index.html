@@ -2091,6 +2091,29 @@ html #app .mtabs button { padding: 0 2px; letter-spacing: 0; min-width: 0; }
   #s-game .sy small { font-size: 9px; letter-spacing: -.02em; }
   #s-game .chip > em { font-size: 9px; }
 }
+
+/* r17 boss: 이름 지우기 띠 (30번 어스름의 왕) — #mourn 자리(맨 위 줄 바로 밑). 단추는 누를 수 있다 */
+#erase { position: absolute; left: var(--gut-l); right: var(--gut-r); top: calc(var(--top-h, 157px) + 2px); z-index: 22; display: none; padding: 6px 10px 8px; text-align: center;
+  background: rgba(14, 11, 26, .94); border: 1px solid #4a4466; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 0 18px rgba(90, 70, 140, .35); }
+#erase.on { display: block; animation: erIn .35s ease both; }
+#erase .ek { margin: 0 0 2px; font-family: var(--f-11); font-size: var(--fs-m); color: #c7c2dc; font-style: italic; }
+#erase .et { display: block; font-family: var(--f-11); font-size: var(--fs-m); font-weight: 700; color: #efe6d0; letter-spacing: .02em; }
+#erase .ebar { display: block; height: 3px; margin: 5px 0 6px; background: #2a2440; border-radius: 2px; overflow: hidden; }
+#erase .ebar u { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #6f6a80, #c7c2dc); }
+#erase .erow { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+#erase .echip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 3px 2px 7px; border: 1px solid #3a3560; border-radius: 4px; background: #1c192d; }
+#erase .echip em { font-style: normal; font-family: var(--f-11); font-size: var(--fs-m); color: #a7a1c2; max-width: 7.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#erase .echip button { min-height: 32px; min-width: 44px; padding: 0 8px; border-radius: 3px; border: 1px solid #5a5480; background: #262241; color: #efe6d0; font-family: var(--f-11); font-size: var(--fs-m); }
+#erase .echip button.ecall { border-color: var(--ember2); color: var(--ember); }
+#erase .echip button.pend { background: #3a2a10; animation: erPulse .5s ease-in-out infinite alternate; }
+#erase .echip button:disabled { opacity: .35; }
+#erase .echip.saved { border-color: var(--ember); } #erase .echip.saved em { color: var(--ember); }
+#erase .echip.gone em { text-decoration: line-through; color: #6f6a80; }
+#erase .ehint { display: block; margin-top: 5px; font-family: var(--f-11); font-size: var(--fs-s); color: var(--mute); }
+#erase.done .ebar u { background: #6f6a80; }
+@keyframes erIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes erPulse { from { box-shadow: 0 0 0 rgba(240, 182, 74, 0); } to { box-shadow: 0 0 8px rgba(240, 182, 74, .6); } }
+@media (prefers-reduced-motion: reduce) { #erase.on, #erase .echip button.pend { animation: none; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -2775,9 +2798,16 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '4.0.4';
+DS.VERSION = '4.0.5';
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '4.0.5', date: '2026-11-16', tag: '업데이트', title: '이름 지우기',
+    lead: '어스름의 왕이 마지막 싸움에서 우리 사람의 이름을 지웁니다.',
+    items: [
+      ['새로', '30번 어스름의 왕은 체력 2/3, 1/3에서 대장을 뺀 부대원 두 명, 세 명의 이름을 지웁니다. 지워진 사람은 영영 돌아오지 않습니다.'],
+      ['새로', '막을 길: 약 3초 안에 가주를 보내 보호하거나, 한 사람 치유나 정화를 걸거나, 대장이 한 싸움에 한 번 이름을 부릅니다.'],
+      ['변경', '20년 뒤 돌아오는 귀환전에도 같은 일이 일어납니다. 지워진 이름은 엔딩에서 불립니다.']
+    ] },
   { ver: '4.0.4', date: '2026-11-16', tag: '업데이트', title: '넓어진 화면',
     lead: '버튼이 지도를 덜 가리고, 능력치 그래프가 아홉 축이 됩니다. 글도 쉬운 말로 바꿨습니다.',
     items: [
@@ -8672,6 +8702,7 @@ var ENDING = ['문이 닫히자 북쪽 하늘이 걷혔다. 먼동이 텄다.',
   say('dawn', '터면 됐다. 지붕은 내가 올린다.'),
   '돌아온 자. 맹주 가문에서 처음으로 그렇게 불린 사람이다.',
   '{fallen}',
+  '{erased}',      // r17 boss: 문 앞에서 지워진 이름(이번 30번 승리의 「이름 지우기」) — story.js 가 그 판의 이름으로 바꾸거나 뺀다
   V(say('fly', '끝났으니 말인데, 솔개. 결국 나한테는 한 번도 안 쐈네?'), { of: ['fly', 'arc'], heir: '', gone: '' }),      // 두 사람 본인이 다 살아 있을 때만
   V(say('arc', '다음에.'), { of: ['fly', 'arc'], heir: '', gone: '' }),
   say('dawn', '문 너머에 아직 부르지 못한 이름들이 있다. 들리느냐.'),
@@ -8815,6 +8846,21 @@ DS.STORY_BOSSGEN = {
 };
 
 DS.STORY_PATCH = (DS.STORY_PATCH || []).concat([{ scn: SCN, lore: LORE_C }]);
+
+// r17 boss: 30번 어스름의 왕 「이름 지우기」의 글 (game.js erBegin…·story.js '{erased}'·endgame.js 낭독이 읽는다). 왕은 사람 말투로 짧게.
+DS.ERASE_TXT = {
+  king: ['너희 이름도 무겁구나.', '부를 사람이 없는 이름부터 가져가마.'],
+  kingGen: ['스무 해 동안 잘 쌓아 두었구나.', '이번에는 누구를 먼저 잊겠느냐.'],
+  band: '{list}의 이름이 지워진다', gone: '{list}의 이름이 지워졌다', none: '한 이름도 내주지 않았다',
+  hint: '가주를 보내 보호하거나, 대장이 이름을 불러 지킬 수 있다',
+  cover: '보호', call: '이름 부르기', calling: '부르는 중', go: '{a}에게!',
+  saved: { cover: '보호했다', heal: '이름이 돌아왔다', call: '불렀다' },
+  noGuard: '보호할 가주가 없다', callUsed: '이름은 한 싸움에 한 번 부른다', noPause: '이름이 지워지는 동안은 멈출 수 없다',
+  shout: ['{a}!', '{a}, 안 돼!', '{a}… 잊지 않아.'],
+  ending: function (names) { return '문 앞에서 지워진 이름이 있었다. ' + names.join(', ') + '. 문이 닫히기 전에 열 가문이 그 이름을 소리 내어 불렀다. 왕의 몸에서 그 이름들이 풀려 나왔다.'; },
+  endingKept: '왕이 지우려던 이름을 하나도 내주지 않았다. 불러 준 이름은 지워지지 않는다.',
+  close: function (names) { return '문 앞에서 지워진 이름부터 불렀다. ' + names.join(', ') + '.'; }
+};
 })();
 
 // 전민 戰民, 열 가문의 시대 — 이야기 적용기 (r7 「가문의 부흥」, 경전 개정 6)
@@ -9000,6 +9046,8 @@ if (endingTouched) {
     var get = function () {
       var sv = DS.G && DS.G.save, f = sv && sv.fallen, out = fix.slice(), F = DS.LORE.endingFallen || {};
       if (at >= 0) out[at] = !f || f.length >= 30 ? (F.base || FALLEN_OLD) : f.length ? (typeof F.some === 'function' ? F.some(f.length, f) : F.base) : (F.none || F.base);
+      var ei = out.indexOf('{erased}');      // r17 boss: 이번 30번 승리에서 지워진 이름 (없으면 뺀다 · 지킬 이름이 있었는데 다 지켰으면 그 줄)
+      if (ei >= 0) { var er = sv && sv.erLast, ET = DS.ERASE_TXT; if (er && ET && er.names && er.names.length) out[ei] = ET.ending(er.names); else if (er && ET && er.marked) out[ei] = ET.endingKept; else out.splice(ei, 1); }
       return DS.storyFit ? DS.storyFit(out) : out;
     };
     if (d.configurable) Object.defineProperty(L, 'ending', { enumerable: true, configurable: true, get: get });
@@ -9450,6 +9498,15 @@ if (DS.BAL.cmdBest == null) DS.BAL.cmdBest = true;
 //   skTune: 기술 표의 하위 호환 정리 (data.js 의 DS.SK_R8 — 조준 사격 틱 50→45, 짧은 호령 12·15초→20·25초). DS.skTune(false) 로 3.2.1 값.
 if (DS.BAL.skTune == null) DS.BAL.skTune = true;
 if (DS.skTune) DS.skTune(DS.BAL.skTune);
+// ── r17 boss (4.0.3): 30번 어스름의 왕의 「이름 지우기」 — 왕(duskking) 유닛에만 붙는 분기. 끄면(DS.BAL.nameErase=false) 그 전과 똑같다 (tools/eng/hash.js)
+//   체력 th[k] 문턱마다 한 번: 대장을 뺀 우리 사람 n[k] 명(두 번째는 첫 번째와 겹치지 않게)에 표식 → 왕 쪽으로 pull 칸 끌려가 굳는다 → dur 초(엔진 시간) 뒤 표식이 남은 이는 즉사.
+//   막는 길: ① 감싸기 — 그 사람의 가주(가주가 대상이면 다른 가주)가 이동 명령으로 곁(1칸)에 와서 cover 초 붙어 있으면 걷힌다 (명령 없이 우연히 곁에 선 것은 아니다 — 자동 전투는 거의 못 구한다). 감싼 이는 최대 HP 의 coverHurt 를 대신 잃는다(죽지는 않는다)
+//            ② 치유·정화 — 한 사람에게 거는 치유·정화 기술을 그 사람에게 쓰면 걷힌다 (모두 치유처럼 넓게 퍼지는 것은 안 된다)
+//            ③ 이름을 부른다 — 대장만, 한 싸움에 한 번, 한 명. 틱이 call 이상 차는 순간 틱을 모두 쓴다 (모자라면 차기를 기다린다 — 시간이 다 가면 못 부른다)
+//   예고 중 왕의 체력은 문턱 밑으로 내려가지 않는다. 지워진 사람 하나마다 왕의 남은 체력 hpCut·공격 atkCut 이 준다 (남은 사람으로 이길 수 있게).
+//   대상 고르기는 sim.erSeed(게임: 저장 씨앗 + 30번 시도 횟수) 로 결정적 — 엔진 난수(this.rand)는 부르지 않는다.
+if (DS.BAL.nameErase == null) DS.BAL.nameErase = true;
+DS.ERASE = { th: [2 / 3, 1 / 3], n: [2, 3], cmdMax: 1, dur: 2.2, pull: 2, cover: 0.8, coverHurt: 0.25, call: 50, hpCut: 0.15, atkCut: 0.12, slow: 0.8 };      // dur 2.2 × 화면 slow 0.8 = 실제 2.75초 (배속 무시)
 
 function dist(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
 function has(u, tag) { return u.tags && u.tags.indexOf(tag) >= 0; }
@@ -9472,7 +9529,7 @@ function Sim(o) {
   this._d = new Float64Array(n); this._p = new Int32Array(n); this._st = new Int32Array(n); this.stamp = 0;
   this.dz = { ally: new Uint8Array(n), enemy: new Uint8Array(n) };
   this.groups = []; this.chk = 0; this.block = o.block || null;
-  this._ver = 0; this._allyV = -1; this._ally = null; this._us = []; this.swp = 0;      // 명부가 바뀐 횟수, 살아 있는 아군 목록(캐시), 틱마다 쓰는 임시 목록
+  this.seed0 = o.seed || 7; this.erSeed = o.erSeed; this._ver = 0; this._allyV = -1; this._ally = null; this._us = []; this.swp = 0;      // 명부가 바뀐 횟수, 살아 있는 아군 목록(캐시), 틱마다 쓰는 임시 목록
   var self = this;
   (o.units || []).forEach(function (s) { self.add(s); });
   (o.spawns || []).forEach(function (g) { self.groups.push(g); self.spawnGroup(g); });
@@ -9682,6 +9739,7 @@ P.hurt = function (v, dmg, src, o) {
   if (v.dead) return;
   o = o || {};
   v.hp -= dmg; this.lastHit = this.t;
+  if (v.er && dmg < v.mhp) this.erHit(v);      // r17: 이름 지우기 문턱 (왕만). 최대 체력 이상 한 방(시험·연출의 즉사)은 건너뛴다 — 실제 싸움에는 없는 값
   if (src && src.side === 'enemy' && v.side === 'ally') src.prov = this.t + 6;      // 우리를 때린 적은 멀어도 내버려 두지 않는다
   var he = { t: 'hit', id: v.id, v: dmg, crit: !!o.crit, type: o.type || 'phys' };
   if (src) he.by = src.id;      // 누가 때렸는가 (독·용암처럼 때린 이가 없으면 생략)
@@ -9702,7 +9760,8 @@ P.kill = function (v, by) {
   if (v.dead) return;
   var self = this;
   v.dead = true; v.deadT = this.t; v.hp = 0; this.occ[v.y * this.w + v.x] = null; this._ver++;
-  this.emit({ t: 'die', id: v.id, by: by ? by.id : null });
+  var de = { t: 'die', id: v.id, by: by ? by.id : null }; if (this._erK) de.erase = 1;
+  this.emit(de);
   if (by && by.fx && !by.dead && by.side !== v.side) {
     if (by.fx.killHp) this.heal(by, by.mhp * by.fx.killHp);
     if (by.fx.killGauge) by.gauge = Math.min(100, by.gauge + by.fx.killGauge);
@@ -9721,7 +9780,7 @@ P.kill = function (v, by) {
     if (v.obj) {
       if (v.phase2) {
         var s = this.mk(null, { boss: v.phase2, x: v.x, y: v.y, grp: v.grp }); s.obj = true;
-        var nu = this.add(s); if (nu) { nu.aggro = true; nu.gauge = 30; this.emit({ t: 'phase', id: nu.id }); }
+        var nu = this.add(s); if (nu) { nu.aggro = true; nu.gauge = 30; this.emit({ t: 'phase', id: nu.id }); if (nu.type === 'duskking' && DS.BAL.nameErase) this.erInit(nu); }
       } else this.win();
     } else if (this.objective === 'all') this.checkAll();
   }
@@ -9843,6 +9902,7 @@ P.resolve = function (u, id, tiles, unitTgt) {
   if ((S.tg === 'enemy' || S.tg === 'ally') && unitTgt) vs = unitTgt.dead ? [] : [unitTgt];
   else vs = this.victims(u, S, tiles);
   this.emit({ t: 'skill', id: u.id, sk: id, fx: S.fx, tiles: tiles || vs.map(function (v) { return [v.x, v.y]; }), from: [u.x, u.y] });
+  if (this._er && u.side === 'ally' && S.tg === 'ally' && unitTgt && unitTgt.erM && S.eff.some(function (e) { return e.t === 'heal' || e.t === 'cleanse'; })) this.erSave(unitTgt, 'heal', u);      // r17: 한 사람에게 거는 치유·정화
   S.eff.forEach(function (e) {
     switch (e.t) {
       case 'dmg': vs.forEach(function (v) {
@@ -10098,6 +10158,11 @@ P.runOrder = function (u) {
         if (u.gauge < c) { this.wait(u); return true; }
         this.cast(u, o.id, v); u.order = null; return true;
       }, 80);
+    case 'call':      // r17: 이름을 부른다 — 틱이 차는 대로
+      v = this.byId[o.tid];
+      if (!this._er || !v || v.dead || !v.erM || (this._er.er.called)) { u.order = null; return false; }
+      if (u.gauge < DS.ERASE.call) { this.wait(u, 0.1); return true; }
+      u.gauge = 0; this._er.er.called = u.id; this.erSave(v, 'call', u); this.say(u, v.mn || v.name); u.order = null; u.busy = 0.4; return true;
     case 'item':
       v = o.tid ? this.byId[o.tid] : u;
       if (!v || v.dead || !(this.inv[o.key] > 0)) { u.order = null; return false; }
@@ -10653,6 +10718,7 @@ P.enemySkill = function (u, allies) {
 
 P.think = function (u) {
   u.idle = false;
+  if (u.erM) { this.wait(u, 0.2); return; }      // r17: 이름이 바래는 동안은 굳는다
   if (u.side === 'enemy') return this.aiEnemy(u);
   if (u.role === 'cmd') {
     if (u.order && DS.BAL.ordSafe && u.order.t !== 'move' && this.ordGuard(u)) { if (u.saving) u.saving = false; return; }      // 명령은 그대로 쥔 채 먼저 몸을 피한다 (이동 명령만 예외)
@@ -10729,6 +10795,7 @@ P.tick = function (dt) {
     if (u.busy > 0) u.busy -= dt;
     if (u.busy <= 0 && !u.casting) this.think(u);
   }
+  if (this._er) this.erTick(dt);      // r17: 이름 지우기 예고
   // 예고 기술
   if (this.tele.length) {
     var done = [];
@@ -10743,6 +10810,71 @@ P.tick = function (dt) {
       });
     }
   }
+};
+
+// ───────── r17: 이름 지우기 (30번 어스름의 왕) ─────────
+function erRng(seed) { var h = 2166136261 >>> 0, s = String(seed); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return DS.rng((h % 2147483646) + 1); }
+P.erInit = function (k) { k.er = { k: 0, on: null, used: {}, called: null, rng: erRng((this.erSeed != null ? this.erSeed : this.seed0) + ':erase'), log: [] }; };
+P.erHit = function (v) {
+  var E = v.er, C = DS.ERASE;
+  if (E.on) { if (v.hp < E.floor) v.hp = E.floor; return; }
+  if (E.k < C.th.length && v.hp <= v.mhp * C.th[E.k] && !this.result) { E.floor = Math.max(1, Math.round(v.mhp * C.th[E.k])); if (v.hp < E.floor) v.hp = E.floor; this.erStart(v); }
+};
+P.erHero = function () { var h = this.heroId && this.byId[this.heroId]; if (h) return h; for (var i = 0; i < this.units.length; i++) { var u = this.units[i]; if (u.side === 'ally' && u.role === 'cmd' && u.hero) return u; } return this.byId[this.leader] || null; };
+P.erStart = function (v) {
+  var E = v.er, C = DS.ERASE, k = E.k++, self = this, hero = this.erHero(), R = E.rng, i;
+  var cand = this.units.filter(function (u) { return !u.dead && u.side === 'ally' && (u.role === 'cmd' || u.role === 'merc') && u !== hero && !E.used[u.id]; });
+  cand.sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; });
+  for (i = cand.length - 1; i > 0; i--) { var j = Math.floor(R() * (i + 1)), t = cand[i]; cand[i] = cand[j]; cand[j] = t; }
+  var n = Math.min(cand.length, k === 0 ? C.n[0] : cand.length >= 6 ? C.n[1] : C.n[0]), pick = [], nc = 0;
+  for (i = 0; i < cand.length && pick.length < n; i++) { if (cand[i].role === 'cmd') { if (nc >= C.cmdMax) continue; nc++; } pick.push(cand[i]); }      // 가주는 한 번에 cmdMax 명까지 (가주가 지워지면 그 가솔 둘도 흩어진다)
+  if (!pick.length) return;
+  pick.forEach(function (u) {
+    E.used[u.id] = 1; u.erM = { k: k, cov: 0 }; u.order = null; u.casting = null;
+    self.tele = self.tele.filter(function (T) { if (T.u === u) { self.emit({ t: 'castEnd', tid: T.id, cancel: true }); return false; } return true; });
+    for (var s = 0; s < C.pull; s++) {      // 왕 쪽으로 끌려간다 (빈 칸만)
+      var dx = v.x - u.x, dy = v.y - u.y; if (Math.abs(dx) + Math.abs(dy) <= 2) break;
+      var opts = Math.abs(dx) >= Math.abs(dy) ? [[Math.sign(dx), 0], [0, Math.sign(dy)]] : [[0, Math.sign(dy)], [Math.sign(dx), 0]], moved = false;
+      for (var q = 0; q < 2 && !moved; q++) { var nx = u.x + opts[q][0], ny = u.y + opts[q][1]; if ((opts[q][0] || opts[q][1]) && self.pass(u.mt, nx, ny) && !self.occ[ny * self.w + nx]) { self.occ[u.y * self.w + u.x] = null; u.x = nx; u.y = ny; self.occ[ny * self.w + nx] = u; moved = true; } }
+      if (!moved) break;
+    }
+    self.emit({ t: 'knock', id: u.id, x: u.x, y: u.y });
+  });
+  E.on = { k: k, t: C.dur, dur: C.dur, ids: pick.map(function (u) { return u.id; }), saved: [], dead: [] };
+  this._er = v; this.reDanger();
+  this.emit({ t: 'erase', id: v.id, k: k, ids: E.on.ids.slice(), dur: C.dur });
+};
+P.erGuard = function (u) {      // 감쌀 수 있는 사람: 가솔이면 그 가주, 가주면 다른 가주 (굳은 이는 못 감싼다)
+  var self = this;
+  if (u.role === 'merc') { var o = this.byId[u.owner]; return o && !o.dead && !o.erM ? [o] : []; }
+  return this.cmds().filter(function (c) { return c !== u && !c.erM; });
+};
+P.erSave = function (u, how, by) {
+  var K = this._er; if (!K || !u.erM) return;
+  var E = K.er; delete u.erM; E.on.saved.push(u.id); E.log.push([E.on.k, u.id, how]);
+  if (how === 'cover' && by) { var d = Math.round(by.mhp * DS.ERASE.coverHurt); by.hp = Math.max(1, by.hp - d); this.emit({ t: 'hit', id: by.id, v: d, type: 'dark', cover: 1 }); }
+  this.emit({ t: 'eraseSave', id: u.id, how: how, by: by ? by.id : null });
+};
+P.erTick = function (dt) {
+  var K = this._er, E = K.er, O = E.on, C = DS.ERASE, self = this;
+  if (!O) { this._er = null; return; }
+  O.ids.forEach(function (id) {
+    var u = self.byId[id]; if (!u || u.dead || !u.erM) return;
+    var g = self.erGuard(u).filter(function (c) { return dist(c, u) <= 1 && ((c.order && c.order.t === 'move') || c.holdT > self.t); })[0];      // 명령으로 와서 선 사람만 (도착하면 holdT 동안 그 자리)
+    if (g) { u.erM.cov += dt; if (u.erM.cov >= C.cover) self.erSave(u, 'cover', g); } else u.erM.cov = Math.max(0, u.erM.cov - dt);
+  });
+  O.t -= dt;
+  if (O.t > 0 && !K.dead) return;
+  this._er = null; E.on = null;
+  var n = 0;
+  O.ids.forEach(function (id) {
+    var u = self.byId[id]; if (!u || !u.erM) return;
+    delete u.erM; if (u.dead) return;
+    self._erK = true; self.kill(u, K); self._erK = false; O.dead.push(id); E.log.push([O.k, id, 'erased']); n++;
+  });
+  if (n && !K.dead) { K.hp = Math.max(1, Math.round(K.hp * (1 - C.hpCut * n))); K.atk = Math.round(K.atk * (1 - C.atkCut * n)); K.mag = Math.round(K.mag * (1 - C.atkCut * n)); K.gauge = 0; }      // 지운 이름의 무게에 잠깐 비틀거린다
+  this.emit({ t: 'eraseEnd', id: K.id, k: O.k, dead: O.dead, saved: O.saved });
+  if (!this.result && K.hp <= K.mhp * (C.th[E.k] == null ? -1 : C.th[E.k])) this.erHit(K);      // 깎인 체력이 벌써 다음 문턱 밑이면 곧바로
 };
 })();
 
@@ -15058,6 +15190,7 @@ V.frame = function (dt, evs) {
   if (this.vig) { g.imageSmoothingEnabled = true; g.drawImage(this.vig, 0, 0, this.W, this.H); g.imageSmoothingEnabled = false; }      // 지역의 빛 (늘인 작은 그림 한 장)
   if (this.flashA > 0.12) this.flashA = 0.12;      // r8: 번쩍임 상한 — 3배속에서 겹쳐 깜빡이지 않게
   if (this.flashA > 0) { g.fillStyle = 'rgba(255,255,255,' + this.flashA.toFixed(3) + ')'; g.fillRect(0, 0, this.W, this.H); this.flashA -= dt * 1.6; }      // 치명타·번개의 번쩍임
+  if (this.er || this.erDim > 0 || (this.erFx && this.erFx.length)) this.drawErase(g, dt);      // r17 boss: 이름 지우기 (실제 시간)
   this.drawText(g, dt);
   if (this.cer) for (var cid2 in this.cer) { this.drawCerText(g); break; }
   if (this.trans) this.drawTrans(g);
@@ -15962,6 +16095,67 @@ V.drawText = function (g, dt) {
     }
   }
 };
+// ── r17 boss: 「이름 지우기」 (30번 어스름의 왕) ── 실제 시간으로 그린다 (배속과 무관)
+//   erOn(o): 예고가 걸렸다 — o.ids(대상 유닛) · o.names · o.dur(실제 초) · o.king. 화면이 어두워지고, 대상 머리 위 이름이 점점 바랜다 (글자가 하나씩 회색으로 빠진다).
+//   erSaved(id): 표식이 걷혔다 — 이름이 금빛으로 돌아온다 · erOff(): 예고가 끝났다 · erSuck(id, name): 지워진 이의 이름 글자가 왕 쪽으로 빨려 든다.
+//   죽음 연출이 꺼져 있으면(설정) 어둠·빨려 듦은 옅게만, 표식은 그대로 (규칙에 필요한 정보라서).
+V.erOn = function (o) { this.er = { ids: o.ids.slice(), names: o.names || {}, dur: o.dur || 3, t: 0, king: o.king, saved: {}, on: true }; this.erDim = this.erDim || 0; this.shake = Math.max(this.shake, 0.35); };
+V.erSaved = function (id) { if (this.er) this.er.saved[id] = this.er.t; var v = this.vu[id]; if (v) { this.rings.push({ x: v.x, y: v.y + 0.35, t: 0, dur: 0.6, c: '#f6cf57', r: 16 }); this.burst(v.x, v.y - 0.3, ['#f6cf57', '#fff6d0'], 12, { up: 30, grav: -10, spd: 12, life: 0.8 }); } };
+V.erOff = function () { if (this.er) this.er.on = false; };
+V.erSuck = function (id, name) {
+  var v = this.vu[id], K = this.er && this.vu[this.er.king]; if (!v) return;
+  (this.erFx || (this.erFx = [])).push({ x0: v.x, y0: v.y, kx: K ? K.x : v.x, ky: K ? K.y - 1 : v.y - 3, t: -0.6, dur: 1.6, name: String(name || '') });
+};
+V.drawErase = function (g, dt) {
+  var E = this.er, fx = this.erFx, on = E && E.on, calmFx = !DS.deathFxOn || !DS.deathFxOn(), i, k;
+  this.erDim = Math.max(0, Math.min(1, (this.erDim || 0) + (on ? dt * 2.5 : -dt * 0.8)));
+  if (this.erDim > 0.01) {
+    var a = this.erDim * (calmFx ? 0.18 : 0.42);
+    g.fillStyle = 'rgba(8,6,18,' + a.toFixed(3) + ')'; g.fillRect(0, 0, this.W, this.H);
+    if (!calmFx) { var gr = g.createRadialGradient(this.W / 2, this.H / 2, Math.min(this.W, this.H) * 0.25, this.W / 2, this.H / 2, Math.max(this.W, this.H) * 0.7); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(20,10,30,' + (this.erDim * 0.55).toFixed(3) + ')'); g.fillStyle = gr; g.fillRect(0, 0, this.W, this.H); }
+  }
+  if (E) {
+    E.t += dt;
+    if (!on && E.t > E.dur + 1.2) { this.er = null; E = null; }
+  }
+  if (E) for (i = 0; i < E.ids.length; i++) {
+    var id = E.ids[i], v = this.vu[id]; if (!v || v.ds || v.dying >= 0) continue;
+    var sc = this.screenOf(v.x, v.y), nm = String(E.names[id] || v.u.mn || v.u.name || ''), sv = E.saved[id];
+    var f = Math.max(0, Math.min(1, E.t / E.dur)), y = sc.y - 30 * this.k / 2 - 12;
+    if (sv != null) {      // 걷혔다: 금빛으로 돌아와 잠깐 떠 있다가 사라진다
+      var q = E.t - sv; if (q > 1.4) continue;
+      g.globalAlpha = Math.max(0, 1 - q / 1.4); g.font = cvFont(12); label(g, nm, sc.x, y - q * 8, '#f6cf57', 12, 'rgba(20,16,30,.7)'); g.globalAlpha = 1; continue;
+    }
+    if (!on) continue;
+    // 고리: 발밑에서 맥박치며 좁아진다
+    var r = (10 + 6 * (1 - f)) * this.k / 2 + Math.sin(E.t * 9) * 1.5;
+    g.strokeStyle = 'rgba(167,161,194,' + (0.5 + 0.4 * Math.sin(E.t * 9)).toFixed(3) + ')'; g.lineWidth = 2; g.beginPath(); g.ellipse(sc.x, sc.y + 5 * this.k / 2, r, r * 0.4, 0, 0, Math.PI * 2); g.stroke();
+    // 이름: 글자가 앞에서부터 하나씩 바래 간다
+    g.font = cvFont(12); var w = g.measureText(nm).width, x0 = sc.x - w / 2, n = nm.length, gone = f * n;
+    g.fillStyle = 'rgba(20,16,30,.72)'; g.fillRect(x0 - 5, y - 9, w + 10, 17);
+    g.textBaseline = 'middle'; g.textAlign = 'left';
+    var cx = x0;
+    for (k = 0; k < n; k++) {
+      var ch = nm[k], cw = g.measureText(ch).width, fade = Math.max(0, Math.min(1, gone - k));
+      g.globalAlpha = 1 - fade * 0.8; g.fillStyle = fade > 0.5 ? '#6f6a80' : '#efe6d0';
+      g.fillText(ch, cx, y + (fade > 0 ? Math.sin(E.t * 14 + k) * fade : 0)); cx += cw;
+    }
+    g.globalAlpha = 1; g.textAlign = 'center';
+    // 남은 시간: 이름 밑 가는 줄
+    g.fillStyle = '#3a2d55'; g.fillRect(x0 - 5, y + 9, w + 10, 2); g.fillStyle = '#c7c2dc'; g.fillRect(x0 - 5, y + 9, (w + 10) * (1 - f), 2);
+  }
+  if (fx && fx.length) for (i = fx.length - 1; i >= 0; i--) {      // 빨려 드는 이름
+    var p = fx[i]; p.t += dt; if (p.t < 0) continue; if (p.t > p.dur) { fx.splice(i, 1); continue; }
+    var e = p.t / p.dur, ee = e * e, s0 = this.screenOf(p.x0, p.y0 - 1.2), s1 = this.screenOf(p.kx, p.ky);
+    g.font = cvFont(12);
+    for (k = 0; k < p.name.length; k++) {
+      var lag = Math.max(0, Math.min(1, ee * 1.25 - k * 0.06)), px = s0.x + (s1.x - s0.x) * lag + Math.sin(lag * 6 + k) * 10 * (1 - lag), py = s0.y + (s1.y - s0.y) * lag - Math.sin(lag * Math.PI) * 24;
+      g.globalAlpha = (1 - lag) * (calmFx ? 0.6 : 1); g.fillStyle = lag > 0.3 ? '#8d8a99' : '#efe6d0'; g.fillText(p.name[k], px + (k - p.name.length / 2) * 9 * (1 - lag), py);
+    }
+    g.globalAlpha = 1;
+  }
+};
+
 })();
 
 // ───────── 아이콘 (2.8) — 소모품·용병 물건·유물·장비의 작은 픽셀 그림 ─────────
@@ -16945,7 +17139,7 @@ var SFX = {
 // 2.7 까지는 효과음마다 크기가 제각각이었다(화살 −38dB·두드림 −43dB 가 배경음 −31dB 밑에 묻히고, 합일은 −22dB). 오프라인 렌더(DS.Audio.probe)로
 // 50ms 창의 최대 RMS 를 재어 갈래마다 같은 크기가 되게 곱한다: 조작 −32 · 전투 −27 · 치명타·폭발 −23 · 연출 −22 (dBFS, 압축기 앞). 배경음은 16초 RMS −38 로 곡끼리 맞춘다.
 var LVL = {"tap":3.63,"ok":1.95,"cancel":2.26,"step":1.3,"slash":2.26,"punch":2.04,"arrow":3.67,"magic":1.88,"skill":2.95,"hit":1.74,"crit":1.68,"miss":2.88,"die":2.14,"heal":2.95,"buff":1.95,"fire":3.2,"boom":1.3,"thunder":0.96,"water":2.29,"wind":3.35,"dark":2.42,"poison":3.31,"holy":2.6,"warn":2.63,"blink":2.37,"leap":2.69,"spawn":2.4,"sword":1.45,"phase":1.66,"level":3.71,"star":2.11,"win":2.37,"lose":1.97,"coin":2.26,"promo":2.09,"fuse":1.19,"pullHi":2.48,"relic":1.8,"mourn":1.62,"bossIn":2.02,"taunt":2.85};
-var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89};
+var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89,"erase":2.0};
 
 // ── 배경음: 16분음표 시퀀서 ──
 // 음 이름 → 주파수
@@ -16978,6 +17172,9 @@ var TRACKS = {
   // 승리 — 한 번만 울리는 짧은 곡
   victory: { bpm: 120, lead: pat('C5 - C5 C5 E5 - G5 - C6 - - - G5 - E5 - F5 - A5 - C6 - A5 - G5 - - - C6 - - -'),
     bass: pat('C3 - - - G2 - - - C3 - - - E3 - - - F2 - - - A2 - - - G2 - - - C3 - - -'), lv: 0.04, bv: 0.05, type: 'square', once: true },
+  // r17 boss: 이름 지우기 — 느리고 낮은 반음 맴돌기 (북 없이)
+  erase: { bpm: 56, lead: pat('E4 - F4 - E4 - - - D#4 - E4 - - - - - B3 - C4 - B3 - - - A#3 - B3 - - - - -'),
+    bass: pat('E1 - - - - - - - E1 - - - - - - - F1 - - - - - - - E1 - - - - - - -'), lv: 0.04, bv: 0.07, type: 'sine', echo: true },
   // 엔딩 — 따뜻한 장조
   ending: { bpm: 80, lead: pat('G4 - B4 - D5 - - - E5 - D5 - B4 - - - C5 - E5 - G5 - - - F#5 - E5 - D5 - - - G4 - B4 - D5 - - - G5 - F#5 - E5 - - - D5 - C5 - B4 - A4 - G4 - - - - - - -'),
     bass: pat('G2 - - - D3 - - - E2 - - - B2 - - - C3 - - - G2 - - - D3 - - - D2 - - - G2 - - - D3 - - - E2 - - - B2 - - - C3 - - - D3 - - - G2 - - - - - - -'), lv: 0.034, bv: 0.05, type: 'triangle', echo: true }
@@ -17347,6 +17544,8 @@ function startScenario(s) {
   var sim = new DS.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (Date.now() & 0xffff) + s.id, inv: sv.items, mode: 'scn' });
   G.sim = sim; G.scn = s; G.aim = null; G.bossId = null; G.pendPoi = null; G.ending = false; G.gain = { exp: 0, gold: 0, loot: [], relics: [] }; G.wasCombat = false; G.lost = [];
   G.goal = null; G.bcast = null; G.pendCamp = null; G.scnSaid = false; G.stats = { kills: {}, dmg: {} }; G.dangerOn = false; G.bearLost = [];
+  sim.heroId = 'c' + sv.hero; G.er = null; G.erased = []; G.erSavedN = 0; G.erMarkN = 0; erBandOff();
+  if (s.boss === 'herald') { sv.erN = (sv.erN || 0) + 1; sim.erSeed = [sv.hero, sv.name || '', (sv.eg && sv.eg.gen) || 1, sv.erN].join(':'); }      // r17 boss: 이름 지우기 대상은 저장 + 30번 시도 횟수로 정해진다 (같은 시도면 같은 사람, 다시 하면 다른 사람)
   if (sv.opt.refill !== false) DS.autoAssign(sv);
   if (DS.linBattleStart) DS.linBattleStart(sv);      // 갓 숨진 이를 관에 모실 때는 다음 싸움 전까지
   placeParty(sim, 6, 17, b.start);
@@ -17382,6 +17581,7 @@ function onWin() {
   if (rid) { if (!out.relic) out.relic = rid; rels.push(rid); }
   (G.gain.relics || []).forEach(function (id) { if (rels.indexOf(id) < 0) rels.push(id); });
   if (rels.length > 1) out.relics = rels.slice();
+  if (s.boss === 'herald') { sv.erLast = { g: (DS.egActive && DS.egActive(sv) && sv.eg && sv.eg.gen) || 1, names: (G.erased || []).slice(), saved: G.erSavedN || 0, marked: G.erMarkN || 0 }; }      // r17 boss: 맺음 낭독이 읽는다
   linEnd(true);      // 2.9 가계도: 쓰러진 지휘관은 숨을 거둔다 (예전: 간신히 일어났다) · 함께 이긴 부부의 정·출산 · 슬픔 판 수
   persist();
   setTimeout(function () {
@@ -17791,7 +17991,7 @@ function updateHud(now) {
     }
     else {
       var ch = sv.chars[me.ch], o = me.order, busy = sim.combat || G.gain.exp;
-      var doing = me.casting ? '시전 중' : me.saving && sim.combat ? '기술 준비' : o ? ({ move: '이동 중', attack: '공격 명령', skill: (SK[o.id] ? SK[o.id].name : '') + ' 예약', item: (DS.ITEMS[o.key] ? DS.ITEMS[o.key].name : '아이템') + ' 사용', hold: '자리 지킴' }[o.t]) : sim.combat ? (me.auto ? '자동 전투' : '수동 (명령 대기)') : '쉬는 중';
+      var doing = me.casting ? '시전 중' : me.saving && sim.combat ? '기술 준비' : o ? ({ move: '이동 중', attack: '공격 명령', skill: (SK[o.id] ? SK[o.id].name : '') + ' 예약', item: (DS.ITEMS[o.key] ? DS.ITEMS[o.key].name : '아이템') + ' 사용', hold: '자리 지킴', call: '이름을 부르는 중' }[o.t] || '명령') : sim.combat ? (me.auto ? '자동 전투' : '수동 (명령 대기)') : '쉬는 중';
       // 싸우는 동안은 짧게: 하는 일과 얻은 것만. 한가할 때는 단·호칭까지.
       putInfo(busy ? doing + (G.gain.exp && !fx.length ? ', EXP+' + G.gain.exp + ' G+' + G.gain.gold + (G.gain.loot && G.gain.loot.length ? ' 전리품' + G.gain.loot.length : '') : '') : DS.charTitle(ch) + ' Lv' + DS.lvOfL(ch.L) + ', ' + doing);
     }
@@ -18178,7 +18378,7 @@ function onEvents(evs) {
             if (u.role === 'boss') km.bk = (km.bk || 0) + 1;      // 보스를 잡은 전공
             if (u.role === 'boss') mercTalk(ku, 'kill', true); else if (Math.random() < 0.3) mercTalk(ku, 'kill');      // 보스를 잡았으면 꼭 한마디
             var kt1 = DS.mercTitle ? DS.mercTitle(km) || '' : '';
-            if (kt1 && kt1 !== kt0) { G.view.float(ku.x, ku.y, '「' + kt1 + '」', '#f6cf57', { dy: -24, life: 2.2, delay: 0.4 }); later((km.n || '') + '에게 별명이 붙었다. 「' + kt1 + '」', 3600); A('star'); }      // 전공 별명 (QA: 생겨도 알림이 없었다)
+            if (kt1 && kt1 !== kt0) { G.view.float(ku.x, ku.y, '「' + kt1 + '」', '#f6cf57', { dy: -24, life: 2.2, delay: 0.4 }); later((km.n || ku.name || '') + '에게 별명이 붙었다. 「' + kt1 + '」', 3600); A('star'); }      // 전공 별명 (QA: 생겨도 알림이 없었다)
           }
         }
         else if (u && u.role === 'merc' && u.mid && !e.flee) {      // 용병은 쓰러지면 영영 잃는다
@@ -18215,6 +18415,9 @@ function onEvents(evs) {
       case 'aggro': u = sim.byId[e.id]; if (u && u.role === 'boss' && u.obj && !u.fake && G.bossId !== u.id) showBoss(u); break;
       case 'phase': u = sim.byId[e.id]; if (u) { showBoss(u); banner(u.name, '쓰러뜨려도 끝이 아니었다', 2600); } break;
       case 'wave': banner(e.text || '증원!', '', 1800); A('warn'); break;
+      case 'erase': erBegin(e); break;      // r17 boss: 어스름의 왕의 이름 지우기
+      case 'eraseSave': erSaved(e); break;
+      case 'eraseEnd': erEnd(e); break;
       case 'say': if (e.id === G.bossId && !(G.bcast && G.bcast.tid)) G.bcast = { name: e.text, until: performance.now() + 1500 }; break;
       case 'cast':
         if (e.id === G.bossId && SK[e.sk]) G.bcast = { tid: e.tid, name: SK[e.sk].name, dur: e.dur, t0: sim.t };
@@ -18317,6 +18520,78 @@ function fuseNews(ch) {
   else banner(DS.charName(ch) + ' 7단 Lv10', F.name + ' ' + (F.members.length - st.miss.length - st.low.length) + ' / ' + F.members.length + (sv.crest ? '' : ', 맹세의 깃대는 아직'), 2800);
   if (!G.scn) updateQuest();
 }
+// ───────── r17 boss: 이름 지우기 (30번 어스름의 왕) ─────────
+// 엔진(engine.js erStart…)이 'erase' → 'eraseSave'* → 'eraseEnd' 를 보낸다. 여기서는 화면 위 띠(이름 · 남은 시간 · 감싼다/부른다), 왕의 한마디, 곡, 외침.
+//   띠의 단추: 「감싼다」 = 그 사람을 감쌀 수 있는 가장 가까운 가주에게 그 자리로 가라는 이동 명령 · 「부른다」 = 대장의 이름 부르기(한 싸움에 한 번, 틱이 차는 대로).
+function erFill(t, o) { return fill(String(t || '').replace(/\{(\w+)\}/g, function (m, k) { return o && o[k] != null ? o[k] : m; })); }
+function erNm(u) { return u ? String(u.mn || u.name || '') : ''; }
+function erBandEl() { var el = $('#erase'); if (!el) { var sg = $('#s-game'); if (!sg) return null; el = document.createElement('div'); el.id = 'erase'; el.setAttribute('role', 'alert'); sg.appendChild(el); } return el; }
+function erBandOff() { var el = $('#erase'); if (el) { el.classList.remove('on'); el.innerHTML = ''; } }
+function erBegin(e) {
+  var sim = G.sim, sv = G.save, T = DS.ERASE_TXT, K = sim.byId[e.id], gen = (DS.egActive && DS.egActive(sv) && sv.eg && sv.eg.gen) || 1;
+  var us = e.ids.map(function (id) { return sim.byId[id]; }).filter(Boolean), names = {}, list = us.map(function (u) { names[u.id] = erNm(u); return erNm(u); });
+  G.er = { k: e.k, ids: e.ids.slice(), names: names, king: e.id, t0: performance.now(), real: e.dur / DS.ERASE.slow, saved: {}, how: {} };
+  G.erMarkN += us.length;
+  var line = (gen > 1 && T.kingGen ? T.kingGen : T.king)[e.k % T.king.length];
+  if (K) G.view.float(K.x, K.y, line, '#c7c2dc', { dy: -30, life: 2.6 });
+  if (G.view.erOn) G.view.erOn({ ids: e.ids, names: names, dur: G.er.real, king: e.id });
+  DS.Audio.bgm('erase'); A('dark'); setTimeout(function () { A('phase'); }, 120);
+  var el = erBandEl(); if (!el) return;
+  var first = !sv.seen.erase; sv.seen.erase = 1;
+  el.innerHTML = '<p class="ek">' + esc(line) + '</p><b class="et">' + esc(erFill(T.band, { list: list.join(', ') })) + '</b><i class="ebar"><u></u></i>' +
+    '<div class="erow">' + us.map(function (u) { return '<span class="echip" data-er="' + u.id + '"><em>' + esc(names[u.id]) + '</em><button class="ecov" data-cov="' + u.id + '">' + esc(T.cover) + '</button><button class="ecall" data-call="' + u.id + '">' + esc(T.call) + '</button></span>'; }).join('') + '</div>' +
+    (first ? '<small class="ehint">' + esc(T.hint) + '</small>' : '');
+  el.classList.remove('done'); el.classList.add('on');
+  Array.prototype.forEach.call(el.querySelectorAll('[data-cov]'), function (b) { b.addEventListener('click', function () { DS.Audio.unlock(); erCover(b.getAttribute('data-cov')); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-call]'), function (b) { b.addEventListener('click', function () { DS.Audio.unlock(); erCall(b.getAttribute('data-call')); }); });
+  erBandTick();
+}
+function erCover(id) {
+  var sim = G.sim, u = sim && sim.byId[id]; if (!u || !u.erM || !sim._er) return;
+  var gs = sim.erGuard(u).filter(function (c) { return !c.dead && !(c.order && c.order.t === 'call'); }).sort(function (a, b) { return (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y)); });
+  if (!gs.length) { A('cancel'); toast(DS.ERASE_TXT.noGuard, 1600); return; }
+  sim.setOrder(gs[0].id, { t: 'move', x: u.x, y: u.y }); G.er.how[id] = 'cover:' + gs[0].id; A('ok');
+  G.view.float(gs[0].x, gs[0].y, erFill(DS.ERASE_TXT.go, { a: erNm(u) }), '#f6cf57', { dy: -16, life: 1.4 });
+}
+function erCall(id) {
+  var sim = G.sim, u = sim && sim.byId[id], h = sim && sim.erHero(), K = sim && sim._er; if (!u || !u.erM || !K) return;
+  if (K.er.called || !h || h.dead || h.erM) { A('cancel'); toast(DS.ERASE_TXT.callUsed, 1600); return; }
+  sim.setOrder(h.id, { t: 'call', tid: id }); G.er.callT = id; A('ok');
+}
+function erBandTick() {
+  var E = G.er, el = $('#erase'), sim = G.sim; if (!E || !el || !sim) return;
+  var K = sim._er, O = K && K.er.on, f = O ? Math.max(0, O.t / O.dur) : 0, bar = $('.ebar u', el); if (bar) bar.style.width = (f * 100).toFixed(1) + '%';
+  if (!O) return;
+  var h = sim.erHero(), callable = !K.er.called && h && !h.dead && !h.erM;
+  Array.prototype.forEach.call(el.querySelectorAll('.echip'), function (c) {
+    var id = c.getAttribute('data-er'), u = sim.byId[id], live = u && !u.dead && u.erM, cb = $('.ecall', c), vb = $('.ecov', c);
+    c.classList.toggle('saved', !!E.saved[id]); c.classList.toggle('gone', !u || (u.dead && !E.saved[id]));
+    if (vb) vb.disabled = !live || !sim.erGuard(u).length;
+    if (cb) { cb.disabled = !live || !callable || (E.callT && E.callT !== id); var pend = E.callT === id && live && callable; cb.classList.toggle('pend', !!pend); cb.textContent = pend ? DS.ERASE_TXT.calling + ' ' + Math.floor(h.gauge) + '/' + DS.ERASE.call : DS.ERASE_TXT.call; }
+  });
+}
+function erSaved(e) {
+  var sim = G.sim, u = sim.byId[e.id], by = e.by && sim.byId[e.by], T = DS.ERASE_TXT; if (!G.er) return;
+  G.er.saved[e.id] = e.how; G.erSavedN++;
+  if (G.view.erSaved) G.view.erSaved(e.id);
+  if (u) G.view.float(u.x, u.y, T.saved[e.how] || T.saved.heal, '#f6cf57', { dy: -26, life: 1.8 });
+  if (by && e.how === 'call') G.view.float(by.x, by.y, '「' + erNm(u) + '」', '#fff3c4', { dy: -20, life: 2.2, big: true });
+  A(e.how === 'heal' ? 'heal' : 'star'); erBandTick();
+}
+function erEnd(e) {
+  var sim = G.sim, T = DS.ERASE_TXT, el = $('#erase'), E = G.er; if (!E) return;
+  var names = e.dead.map(function (id) { return E.names[id]; }).filter(Boolean);
+  G.erased = (G.erased || []).concat(names);
+  if (G.view.erOff) G.view.erOff();
+  if (el) { var b = $('.et', el); if (b) b.textContent = names.length ? erFill(T.gone, { list: names.join(', ') }) : T.none; el.classList.add('done'); Array.prototype.forEach.call(el.querySelectorAll('button'), function (x) { x.disabled = true; }); setTimeout(function () { if (G.er === E || !G.er) { erBandOff(); } }, 2600); }
+  e.dead.forEach(function (id, i) {      // 남은 사람이 짧게 그 이름을 외친다 (같은 가문 먼저)
+    var dv = G.view.vu[id], du = dv && dv.u, own = du && (du.role === 'merc' ? du.owner : du.id);
+    var near = sim.units.filter(function (x) { return !x.dead && x.side === 'ally' && (x.role === 'merc' || x.role === 'cmd') && x.id !== id && x.ch !== G.save.hero; }).sort(function (a, b) { return ((a.owner === own || a.id === own) ? 0 : 1) - ((b.owner === own || b.id === own) ? 0 : 1); })[0];
+    if (near) G.view.float(near.x, near.y, erFill(T.shout[(i + e.k) % T.shout.length], { a: E.names[id] }), '#efe6d0', { dy: -16, life: 2.4, delay: 0.9 + i * 0.5 });
+  });
+  if (!sim.result) setTimeout(function () { if (G.sim === sim && !sim.result && !sim._er) DS.Audio.bgm('boss'); }, 2200);
+  G.er = null;
+}
 // r16 fx: 우리 편 사람이 영영 쓰러지는 순간의 장면 (view.deathScene) — 나이·성격·깃발을 실어 보낸다. 그린 시간(ms), 안 그리면 0
 function deathFx(u, e, rec, flag, name) {
   if (!G.view || !G.view.deathScene) return 0;
@@ -18324,7 +18599,8 @@ function deathFx(u, e, rec, flag, name) {
   try { var dr = DS.unitDress ? DS.unitDress(u) : null; age = dr && dr.g || ''; } catch (x) { age = ''; }
   if (!age && rec && rec.eld) age = 'elder';
   try { var pk = rec && DS.mercPersona ? DS.mercPersona(rec).key : ''; light = pk === 'chatty' || pk === 'brag'; } catch (x) { light = false; }
-  return G.view.deathScene(u.id, { by: e.by, name: name || u.name, flag: !!flag && u.role === 'cmd', flagCol: u.flagCol, age: age, light: light });
+  if (e && e.erase && G.view.erSuck) G.view.erSuck(u.id, name || u.mn || u.name);      // r17 boss: 지워진 이름이 왕 쪽으로 빨려 든다
+  return G.view.deathScene(u.id, { by: e.by, name: name || u.name, flag: !!flag && u.role === 'cmd', flagCol: u.flagCol, age: age, light: light, force: e && e.erase ? 'dusk' : undefined });
 }
 // 4.0: 깃발을 든 사람이 쓰러졌다 — 그 자리에서 확정 (명부에서 빠짐 → 추모 기록(들던 깃발 f) → 가계 기록 → 가족의 비탄 · 아홉이면 그 집의 다음 사람). 잃은 사람을 돌려준다
 function bearerFell(u, bm, quiet) {
@@ -18438,11 +18714,13 @@ function loop(now) {
   }
   if (sim) {
     var slw = G.view && G.view.slowMul ? G.view.slowMul() : 1;      // r16 fx: 죽음 연출 동안 잠깐 느리게 (실제 시간으로 짧게)
-    if (!G.pause && G.hold === 0 && !G.ending) { sim.update(dt * slw * Math.max(1, Math.min(3, G.save.opt.speed || 1))); if (DS.ageAdvance) DS.ageAdvance(G.save, dt * slw * Math.max(1, Math.min(3, G.save.opt.speed || 1))); }      // 나이: 세계 달력은 게임 속 시간(배속 포함)으로 흐른다
+    var spdM = sim._er ? DS.ERASE.slow : Math.max(1, Math.min(3, G.save.opt.speed || 1));      // r17 boss: 이름 지우기 예고 동안은 배속과 상관없이 실제 시간보다 조금 느리게
+    if (!G.pause && G.hold === 0 && !G.ending) { sim.update(dt * slw * spdM); if (DS.ageAdvance) DS.ageAdvance(G.save, dt * slw * Math.max(1, Math.min(3, G.save.opt.speed || 1))); }      // 나이: 세계 달력은 게임 속 시간(배속 포함)으로 흐른다
     else if (G.ending && sim.result) sim.acc = 0;
     evs = sim.drain();
     G.view.frame(dt, evs);
     if (evs.length) onEvents(evs);
+    if (G.er) erBandTick();
     if (now - G.hudT > 90) { G.hudT = now; updateHud(now); }
     checkExit();
   }
@@ -18461,7 +18739,7 @@ DS.startGame = function () {
     $('#quest').addEventListener('click', questGo);
     $('#bMenu').addEventListener('click', function () { A('tap'); DS.openMenu('party'); });
     $('#bMap').addEventListener('click', function () { A('tap'); DS.openMenu('map'); });
-    $('#bPause').addEventListener('click', function () { G.softUntil = 0; G.pause = !G.pause; A('tap'); renderSys(); if (G.pause) toast('멈춤. 멈춘 채로 명령을 내린다'); });
+    $('#bPause').addEventListener('click', function () { if (G.sim && G.sim._er && !G.pause) { A('cancel'); toast(DS.ERASE_TXT.noPause, 1800); return; } G.softUntil = 0; G.pause = !G.pause; A('tap'); renderSys(); if (G.pause) toast('멈춤. 멈춘 채로 명령을 내린다'); });
     $('#bSpeed').addEventListener('click', function () { sv = G.save; sv.opt.speed = sv.opt.speed >= 3 ? 1 : (sv.opt.speed || 1) + 1; A('tap'); renderSys(); });
     $('#bAutoU').addEventListener('click', function () {
       var me = G.sim.byId[G.sel]; if (!me) return;
@@ -21811,6 +22089,7 @@ DS.egCloseLines = function (g, s) {
   var e = E(s), P = LP(s), t0 = e.t0 || 0, names = [], seen = {}, twice = [], lg = s.lin.log || [], fail = e.call && e.call.g === g && e.call.used === 1 && !e.call.ok ? e.call.pid : 0, r = g - 2, hn = headNm(s);
   if (fail && P[fail]) { names.push(nm(s, fail)); seen[fail] = 1; }
   lg.forEach(function (ev) { if (ev && ev.t === 'death' && (ev.tm || 0) >= t0 && P[ev.a] && !seen[ev.a]) { seen[ev.a] = 1; names.push(nm(s, ev.a)); if (P[ev.a].rv && P[ev.a].st !== 'live') twice.push(nm(s, ev.a)); } });
+  if (s.erLast && s.erLast.g === g && s.erLast.names && s.erLast.names.length && DS.ERASE_TXT) out.push(DS.ERASE_TXT.close(s.erLast.names));      // r17 boss: 그 대 귀환전에서 지워진 이름부터
   if (names.length) { out = out.concat(lines('close.call', {})); var more = names.length - 6; out.push(names.slice(0, 6).join('. ') + '.' + (more > 0 ? fill(txt('close.more') || ', 그 밖에 {k}', { k: numN(more) }) : '')); out = out.concat(lines('close.light', {}, r)); var fa = names[fail && P[fail] ? 1 : 0]; if (fa) out = out.concat(lines('close.thank', { a: fa }, r)); }
   else out = out.concat(lines('close.none', {}), lines('close.noneFlee', {}));
   if (fail && P[fail]) { out = out.concat(lines('close.back', {})); lines('close.wait', {}, h2(fail, g, 13) * 3).forEach(function (l) { out.push(typeof l === 'object' ? l : { w: nm(s, fail), t: [l] }); }); }
