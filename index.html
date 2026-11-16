@@ -5156,11 +5156,11 @@ var DS = globalThis.DS = globalThis.DS || {};
 DS.SEX = { m: { name: '남', sym: '♂' }, f: { name: '여', sym: '♀' } };
 // r13 가문명: 성은 여러 문화의 유명한 가문명(한국어 널리 쓰는 표기, 2~6자). 이름만 빌린다 — 원작 인물·줄거리는 가져오지 않는다.
 //   표시는 「이름 가문명」(DS.snName: 「불꽃 스타크」), 집은 「스타크 가문」(DS.houseOf). 옛 시대(4.0 전 저장)의 한 글자 성도 같은 꼴로 보인다(「불꽃 모」).
-//   아홉 집·세 마스터 성(아래 LIN_HOUSE)은 풀에 넣지 않는다. 1.0.0: 합일 가문은 타르가르옌·아트레이데스·우치하 (사용자 「대표성이 있어야」) — 풀에서 뺐다. 죠스타는 풀에 남는다
+//   아홉 집·세 마스터 성(아래 LIN_HOUSE)은 풀에 넣지 않는다. 1.0.0: 합일 가문은 타르가르옌·아트레이데스·죠스타 (사용자 「대표성이 있어야」, 「죠스타는 괜찮다」) — 앞의 둘은 풀에서 뺐다. 죠스타는 풀에도 남는다
 DS.SURNAME_SRC = [      // [묶음, 성들] — 「가문의 성」 창이 묶음별로 보여 준다
   ['판타지 드라마', ['스타크', '바라테온', '타이렐', '마르텔', '그레이조이']],
   ['슈퍼히어로', ['웨인', '켄트', '파커', '스트레인지', '배너']],
-  ['만화, 애니', ['조르딕', '휴우가', '우즈마키', '아커만', '야가미', '노하라', '죠스타']],
+  ['만화, 애니', ['우치하', '조르딕', '휴우가', '우즈마키', '아커만', '야가미', '노하라', '죠스타']],
   ['게임', ['벨몬트', '레드필드', '크로프트', '윈드러너', '마리오', '레이너']],
   ['고전 문학', ['몬터규', '캐퓰렛', '카라마조프', '다아시', '바스커빌', '홈즈']],
   ['판타지, SF 소설', ['말포이', '위즐리', '배긴스', '하코넨']],
@@ -5168,7 +5168,7 @@ DS.SURNAME_SRC = [      // [묶음, 성들] — 「가문의 성」 창이 묶�
 ];
 DS.SURNAMES = DS.SURNAME_SRC.reduce(function (a, g) { return a.concat(g[1]); }, []);
 // 아홉 집·세 마스터의 성 (주인공 가문은 save.lin.sur). 각 집의 이야기 속 역할과 맞물리는 이름 — 표는 r13/names.md
-DS.LIN_HOUSE = { inf: '로저스', cav: '라니스터', fly: '스카이워커', mar: '스패로우', pike: '프레이', arc: '퀸', cle: '센주', mon: '카마도', mag: '그레인저', sha: '아담스', bm: '타르가르옌', tm: '아트레이데스', mm: '우치하' };
+DS.LIN_HOUSE = { inf: '로저스', cav: '라니스터', fly: '스카이워커', mar: '스패로우', pike: '프레이', arc: '퀸', cle: '센주', mon: '카마도', mag: '그레인저', sha: '아담스', bm: '타르가르옌', tm: '아트레이데스', mm: '죠스타' };
 // 4.0 까지의 집 성 — 옛 저장의 아홉 집 사람을 새 이름으로 옮길 때만 쓴다 (DS.linFix)
 DS.LIN_HOUSE_OLD = { inf: '한', cav: '백', fly: '하', mar: '해', pike: '도', arc: '류', cle: '서', mon: '진', mag: '윤', sha: '모', bm: '강', tm: '여', mm: '설' };
 // 표시 형식 하나: 이름 + 띄어 쓰기 + 가문명 (성이 없으면 이름만)
@@ -5847,7 +5847,7 @@ function linSurMove(s, Lr) {
 }
 function linHouseMove(s, Lr) {
   var O = DS.LIN_HOUSE_OLD, N = DS.LIN_HOUSE; if (!O || !N) return;
-  var V = { bm: '엘릭', tm: '템페스트', mm: '죠스타' };      // 1.0.0: 합일 가문 옛 이름 → 새 이름
+  var V = { bm: '엘릭', tm: '템페스트', mm: '우치하' };      // 1.0.0: 합일 가문 옛 이름 → 새 이름
   function mv(sn, key) { return key && N[key] && ((O[key] && sn === O[key]) || (V[key] && sn === V[key])) ? N[key] : sn; }
   for (var k in Lr.P) { var p = Lr.P[k]; if (!p || typeof p !== 'object') continue;
     if ((p.cast || p.hof) && !p.hb) { p.sn = mv(p.sn, p.cast || p.hof); continue; }      // 대장 집 핏줄 아이가 맡아 든 경우(hb)는 대장 성이라 둔다
@@ -6750,7 +6750,7 @@ DS.flagNameOld = fn0;      // 병과로 부르던 옛 이름 (「보병 깃발�
 // r20 house: 가문 마크 — 열세 가문(아홉 집 + 세 합일 가문 + 맹주 가문)의 문장. 화면에서만 쓰는 인라인 SVG 문자열.
 //   DS.houseCrest(cls, size, opt)  → '<svg class="crest" …>'   opt: { lord: 1 } 맹주 가문(작은 왕관), { title: '…' } 읽기 글
 //   DS.houseCrestOf(s, ch, size)   → 그 가문(save.chars 한 줄)의 문장. 대장 가문이면 lord
-// 모양: 아홉 집은 방패, 합일 가문(타르가르옌·아트레이데스·우치하)은 금테 두 겹의 둥근 방패. 맹주 가문은 대장 병과의 문장에 금관을 얹는다
+// 모양: 아홉 집은 방패, 합일 가문(타르가르옌·아트레이데스·죠스타)은 금테 두 겹의 둥근 방패. 맹주 가문은 대장 병과의 문장에 금관을 얹는다
 //   (대장 가문이 곧 그 병과의 집이라 같은 문장이 둘로 겹칠 일이 없다 — 병과 그림은 그대로 두고 「맹주」만 왕관으로 알린다).
 // 32×32 격자에 그린다. 16px 에서는 1칸 = 0.5px — 그림은 굵은 면 위주로, 가는 선은 쓰지 않는다. build.js 에서 banner 뒤.
 var DS = globalThis.DS = globalThis.DS || {};
@@ -6801,7 +6801,7 @@ var ART = {
   bm: function (c, f) { return '<path d="M16 5L18 8.4V20H14V8.4Z" fill="' + c + '"/><rect x="10" y="20" width="12" height="2.4" rx="1" fill="' + c + '"/><rect x="15" y="22.4" width="2" height="3.6" fill="' + c + '"/><circle cx="16" cy="27" r="1.6" fill="' + c + '"/><path d="M13.4 12.6C11 12 8.6 10.2 7.6 7.6C9.6 8.6 11.6 9 13.4 9ZM18.6 12.6C21 12 23.4 10.2 24.4 7.6C22.4 8.6 20.4 9 18.6 9Z" fill="' + c + '"/>'; },
   // 아트레이데스(수군·창병·궁병 합일): 번개
   tm: function (c, f) { return '<path d="M19 5L10.4 17.6H15.4L12.8 27.6L22.2 13.6H17.2L20.6 5Z" fill="' + c + '"/>'; },
-  // 우치하(승려·무도가·법사·주술사 합일): 다섯 갈래 별
+  // 죠스타(승려·무도가·법사·주술사 합일): 다섯 갈래 별
   mm: function (c, f) { var p = []; for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 4.2 : 10; p.push((16 + Math.cos(a) * r).toFixed(1) + ' ' + (17 + Math.sin(a) * r).toFixed(1)); } return '<path d="M' + p.join('L') + 'Z" fill="' + c + '"/>'; }
 };
 var CROWN = '<path d="M9.5 6.6L8.6 0.8L12.4 3.6L16 0L19.6 3.6L23.4 0.8L22.5 6.6Z" fill="' + GOLD + '" stroke="' + EDGE + '" stroke-width="1" stroke-linejoin="round"/>';
