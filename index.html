@@ -3910,6 +3910,22 @@ html.calm .ar-ic, html.calm .ar-go { transform: none !important; transition: non
 .tmb .tmk { font-style: normal; font-size: var(--fs-s); color: var(--dim, #ab9f86); margin-right: 6px; }
 .tmb b { font-weight: 600; }
 .rkl li.on .rkg { color: #2d5a1a; }
+/* r42 (2.0.0): 사람마다 단·레벨, 가문 공훈 */
+.rkl.v.t10 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ptier { display: inline-flex; align-items: baseline; gap: 2px; margin-right: 6px; padding: 1px 6px; border-radius: 9px; font-size: 11px; font-weight: 600; color: #1b1611; background: #d9b66a; vertical-align: middle; }
+.ptier i { font-style: normal; font-weight: 400; font-size: 10px; }
+.ptier.vtag { color: #1b1611; }
+.hmbox { margin: 4px 0 2px; display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 6px; }
+.hmbox > b { font-size: 12px; }
+.hmbox > small { grid-column: 1 / -1; font-size: 10.5px; color: var(--mute, #b9ab90); }
+.hmbox > .vet { grid-row: 1; }
+.hmbox .bar, .hmbox .fx2 { grid-column: 1 / -1; }
+.hch { position: relative; }
+.hch .hcl { position: absolute; top: 1px; right: 2px; font-style: normal; font-size: 8.5px; line-height: 10px; color: #f6e6b8; text-shadow: 0 1px 0 #000; }
+.hgv { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; color: var(--mute, #b9ab90); }
+.hgc .hgh .hgv small { font-size: 9.5px; }
+.row.fupick .fusp { flex: none; display: inline-flex; align-items: center; }
+.row.fupick .fusp canvas, .row.fupick .fusp img { max-height: 30px; width: auto; image-rendering: pixelated; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -4686,10 +4702,20 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '1.4.0';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '4.4.0';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.0.0';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '5.0.0';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.0.0', date: '2026-11-18', tag: '안내', title: '새 시대',
+    lead: '사람이 스스로 강해지는 시대가 열렸습니다. 이전 기록은 보관하고 새로 시작합니다.',
+    items: [
+      ['변경', '단과 레벨은 이제 사람마다 따로 오릅니다. 맹주, 가주, 가솔 모두 싸운 만큼 강해지고, 모습과 기술도 제 단을 따릅니다.'],
+      ['변경', '공훈은 가문의 것입니다. 가문이 싸우고 이길수록 공훈 계급이 오르고, 그 가문의 가주와 가솔이 강해집니다.'],
+      ['변경', '합일은 7단 Lv10에 이른 세 사람이 함께 8단에 오릅니다.'],
+      ['변경', '다른 가문 사람이 맹주를 이으면 그 가문이 맹주 가문이 됩니다.'],
+      ['변경', '타고난 기질은 단이 오를 때마다 자랍니다. 맹주의 필살기는 5단과 8단에 세지고, 그 뒤 별이 붙습니다.'],
+      ['안내', '이전 판의 저장은 보관되며 이어 하지 않습니다. 새로 시작해 주세요.']
+    ] },
   { ver: '1.4.0', date: '2026-11-17', tag: '업데이트', title: '연무장',
     lead: '조이스틱으로 움직이고, 사람마다 타고난 기질이 생겼습니다. 마을에 연무장이 열렸습니다.',
     items: [
@@ -4846,7 +4872,7 @@ DS.BAL = { ehp: 1.5, eatk: 0.75, edef: 1.0, exp: 1.0, gold: 1.0, bench: 0.05, bo
 DS.tierOfL = function (L) { return Math.min(DS.MAX_TIER, Math.floor((L - 1) / DS.LV_PER_TIER) + 1); };
 DS.lvOfL = function (L) { return (L - 1) % DS.LV_PER_TIER + 1; };
 // 단이 오를수록 한 레벨에 드는 경험치가 가파르게 는다
-DS.EXP_TIER = [1.1, 2.09, 2.62, 3.14, 3.76, 4.39, 5.02, 5.64, 6.48, 7.11, 7.73];      // 2.8.0: 자동 지휘관 기술·용병 행동으로 판이 빨라진 만큼 2.7.0 의 1.1배 — 자동 플레이 4시드 5.7~6.5시간 (tools/balance.js)
+DS.EXP_TIER = [1.1, 2.09, 2.62, 3.3, 4.2, 5.6, 6.8, 8.4, 9.4, 10.0, 10.8];      // r42 (2.0.0): 사람마다 경험치를 받고 합일이 사람 셋이라 5단부터 가파르게 — 봇 3시드 3.7~4.5시간 (1.4.0: 4.3~4.6)
 DS.expNeed = function (L) { return Math.round((30 + 17 * L) * DS.EXP_TIER[DS.tierOfL(L)]); };
 // ⑮ 합일: 7단 10레벨 가문 셋(1.0.1: 아무 셋)이 하나로 합쳐지지 않고 각각 8단(L71~)으로 함께 오른다. 8단 뒤의 모습·기술은 제 계열 마스터의 것. 「오른 깃발」 = 마스터 아닌 병과로 L > 70
 DS.risen = function (ch) { return !!ch && !DS.CLASSES[ch.cls].master && ch.L > 70; };
@@ -4984,6 +5010,23 @@ DS.charSkills = function (ch) {
   return out;
 };
 
+// ───────── r42 가문 공훈 (가문의 레벨) ─────────
+// 가문 줄 ch.hx = 공훈 점수. 그 가문 사람(맹주·가주·가솔)이 싸워 세운 공이 가문에 쌓인다. 계급 이름은 옛 공훈 사다리 그대로 (신참 … 불멸).
+//   가주(맹주) 능력치 +pct %, 가솔 ×mul. 막사 사람은 가문이 없어 공훈을 쌓지 않는다.
+DS.HVET = [{ at: 0, pct: 0, mul: 1 }, { at: 100, pct: 4, mul: 1.06 }, { at: 350, pct: 8, mul: 1.12 }, { at: 900, pct: 12, mul: 1.18 }, { at: 1700, pct: 16, mul: 1.25 }, { at: 4000, pct: 20, mul: 1.33 }];      // 숙련 ≈ 3번 · 고참 ≈ 6번 · 정예 ≈ 12번 · 용사 ≈ 20번 · 불멸 ≈ 8단 준비 뒤 (봇)
+DS.hRankX = function (x) { var r = 0; for (var i = 0; i < DS.HVET.length; i++) if ((+x || 0) >= DS.HVET[i].at) r = i; return r; };
+DS.hRank = function (ch) { return ch ? DS.hRankX(ch.hx) : 0; };
+DS.hName = function (r) { return (DS.VET[r] || DS.VET[0]).name; };
+DS.hPct = function (ch) { return DS.HVET[DS.hRank(ch)].pct; };
+DS.hMul = function (ch) { return DS.HVET[DS.hRank(ch)].mul; };
+DS.hNext = function (ch) { var x = +(ch && ch.hx) || 0, r = DS.hRankX(x), nx = DS.HVET[r + 1]; return nx ? { name: DS.hName(r + 1), at: nx.at, from: DS.HVET[r].at, x: x } : null; };
+DS.hAdd = function (s, ch, pts) {      // 돌려주는 것: 계급이 올랐으면 { ch, from, to }, 아니면 null
+  if (!ch || !(pts > 0)) return null;
+  var r0 = DS.hRank(ch); ch.hx = Math.round(((+ch.hx || 0) + pts) * 10) / 10;
+  var r1 = DS.hRank(ch); if (r1 > r0) { var o = { ch: ch, from: r0, to: r1 }; (DS.hUps || (DS.hUps = [])).push(o); return o; }
+  return null;
+};
+
 // ───────── 용병 ─────────
 DS.mercTypes = function (cls) { var c = DS.CLASSES[cls]; return (c.mercs || [c.merc]).concat(DS.BIG_MATCH[cls] || []); };
 DS.baseMercTypes = function (cls) { var c = DS.CLASSES[cls]; return c.mercs || [c.merc]; };
@@ -4994,7 +5037,7 @@ DS.mercTitleInfo = function (m) {
   if (!m) return null;
   for (var i = 0; i < DS.MERC_TITLES.length; i++) {
     var T = DS.MERC_TITLES[i], N = T.need, ok = m.nk === T.id;
-    if (!ok && N) ok = N.weed ? (m.g === 1 && DS.vetRank(m.x) >= 4) : ((+m[N.k ? 'k' : N.b ? 'b' : N.bk ? 'bk' : 'sv'] || 0) >= (N.k || N.b || N.bk || N.sv));
+    if (!ok && N) ok = N.weed ? (m.g === 1 && DS.tierOfL(DS.pL(m)) >= 5) : ((+m[N.k ? 'k' : N.b ? 'b' : N.bk ? 'bk' : 'sv'] || 0) >= (N.k || N.b || N.bk || N.sv));
     if (ok) return T;
   }
   return null;
@@ -5012,14 +5055,14 @@ DS.mercCall = function (m) { var t = DS.mercTitle(m); return (t ? t + ' ' : '') 
 DS.mercName = function (m) { var c = DS.mercCall(m); return (c ? c + ', ' : '') + DS.GRADES[m.g].name + ' ' + DS.MERCS[m.type].name; };
 // 추모 기록 한 줄 (game.js 가 용병을 잃을 때 save.fallen 에 넣는다). 별명·버릇·특성까지 남긴다.
 DS.fallenRecord = function (m, at) {
-  var f = { n: m.n, type: m.type, g: m.g, x: m.x || 0, k: m.k || 0, b: m.b || 0, at: at || '' }, t = DS.mercTitle(m);
+  var f = { n: m.n, type: m.type, g: m.g, L: DS.pL(m), k: m.k || 0, b: m.b || 0, at: at || '' }, t = DS.mercTitle(m);
   if (t) f.nk = t; if (m.t) f.t = m.t; if (m.q) f.q = m.q; if (m.bk) f.bk = m.bk;
   if (m.lw) f.lw = String(m.lw).slice(0, 24); if (m.pid) f.pid = m.pid; if (m.id) f.id = m.id; if (m.pk) f.pk = m.pk;      // r32: 마지막 한마디 · 가계도 고리 · 성격 씨앗
   return f;
 };
 // r32 추모 목록 정리: 이름난 이(공훈 「숙련」 이상)·가계도에 걸린 이·가주였던 이·아홉 집 사람은 남기고(최대 keep), 그 밖은 최근 rest 명. 차례는 쓰러진 순서 그대로
 DS.FALLEN = { keep: 240, rest: 30 };
-DS.fallenNote = function (f) { return !!f && ((+f.x || 0) >= DS.VET[1].at || !!f.pid || !!f.f || !!f.cast); };
+DS.fallenNote = function (f) { return !!f && ((+f.L || 0) >= 11 || (+f.x || 0) >= DS.VET[1].at || !!f.pid || !!f.f || !!f.cast); };
 DS.fallenTrim = function (list) {
   list = (list || []).filter(function (f) { return f && typeof f === 'object'; });
   var F = DS.FALLEN, nk = 0, nr = 0, keep = [];
@@ -5038,6 +5081,16 @@ DS.mercSay = function (m, when, force) {
   return L[Math.floor(Math.random() * L.length)];
 };
 // 이름난 용병(영웅·전설)의 고유 기술. 저장 칸 없이 종류와 번호에서 정해진다 (m.s 가 있으면 그것).
+// r42: 가솔의 기술 = 종류의 기술 목록(DS.MERC_SK)을 제 단으로 연다 — 첫째 3단, 둘째 5단, 셋째 7단. 영웅·전설은 고유 기술(DS.mercSkill)을 1단부터.
+DS.MSK_AT = [3, 5, 7];
+DS.mercSkills = function (m, L) {
+  if (!m || !DS.MERCS[m.type]) return [];
+  var t = DS.tierOfL(L != null ? L : DS.pL(m)), list = DS.MERC_SK[m.type] || [], out = [], u = DS.mercSkill(m);
+  if (u) out.push(u);
+  if (m.rv && u) return out;      // 관에서 돌아온 이는 옛 가문의 기술 하나만 (그 사람의 표식)
+  list.forEach(function (k, i) { if (DS.SKILLS[k] && t >= (DS.MSK_AT[i] || 99) && out.indexOf(k) < 0) out.push(k); });
+  return out;
+};
 DS.mercSkill = function (m) {
   if (m && m.rv && m.s && DS.SKILLS[m.s]) return m.s;      // 3.3.0: 다시 부름으로 돌아온 이는 옛 깃발의 기술을 등급과 관계없이 지닌다
   if (!m || !(m.g >= 4)) return null;
@@ -5046,7 +5099,8 @@ DS.mercSkill = function (m) {
 };
 // r32 필살기 — 공훈 「용사」(DS.ULT.at)에 오른 사람의 것. who = 부대원 줄이나 대장의 사람 줄(ch.ps). key = 해시 씨앗(없으면 pk·id)
 //   후보 = 태생 병과(아홉 집은 제 집, 큰 용병은 맞는 병과 모두)의 필살기 셋씩 + 성격 몫 하나. 그 가운데 사람 번호로 하나 — 같은 종류 둘이 같은 것을 가질 일이 드물게.
-DS.vetStars = function (x) { var S = DS.ULT.stars, n = 0; for (var i = 0; i < S.length; i++) if ((+x || 0) >= S[i]) n = i + 1; return n; };
+DS.vetStars = function (x) { var S = DS.ULT.stars, n = 0; for (var i = 0; i < S.length; i++) if ((+x || 0) >= S[i]) n = i + 1; return n; };      // r42: x 는 개인 레벨 L (별 = 9단 · 10단 · L100)
+DS.pStars = function (who) { return DS.vetStars(who ? DS.pL(who) : 0); };
 DS.ultPool = function (who) {
   if (!who) return [];
   var cl = [], out = [], k;
@@ -5058,7 +5112,7 @@ DS.ultPool = function (who) {
   return out;
 };
 DS.ultOf = function (who, key) {
-  if (!who || !((+who.x || 0) >= DS.ULT.at)) return null;
+  if (!who || !(DS.pL(who) >= DS.ULT.at)) return null;
   var L = DS.ultPool(who); if (!L.length) return null;
   var seed = key != null ? key : (who.pk || who.id || 0), h = DS.hash2(seed | 0, 97, (who.type || '').length * 13 + 5);
   return L[Math.floor(h * L.length) % L.length];
@@ -5067,13 +5121,14 @@ DS.ultOf = function (who, key) {
 DS.ultKey = function (s, who) { var h = s && s.chars && s.chars[s.hero]; return h && who && h.ps === who ? (who.pk || 7000 + (+h.pid || +h.id || 0)) : null; };      // 대장의 사람 줄은 번호가 없다 — banner.js 의 cmdSpec 과 같은 씨앗
 DS.STAR_NAME = ['', '별 하나', '별 둘', '별 셋'];
 DS.vetNext = function (x) { x = +x || 0; var r = DS.vetRank(x), nx = DS.VET[r + 1]; if (nx) return { name: nx.name, at: nx.at, from: DS.VET[r].at }; var st = DS.vetStars(x), S = DS.ULT.stars; return st < S.length ? { name: DS.STAR_NAME[st + 1], at: S[st], from: st ? S[st - 1] : DS.VET[r].at } : null; };
-DS.ultPow = function (who) { var U = DS.ULT, x = +(who && who.x) || 0, st = DS.vetStars(x), v = 0; (U.vetP || []).forEach(function (q) { if (x >= q[0]) v += q[1]; }); return 1 + U.starP * st + v + (U.gradeP[Math.max(0, Math.min(5, Math.round(+(who && who.g) || 1)))] || 0); };      // r36: 용사 · 불멸에 오를 때마다 +15%
-DS.ultRate = function (who) { return 1 + DS.ULT.starR * DS.vetStars(who && who.x); };
+DS.ultPow = function (who) { var U = DS.ULT, x = who ? DS.pL(who) : 0, st = DS.vetStars(x), v = 0; (U.vetP || []).forEach(function (q) { if (x >= q[0]) v += q[1]; }); return 1 + U.starP * st + v + (U.gradeP[Math.max(0, Math.min(5, Math.round(+(who && who.g) || 1)))] || 0); };      // r36: 용사 · 불멸에 오를 때마다 +15%
+DS.ultRate = function (who) { return 1 + DS.ULT.starR * DS.pStars(who); };
 (DS.UNIT_KEYS = DS.UNIT_KEYS || []).push('ult', 'ultP', 'ultR');
 // ── r36 (1.3.0) 필살기는 맹주(대장)만: 다른 가주·가솔은 지니지 않는다. (r38: 고르지 않는다 — 타고난다. 아래 DS.ultInnate) 시나리오 DS.ULT.unlock(3)을 깨면 깨어난다.
 //   고른 것은 맹주 사람 줄(ch.ps.ul)에 — 대를 이은 새 맹주는 새로 고른다 (후보 셋은 맹주 가문 병과에서 나오니 그대로). 교회에서 골드로 바꾼다 (DS.ultCost).
 //   세기: 용사 · 불멸에 +15%씩, 별(공훈 1000·1500·2000)마다 +8% · 충전 +12% (DS.ultPow · DS.ultRate). 가호 「타오르는 기세」도 맹주에게.
-DS.ULT.unlock = 3; DS.ULT.vetP = [[280, 0.15], [450, 0.15]]; DS.ULT.cost = 400;
+DS.ULT.unlock = 3; DS.ULT.vetP = [[41, 0.15], [71, 0.15]]; DS.ULT.cost = 400;      // r42: 맹주의 개인 5단(L41) · 8단(L71)에 +15%씩
+DS.ULT.at = 41; DS.ULT.stars = [81, 91, 100];      // r42: 별은 9단 · 10단 · L100
 DS.ULT.charge = 40;      // r36: 부대에 필살기가 하나뿐이다 — 맹주의 게이지는 60초 → 40초에 찬다 (봇: 옛 가주·가솔 필살기를 잃은 몫을 일부 메운다)
 DS.ultHeroWho = function (s) { var ch = s && s.chars && s.chars[s.hero]; return ch && !ch.vac && ch.ps ? ch.ps : null; };
 DS.ultOpen = function (s) { return !!(DS.BAL && DS.BAL.ult !== false && s && s.cleared && s.cleared[DS.ULT.unlock]); };
@@ -5137,7 +5192,7 @@ DS.pickMercName = function (save, rnd) {
 };
 DS.addMerc = function (save, type, g, owner) {
   var keys = Object.keys(DS.TRAITS), r = Math.random;
-  var m = { id: save.mnid++, type: type, g: g, o: owner || 0, hp: 1, n: DS.pickMercName(save, r), v: Math.floor(r() * 4), t: keys[Math.floor(r() * keys.length)], x: 0, k: 0, b: 0 };
+  var m = { id: save.mnid++, type: type, g: g, o: owner || 0, hp: 1, n: DS.pickMercName(save, r), v: Math.floor(r() * 4), t: keys[Math.floor(r() * keys.length)], L: DS.recruitL ? DS.recruitL(save, g) : 1, exp: 0, k: 0, b: 0 };      // r42: 개인 레벨 (부대 평균보다 조금 아래)
   var qk = DS.rollQuirk(type, r); if (qk) m.q = qk;      // 버릇(둘째 특성): 있을 때만 칸이 생긴다
   save.mercs.push(m);
   return m;
@@ -5236,7 +5291,7 @@ DS.recruitPrice = function (s, k) { var h = DS.recruitHeat(s) + (k || 0); return
 DS.recruitTotal = function (s, n) { var t = 0; for (var i = 0; i < n; i++) t += DS.recruitPrice(s, i); return t; };
 DS.recruitPaid = function (s, n) { DS.recruitHeat(s); s.rh.h = Math.min(DS.RECRUIT.max, s.rh.h + (n || 1)); };
 DS.recruitEase = function (s) { var h = DS.recruitHeat(s), e = DS.RECRUIT.ease; return h > 0 && e > 0 ? Math.ceil(h / e) : 0; };      // 기본값으로 돌아올 때까지 남은 계절
-DS.heroTier = function (save) { var t = 1; DS.charList(save).forEach(function (c) { t = Math.max(t, DS.tierOfL(c.L)); }); return t; };
+DS.heroTier = function (save) { var t = 1; DS.charList(save).forEach(function (c) { t = Math.max(t, DS.tierOfL(c.L)); }); (save.mercs || []).forEach(function (m) { t = Math.max(t, DS.tierOfL(DS.pL(m))); }); return t; };
 
 // ── 전투용 유닛 사양 ──
 (DS.UNIT_KEYS = DS.UNIT_KEYS || []).push('st', 'quirk', 'basic', 'kite', 'taunt', 'mn');      // 레벨이 오르거나 편성·태세가 바뀔 때 game.js 의 refreshUnits 가 함께 베낄 칸
@@ -5252,24 +5307,24 @@ DS.cmdSpec = function (ch, hero, who) {      // who = 든 사람 (banner.js 의 
 };
 // 용병의 능력은 이끄는 지휘관의 레벨(그 단의 기본 장비 기준)을 따르고, 등급과 병과 일치가 배율을 준다
 DS.mercSpec = function (ch, m) {
-  var M = DS.MERCS[m.type], t = DS.tierOfL(ch.L), ref = { cls: ch.cls, L: ch.L };
+  var M = DS.MERCS[m.type], mL = m.L != null ? DS.pL(m) : ch.L, t = DS.tierOfL(mL), ref = { cls: ch.cls, L: mL };      // r42: 가솔은 제 레벨로 (가문 병과의 능력치 줄 · 그 단의 기본 장비)
   DS.stdGear(ref, t);
-  var s = DS.charStats(ref), main = M.useMag ? s.mag : s.atk, vr = DS.vetRank(m.x), T = DS.TRAITS[m.t] || {};
+  var s = DS.charStats(ref), main = M.useMag ? s.mag : s.atk, vr = DS.hRank(ch), T = DS.TRAITS[m.t] || {};
   var Q = (m.q && DS.QUIRKS[m.q] && DS.quirkFits(m.type, m.q)) ? DS.QUIRKS[m.q] : {};      // 버릇(둘째 특성)
-  var k = DS.GRADES[m.g].mul * DS.VET[vr].mul * (DS.mercMatch(ch, m) ? 1.1 : 1) * (ch.L > 70 ? 0.92 : 1);      // 등급 × 공훈 × 병과 일치
+  var k = DS.GRADES[m.g].mul * DS.hMul(ch) * (DS.mercMatch(ch, m) ? 1.1 : 1) * (mL > 70 ? 0.92 : 1);      // 등급 × 가문 공훈 × 병과 일치
   var Ld = DS.LEAD[ch.cls] || {};      // 지휘관의 통솔 효과
   var hp = Math.round(s.hp * M.hp * k * (Ld.hp || 1) * (T.hp || 1) * (Q.hp || 1));
   var at = Math.round(main * M.at * k * (Ld.at || 1) * (T.at || 1) * (Q.at || 1));
-  var sk = DS.mercSkill(m);      // 영웅·전설의 고유 기술 (엔진의 aiMerc 가 aiSkill 을 부르면 쓴다)
+  var sks = DS.mercSkills(m, mL);      // r42: 종류의 기술을 제 단으로 (3단·5단·7단) + 영웅·전설의 고유 기술 (엔진의 aiMerc 가 aiSkill 을 부르면 쓴다)
   var sp = {
-    id: 'm' + m.id, mid: m.id, side: 'ally', role: 'merc', owner: 'c' + ch.id, type: m.type, name: m.n || DS.mercKind(m), L: ch.L, grade: m.g, vet: vr, trait: m.t || null, quirk: Q.name ? m.q : null,
+    id: 'm' + m.id, mid: m.id, side: 'ally', role: 'merc', owner: 'c' + ch.id, type: m.type, name: m.n || DS.mercKind(m), L: mL, tier: t, grade: m.g, vet: vr, trait: m.t || null, quirk: Q.name ? m.q : null,
     crit: 0.06 + (T.crit || 0) + (Q.crit || 0),
     look: M.big ? null : [m.type, m.g, m.v || 0], sprite: M.sprite || null, pal: M.pal || null, big: !!M.big,
     hp: hp, mhp: hp, mp: 0, mmp: 0, atk: at, mag: at,
     def: Math.round(s.def * M.df * k * (Ld.def || 1) * (T.def || 1) * (Q.def || 1)), res: Math.round(s.res * M.df * k * (Ld.res || 1) * (T.res || 1)),
     spd: M.spd * (Ld.spd || 1) * (T.spd || 1) * (Q.spd || 1), mv: M.mv * (Q.mv || 1), mt: M.mt, rng: [M.rng[0], M.rng[1] + (Q.rng || 0)],
     atkKind: M.atk, dtype: Q.dtype || M.dtype, kind: M.kind, tags: M.tags || [], passive: M.passive || Q.passive, heal: M.heal || Q.heal || 0,
-    basic: Q.basic || 1, drain: Q.drain || 0, skills: sk ? [sk] : [],
+    basic: Q.basic || 1, drain: Q.drain || 0, skills: sks,
     kite: M.kite || 0, taunt: Math.max(M.taunt || 0, Q.taunt || 0), mn: m.n || ''      // 종류별 고유 행동(엔진이 읽는다: 거리 유지·도발), 이름표에 쓸 용병 이름(그래픽)
   };
   return DS.ultSpec(sp, m, false);      // r36: 가솔은 필살기가 없다 (맹주만)
@@ -5339,7 +5394,7 @@ DS.enemySpec = function (type, L, o) {
 // ── 저장 데이터 ──
 DS.newSave = function (name, heroCls) {
   var s = {
-    v: DS.SAVE_V || 4, name: name || '대장', nid: 1, chars: {}, party: [], hero: 0, gold: 300,
+    v: DS.SAVE_V || 11, name: name || '대장', nid: 1, chars: {}, party: [], hero: 0, gold: 300,
     items: { herb: 5, mana: 2, endo: 1 }, relics: [], cleared: {}, visited: { haemil: true },
     gear: {}, mercs: [], mnid: 1, tickets: 1, pity: 0, fallen: [],      // r35: 처음 모집권 1장 (예전 2장)
    
@@ -5349,7 +5404,7 @@ DS.newSave = function (name, heroCls) {
   s.hero = DS.addChar(s, heroCls, 1, s.name).id;
   s.us = 1 + Math.floor(Math.random() * 2147483646);      // r38: 타고난 필살기의 씨앗 (새 판마다 다르게 — 옛 저장은 eg.seed)
   s.bn = 1;      // 4.0: 새 구조 (판정의 근거가 아니라 참고 표시 — 근거는 DS.bnFix 의 불변식)
-  if (DS.CAST_KIND) s.chars[s.hero].ps = { type: DS.CAST_KIND[heroCls] || 'm_sword', g: DS.CAST_G || 3, t: DS.CAST_TRAIT[heroCls] || 'guard', v: 0, x: 0, k: 0, b: 0 };      // 대장이라는 사람 한 줄 (1세: 희귀 · 병과 고정 특성)
+  if (DS.CAST_KIND) s.chars[s.hero].ps = { type: DS.CAST_KIND[heroCls] || 'm_sword', g: DS.CAST_G || 3, t: DS.CAST_TRAIT[heroCls] || 'guard', v: 0, L: s.chars[s.hero].L, exp: 0, k: 0, b: 0 };      // r42: 맹주의 개인 레벨      // 대장이라는 사람 한 줄 (1세: 희귀 · 병과 고정 특성)
   return s;
 };
 // 깃발 한 줄. 사람 칸(name·down·hp)은 대장 줄(저장의 첫 깃발)에만 — 4.0: 깃발을 드는 사람은 부대원 줄에 있다
@@ -5379,123 +5434,141 @@ DS.kit = function (save, o) {
     DS.stdGear(c, Math.max(1, DS.tierOfL(c.L) - (o.gearLag || 0)));
     save.mercs = save.mercs.filter(function (m) { return m.o !== c.id || m.h; });      // 4.0: 든 사람은 남긴다
     var ty = DS.baseMercTypes(c.cls);
-    for (var i = 0; i < DS.MERC_SLOTS; i++) { var km = DS.addMerc(save, ty[i % ty.length], o.grade || 2, c.id); km.t = null; km.v = 0; delete km.q; }      // 시험용은 특성·버릇 없이
-    if (c.id !== save.hero && DS.bearer && !DS.bearer(save, c)) { var kb = DS.addMerc(save, (DS.CAST_KIND && DS.CAST_KIND[c.cls]) || ty[0], 1, c.id); kb.h = 1; kb.t = null; kb.v = 0; delete kb.q; }      // 빈 깃발에는 시험용 든 사람 (일반·특성 없음·공훈 0 = 얹힘 0 — 지금 값과 같다)
+    for (var i = 0; i < DS.MERC_SLOTS; i++) { var km = DS.addMerc(save, ty[i % ty.length], o.grade || 2, c.id); km.t = null; km.v = 0; delete km.q; km.L = c.L; if (c.L > 70) km.fz = 1; }      // 시험용은 특성·버릇 없이
+    if (c.id !== save.hero && DS.bearer && !DS.bearer(save, c)) { var kb = DS.addMerc(save, (DS.CAST_KIND && DS.CAST_KIND[c.cls]) || ty[0], 1, c.id); kb.h = 1; kb.t = null; kb.v = 0; delete kb.q; kb.L = c.L; if (c.L > 70) kb.fz = 1; }      // 빈 깃발에는 시험용 든 사람 (일반·특성 없음·공훈 0 = 얹힘 0 — 지금 값과 같다)
   });
 };
 
-// 경험치: 출전 지휘관은 전부, 대기 중인 캐릭터는 일부. 낮은 캐릭터는 따라잡기 보정.
-DS.gainExp = function (save, amount, eL) {
-  var ups = [], top = 0;
-  DS.charList(save).forEach(function (c) { top = Math.max(top, c.L); });
-  DS.charList(save).forEach(function (ch) {
-    var cap = DS.capL(ch); if (ch.L >= cap) { ch.exp = 0; return; }
-    var inParty = save.party.indexOf(ch.id) >= 0 && !ch.down && !ch.vac && (!DS.bearer || !!DS.bearer(save, ch)), d = (eL || ch.L) - ch.L;      // 4.0: 빈 깃발은 대기와 같은 5%
-    var f = d >= 0 ? Math.min(1.5, 1 + d * 0.08) : Math.max(0.25, 1 + d * 0.075);
-    f *= (inParty ? 1 : DS.BAL.bench) * DS.BAL.exp * (1 + Math.min(1.5, Math.max(0, top - ch.L - 2) * 0.15)) * (1 + ((save.perk && save.perk.exp) || 0));
-    delete ch.cu;      // 4.0: 후계 레벨 손실이 없어져 되찾기 2배도 없다
-    ch.exp += amount * f;
-    var from = ch.L;
-    while (ch.L < cap && ch.exp >= DS.expNeed(ch.L)) { ch.exp -= DS.expNeed(ch.L); ch.L++; }
-    if (ch.L >= cap) ch.exp = 0;
-    if (ch.L > from) ups.push({ id: ch.id, from: from, to: ch.L, promo: DS.tierOfL(ch.L) > DS.tierOfL(from) });
+// ───────── r42 (2.0.0) 사람마다 단·레벨 ─────────
+// 사람 = 맹주(대장 가문 줄의 ps) · 부대원(save.mercs — 가주·가솔·막사). 사람마다 L(1~100)·exp·fz(합일함 — 70 을 넘을 수 있다)를 지닌다.
+// 가문 줄(save.chars)의 L·exp 는 지금 가주의 개인 레벨을 비춘 것이다 (DS.pSync). 빈 가문은 마지막 값을 지닌 채 싸우지 않는다.
+//   바깥(시험 도구·옛 코드)이 가문 줄의 L 을 직접 바꾸면 그 값이 가주에게로 간다 (ch.Ls = 마지막으로 맞춘 값).
+DS.PEXP = { catchCap: 1.5, recruit: { k: 0.9, d: 3 }, kid: 0.5, heir: { kid: 0.5, adopt: 0.25 } };
+DS.pL = function (who) { return who ? Math.max(1, Math.min(100, Math.round(+who.L || 1))) : 1; };
+DS.pCap = function (who) { return who && (who.fz || +who.L > 70) ? 100 : 70; };
+DS.heroPs = function (s) { var h = s && s.chars && s.chars[s.hero]; return h && !h.vac && h.ps ? h.ps : null; };
+DS.whoHouse = function (s, who) {      // 그 사람이 선 가문 (맹주 = 대장 가문, 가주·가솔 = m.o). 막사는 null
+  if (!s || !s.chars || !who) return null;
+  var h = s.chars[s.hero]; if (h && h.ps === who) return h;
+  return who.o && s.chars[who.o] ? s.chars[who.o] : null;
+};
+DS.pSyncRow = function (ch, b) {
+  if (!ch) return;
+  if (!b) { ch.Ls = ch.L; return; }
+  if (b.L == null || !(+b.L >= 1)) { b.L = ch.L; b.exp = +ch.exp || 0; if (ch.L > 70) b.fz = 1; }
+  else if (ch.L !== b.L && (ch.Ls == null || ch.L !== ch.Ls)) { b.L = ch.L; b.exp = +ch.exp || 0; if (ch.L > 70) b.fz = 1; }      // 바깥이 가문 줄의 레벨을 바꿨다 → 가주에게
+  b.L = DS.pL(b); ch.L = b.L; ch.exp = +b.exp || 0; ch.Ls = ch.L;
+};
+DS.pSync = function (s) {
+  if (!s || !s.chars) return s;
+  for (var k in s.chars) { var ch = s.chars[k]; if (!ch) continue; DS.pSyncRow(ch, DS.bearer ? DS.bearer(s, ch, 1) : null); }
+  (s.mercs || []).forEach(function (m) { if (m.L == null || !(+m.L >= 1)) m.L = 1; m.L = DS.pL(m); if (!(+m.exp >= 0)) m.exp = 0; if (m.L > 70) m.fz = 1; });
+  return s;
+};
+// 모든 사람 [{ who, ch: 선 가문(막사 null), role: 'hero'|'bear'|'follow'|'bench', dep: 싸우러 나갔는가 }]
+DS.persons = function (s) {
+  var out = [], seen = {}; if (!s || !s.chars) return out;
+  DS.pSync(s);      // 바깥이 가문 줄의 레벨을 바꿨으면 먼저 가주에게
+  var hid = s.hero, party = s.party || [];
+  DS.charList(s).forEach(function (ch) {
+    var hero = ch.id === hid, b = hero ? DS.heroPs(s) : (DS.bearer ? DS.bearer(s, ch, 1) : null);
+    var dep = party.indexOf(ch.id) >= 0 && !ch.down && !ch.vac && !!b;
+    if (b) { out.push({ who: b, ch: ch, role: hero ? 'hero' : 'bear', dep: dep }); if (!hero) seen[b.id] = 1; }
+    DS.mercsOf(s, ch.id).forEach(function (m) { if (seen[m.id]) return; seen[m.id] = 1; out.push({ who: m, ch: ch, role: 'follow', dep: dep }); });
   });
+  (s.mercs || []).forEach(function (m) { if (!seen[m.id]) out.push({ who: m, ch: null, role: 'bench', dep: false }); });
+  return out;
+};
+DS.pAvgL = function (s) { var n = 0, t = 0; DS.persons(s).forEach(function (p) { if (p.dep) { n++; t += DS.pL(p.who); } }); return n ? t / n : 1; };
+// 새로 오는 사람의 레벨: 출전한 사람들의 평균에 가깝게 (조금 아래), 등급이 높을수록 조금 높게. 합일 전이라 70 을 넘지 않는다
+DS.recruitL = function (s, g) { var R = DS.PEXP.recruit, a = DS.pAvgL(s); if (a <= 1.5) return 1; return Math.max(1, Math.min(70, Math.round(a * R.k) - R.d + ((+g || 2) - 3))); };
+DS.kidL = function (s) { return Math.max(1, Math.min(70, Math.round(DS.pAvgL(s) * DS.PEXP.kid))); };
+// 경험치: 싸우러 나간 사람(출전 가문의 가주·가솔·맹주)은 전부, 나머지(막사·대기 가문)는 BAL.bench. 낮은 사람은 따라잡기 보정, 잠재력(★)만큼 빨리.
+//   돌려주는 것: 레벨이 오른 사람 [{ id: 선 가문 번호(막사 0), mid: 부대원 번호(맹주 0), hero, bear(깃발 유닛인가), from, to, promo, who, pg: 새 성장 }]
+DS.gainExp = function (save, amount, eL) {
+  var ups = [], list = DS.persons(save), top = 1, perk = (save.perk && save.perk.exp) || 0;
+  list.forEach(function (p) { if (p.dep) top = Math.max(top, DS.pL(p.who)); });
+  list.forEach(function (p) {
+    var w = p.who; if (w.L == null) w.L = p.ch ? p.ch.L : 1;
+    var cap = DS.pCap(w); if (w.L >= cap) { w.exp = 0; return; }
+    var d = (eL || w.L) - w.L, f = d >= 0 ? Math.min(1.5, 1 + d * 0.08) : Math.max(0.25, 1 + d * 0.075);
+    f *= (p.dep ? 1 : DS.BAL.bench) * DS.BAL.exp * (1 + Math.min(DS.PEXP.catchCap, Math.max(0, top - w.L - 2) * 0.15)) * (1 + perk) * (DS.potMul ? DS.potMul(w) : 1);
+    w.exp = (+w.exp || 0) + amount * f;
+    var from = w.L, pg0 = DS.pgSteps ? DS.pgSteps(w) : 0;
+    while (w.L < cap && w.exp >= DS.expNeed(w.L)) { w.exp -= DS.expNeed(w.L); w.L++; }
+    if (w.L >= cap) w.exp = 0;
+    if (w.L > from) {
+      var up = { id: p.ch ? p.ch.id : 0, mid: p.role === 'hero' ? 0 : (w.id || 0), hero: p.role === 'hero', bear: p.role === 'hero' || p.role === 'bear', from: from, to: w.L, promo: DS.tierOfL(w.L) > DS.tierOfL(from), who: w, dep: p.dep };
+      if (up.promo && DS.pgRecord) up.pg = DS.pgRecord(w, pg0);
+      ups.push(up);
+    }
+  });
+  DS.pSync(save);
   return ups;
 };
 
-// 합일(7단 합체) 1.0.1: 묶음이 정해져 있지 않다 — 7단 Lv10(L=70)인 가문 아무 셋 + 맹세의 깃대 → 교회에서 셋이 함께 8단(L71). 한 가문은 한 번만 묶인다.
-//   묶음 기록: save.fuU = [{ ids: [깃발 번호 셋], name: '라니스터'(가주 공훈 1등 가문, 그 순간 고정), at: 깬 시나리오 번호, t: 플레이 초 }]
-//   옛 저장(정해진 묶음으로 오른 판)은 DS.fuseUnions 가 읽을 때 한 번 옮긴다 (save.fuN 의 이름을 잇는다)
+// ───────── r42 합일: 사람 셋 ─────────
+// 7단 Lv10(L70)인 사람(합일하지 않은 어른) 아무 셋 + 맹세의 깃대 → 교회에서 셋이 저마다 8단 1레벨(L71)로 오르고 70 을 넘어 자랄 수 있다(fz).
+//   8단 뒤의 세기·모습·이름은 그 사람이 선 가문 병과의 마스터 것 (DS.riseCls — 가문 줄의 L 이 가주를 비추므로 그대로).
+//   사람 열쇠: 'h' = 맹주, 'm<번호>' = 부대원. 옛 꼴(가문 번호 숫자)을 주면 그 가문의 가주.
 DS.FUSE_MIN = 70;
 DS.FUSE_N = 3;
-function fuTopScn(save) { var t = 0; for (var k in (save.cleared || {})) if (save.cleared[k] && +k > t) t = +k; return t; }
-DS.fuseUnions = function (save) {
-  if (!save || !save.chars) return [];
-  var U = save.fuU instanceof Array ? save.fuU : (save.fuU = []), used = {};
-  for (var i = U.length - 1; i >= 0; i--) {      // 깨진 칸은 걷는다 (없는 깃발 번호는 빼되, 둘 이상 남으면 묶음은 그대로)
-    var u = U[i]; if (!u || !(u.ids instanceof Array)) { U.splice(i, 1); continue; }
-    u.ids = u.ids.map(Number).filter(function (id) { return save.chars[id] && !used[id]; });
-    if (!u.ids.length) { U.splice(i, 1); continue; }
-    u.ids.forEach(function (id) { used[id] = 1; }); u.name = String(u.name || '');
-  }
-  if (DS.FAMILY) Object.keys(DS.FAMILY).forEach(function (f) {      // 옛 판: 정해진 묶음 전원이 8단 이상인데 기록이 없다
-    var F = DS.FAMILY[f], list = DS.charList(save), mem = F.members.map(function (cls) { return list.filter(function (c) { return c.cls === cls; })[0]; });
-    if (mem.some(function (c) { return !c || c.L <= 70 || used[c.id]; })) return;
-    var nm = save.fuN && save.fuN[f] ? save.fuN[f] : (DS.idsTop ? DS.idsTop(save, mem.map(function (c) { return c.id; })) : '');
-    U.push({ ids: mem.map(function (c) { return c.id; }), name: nm, at: 0, fam: f }); mem.forEach(function (c) { used[c.id] = 1; });
-  });
-  return U;
+DS.pKey = function (s, who) { return who && who === DS.heroPs(s) ? 'h' : who && who.id ? 'm' + who.id : ''; };
+DS.pByKey = function (s, k) {
+  if (k === 'h') return DS.heroPs(s);
+  if (typeof k === 'number' || /^\d+$/.test(String(k))) { var ch = s.chars[+k]; return ch ? (ch.id === s.hero ? DS.heroPs(s) : DS.bearer(s, ch)) : null; }
+  var m = /^m(\d+)$/.exec(String(k || '')); if (!m) return null;
+  for (var i = 0; i < (s.mercs || []).length; i++) if (s.mercs[i].id === +m[1]) return s.mercs[i];
+  return null;
 };
-DS.unionOf = function (save, id) { var U = DS.fuseUnions(save); for (var i = 0; i < U.length; i++) if (U[i].ids.indexOf(+id) >= 0) return U[i]; return null; };
-DS.unionName = function (save, u) { return u && u.name ? u.name + ' 대가문' : u ? '대가문' : ''; };
-// 아직 묶이지 않은 가문(마스터 아닌 병과, 7단 Lv10 이하) — 합일을 앞둔 줄
-DS.fusePool = function (save) {
-  var U = DS.fuseUnions(save), used = {}; U.forEach(function (u) { u.ids.forEach(function (id) { used[id] = 1; }); });
-  return DS.charList(save).filter(function (c) { return !DS.CLASSES[c.cls].master && c.L <= 70 && !used[c.id]; });
+DS.pNative = function (s, who) {      // 그 사람의 태생 병과 (맹주 = 맹주 가문 병과, 아홉 = 제 집, 부대원 = 종류가 맞는 첫 병과)
+  if (!who) return 'inf';
+  if (who === DS.heroPs(s)) return s.chars[s.hero].cls;
+  if (who.cast && DS.CLASSES[who.cast]) return who.cast;
+  var hit = null; Object.keys(DS.CLASSES).forEach(function (c) { if (!hit && !DS.CLASSES[c].master && DS.baseMercTypes(c).indexOf(who.type) >= 0) hit = c; });
+  if (!hit) Object.keys(DS.CLASSES).forEach(function (c) { if (!hit && !DS.CLASSES[c].master && DS.mercTypes(c).indexOf(who.type) >= 0) hit = c; });
+  return hit || 'inf';
 };
+function fuEnt(s, p) { return { id: DS.pKey(s, p.who), key: DS.pKey(s, p.who), who: p.who, ch: p.ch, L: DS.pL(p.who), exp: +p.who.exp || 0, cls: p.ch ? p.ch.cls : DS.pNative(s, p.who), role: p.role, dep: p.dep }; }
+DS.fusePool = function (save) { return DS.persons(save).filter(function (p) { return !p.who.fz && DS.pL(p.who) <= 70 && !(DS.kidOf && false); }).map(function (p) { return fuEnt(save, p); }); };
 DS.fuseCands = function (save) { return DS.fusePool(save).filter(function (c) { return c.L >= DS.FUSE_MIN; }); };
-// 고른 셋으로 합일할 수 있나: { ok, why }
 DS.fuseOk = function (save, ids) {
-  if (!(ids instanceof Array) || ids.length !== DS.FUSE_N) return { ok: false, why: '가문 ' + DS.FUSE_N + '곳을 고른다' };
-  var seen = {}, cand = {}; DS.fuseCands(save).forEach(function (c) { cand[c.id] = 1; });
-  for (var i = 0; i < ids.length; i++) { var id = +ids[i]; if (seen[id]) return { ok: false, why: '같은 가문을 두 번 골랐다' }; seen[id] = 1; if (!cand[id]) return { ok: false, why: '7단 Lv10이 아닌 가문이 있다' }; }
+  if (!(ids instanceof Array) || ids.length !== DS.FUSE_N) return { ok: false, why: DS.FUSE_N + '사람을 고른다' };
+  var seen = {}, cand = {}; DS.fuseCands(save).forEach(function (c) { cand[c.key] = 1; });
+  for (var i = 0; i < ids.length; i++) { var w = DS.pByKey(save, ids[i]), k = DS.pKey(save, w); if (!w) return { ok: false, why: '찾을 수 없는 사람이 있다' }; if (seen[k]) return { ok: false, why: '같은 사람을 두 번 골랐다' }; seen[k] = 1; if (!cand[k]) return { ok: false, why: '7단 Lv10이 아닌 사람이 있다' }; }
   if (!save.crest) return { ok: false, why: '맹세의 깃대가 없다' };
   return { ok: true, why: '' };
 };
-// 진행: 지금 7단 Lv10 인 가문 수 / 셋, 다음으로 가까운 가문 (모자란 경험치 순)
 DS.fuseProg = function (save) {
   var pool = DS.fusePool(save), ready = pool.filter(function (c) { return c.L >= DS.FUSE_MIN; });
   var need = function (c) { var n = 0; for (var L = c.L; L < DS.FUSE_MIN; L++) n += DS.expNeed(L) - (L === c.L ? Math.min(c.exp || 0, DS.expNeed(L)) : 0); return n; };
-  var low = pool.filter(function (c) { return c.L < DS.FUSE_MIN; }).sort(function (a, b) { return need(a) - need(b) || b.L - a.L; });
-  return { ready: ready, n: Math.min(DS.FUSE_N, ready.length), of: DS.FUSE_N, low: low, pool: pool, crest: !!save.crest, ok: ready.length >= DS.FUSE_N && !!save.crest, can: pool.length >= DS.FUSE_N, unions: DS.fuseUnions(save).length };
+  var low = pool.filter(function (c) { return c.L < DS.FUSE_MIN; }).sort(function (a, b) { return (b.dep ? 1 : 0) - (a.dep ? 1 : 0) || need(a) - need(b) || b.L - a.L; });
+  var done = DS.persons(save).filter(function (p) { return p.who.fz; }).length;
+  return { ready: ready, n: Math.min(DS.FUSE_N, ready.length), of: DS.FUSE_N, low: low, pool: pool, crest: !!save.crest, ok: ready.length >= DS.FUSE_N && !!save.crest, can: pool.length >= DS.FUSE_N, unions: Math.floor(done / DS.FUSE_N), fused: done };
 };
-// 옛 이름 (정해진 묶음 기준) — 바깥 코드가 부르면 그 묶음 전원의 사정을 돌려준다. 새 코드는 쓰지 않는다
-DS.fuseState = function (save, fam) {
-  var F = DS.FAMILY[fam], list = DS.charList(save), have = [], miss = [], low = [];
-  if (!F) return { done: false, have: [], miss: [], low: [], ok: false };
-  F.members.forEach(function (cls) {
-    var c = list.filter(function (x) { return x.cls === cls; })[0];
-    if (!c) miss.push(cls); else { have.push(c); if (c.L < DS.FUSE_MIN) low.push(c); }
-  });
-  if (!miss.length && have.every(function (c) { return c.L > 70; })) return { done: true, have: have, miss: [], low: [] };
-  var ids = have.map(function (c) { return c.id; });
-  return { done: false, have: have, miss: miss, low: low, top: have.some(function (c) { return c.L >= 70; }), ok: !miss.length && DS.fuseOk(save, ids).ok };
-};
-// ⑮ 합일 = 세 가문이 뜻을 모아 함께 오른다: 가문은 줄지 않고(늘 열), 고른 셋이 저마다 8단 1레벨(L71). 든 사람·따르는 이·장비·유물·가계도·혼인은 그대로.
-//   ids: 깃발 번호 셋 (옛 꼴 fam 문자열이면 그 묶음의 깃발들). 돌려주는 것: 대표 깃발(대장의 깃발이 끼면 그것, 아니면 첫 깃발).
-//   DS.lastFuse = { ids, id, name, union, mercsBack: 0, over: 0, relicsBack: [] }
+// 옛 묶음 기록(가문 셋의 대가문)은 없어졌다 — 옛 호출이 읽어도 비어 있게
+DS.fuseUnions = function (save) { if (save) save.fuU = []; return []; };
+DS.unionOf = function () { return null; };
+DS.unionName = function () { return ''; };
+DS.fuseState = function (save, fam) { return { done: false, have: [], miss: [], low: [], ok: false }; };
+// 합일: ids = 사람 열쇠 셋. 돌려주는 것: 첫 사람. DS.lastFuse = { ids, who: [사람 셋], names, id }
 DS.fuse = function (save, ids, opt) {
-  if (typeof ids === 'string') { var F = DS.FAMILY[ids]; if (!F) return null; ids = DS.charList(save).filter(function (c) { return F.members.indexOf(c.cls) >= 0; }).map(function (c) { return c.id; }); }
-  ids = (ids || []).map(Number);
+  ids = (ids || []).slice();
   if (!DS.fuseOk(save, ids).ok) return null;
-  var have = ids.map(function (id) { return save.chars[id]; });
-  var lead = have.filter(function (c) { return c.id === save.hero; })[0] || have[0];
-  var name = (opt && opt.name) || (DS.idsTop ? DS.idsTop(save, ids) : '');
-  var U = DS.fuseUnions(save);      // 올리기 전에 읽는다 (올린 뒤에 읽으면 옛 판 옮기기가 이 셋을 옛 묶음으로 본다)
-  have.forEach(function (c) { c.L = Math.max(c.L, 71); c.exp = 0; });
-  var u = { ids: ids.slice(), name: name, at: fuTopScn(save), t: Math.round(+save.time || 0) };
-  U.push(u);
-  DS.lastFuse = { ids: ids.slice(), id: lead.id, name: name, union: u, mercsBack: 0, over: 0, relicsBack: [] };
-  return lead;
+  var who = ids.map(function (k) { return DS.pByKey(save, k); });
+  who.forEach(function (w) { w.L = Math.max(DS.pL(w), 71); w.exp = 0; w.fz = 1; });
+  DS.pSync(save);
+  var names = who.map(function (w) { return w === DS.heroPs(save) ? (save.chars[save.hero].name || save.name || '맹주') : (w.ttl || w.n || ''); });
+  DS.lastFuse = { ids: who.map(function (w) { return DS.pKey(save, w); }), who: who, names: names, id: DS.pKey(save, who[0]), name: '', union: null, mercsBack: 0, over: 0, relicsBack: [] };
+  save.fuN2 = (+save.fuN2 || 0) + 1;
+  return who[0];
 };
-// 1.0.1: 남은 마지막 한 가문 — 셋씩 묶고 하나가 남으면, 이미 있는 대가문 하나에 넷째로 합류해 8단에 오른다 (옛 「별의 네 집」처럼)
-DS.fuseJoinable = function (save) {
-  var pool = DS.fusePool(save), U = DS.fuseUnions(save);
-  if (pool.length !== 1 || !U.length || pool[0].L < DS.FUSE_MIN) return null;
-  return U.some(function (u) { return u.ids.length < 4; }) ? pool[0] : null;
-};
-DS.fuseJoin = function (save, id, ui) {
-  var c = DS.fuseJoinable(save), U = DS.fuseUnions(save), u = U[ui];
-  if (!c || c.id !== +id || !u || u.ids.length >= 4 || !save.crest) return null;
-  c.L = Math.max(c.L, 71); c.exp = 0; u.ids.push(c.id);
-  DS.lastFuse = { ids: [c.id], id: c.id, name: u.name, union: u, join: true, mercsBack: 0, over: 0, relicsBack: [] };
-  return c;
-};
-// 봇·시험용: 후보에서 셋씩 차례로 묶는다 (깃발 번호 순). 돌려주는 것: 이번에 생긴 묶음 수
+DS.fuseJoinable = function () { return null; };
+DS.fuseJoin = function () { return null; };
+// 봇·시험용: 후보에서 셋씩 차례로 (출전한 사람 먼저). 돌려주는 것: 이번에 오른 셋의 수
 DS.fuseAuto = function (save, max) {
   var n = 0; max = max == null ? 99 : max;
-  while (n < max) { var c = DS.fuseCands(save).map(function (c) { return c.id; }); if (c.length < DS.FUSE_N || !save.crest) break; if (!DS.fuse(save, c.slice(0, DS.FUSE_N))) break; n++; }
-  var j = DS.fuseJoinable(save); if (j && save.crest && n < max) { var U = DS.fuseUnions(save); for (var k = 0; k < U.length; k++) if (U[k].ids.length < 4) { if (DS.fuseJoin(save, j.id, k)) n++; break; } }
+  while (n < max) { var c = DS.fuseCands(save).sort(function (a, b) { return (b.dep ? 1 : 0) - (a.dep ? 1 : 0) || (b.role === 'hero') - (a.role === 'hero'); }).map(function (c) { return c.key; }); if (c.length < DS.FUSE_N || !save.crest) break; if (!DS.fuse(save, c.slice(0, DS.FUSE_N))) break; n++; }
   return n;
 };
 // ⑮ 옛 저장의 합일 마스터 → 원래 세(네) 깃발로: 각각 마스터의 레벨 그대로(8단이면 8단, 9단이면 9단). 마스터 줄의 번호·장비·유물·사람 칸은 대표 깃발(rep)이 잇고, 나머지는 빈 손의 새 줄.
@@ -5659,8 +5732,8 @@ DS.bountyHit = function (save, e, rnd) {
     st.sh = (st.sh || 0) + (b.k === 'elite' ? DS.BTY.shard.elite : 1);      // 깃술 조각 (모이면 DS.bountyFlag 가 유물로 바꾼다)
     save.gold += b.r.gold || 0;
     if (b.r.ticket) save.tickets = (save.tickets || 0) + b.r.ticket;
-    var mer = DS.BTY.merit + (b.k === 'elite' ? DS.BTY.elite.merit : 0);      // 용병 몫: 출전 중인 용병 모두의 공훈
-    save.party.forEach(function (id) { DS.mercsOf(save, id).forEach(function (m) { m.x = (m.x || 0) + mer; }); });
+    var mer = DS.BTY.merit + (b.k === 'elite' ? DS.BTY.elite.merit : 0);      // r42: 출전 가문 모두의 공훈 (가솔 수만큼)
+    save.party.forEach(function (id) { var hc = save.chars[id]; if (hc && DS.hAdd) DS.hAdd(save, hc, mer * Math.max(1, DS.mercsOf(save, id).length)); });
     b.title = fill(btxt(b.k, 'title'), b);
   });
   if (done.length) DS.bountyState(save, rnd);
@@ -5688,7 +5761,7 @@ DS.enemySpec = function (type, L, o) {
 //   opt.g = { 1: true, ... } 고른 등급, opt.keepNk 별명 있는 용병 빼기, opt.keepVet 공훈 계급(DS.VET 번호) 이상 빼기 (false 면 안 뺌),
 //   opt.keepLk 잠근 용병(m.lk) 빼기, opt.skip = { id: 1 } 하나하나 뺀 용병. 지휘관이 이끄는 용병은 늘 건드리지 않는다.
 //   돌려주는 것: { pick: [내보낼 용병], kept: [{ m, why: 'nk'|'vet'|'lk'|'skip' }] } — 등급만 맞고 빠진 용병이 kept.
-DS.MERC_KEEP_VET = 2;      // 기본으로 아끼는 공훈 계급: 고참 이상
+DS.MERC_KEEP_VET = 3;      // r42: 기본으로 아끼는 개인 단: 3단 이상
 function famOf(save, m) {      // 3.0 가계도: 배우자·자식·부모가 살아 있는 용병은 일괄 내보내기에서 늘 뺀다 (하나씩 내보내기는 확인 창에서 묻는다)
   try {
     if (!DS.linOf || !DS.linSpouse) return false;
@@ -5704,7 +5777,7 @@ DS.mercBulkPick = function (save, opt) {
   var g = opt.g || {}, vet = opt.keepVet === false ? 99 : opt.keepVet == null || opt.keepVet === true ? DS.MERC_KEEP_VET : +opt.keepVet, skip = opt.skip || {}, pick = [], kept = [];
   DS.reserve(save).forEach(function (m) {
     if (!g[m.g]) return;
-    var why = opt.keepLk !== false && m.lk ? 'lk' : famOf(save, m) ? 'fam' : opt.keepNk !== false && DS.mercTitle(m) ? 'nk' : DS.vetRank(m.x) >= vet ? 'vet' : skip[m.id] ? 'skip' : '';
+    var why = opt.keepLk !== false && m.lk ? 'lk' : famOf(save, m) ? 'fam' : opt.keepNk !== false && DS.mercTitle(m) ? 'nk' : DS.tierOfL(DS.pL(m)) >= vet ? 'vet' : skip[m.id] ? 'skip' : '';
     if (why) kept.push({ m: m, why: why }); else pick.push(m);
   });
   return { pick: pick, kept: kept };
@@ -7124,6 +7197,7 @@ DS.COFFIN_MAX = 10;
 // 3.3.0: 1만 골드 확정 부활(DS.revive·reviveCond·REVIVE_COST)은 없앴다. 관에서 나오는 길은 「다시 부름」(DS.egReturn — 다음 세대의 장, 스무 해 끝 새벽)과 [묻는다](DS.linBury) 둘이다.
 // 돌아온 이·깃대를 넘긴 선대의 용병 종류 (설계서 4-3). 4.0 의 CAST_KIND 가 굳으면 이 표만 바꾼다
 DS.RET_KIND = { inf: 'm_sword', cav: 'm_lancer', fly: 'm_lancer', mar: 'm_pike', pike: 'm_pike', arc: 'm_archer', cle: 'm_sister', mon: 'm_templar', mag: 'm_sister', sha: 'm_templar', bm: 'm_sword', tm: 'm_pike', mm: 'm_templar' };
+DS.RET_L = function (s, L, g) { return Math.max(DS.recruitL ? DS.recruitL(s, g) : 1, Math.min(70, Math.round((+L || 1) * 0.6))); };      // r42: 돌아온 이의 개인 레벨 — 옛 레벨의 6할 (부대에 새로 오는 이보다 낮지 않게)
 DS.RET_VET = function (tier) { return tier <= 3 ? 25 : tier <= 6 ? 70 : tier <= 8 ? 150 : 280; };      // 깃발 들던 이가 돌아올 때의 공훈 (숙련·고참·정예·용사)
 DS.RET_RG = function (tier) { return tier <= 3 ? 2 : tier <= 6 ? 3 : tier <= 8 ? 4 : 5; };      // 숨질 때의 단 → 돌아올 등급 (고급·희귀·영웅·전설)
 // 기본 글 (DS.LORE.lineage 가 있으면 그쪽이 먼저). {a} {b} {kid} {house} {at}
@@ -7220,7 +7294,7 @@ function entOf(s, p) {
 function sync(s, p) {
   var e = entOf(s, p); if (!e) return p;
   if (p.c) { p.cls = e.cls; p.L = e.L; if (!p.gv) p.n = callBase(s, e); }
-  else { p.type = e.type; p.g = e.g; p.n = e.n; p.sn = e.sn || p.sn; }
+  else { p.type = e.type; p.g = e.g; p.n = e.n; p.sn = e.sn || p.sn; p.L = DS.pL(e); }
   return p;
 }
 DS.linOf = function (s, ent) { if (!ent) return null; return ent.cls ? charP(s, ent) : mercP(s, ent, false); };
@@ -7369,8 +7443,8 @@ DS.linBirthBlock = function (s, hpid) {
 function spG(s, q) { if (!q) return 2; var e = entOf(s, q), sn = q.snap || {}; return Math.max(1, Math.min(5, Math.round(+((e && e.g) || q.g || sn.g || 2)))); }
 DS.potOf = function (s, sp, r, hi) { var a = hi ? 0.25 : 1 / 3, b = hi ? 0.55 : 2 / 3, luck = r < a ? -1 : r < b ? 0 : 1; return Math.max(1, Math.min(5, spG(s, sp) + luck)); };
 DS.potHi = function (s) { var h = s.chars[s.hero]; return !!h && DS.tierOfL(h.L) >= 7; };
-DS.potMul = function (m) { var p = m && m.pot, k = m && DS.KIND_GROW && DS.KIND_GROW[m.type] || 1; return (p >= 1 && p <= 5 ? 1 + 0.15 * (p - 3) : 1) * k; };      // 공훈이 쌓이는 속도 (★1 −30% … ★5 +30%) × ⑳ 장수 종족의 더딘 성장
-DS.meritAdd = function (m, pts) { if (!m) return 0; var d = pts * DS.potMul(m); m.x = (m.x || 0) + d; return d; };
+DS.potMul = function (m) { var p = m && m.pot, k = m && DS.KIND_GROW && DS.KIND_GROW[m.type] || 1; return (p >= 1 && p <= 5 ? 1 + 0.15 * (p - 3) : 1) * k; };      // r42: 경험치가 쌓이는 속도 (★1 −30% … ★5 +30%) × ⑳ 장수 종족의 더딘 성장
+DS.meritAdd = function (m, pts, sv) { if (!m) return 0; var S = sv || (DS.G && DS.G.save), h = S && DS.whoHouse ? DS.whoHouse(S, m) : null; if (h && DS.hAdd) DS.hAdd(S, h, pts); return h ? pts : 0; };      // r42: 공은 그 사람이 선 가문의 공훈으로 (막사 사람은 쌓지 않는다)
 // 옛 아이(대장 집의 핏줄)에게 한 번: 부모 기록으로 계산해 채운다 (등급은 바꾸지 않는다 — 무손실)
 DS.potFix = function (s) {
   var P = L0(s).P, n = 0;
@@ -7444,7 +7518,7 @@ DS.linAfterScn = function (s, o, rnd) {
 };
 
 // ── 죽음 ──
-function snapMerc(m) { var o = { id: m.id, type: m.type, g: m.g, t: m.t, v: m.v || 0, x: m.x || 0, k: m.k || 0, b: m.b || 0 }; ['q', 'bk', 'sv', 'it', 's', 'nk', 'ttl', 'pk', 'rv', 'lw'].forEach(function (k) { if (m[k] != null) o[k] = m[k]; }); var tt = DS.mercTitle ? DS.mercTitle(m) : ''; if (tt) o.title = tt; return o; }
+function snapMerc(m) { var o = { id: m.id, type: m.type, g: m.g, t: m.t, v: m.v || 0, L: DS.pL(m), k: m.k || 0, b: m.b || 0 }; if (m.fz) o.fz = 1; ['q', 'bk', 'sv', 'it', 's', 'nk', 'ttl', 'pk', 'rv', 'lw'].forEach(function (k) { if (m[k] != null) o[k] = m[k]; }); var tt = DS.mercTitle ? DS.mercTitle(m) : ''; if (tt) o.title = tt; return o; }
 function emptyCoffins(s) { var c = s.coffins; return c ? Math.max(0, c.have - c.list.length) : 0; }
 // 용병(아이 포함)이 죽었다 (DS.loseMerc 뒤에 부른다: m = 잃은 용병). 가계도에 오른 이거나 빈 관이 있으면 사람으로 남긴다.
 DS.linMercDied = function (s, m, at, why) {
@@ -7516,7 +7590,19 @@ DS.NAME_BAN = ['운영', '관리자', 'GM', 'gm', 'admin', '개발자', '시발'
 DS.nameOK = function (t) { t = String(t || '').trim(); var bare = t.replace(/ /g, ''); if (bare.length < 1 || bare.length > 8 || !/^[가-힣A-Za-z ]+$/.test(t)) return false; var low = t.toLowerCase(); return !DS.NAME_BAN.some(function (w) { return low.indexOf(w.toLowerCase()) >= 0; }); };
 DS.linHouseOK = function (t) { return DS.nameOK(t); };
 // 돌려주는 줄: { kind:'kid'|'adopt'|'pull', blood, kin(0 핏줄 · 2 막사 · 3 따르는 이 · 4 깃발 든 이 · 5 모집), mid, pid, name, full, sx, g, type, x, o, h(든 깃발 번호), L, loss:0, why, move, house }
-DS.LIN_WHY = { kid: '핏줄. 공훈을 잇는다', adopt: '양자. 제 공훈으로 시작한다', pull: '부대에 이을 사람이 없다. 해밀 용병소가 한 사람을 보낸다.', move: '양자. 가문 이름을 새로 짓는다. 레벨과 장비는 그대로다' };
+DS.LIN_WHY = { kid: '핏줄. 선대와의 레벨 차이 절반을 잇는다', adopt: '양자. 선대와의 레벨 차이 1/4 을 잇는다', pull: '부대에 이을 사람이 없다. 해밀 용병소가 한 사람을 보낸다.', move: '양자. 맹주 가문이 이 사람의 가문으로 옮겨 간다' };
+// r42: 후계가 앉을 맹주 가문 — 맹주 가문이 아닌 다른 병과 가문의 가주(깃발 든 이)·가솔이었으면 그 가문 (아홉은 castRow 가 제 집으로). 아니면 null (맹주 가문 그대로)
+function heirHouse(s, m, seat) {
+  var o = m && m.o && s.chars[m.o]; if (!o || o.id === seat.id || o.cls === seat.cls) return null;
+  return o;
+}
+// r42 계승: 후계는 제 레벨을 지니고, 선대와의 차이 가운데 핏줄은 절반, 양자·아홉은 1/4 을 받는다 (합일하지 않았으면 70 까지)
+function heirL(s, m, seat, kind) {
+  var own = DS.pL(m), pre = seat && seat.ps && seat.ps.L != null ? DS.pL(seat.ps) : seat ? seat.L : own, H = DS.PEXP ? DS.PEXP.heir : { kid: 0.5, adopt: 0.25 };
+  var k = kind === 'kid' ? H.kid : kind === 'pull' ? 0 : H.adopt, gap = Math.max(0, pre - own);
+  return Math.min(DS.pCap ? DS.pCap(m) : 70, own + Math.ceil(gap * k));
+}
+DS.linHeirL = heirL;
 DS.linHeirs = function (s, chId) {
   var ch = s.chars[chId]; if (!ch || +chId !== +s.hero) return [];
   var P = L0(s).P, dp = ch.vac ? P[ch.vac.pid] : charP(s, ch), L = ch.L, out = [], blood = [], cast = [], hid = s.hero;
@@ -7526,13 +7612,14 @@ DS.linHeirs = function (s, chId) {
     if (p && (p.id === spouse || p.hand || p.rv || p.ret || anc[p.id])) return;
     if (m.cast) { var cr = castRow(s, m, p, ch, L); if (cr) cast.push(cr); return; }      // r22: 아홉(과 그 집 2대)은 성을 바꾸지 않는다 — 대신 그 집이 맹주 가문이 된다
     var bf = DS.bearsFlag ? DS.bearsFlag(s, m) : null, isB = !!(p && p.hb && !p.ad);
-    var row = { kind: isB ? 'kid' : 'adopt', blood: isB, kin: isB ? 0 : bf ? 4 : m.o ? 3 : 2, mid: m.id, pid: p ? p.id : 0, name: DS.mercCall(m) || m.n, full: DS.fullName(m), sx: m.sx || (mercFix(m), m.sx), g: m.g, type: m.type, x: m.x || 0, o: m.o || 0, h: bf ? bf.id : 0, L: L, loss: 0 };
-    row.move = !isB && !!bf && bf.cls !== ch.cls; if (m.pot) row.pot = m.pot;
-    row.house = row.move ? bf.cls : '';
+    var row = { kind: isB ? 'kid' : 'adopt', blood: isB, kin: isB ? 0 : bf ? 4 : m.o ? 3 : 2, mid: m.id, pid: p ? p.id : 0, name: DS.mercCall(m) || m.n, full: DS.fullName(m), sx: m.sx || (mercFix(m), m.sx), g: m.g, type: m.type, x: DS.pL(m), pL: DS.pL(m), o: m.o || 0, h: bf ? bf.id : 0, L: L, loss: 0 };
+    var hf = !isB ? heirHouse(s, m, ch) : null;      // r42: 다른 가문의 가주·가솔이면 맹주 가문이 그 가문으로 옮겨 간다
+    row.move = !!hf; if (hf) row.hf = hf.id; row.nL = heirL(s, m, ch, isB ? 'kid' : 'adopt'); if (m.pot) row.pot = m.pot;
+    row.house = row.move ? hf.cls : '';
     row.why = DS.LIN_WHY[row.move ? 'move' : row.kind];
     (isB ? blood : out).push(row);
   });
-  var by = function (a, b) { return a.kin - b.kin || (b.x || 0) - (a.x || 0) || b.g - a.g || a.mid - b.mid; };
+  var by = function (a, b) { return a.kin - b.kin || (b.pL || 0) - (a.pL || 0) || b.g - a.g || a.mid - b.mid; };      // r42: 개인 레벨 순
   var list = blood.sort(by).concat(out.sort(by));      // ⑭-1: 대장이 쓰러질 때마다 핏줄과 양자 후보를 함께 띄운다 (자동은 핏줄 우선 — 줄 차례)
   Object.keys(P).map(Number).sort(function (a, b) { return a - b; }).forEach(function (k) {      // 미성년 핏줄: 흐린 줄
     var q = P[k]; if (q.st !== 'young' || q.ad || !q.hb || anc[q.id]) return;
@@ -7549,7 +7636,7 @@ function castRow(s, m, p, ch, L) {
   var key = m.cast, flag = DS.castFlag ? DS.castFlag(s, key) : null;
   if (!DS.CAST_NAME || !DS.CAST_NAME[key] || !flag || flag.id === ch.id) return null;
   var bf = DS.bearsFlag ? DS.bearsFlag(s, m) : null;
-  var row = { kind: 'adopt', blood: false, kin: 6, cast: key, mid: m.id, pid: p ? p.id : 0, name: DS.mercCall(m) || m.n, full: DS.fullName(m), sx: m.sx || (mercFix(m), m.sx), g: m.g, type: m.type, x: m.x || 0, o: m.o || 0, h: bf ? bf.id : 0, hf: flag.id, L: L, loss: 0, move: true, house: key, hn: DS.castHouse(key), why: DS.LIN_WHY.cast };
+  var row = { kind: 'adopt', blood: false, kin: 6, cast: key, mid: m.id, pid: p ? p.id : 0, name: DS.mercCall(m) || m.n, full: DS.fullName(m), sx: m.sx || (mercFix(m), m.sx), g: m.g, type: m.type, x: DS.pL(m), pL: DS.pL(m), nL: heirL(s, m, ch, 'adopt'), o: m.o || 0, h: bf ? bf.id : 0, hf: flag.id, L: L, loss: 0, move: true, house: key, hn: DS.castHouse(key), why: DS.LIN_WHY.cast };
   if (m.pot) row.pot = m.pot;
   return row;
 }
@@ -7575,8 +7662,8 @@ DS.linSucceed = function (s, chId, pick, opt) {
   if (ck && (!cf || cf.id === ch.id)) return null;
   if (p.hand || p.rv || p.ret) { if (!fresh) return null; }
   if (dp && ancOf(s, dp)[p.id]) return null;      // 조상 가드 (부모 고리)
-  var isB = !!(p.hb && !p.ad) && !ck, bf = ck ? cf : DS.bearsFlag ? DS.bearsFlag(s, m) : null, move = !isB && !!bf && bf.cls !== ch.cls, oldHs = Lr.hs || ch.cls, kind = isB ? 'kid' : 'adopt';
-  var dps = ch.ps || {}, x0 = m.x || 0;
+  var isB = !!(p.hb && !p.ad) && !ck, bf = ck ? cf : !isB ? heirHouse(s, m, ch) : null, move = !isB && !!bf && bf.id !== ch.id && bf.cls !== ch.cls, oldHs = Lr.hs || ch.cls, kind = isB ? 'kid' : 'adopt';      // r42: 다른 가문의 가주·가솔이던 양자, 아홉 → 맹주 가문이 그 가문으로 옮겨 간다
+  var dps = ch.ps || {}, x0 = m.x || 0, nL = fresh ? DS.pL(m) : heirL(s, m, ch, kind);
   if (!isB) {
     if (dp && (p.pa || []).indexOf(dp.id) < 0) p.pa = (p.pa || []).concat([dp.id]); p.ad = 1; p.osn = p.sn; p.gen = dgen + 1;
     if (move) { Lr.osur = Lr.sur; Lr.sur = p.sn || Lr.sur; }      // ⑬ 가문이 옮겨 간다: 양자의 본래 성을 쓴다 (옛 성은 기록에)
@@ -7584,13 +7671,14 @@ DS.linSucceed = function (s, chId, pick, opt) {
     evs.push({ t: 'adopt', a: p.id, b: dp ? dp.id : 0, ev: logE(s, 'adopt', p.id, dp ? dp.id : 0, { osn: p.osn }) });
   }
   if (m.it && DS.giveMercItem) DS.giveMercItem(s, m.id, null);      // 들고 있던 물건은 가방으로
-  var ps = { type: m.type, g: m.g, t: m.t, v: m.v || 0, x: isB ? Math.max(x0, +dps.x || 0) : x0, k: m.k || 0, b: m.b || 0 };
+  var ps = { type: m.type, g: m.g, t: m.t, v: m.v || 0, L: nL, exp: nL > DS.pL(m) ? 0 : +m.exp || 0, k: m.k || 0, b: m.b || 0 };      // r42: 제 레벨 + 계승 몫
+  if (m.fz) ps.fz = 1; if (m.pot) ps.pot = m.pot;
   ['q', 'bk', 'sv', 's', 'nk', 'pk'].forEach(function (k) { if (m[k] != null) ps[k] = m[k]; });
   if (DS.tmCarry) { DS.tmCarry(m, ps); p.tm = ps.tm.slice(); if (dp && !dp.tm && dps.tm) dp.tm = dps.tm.slice(); }      // r41 temper: 기질·받은 성장은 사람을 따라간다
   p.snap = snapMerc(m);
   var hpR = m.hp == null ? 1 : m.hp, mgr = m.gr;
   var seat = ch;
-  if (move) {      // ⑯ 대장 깃발은 그대로 (병과·레벨·단·장비). 바뀌는 것은 가문의 문패(이름·문장·호 체계)뿐 — 양자가 들던 아홉 집 깃발은 그 집에 남아 다른 이가 맡는다
+  if (move) {      // r42: 맹주 가문이 그 사람의 가문으로 옮겨 간다 (병과·장비·가문 공훈은 그 가문의 것). 옛 맹주 가문은 보통 가문이 되어 새 가주를 기다린다
     var oldN = Lr.hn || DS.houseOf(Lr.osur || Lr.sur || ''), hn = String(opt.house || '').trim();
     if (ck) hn = DS.castHouse(ck);      // r22: 아홉의 집 이름 그대로 (이야기가 그 이름을 부른다 — 바꿔 달지 않는다)
     if (!DS.linHouseOK(hn)) hn = DS.houseDefault(s, p, bf);
@@ -7604,8 +7692,15 @@ DS.linSucceed = function (s, chId, pick, opt) {
     var hx = { from: oldHs, to: bf.cls, osn: Lr.osur || '', name: hn, old: oldN }; if (ck) hx.cast = ck;
     evs.push({ t: 'house', a: p.id, from: oldHs, to: bf.cls, name: hn, cast: ck || undefined, ev: logE(s, 'house', p.id, dp ? dp.id : 0, hx) });
     if (ck) { p.cast = ck; if (!Lr.ca || typeof Lr.ca !== 'object') Lr.ca = {}; Lr.ca[ck] = scnN(s) + 1; }      // r22: 이 집이 맹주가 된 때 (이야기 열쇠는 대장에게 — story.js DS.castHero)
+    seat = bf;
   }
+  var mWasFollow = move && m.o === bf.id && !m.h;
   DS.loseMerc(s, m.id); p.m = 0;
+  if (move) {
+    var cb = DS.bearer ? DS.bearer(s, bf, 1) : null;
+    if (cb && cb !== m) { delete cb.h; cb.o = mWasFollow ? bf.id : 0; }      // 그 가문의 가주였던 이는 비워진 가솔 자리로 (못 서면 막사)
+    seatMove(s, ch, bf);
+  }
   delete seat.vac; delete seat.cu;
   if (m.by != null) { seat.by = m.by; seat.ls = m.ls; }
   seat.hp = hpR; seat.down = false; if (seat.mp == null) seat.mp = 1;
@@ -7616,13 +7711,27 @@ DS.linSucceed = function (s, chId, pick, opt) {
   if (Lr.gb && Lr.gb.one && p.gen - (+Lr.gb.o || 0) === 1) seat.name = Lr.gb.b;      // 직접 입력한 호에 대수가 없으면 그대로
   delete seat.gr; if (mgr) seat.gr = mgr;
   mood(seat, 'will');
-  var e = logE(s, 'heir', p.id, dp ? dp.id : 0, { kind: kind, L: seat.L, from: seat.L, cls: seat.cls, x: ps.x });
-  evs.push({ t: 'heir', a: p.id, b: dp ? dp.id : 0, ch: seat.id, kind: kind, L: seat.L, from: seat.L, move: move, ev: e });
+  seat.L = ps.L; seat.exp = ps.exp; seat.Ls = seat.L;      // r42: 맹주 가문 줄은 새 맹주의 개인 레벨을 비춘다
+  var e = logE(s, 'heir', p.id, dp ? dp.id : 0, { kind: kind, L: ps.L, from: DS.pL(m), cls: seat.cls });
+  evs.push({ t: 'heir', a: p.id, b: dp ? dp.id : 0, ch: seat.id, kind: kind, L: ps.L, from: DS.pL(m), pre: dps.L != null ? DS.pL(dps) : ps.L, move: move, ev: e });
   if (DS.ghTouch) DS.ghTouch(s);      // 장비 내력: 대장 깃발을 새 손이 든다
-  if (ck && cf && DS.bnAuto && !(DS.bearer && DS.bearer(s, cf))) { var fa = DS.bnAuto(s, { ids: [cf.id] })[0]; if (fa && fa.mid) evs.push({ t: 'seat', ch: cf.id, mid: fa.mid }); }      // r22: 아홉이 떠난 그 집(이제 분가)의 가주 자리는 가솔이 먼저 잇는다 (없으면 빈 채로 — 가문 카드에서 맡긴다)
+  if (move && DS.bnAuto && !(DS.bearer && DS.bearer(s, ch))) { var fa = DS.bnAuto(s, { ids: [ch.id] })[0]; if (fa && fa.mid) evs.push({ t: 'seat', ch: ch.id, mid: fa.mid }); }      // r42: 옛 맹주 가문의 가주 자리는 그 가문 가솔이 먼저 잇는다 (없으면 막사에서 — 그래도 없으면 빈 채로)
   if (DS.mercTidy) DS.mercTidy(s);
+  if (DS.pSync) DS.pSync(s);
   return evs;
 };
+// r42: 맹주 자리를 다른 가문 줄로 옮긴다 — 사람 칸(이름·가계도 고리·성별·나이·체력·사람 줄)은 새 줄로, 옛 줄은 보통 가문
+var SEATK = ['name', 'pid', 'sx', 'by', 'ls', 'gr', 'eld', 'hp', 'down', 'vac', 'nat', 'cu', 'lsc', 'ps'];
+function seatMove(s, from, to) {
+  if (!from || !to || from === to) return;
+  SEATK.forEach(function (k) { if (from[k] !== undefined) to[k] = from[k]; else delete to[k]; delete from[k]; });
+  delete from.Ls; delete to.Ls;
+  s.hero = to.id;
+  var pi = s.party.indexOf(from.id), ti = s.party.indexOf(to.id);
+  if (ti < 0) { if (pi >= 0) s.party[pi] = to.id; else if (s.party.length < DS.PARTY_MAX) s.party.push(to.id); else s.party[s.party.length - 1] = to.id; }
+  if (to.manual) delete to.manual;
+}
+DS.linSeatMove = seatMove;
 // r35 「가문이 끊겼다」: 대장이 쓰러졌는데 이을 어른이 아무도 없다 (값없는 모집 줄과 미성년 아이만 남았다).
 //   이때는 값없이 한 사람을 보내는 대신 스무 해가 흐르고(나이·천수·성년은 age.js 의 해마다 판정 그대로), 새 대장이 옛 깃발을 든다.
 //   자란 핏줄이 있으면 그 아이가, 없으면 낯선 이가 잇는다. 이름은 고를 수 있다. 가문 이름은 옛 이름을 잇거나 여덟 큰 가문 가운데 하나.
@@ -7703,12 +7812,13 @@ DS.linTidy = function (s) {
 // ── 합일: 조건·결과는 그대로. 4.0: 사람은 아무도 사라지지 않는다 — 합일체 P 를 만들지 않고, 연대기에 fuse 한 줄만 (meta.js 의 DS.fuse 가 사람을 옮긴다) ──
 var fuse0 = DS.fuse;
 // 1.0.1: 묶음은 자유 — 고른 세 가문(ids)과 묶음 이름(가주 공훈 1등 가문)을 연대기에 남긴다. 옛 꼴(fam 문자열)도 meta.js 가 받아 준다
-DS.fuse = function (s, ids, opt) {
+DS.fuse = function (s, ids, opt) {      // r42: 사람 셋 — 연대기에 셋의 이름으로 한 줄씩
   var m = fuse0(s, ids, opt); if (!m) return m;
-  var LF = DS.lastFuse || {}, u = LF.union || null;
-  if (u && u.fam == null && typeof ids === 'string') u.fam = ids;
-  var b = m.id === s.hero ? charP(s, m) : (DS.bearer ? (function () { var x = DS.bearer(s, m); return x ? mercP(s, x, true) : null; })() : null);
-  logE(s, 'fuse', b ? b.id : 0, 0, { ids: (LF.ids || []).slice(), cls: m.cls, clss: (LF.ids || []).map(function (id) { return s.chars[id] ? s.chars[id].cls : ''; }), name: LF.name || '' });
+  var LF = DS.lastFuse || {}, hp = DS.heroPs ? DS.heroPs(s) : null;
+  (LF.who || []).forEach(function (w) {
+    var p = w === hp ? charP(s, s.chars[s.hero]) : mercP(s, w, true);
+    logE(s, 'fuse', p ? p.id : 0, 0, { ids: (LF.ids || []).slice(), names: (LF.names || []).slice() });
+  });
   return m;
 };
 
@@ -7798,7 +7908,8 @@ DS.linHandOver = function (s, mid) {
   var type = DS.MERCS[ps.type] && !DS.MERCS[ps.type].pop ? ps.type : (DS.RET_KIND[ch.cls] || DS.baseMercTypes(ch.cls)[0]);
   // 4.0: 선대는 제 사람 기록(ps — 종류·특성·공훈) 그대로 영웅 등급 부대원으로 곁에 남는다 (난수를 쓰지 않는다)
   var m = { id: s.mnid++, type: type, g: Math.max(4, +ps.g || 1), o: 0, hp: ch.hp == null ? 1 : ch.hp, n: A.n, v: +ps.v || 0, t: own(DS.TRAITS, ps.t) ? ps.t : keys[Math.floor(hsh(A.id, 61, 3) * keys.length) % keys.length],
-    x: +ps.x || 0, k: +ps.k || 0, b: +ps.b || 0, sn: A.sn, sx: A.sx, ttl: call, pk: ps.pk || 100000 + A.id };
+    L: DS.pL(ps), exp: +ps.exp || 0, k: +ps.k || 0, b: +ps.b || 0, sn: A.sn, sx: A.sx, ttl: call, pk: ps.pk || 100000 + A.id };
+  if (ps.fz) m.fz = 1; if (ps.tm) m.tm = ps.tm.slice(); if (ps.pgn) m.pgn = ps.pgn;
   ['q', 'bk', 'sv', 's', 'nk'].forEach(function (k) { if (ps[k] != null) m[k] = ps[k]; });
   if (by != null) { m.by = by; m.ls = ls; }
   s.mercs.unshift(m);
@@ -7821,11 +7932,12 @@ DS.egReturn = function (s, i) {
     m.t = keys[Math.floor(hsh(seed, 61, 3) * keys.length) % keys.length]; m.v = Math.floor(hsh(seed, 67, 5) * 4); delete m.q;
     var fit = Object.keys(DS.QUIRKS || {}).filter(function (q) { return DS.quirkFits(type, q); });
     if (hsh(seed, 71, 7) < (DS.QUIRK_P || 0) && fit.length) m.q = fit[Math.floor(hsh(seed, 73, 9) * fit.length) % fit.length];
-    m.x = DS.RET_VET(DS.tierOfL(c.L || 1)); m.k = 0; m.b = 0;
+    m.L = DS.RET_L(s, c.L || 1, g); m.k = 0; m.b = 0;
     skill = DS.egOldSkill(c.cls, DS.tierOfL(c.L || 1), seed); if (skill) m.s = skill;
     m.pk = 100000 + seed;
   } else {      // 부대원이던 이: 종류·특성·버릇·생김·공훈·처치·전투·별명·고유 기술 그대로
-    ['t', 'v', 'x', 'k', 'b', 'q', 'bk', 'sv', 's', 'nk'].forEach(function (k) { if (sn[k] != null) m[k] = sn[k]; else if (k === 'q') delete m.q; });
+    ['t', 'v', 'k', 'b', 'q', 'bk', 'sv', 's', 'nk'].forEach(function (k) { if (sn[k] != null) m[k] = sn[k]; else if (k === 'q') delete m.q; });
+    m.L = DS.RET_L(s, sn.L || 1, g);
     m.pk = sn.pk || sn.id || 100000 + seed;
   }
   m.n = c.n; m.sn = c.sn; m.sx = c.sx; if (c.ttl && !cmd) m.ttl = c.ttl; m.rv = 1;
@@ -7861,7 +7973,7 @@ DS.linAutoWed = function (s) {
     var ch = s.chars[id]; if (!ch || ch.vac || ch.down) return; var cp = charP(s, ch); if (cp.sp) return;
     var best = null;
     s.mercs.forEach(function (m) { mercFix(m); if (m.sx === ch.sx) return; var p = mercP(s, m, false); if (p && p.sp) return; if (!DS.linCanWed(s, { c: id }, { m: m.id }, { anywhere: true }).ok) return;
-      var sc = m.g * 100 + (m.o ? 50 : 0) + Math.min(49, m.x || 0); if (!best || sc > best.sc) best = { m: m, sc: sc }; });
+      var sc = m.g * 100 + (m.o ? 50 : 0) + Math.min(49, DS.pL(m) / 2); if (!best || sc > best.sc) best = { m: m, sc: sc }; });
     if (best && DS.linWed(s, { c: id }, { m: best.m.id }, { anywhere: true })) n++;
   });
   return n;
@@ -8054,6 +8166,7 @@ function grow(s, at, evs) {
     if (DS.ageOf(s, p) < DS.AGE.adult) return;
     if (DS.reserve(s).length >= DS.MERC_MAX) { if (!p.wait) { p.wait = 1; evs.push({ t: 'adultWait', a: p.id, text: DS.linName(s, p.id) + '이(가) 성년이 되었다. 막사가 차서 자리가 나길 기다린다' }); } return; }
     var y = p.ya, m = DS.addMerc(s, y.type, y.g, 0);
+    m.L = DS.kidL ? DS.kidL(s) : 1; m.exp = 0;      // r42: 아이는 낮은 레벨로 막사에 들어와 부모 가문 가솔로 자란다
     m.n = y.n; m.sx = y.sx; m.sn = p.sn; if (p.ttl) m.ttl = p.ttl; m.t = y.t; m.v = y.v; if (y.q) m.q = y.q; else delete m.q;
     m.by = p.by; m.ls = p.ls; m.pid = p.id; if (p.pot != null) m.pot = p.pot;      // ⑭-4 잠재력
     p.st = 'live'; p.m = m.id; p.type = y.type; p.g = y.g; p.n = y.n; delete p.ya; delete p.wait;
@@ -8229,12 +8342,13 @@ function heroId(s) { return s && s.chars && own(s.chars, s.hero) ? +s.hero : 0; 
 
 // ───────── 든 사람 ─────────
 // 대장 깃발이면 그 줄의 ps(대장이라는 사람의 기록 — 체력·나이·이름은 대장 줄에), 아니면 m.o === ch.id && m.h 인 부대원. 없으면 null (빈 깃발)
-DS.bearer = function (s, ch) {
+DS.bearer = function (s, ch, noSync) {      // r42: 찾을 때마다 가문 줄의 레벨을 가주의 개인 레벨에 맞춘다 (noSync = 맞추지 않는다 — DS.pSync 안에서)
   if (!s || !ch || !s.chars) return null;
-  if (ch.id === heroId(s)) { if (!ch.vac && ch.ps && !ch.ps.ul && DS.heroUlt) DS.heroUlt(s); return ch.vac ? null : (ch.ps || null); }      // r38: 깨어난 맹주의 타고난 필살기를 사람 줄에 적어 둔다 (싸움 사양이 ps.ul 을 읽는다)
-  var ms = s.mercs || [];
-  for (var i = 0; i < ms.length; i++) if (ms[i].h && ms[i].o === ch.id) return ms[i];
-  return null;
+  var b = null;
+  if (ch.id === heroId(s)) { if (!ch.vac && ch.ps && !ch.ps.ul && DS.heroUlt) DS.heroUlt(s); b = ch.vac ? null : (ch.ps || null); }      // r38: 깨어난 맹주의 타고난 필살기를 사람 줄에 적어 둔다 (싸움 사양이 ps.ul 을 읽는다)
+  else { var ms = s.mercs || []; for (var i = 0; i < ms.length; i++) if (ms[i].h && ms[i].o === ch.id) { b = ms[i]; break; } }
+  if (!noSync && s.chars[ch.id] === ch && DS.pSyncRow) DS.pSyncRow(ch, b);
+  return b;
 };
 DS.bearerOf = function (s, chId) { return DS.bearer(s, s.chars[chId]); };
 DS.bearsFlag = function (s, m) { return m && m.h && m.o && s.chars[m.o] && m.o !== heroId(s) ? s.chars[m.o] : null; };      // 이 부대원이 든 깃발 (없으면 null)
@@ -8246,17 +8360,20 @@ DS.bearerName = function (s, ch) {
   var b = DS.bearer(s, ch); return b ? (b.ttl || b.n || '') : '';
 };
 // 얹힘 (%): 공훈 100마다 1%(최대 20%) + 등급 몫. 공훈 0 · 일반 = 0 — 지금의 깃발 유닛과 글자 그대로 같다
-DS.bnMerit = function (who) { var B = DS.BN; return who ? Math.min(B.cap, Math.floor(Math.max(0, +who.x || 0) / 100) * B.slope) : 0; };
+// r42: 공훈 몫은 그 사람이 선 가문의 공훈(DS.hPct)이다 — ch 를 주면 그 가문(맡기기 미리 보기), 없으면 지금 선 가문
+function houseFor(who, ch) { if (ch) return ch; var s = DS.G && DS.G.save; return s && DS.whoHouse ? DS.whoHouse(s, who) : null; }
+DS.bnMerit = function (who, ch) { var h = houseFor(who, ch); return who && h && DS.hPct ? DS.hPct(h) : 0; };
 DS.bnGrade = function (who) { return who ? DS.BN.grade[Math.max(1, Math.min(5, Math.round(+who.g || 1)))] || 0 : 0; };
-DS.bnPct = function (who) { return who ? DS.bnMerit(who) + DS.bnGrade(who) : 0; };
+DS.bnPct = function (who, ch) { return who ? DS.bnMerit(who, ch) + DS.bnGrade(who) : 0; };
 
 // ───────── 전투 사양: cmdSpec 바깥 겹 (engine.js 는 고치지 않는다) ─────────
 // who = DS.bearer(save, ch). 공훈·등급 얹힘(HP·공격·마공·방어·마방) + 특성은 온전히. 버릇·고유 기술은 쉰다. 비탄·노년은 lineage·age 겹이 who 에게서 읽는다.
 var cs0 = DS.cmdSpec;
+function withL(ch, L) { var c = {}; for (var k in ch) if (own(ch, k)) c[k] = ch[k]; c.L = L; return c; }
 DS.cmdSpec = function (ch, hero, who) {
-  var u = cs0(ch, hero, who);
+  var u = cs0(who && who.L != null && DS.pL(who) !== ch.L ? withL(ch, DS.pL(who)) : ch, hero, who);      // r42: 깃발 유닛은 든 사람의 개인 레벨로
   if (!who) return u;
-  var k = 1 + DS.bnPct(who) / 100, T = (who.t && DS.TRAITS[who.t]) || {};
+  var k = 1 + DS.bnPct(who, ch) / 100, T = (who.t && DS.TRAITS[who.t]) || {};
   var hp = Math.max(1, Math.round(u.mhp * k * (T.hp || 1)));
   u.hp = u.mhp = hp;
   u.atk = Math.round(u.atk * k * (T.at || 1)); u.mag = Math.round(u.mag * k * (T.at || 1));
@@ -8271,7 +8388,7 @@ DS.cmdSpec = function (ch, hero, who) {
     var bl = DS.bearerLook(who);      // r27: 가주는 제 모습 그대로 — 생김새는 든 사람(부대원)의 것, 능력·기술은 가문(병과)의 것
     if (bl) { u.look = bl.look; u.sprite = bl.sprite; u.pal = bl.pal; u.big = bl.big; u.plook = 1; }
   }
-  u.bpct = DS.bnPct(who);
+  u.bpct = DS.bnPct(who, ch);
   if (DS.ultSpec) DS.ultSpec(u, who, hero);      // r32 필살기 · r36: 맹주만 · r38: 맹주가 타고난 것(ch.ps.ul — 깨어난 뒤에 적힌다)
   return u;
 };
@@ -8434,7 +8551,7 @@ DS.bnAuto = function (s, opt) {
   (only || s.party || []).forEach(function (id) {
     var ch = s.chars[id]; if (!ch || +id === hid || DS.bearer(s, ch)) return;
     var nat = function (m) { return DS.bnNative(ch.cls, m) ? 1 : 0; };      // r27: 태생이 맞는 사람부터
-    var by = function (a, b) { return nat(b) - nat(a) || (b.x || 0) - (a.x || 0) || b.g - a.g || a.id - b.id; };
+    var by = function (a, b) { return nat(b) - nat(a) || DS.pL(b) - DS.pL(a) || b.g - a.g || a.id - b.id; };      // r42: 개인 레벨 순
     var from = 'follow', pool = DS.mercsOf(s, ch.id).filter(DS.bnPickable).sort(by);
     if (!pool.length) { from = 'reserve'; pool = DS.reserve(s).filter(DS.bnPickable).sort(by); }
     var m = pool[0];
@@ -8496,7 +8613,7 @@ DS.castArrive = function (s, pick) {
     }
     if (!free && DS.reserve(s).length >= DS.MERC_MAX) { if (!w.wait) { w.wait = 1; out.push({ t: 'castWait', key: key, text: house + '의 다음 사람은 막사에 자리가 나면 온다.' }); } return; }
     var id = s.mnid++, keys = Object.keys(DS.TRAITS), Y = (DS.AGE && DS.AGE.year) || 600, t = (s.cal && s.cal.t) || 0, nm = DS.CAST_NAME[key];
-    var m = { id: id, type: w.type, g: w.g, o: 0, hp: 1, n: nm, v: Math.floor(hsh(id, 401, 3) * 4) % 4, t: keys[Math.floor(hsh(id, 403, 5) * keys.length) % keys.length], x: 0, k: 0, b: 0, sn: hsn || '로저스', sx: hsh(id, 405, 7) < 0.5 ? 'm' : 'f', lk: 1, cast: key, hd: w.gen };
+    var m = { id: id, type: w.type, g: w.g, o: 0, hp: 1, n: nm, v: Math.floor(hsh(id, 401, 3) * 4) % 4, t: keys[Math.floor(hsh(id, 403, 5) * keys.length) % keys.length], L: DS.recruitL ? DS.recruitL(s, w.g) : 1, exp: 0, k: 0, b: 0, sn: hsn || '로저스', sx: hsh(id, 405, 7) < 0.5 ? 'm' : 'f', lk: 1, cast: key, hd: w.gen };
     if (DS.AGE) { m.by = t - (17 + Math.floor(hsh(id, 407, 9) * 6)) * Y; m.ls = DS.ageLsHuman(id, 409); }      // ㉒ 사람 수명
     s.mercs.unshift(m);
     var p = DS.linMkP(s, { k: 'm', sn: m.sn, n: nm, sx: m.sx, gen: w.gen, pa: [], type: m.type, g: m.g, m: m.id, gv: 1 });
@@ -8523,7 +8640,7 @@ if (md0) DS.linMercDied = function (s, m, at, why) {
 DS.castJoin = function (s, key, ch) {
   if (!DS.CAST_NAME || !DS.CAST_NAME[key] || (s.mercs || []).some(function (x) { return x.cast === key; })) return null;
   if (DS.castHero && DS.castHero(s) === key) return null;      // r22: 그 사람은 이미 대장이다 — 두 번 오지 않는다
-  var id = s.mnid++, m = { id: id, type: DS.CAST_KIND[key] || 'm_sword', g: DS.CAST_G, o: ch.id, h: 1, hp: 1, n: DS.CAST_NAME[key], v: Math.floor(hsh(ch.id, 441, 3) * 4) % 4, t: DS.CAST_TRAIT[key], x: 0, k: 0, b: 0,
+  var id = s.mnid++, m = { id: id, type: DS.CAST_KIND[key] || 'm_sword', g: DS.CAST_G, o: ch.id, h: 1, hp: 1, n: DS.CAST_NAME[key], v: Math.floor(hsh(ch.id, 441, 3) * 4) % 4, t: DS.CAST_TRAIT[key], L: ch.L, exp: 0, k: 0, b: 0,
     sn: (DS.LIN_HOUSE && DS.LIN_HOUSE[key]) || '로저스', sx: DS.CAST_SX[key] || (hsh(ch.id, 211, 7) < 0.5 ? 'm' : 'f'), lk: 1, cast: key };
   if (DS.ageNew && s.cal) DS.ageNew(s, m, 'cmd');
   s.mercs.unshift(m);
@@ -8658,7 +8775,7 @@ function fixPs(ps) {
   if (!own(DS.MERCS, ps.type)) ps.type = 'm_sword';
   ps.g = Math.max(1, Math.min(5, Math.round(+ps.g || 1)));
   if (!own(DS.TRAITS, ps.t)) delete ps.t;
-  ps.x = Math.max(0, +ps.x || 0); ps.k = Math.max(0, Math.round(+ps.k || 0)); ps.b = Math.max(0, Math.round(+ps.b || 0)); ps.v = Math.max(0, Math.min(3, Math.round(+ps.v || 0)));
+  ps.x = Math.max(0, +ps.x || 0); if (ps.L != null) { ps.L = DS.pL(ps); ps.exp = Math.max(0, +ps.exp || 0); } ps.k = Math.max(0, Math.round(+ps.k || 0)); ps.b = Math.max(0, Math.round(+ps.b || 0)); ps.v = Math.max(0, Math.min(3, Math.round(+ps.v || 0)));
   if (ps.q != null && !(DS.QUIRKS && own(DS.QUIRKS, ps.q))) delete ps.q;
   if (ps.s != null && !own(DS.SKILLS, ps.s)) delete ps.s;
   return ps;
@@ -8849,8 +8966,8 @@ DS.powerParts = function (s, ch, who) {
   step('base', DS.power(DS.cmdSpec(ref, false, null)), t + '단 Lv' + DS.lvOfL(ch.L));
   step('gear', DS.power(DS.cmdSpec(bare, false, null)), '');
   if (who) {
-    var w0 = { id: who.id, n: who.n, ttl: who.ttl, x: who.x || 0, g: 1 };
-    step('merit', DS.power(DS.cmdSpec(bare, false, w0)), DS.VET[DS.vetRank(who.x || 0)].name + ' +' + DS.bnMerit(who) + '%');
+    var w0 = { id: who.id, n: who.n, ttl: who.ttl, g: 1 };
+    step('merit', DS.power(DS.cmdSpec(bare, false, w0)), '가문 공훈 ' + DS.hName(DS.hRank(ch)) + ' +' + DS.hPct(ch) + '%');
     w0.g = who.g; step('grade', DS.power(DS.cmdSpec(bare, false, w0)), ((DS.GRADES[who.g] || {}).name || '') + ' +' + DS.bnGrade(who) + '%');
     w0.t = who.t; step('trait', DS.power(DS.cmdSpec(bare, false, w0)), who.t && DS.TRAITS[who.t] ? DS.TRAITS[who.t].name : '');
     if (!hero && who.type && DS.MERCS[who.type]) { w0.type = who.type; w0.cast = who.cast; step('native', DS.power(DS.cmdSpec(bare, false, w0)), DS.bnNative(ch.cls, who) ? '태생 맞음' : '태생 다름 (' + DS.nativeName(who) + ')'); }      // r27
@@ -8860,11 +8977,12 @@ DS.powerParts = function (s, ch, who) {
 };
 DS.mercParts = function (s, ch, m) {
   if (!ch || !m) return null;
-  var rows = [], last = 0, b = { id: m.id, type: m.type, n: m.n, g: 1, x: 0 };
+  var ch0 = {}; for (var kk in ch) if (own(ch, kk)) ch0[kk] = ch[kk]; ch0.hx = 0;      // 가문 공훈을 뺀 가문
+  var rows = [], last = 0, b = { id: m.id, type: m.type, n: m.n, g: 1, L: m.L, fz: m.fz };
   function step(k, n, tail) { rows.push({ k: k, n: n - last, t: tail || '' }); last = n; }
-  step('base', DS.power(DS.mercSpec(ch, b)), DS.MERCS[m.type].name + (DS.mercMatch(ch, m) ? ' 병과 일치' : ''));
-  b.g = m.g; step('grade', DS.power(DS.mercSpec(ch, b)), (DS.GRADES[m.g] || {}).name || '');
-  b.x = m.x || 0; step('merit', DS.power(DS.mercSpec(ch, b)), DS.VET[DS.vetRank(m.x || 0)].name + ' ×' + DS.VET[DS.vetRank(m.x || 0)].mul);
+  step('base', DS.power(DS.mercSpec(ch0, b)), DS.MERCS[m.type].name + ' ' + DS.tierOfL(DS.pL(m)) + '단 Lv' + DS.lvOfL(DS.pL(m)) + (DS.mercMatch(ch, m) ? ', 병과 일치' : ''));
+  b.g = m.g; step('grade', DS.power(DS.mercSpec(ch0, b)), (DS.GRADES[m.g] || {}).name || '');
+  step('merit', DS.power(DS.mercSpec(ch, b)), '가문 공훈 ' + DS.hName(DS.hRank(ch)) + ' ×' + DS.hMul(ch));
   b.t = m.t; b.q = m.q; step('trait', DS.power(DS.mercSpec(ch, b)), [m.t && DS.TRAITS[m.t] ? DS.TRAITS[m.t].name : '', m.q && DS.QUIRKS && DS.QUIRKS[m.q] ? DS.QUIRKS[m.q].name : ''].filter(Boolean).join(', '));
   b.it = m.it; step('gear', DS.power(DS.mercSpec(ch, b)), m.it && DS.ITEMS[m.it] ? DS.ITEMS[m.it].name : '');
   step('age', DS.power(DS.mercSpec(ch, m)), '');
@@ -8880,7 +8998,7 @@ var DS = globalThis.DS, fn0 = DS.flagName;
 function hid(s) { return s && s.hero; }
 // 1.0.1: 합일 가문 이름 = 고른 세 가문 중 가주의 공훈이 가장 큰 가문의 이름 + 「대가문」. 합일하는 순간 save.fuU[].name 에 고정 (DS.fuse), 고르는 동안은 지금 1등을 미리 보여 준다
 //   가주 공훈: 맹주 가문은 대장의 공훈(ps.x), 나머지는 그 가문 가주(DS.bearer)의 공훈. 가주가 없으면 맨 뒤. 같으면 먼저 고른 가문
-function meritOf(s, ch) { if (!ch) return -1; if (ch.id === hid(s)) return +((ch.ps || {}).x || 0); var b = DS.bearer ? DS.bearer(s, ch) : null; return b ? +(b.x || 0) : -0.5; }
+function meritOf(s, ch) { if (!ch) return -1; return +(ch.hx || 0); }      // r42: 가문 공훈
 DS.houseMerit = function (s, ch) { s = s || (DS.G && DS.G.save); return Math.max(0, meritOf(s, ch)); };
 DS.idsTop = function (s, ids) {
   if (!s || !s.chars) return '';
@@ -8930,14 +9048,14 @@ DS.flagNameOld = fn0;      // 병과로 부르던 옛 이름 (「보병 깃발�
 //   값은 사람에게서 정해진다: 저장 칸 tm(정수 % 여섯 칸 [hp, atk, def, mag, res, spd])이 있으면 그것, 없으면 용병 번호로 굴린다 (같은 사람은 늘 같다).
 //   한 사람의 여섯 칸 합은 0 근처 (가운데로 맞춘다) — 처음 만들 때 평균 세기는 그대로다.
 //   저장에 적는 때: 아이가 태어날 때(부모를 닮는다), 대장 자리로 옮길 때, 계급이 처음 오를 때(그 뒤로 고정), 대장 줄(ps)은 읽을 때.
-// 개인 성장: 공훈 계급(숙련~불멸)과 불멸 뒤의 별마다 기질에 맞는 능력치 하나가 영구히 오른다 (pg = 여섯 칸 %, pgn = 받은 단계 수).
+// 개인 성장 (r42): 개인 단이 오를 때마다(2단 … 10단) 기질에 맞는 능력치 하나가 영구히 오른다 (pg = 여섯 칸 %, pgn = 받은 단계 수).
 //   단계 몫 DS.TEMPER.steps. 무엇이 오르는지는 기질 순위로 무게를 둔 결정적 뽑기 (가장 센 칸은 합 20% 를 넘지 않는다).
 //   옛 저장: 지금 계급까지의 성장을 소급해 준다 (공훈에서 계산 — 저장 칸이 없어도 같다).
 // 전투 사양: DS.mercSpec (가솔·용병) · DS.cmdSpec (가주·대장) 바깥 겹에서 곱한다. 사람의 주 공격(종류의 공격/마공)은 유닛의 주 공격 칸에 붙는다.
 (function () {
 var DS = globalThis.DS;
 var TK = DS.TM_KEYS = ['hp', 'atk', 'def', 'mag', 'res', 'spd'];
-DS.TEMPER = { span: 10, spdK: 0.5, inh: 0.6, steps: [3, 3, 4, 4, 5, 2, 2, 2], cap: 20, capO: 12, w: [6, 3, 1.6, 0.8, 0.4], l1: 4, l2: 6, neg: -9 };
+DS.TEMPER = { span: 10, spdK: 0.5, inh: 0.6, steps: [3, 3, 3, 4, 4, 4, 3, 2, 2], cap: 20, capO: 12, w: [6, 3, 1.6, 0.8, 0.4], l1: 4, l2: 6, neg: -9 };
 DS.TM_NAME = { hp: '질긴 숨', atk: '힘센 체질', def: '통뼈', mag: '맑은 머리', res: '차분한 기운', spd: '날랜 몸' };
 DS.TM_NEG = { hp: '약한 숨', atk: '여린 손', def: '얇은 뼈', mag: '흐린 머리', res: '들뜬 기운', spd: '굼뜬 몸' };
 DS.TM_STAT = { hp: '체력', atk: '공격', def: '방어', mag: '마공', res: '마방', spd: '속도' };
@@ -8969,7 +9087,7 @@ function idx(k) { return TK.indexOf(k); }
 function nv(tm, k) { return tm[idx(k)] * (k === 'spd' ? 1 / DS.TEMPER.spdK : 1); }      // 속도는 절반 폭이라 견줄 때 되돌린다
 function seedOf(tm) { var s = 17; tm.forEach(function (v, i) { s = (s * 37 + (v + 50) * (i + 3)) | 0; }); return Math.abs(s); }
 // 계급 단계 수 (숙련 1 … 불멸 5, 별 6~8). 받은 단계(pgn)보다 적어지지 않는다
-DS.pgSteps = function (who) { if (!who) return 0; var x = +who.x || 0, n = DS.vetRank(x) + (DS.vetStars ? DS.vetStars(x) : 0); return Math.max(n, Math.min(DS.TEMPER.steps.length, +who.pgn || 0)); };
+DS.pgSteps = function (who) { if (!who) return 0; var n = Math.min(DS.TEMPER.steps.length, DS.tierOfL(DS.pL(who)) - 1); return Math.max(n, Math.min(DS.TEMPER.steps.length, +who.pgn || 0)); };      // r42: 개인 단이 오를 때마다 한 단계 (2단 … 10단)
 // 단계마다 무엇이 얼마나 올랐는가: [{ k, v, at(단계 번호 1~) }]. 결정적 (기질 + 단계 번호)
 DS.pgList = function (who, n) {
   var T = DS.TEMPER, tm = DS.tmOf(who), main = DS.tmMain(who), off = main === 'atk' ? 'mag' : 'atk';
@@ -9137,17 +9255,17 @@ if (mp0) DS.mercParts = function (s, ch, m) {
   return pp;
 };
 
-// ── 계급이 오른 알림 한 줄 (game.js meritAll) ──
+// ── 단이 오른 알림 한 줄 (game.js — r42: 개인 단이 오를 때, o.t1 = 새 단) ──
 //   「정예 승급 · 공격 +4% (배율 ×1.12 → ×1.18) · 전투력 3,210 → 3,390」
 function fmt(n) { n = Math.round(n || 0); return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 DS.tmRankMsg = function (o) {
   var who = o.who, name = o.name || (who && (who.ttl || who.n)) || '', parts = [];
-  var rk = o.r1 > o.r0 ? DS.VET[o.r1].name + ' 승급' : o.s1 > o.s0 ? DS.STAR_NAME[o.s1] : '';
+  var rk = o.t1 ? o.t1 + '단' : o.r1 > o.r0 ? DS.VET[o.r1].name + ' 승급' : o.s1 > o.s0 ? DS.STAR_NAME[o.s1] : '';
   parts.push((name ? name + ', ' : '') + rk);
   var sum = {}, ord = []; (o.gains || []).forEach(function (g) { if (!sum[g.k]) { sum[g.k] = 0; ord.push(g.k); } sum[g.k] += g.v; });
   var m1 = who ? DS.tmMul(who, 0) : null;
   ord.forEach(function (k) { var a = m1 ? m1[k] : 1; parts.push(DS.TM_STAT[k] + ' +' + sum[k] + '% (배율 ×' + (a - sum[k] / 100).toFixed(2) + ' → ×' + a.toFixed(2) + ')'); });
-  if (o.r1 > o.r0 && !o.flag) parts.push('공훈 ×' + DS.VET[o.r0].mul.toFixed(2) + ' → ×' + DS.VET[o.r1].mul.toFixed(2));
+  if (!o.t1 && o.r1 > o.r0 && !o.flag) parts.push('공훈 ×' + DS.VET[o.r0].mul.toFixed(2) + ' → ×' + DS.VET[o.r1].mul.toFixed(2));
   if (o.s1 > o.s0 && o.lord && DS.ULT) parts.push('필살기 세기 +' + Math.round(DS.ULT.starP * 100) + '%');
   if (o.p0 > 0 && o.p1 > 0) parts.push('전투력 ' + fmt(o.p0) + ' → ' + fmt(o.p1));
   return parts.join(' · ');
@@ -9922,7 +10040,7 @@ var KEEPER = {
 // ───────── 합일 장면 (교회에서 세 집의 문장 띠를 묶을 때) ─────────
 // 주인공이 어느 집에 들었든 읽히도록, 다섯 번째로 합류한 이(바우·슬기)는 화자로 쓰지 않았다.
 var FUSE = {
-  any: ['세 집의 문장 띠를 맹세의 깃대에 나란히 맸다.', '{h}. 키가 같은 세 집이다.', '오늘부터 「{u}」이다.'],
+  any: ['세 사람이 맹세의 깃대 아래 나란히 섰다.', '{h}. 키가 같은 셋이다.', '오늘부터 셋은 8단의 길을 걷는다.'],      // r42 (2.0.0): 합일은 사람 셋
   battle: ['교회 종 아래, 세 집의 문장 띠를 맹세의 깃대에 댔다. 푸른빛, 금빛, 하늘빛.', say('cav', '키는 맞췄다. 처진 집 없지?'), say('fly', '없어. 내가 위에서 다 셌어.'),
            '매듭이 조여들자 세 빛깔이 쇠 달군 빛을 띠었다. 강철의 세 집이다.'],
   tactics: ['쪽빛, 옥빛, 풀빛. 물과 창과 활의 문장 띠가 한 매듭에 닿았다.', say('mar', '악! 뭍에서 셋이 한 배를 탄다. 노는 누가 젓나!'), say('pike', '번갈아. 문지기도 교대는 한다.'),
@@ -10283,15 +10401,16 @@ var HELP = [
     '<b>대장</b>이 쓰러지면 그 싸움이 끝난 뒤 후계를 정한다. 핏줄(성년 아이)이든 양자든 그때마다 고르고, 대장 가문의 레벨, 단, 장비는 그대로 넘어간다. 다른 가문의 가주를 양자로 들이면 대장 가문의 <b>문패</b>를 새로 건다.',
     '빈 관이 있으면 쓰러진 이를 누구든 모셔 둘 수 있다. 맺음 뒤 「다음 세대의 장」의 스무 해 끝 새벽에 한 사람씩 <b>다시 부른다</b>. 강했던 이일수록 대답이 드물다.'] },
   { h: '부대원과 가문', short: '가문', items: [
-    '부대에는 <b>사람과 가문</b>이 있다. 레벨, 단, 기술, 장비, 유물은 가문의 것이고, 그 집 <b>가주</b>의 공훈만큼 가문이 세진다(공훈 100마다 +1%, 최대 20%, 등급에 따라 +0~6%). 가주의 특성도 그대로 통한다.',
+    '부대에는 <b>사람과 가문</b>이 있다. <b>단과 레벨은 사람의 것</b>이고, 장비, 유물, 기술 목록, <b>가문 공훈</b>은 가문의 것이다. 가문은 그 집 <b>가주</b>의 레벨로 싸우고, 가문 공훈만큼 세진다(가주 최대 +20%, 등급에 따라 +0~6%). 가주의 특성과 기질도 그대로 통한다.',
     '가주는 싸움 밖이면 값없이 <b>세우고 바꾼다</b>. 마을 밖에서는 빈 가주 자리 채우기와 맞바꾸기만 된다. 대장 가문의 가주는 대장이다.',
     '가주가 없는 <b>빈 가문</b>은 싸우지 않는다. 싸움 뒤 빈 가문이 있으면 가솔이나 막사에서 한 사람이 가주로 선다.',
     '가문마다 <b>가솔</b>을 인구수 2만큼 세운다(큰 부대원은 2). 「앞장」은 먼저 달려들고, 「곁에」는 가주 가까이의 적만 상대하며 일찍 물러난다.',
     '가솔은 <b>자동</b>이 기본이다. 싸움 뒤 빈자리를 막사에서 채우고(태생 맞음 먼저), 마을에 들어서면 10% 넘게 센 사람으로 바꿔 세운다. 잠긴 사람, 가주, 아이는 옮기지 않는다. 손으로 가솔을 바꾸면 그 가문은 「직접」이 되고, 꼬리표를 누르면 다시 자동이다.',
     '용병소에서 1회, 5회로 <b>부대원을 모은다</b>. 사람마다 이름, 특성, 성격이 있고, 더러는 <b>버릇</b>(둘째 특성)도 타고난다. 가주도 가솔도 아닌 이는 <b>막사</b>(50명)에 머문다.',
     '모집은 귀하다. 골드로 <b>부를 때마다 값이 오르고</b>, 계절이 지나면 조금씩 기본값으로 내려간다. 모집권으로 부르면 값이 오르지 않는다. 등급은 일반 10%, 고급 30%, 희귀 30%, 영웅 20%, 전설 10%. 5회 모집은 희귀 이상 한 명을 약속한다.',
-    '살아남아 싸울수록 <b>공훈</b>이 쌓이고, 전공에 따라 <b>별명</b>이 붙는다.',
-    '<b>필살기</b>는 <b>맹주</b>만 지닌다. 고르는 것이 아니라 <b>타고난다</b>: 맹주마다 가문 병과의 것과 성격 몫 가운데 하나를 지니고 태어나, 사람 창의 「타고난 필살기」에서 미리 볼 수 있다. 시나리오 3을 깨면 깨어난다. 바꿀 수 없다. 싸우는 동안 게이지가 차고, <b>직접 눌러야</b> 나간다(자동으로 싸워도 쓰지 않고 찬 채로 기다린다). 기술 줄 왼쪽 끝 금테 칸이고, 다른 가문을 골라도 그 자리에 있다. 가득 차면 맹주 초상에 금빛 「필」이 뜬다. 맹주가 용사, 불멸에 오르면 15%씩 세지고, 공훈 1000, 1500, 2000마다 <b>별</b>이 붙어 더 세지고 빨리 찬다. 대를 이은 맹주는 제 몫을 따로 타고난다.',
+    '사람마다 제 <b>단과 레벨</b>이 있다. 싸워서 경험치를 얻어 자라고, 단이 오를 때마다 타고난 기질에 맞는 능력치가 하나씩 더 오른다. 전공에 따라 <b>별명</b>이 붙는다.',
+    '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문 사람(가주, 가솔)이 출전해 싸우고 이길수록 가문에 쌓인다. 신참, 숙련, 고참, 정예, 용사, 불멸로 오르고, 오를 때마다 가주의 능력치(+4%씩)와 가솔의 능력치(×1.06씩)가 오른다. 위 초상과 가문 칸의 표식이 가문 공훈이다.',
+    '<b>필살기</b>는 <b>맹주</b>만 지닌다. 고르는 것이 아니라 <b>타고난다</b>: 맹주마다 가문 병과의 것과 성격 몫 가운데 하나를 지니고 태어나, 사람 창의 「타고난 필살기」에서 미리 볼 수 있다. 시나리오 3을 깨면 깨어난다. 바꿀 수 없다. 싸우는 동안 게이지가 차고, <b>직접 눌러야</b> 나간다(자동으로 싸워도 쓰지 않고 찬 채로 기다린다). 기술 줄 왼쪽 끝 금테 칸이고, 다른 가문을 골라도 그 자리에 있다. 가득 차면 맹주 초상에 금빛 「필」이 뜬다. 맹주의 단이 5단, 8단에 오르면 15%씩 세지고, 9단, 10단, 레벨 100에 <b>별</b>이 붙어 더 세지고 빨리 찬다. 대를 이은 맹주는 제 몫을 따로 타고난다.',
     '<b>아홉 집</b>의 사람은 제 집 가주로 온다. 내보낼 수 없고, 쓰러지거나 천수로 떠나면 다음 마을에서 그 집이 거둔 다음 사람(「○○ 가문 2대」)이 와서 가주를 잇는다.', '대장 가문의 성은 가계도 맨 위 「성 바꾸기」에서 고른다. 스타크든 심슨이든, 앞으로 태어날 아이들이 그 성을 받는다. 사람 이름은 「불꽃 스타크」처럼 이름 뒤에 성을 붙여 부른다.'] },
   { h: '장비, 유물, 소모품', items: [
     '<b>장비</b>는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 보스는 더 좋은 것을 떨어뜨린다. 병과에 맞는 계열이면 <b>단과 상관없이</b> 어느 가문에나 입히고, 입던 것은 가방으로 돌아와 다른 가문에 물려준다.',
@@ -10310,12 +10429,13 @@ var HELP = [
     '수명이 다한 이는 싸움이 없는 때에 <b>천수를 누리고</b> 잠든다. 대장이면 쓰러졌을 때처럼 후계를 정하고, 누구든 관에 모실 수 있다.',
     '대장이 혼인하면 해마다 아이가 태어날 수 있다. 해가 갈수록, 아이가 늘수록 드물어진다. 아이는 가계도에서 자라 <b>15살에 성년</b>이 되면 막사에 들어와 부대원으로 싸운다.'] },
   { h: '성장과 합일', items: [
-    '<b>출전</b>한 가문(셋)만 경험치를 온전히 받는다. <b>대기</b> 중인 가문은 5%만 받으니 번갈아 출전시키세요.',
-    '레벨 10마다 <b>단</b>이 올라 이름이 바뀌고 새 기술을 익힌다. 대장은 단마다 모습도 바뀐다.',
-    '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다. 다르면 몸이 맞지 않아 능력치가 조금 준다. 단은 가주 그림의 은빛, 금빛 테로 보인다.',
-    '20번 시나리오에서 「맹세의 깃대」를 얻은 뒤, <b>7단 Lv10 가문 셋</b>을 골라 교회에서 <b>합일</b>한다. 어느 가문끼리든 묶을 수 있다. 셋은 하나로 합쳐지지 않고 함께 8단으로 오른다. 한 가문은 한 번만 묶인다.',
-    '묶음은 <b>가주의 공훈이 가장 큰 가문</b>의 이름을 따 「○○ 대가문」이라 부른다. 이름은 합일하는 순간 정해진다.',
-    '부대 창에서 가문마다 남은 레벨을 볼 수 있다. 21번부터는 8단, 27번부터는 9단 가문이 출전해야 들어간다.',
+    '경험치와 레벨은 <b>사람마다</b> 따로다. <b>출전</b>한 가문(셋)의 가주와 가솔, 맹주는 경험치를 온전히 받는다. 막사와 대기 가문의 사람은 5%만 받으니 번갈아 출전시키세요. 뒤처진 사람은 앞선 사람을 따라잡을 만큼 더 받는다.',
+    '레벨 10마다 <b>단</b>이 오른다. 맹주는 단마다 모습이 바뀌고, 가주와 가솔은 그림의 은빛, 금빛 테로 단이 보인다. 새로 오는 부대원은 부대 평균보다 조금 낮은 레벨로 오고, 아이는 낮은 레벨로 막사에 들어와 자란다.',
+    '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 가문의 기술은 가주의 단이 닿는 만큼 열린다. 태생 병과가 가문과 맞으면 기술을 제대로 살린다. 다르면 몸이 맞지 않아 능력치가 조금 준다.',
+    '<b>가솔</b>은 제 레벨로 싸우고, 제 종류의 기술을 3단, 5단, 7단에 하나씩 익힌다. 영웅, 전설은 고유 기술을 처음부터 지닌다.',
+    '20번 시나리오에서 「맹세의 깃대」를 얻은 뒤, <b>7단 Lv10인 사람 셋</b>을 골라 교회에서 <b>합일</b>한다. 누구끼리든 된다. 셋은 저마다 8단에 오르고, 그때부터 레벨 70을 넘어 자란다. 합일하지 않은 사람은 7단 Lv10에서 멈춘다.',
+    '<b>맹주</b>가 다른 가문의 가주나 가솔이던 사람에게 대를 넘기면 <b>맹주 가문이 그 가문으로 옮겨 간다</b>. 옛 맹주 가문은 보통 가문이 되어 새 가주를 세운다. 후계는 제 레벨을 지니고, 선대와의 레벨 차이 가운데 핏줄은 절반, 양자는 1/4을 받는다.',
+    '21번부터는 8단, 27번부터는 9단 가주가 출전해야 들어간다.',
     '20번을 깬 뒤에는 부대 탭 맨 위 <b>현상 수배</b> 게시판에 사냥, 정예, 출몰 현상금이 붙는다. 「길 안내」를 누르면 그곳까지 데려다준다.',
     '<b>바닥 없는 갱도</b>(돌마루 고원, 5단부터)는 층을 깰 때마다 다음 층이 열리고, 몇 번이든 다시 들어가 키울 수 있다.'] }
 ];
@@ -10328,7 +10448,7 @@ var GLOSSARY = [
   '열 집의 가주 — 보병 바우, 기병 우레, 비병 제비, 해병 너울, 창병 서슬, 궁병 솔개, 승려 달래, 신관 등불, 법사 슬기, 사교 그믐. 주인공의 병과는 주인공 자신이다(보병이면 바우, 법사이면 슬기는 나오지 않는다).',
   '세 계열 — 강철(보병, 기병, 비병, 쇠 달군 붉은빛), 바람(해병, 창병, 궁병, 저 혼자 나부끼는 비췻빛), 별(승려, 신관, 법사, 사교, 낮에도 보이는 금빛). 8단부터의 모습과 기술은 계열을 따른다. 합일 묶음은 계열과 상관없이 고른다(1.0.1).',
   '맹세의 깃대 — 열 가문의 이름을 새긴 쇠 장대. 빛깔 없는 쇠로 벼려 어스름이 지우지 못한다. 매듭 자리가 셋이고, 키(단)가 같은 집끼리 한 매듭에 묶인다.',
-  '합일 — 키(7단 Lv10)가 같은 세 집이 문장 띠를 한 매듭에 묶어 뜻을 모아 함께 오르는 것(셋이 저마다 8단). 어느 집끼리든 묶인다. 집도 사람도 줄지 않고, 집은 저마다 제 문장 그대로다. 묶음은 가주 공훈이 가장 큰 집의 이름을 따 「○○ 대가문」이라 부른다.',
+  '합일 — 키(7단 Lv10)가 같은 세 사람이 맹세의 깃대 아래 뜻을 모아 함께 오르는 것(셋이 저마다 8단). 누구끼리든 된다. 사람은 줄지 않고, 저마다 제 자리와 집 그대로다 (2.0.0 — 예전에는 세 집이 묶였다).',
   '옛 열 가문 — 옛날 한 깃대에 이름을 새기고 어스름을 문 너머로 밀어낸 집들. 맹주를 안에 둔 채 잠그기로 아홉 집이 손을 들어 정했고(깃대의 금 아홉 개), 밖에서 빗장을 질렀다. 「맹주가 스스로 남았다」「맹주 가문이 문을 열어 두었다」는 그 뒤에 덮은 말이다.',
   '맹주 가문 — 주인공의 집. 열 가문 가운데 한 집으로, 제 문장 없이 나머지 아홉 집을 한 맹약으로 묶던 집. 옛 가훈 「맹주는 맨 뒤에 선다」, 새 가훈 「아무도 두고 가지 않는다」. 가주가 될 때 손목에 끈을 매는데, 그 매듭은 먼동이 처음 맨 꼴 그대로 이어진다(피가 아니라 매듭으로 대를 잇는다).',
   '옛 대장 먼동 — 문 안에 남은 맹주 가문의 옛 가주(주인공 집의 시조). 오랜 세월 빛깔을 잃어 「어스름에 묶인 먼동」이 되었다. 빛깔 없는 깃대를 든다. 사당 벽화마다 그려진 얼굴.',
@@ -11338,8 +11458,8 @@ var FALLEN = {
 // ───────── 합일 장면: 세 집의 문장 띠가 한 매듭에 닿아 함께 오른다 (화자에서 바우·슬기는 뺀다) ─────────
 //   1.0.1: 묶음은 자유. 고른 셋이 옛 묶음(battle·tactics) 그대로면 그 장면, 아니면 any ({h} 고른 세 가문 · {u} 묶음 이름 · {t} 이름을 준 가문 — ui.js 가 채운다)
 var FUSE = {
-  any: ['교회 종 아래, 세 집의 문장 띠를 맹세의 깃대에 나란히 맸다.', '{h}. 키가 같은 세 집이다.', '매듭이 조이자 세 문장이 한꺼번에 빛났다. 하나로 합쳐지지는 않았다.',
-    '가주의 공훈이 가장 큰 {t}의 이름을 따, 오늘부터 「{u}」이다.'],
+  any: ['교회 종 아래, 세 사람이 맹세의 깃대 앞에 나란히 섰다.', '{h}. 키가 같은 셋이다.', '깃대에 손을 얹자 셋의 문장이 한꺼번에 빛났다. 하나로 합쳐지지는 않았다.',
+    '오늘부터 셋은 8단의 길을 함께 걷는다.'],      // r42 (2.0.0): 합일은 사람 셋
   battle: ['교회 종 아래, 세 집의 문장 띠를 맹세의 깃대에 나란히 맸다. 푸른빛, 금빛, 하늘빛.', say('cav', '키는 맞췄다. 처진 집 없지?'), say('fly', '없어. 내가 위에서 다 셌어.'),
     '매듭이 조여들자 세 문장이 한꺼번에 쇠 달군 빛을 띠었다. 하나로 합쳐지지는 않았다.', say('cav', '셋이 같이 올랐군. 누가 위인지 다툴 일은 없겠어.'), say('fly', '제일 높은 건 나야. 원래 그래.'),
     '집은 셋 그대로다. 오늘부터 「{u}」이다.'],
@@ -11547,7 +11667,11 @@ DS.castNow = function (s, k) {
   for (var id in P) if (P[id].cast === k || (P[id].cls === k && P[id].k === 'c' && (P[id].gen || 1) === 1)) { any = true; break; }
   if (!flag && !any) return 0;      // 아직 합류 전
   if (!flag) return { st: 2 };
-  if (flag.id === s.hero) return 0;      // 주인공 자신의 병과는 배역이 아니다 (⑬ 으로 옮겨 온 집이면 대장이 그 집의 이름을 부른다)
+  if (flag.id === s.hero) {      // 주인공 자신의 병과는 배역이 아니다. r42: 맹주 가문이 그 집으로 옮겨 왔으면(그 집 사람이 대를 이었다) 그 배역의 목소리는 대장이다
+    var seen = false; for (var q in P) if (P[q].cast === k) { seen = true; break; }
+    if (!seen) return 0;
+    var mn2 = ''; try { mn2 = DS.charName(flag, s); } catch (x) { mn2 = ''; } return { st: 1, nm: mn2 || s.name || '대장', c: 'hero', me: 1 };
+  }
   var b = DS.bearer ? DS.bearer(s, flag) : null;
   return b ? { st: 1, nm: b.ttl || b.n || '' } : { st: 2 };
 };
@@ -11826,8 +11950,10 @@ DS.spdOf = function (v) { v = +v || 1; return v >= 1.75 ? 2 : v >= 1.25 ? 1.5 : 
 // 4.0 (㉑): 4.0 은 모두 새로 시작한다 — 새 키 tenbanners_v2 에 새 저장(v10)만 쓰고 읽는다. 옛 저장(tenbanners_v1 과 그 _bak · 클라우드 v9 문서 · 이사 코드)은
 //   지우지도 바꾸지도 않고 읽기 전용으로 보관한다. 옛 저장에서는 사람 목록만 뽑아(DS.oldPeople) 그중 한 사람을 새 판의 대장(1세)으로 데려올 수 있다(DS.newFromOld).
 //   v9 이하를 v10 으로 옮기는 판 올림은 하지 않는다 (MIGRATE 2~8 은 남아 있지만 read/peek 이 v10 미만을 받지 않는다).
-var KEY = 'tenbanners_v2', OLD = 'tenbanners_v1', META = 'tenbanners_meta', LEGACY = 'darksaver_muta_v1';
-DS.SAVE_V = 10;      // 저장 구조 번호. 2 = 2.0.0, 3 = 2.1.0, 4 = 2.2.0, 5 = 2.3.0, 6 = 2.4.0, 7 = 2.5.0, 8 = 2.6.0, 9 = 2.7.0, 10 = 4.0.0 (부대원 + 깃발)
+// r42 (2.0.0 「새 시대」): 사람마다 단·레벨, 가문 공훈 — 다시 모두 새로 시작한다. 새 키 tenbanners_v3 에 v11 만 쓰고 읽는다.
+//   옛 저장(tenbanners_v2 · tenbanners_v1 과 그 _bak, 클라우드 saves2 · saves 문서)은 지우지도 바꾸지도 않는다 — 처음 한 번 「새 시대가 열렸다」 안내만.
+var KEY = 'tenbanners_v3', OLD = 'tenbanners_v2', OLD1 = 'tenbanners_v1', META = 'tenbanners_meta', LEGACY = 'darksaver_muta_v1';
+DS.SAVE_V = 11;      // 저장 구조 번호. 2 = 2.0.0, 3 = 2.1.0, 4 = 2.2.0, 5 = 2.3.0, 6 = 2.4.0, 7 = 2.5.0, 8 = 2.6.0, 9 = 2.7.0, 10 = 4.0.0 (부대원 + 깃발)
 function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
 function parse(t) { try { return t ? JSON.parse(t) : null; } catch (e) { return null; } }
@@ -11975,7 +12101,7 @@ DS.fixSave = function (s) {
   if (!s || typeof s !== 'object' || !s.chars || typeof s.chars !== 'object') return null;
   var wasBn = s.bn === 1;      // 4.0: 「표시가 있었나」는 채움보다 먼저 (bn 은 기본값 채움에 걸리지 않는다 — 표시가 틀려도 DS.bnFix 의 불변식이 바로잡는다)
   var def = DS.newSave('대장', 'inf'), k, id, hid0 = own(s.chars, s.hero) ? +s.hero : 0;
-  for (k in def) if (s[k] === undefined && k !== 'chars' && k !== 'party' && k !== 'hero' && k !== 'nid' && k !== 'lin' && k !== 'coffins' && k !== 'cal' && k !== 'bn') s[k] = def[k];      // 가계도·관은 DS.linFix 가 채운다 (새 판의 사람 명부를 옮겨 오지 않게)
+  for (k in def) if (s[k] === undefined && k !== 'chars' && k !== 'party' && k !== 'hero' && k !== 'nid' && k !== 'lin' && k !== 'coffins' && k !== 'cal' && k !== 'bn' && k !== 'us') s[k] = def[k];      // r42: us(필살기 씨앗)는 새 판에서만 — 없는 저장은 eg.seed 로 (결정적)      // 가계도·관은 DS.linFix 가 채운다 (새 판의 사람 명부를 옮겨 오지 않게)
   ['items', 'opt', 'seen', 'visited', 'cleared'].forEach(function (g) {
     if (!s[g] || typeof s[g] !== 'object' || Array.isArray(s[g])) s[g] = def[g];
     for (var q in def[g]) if (s[g][q] === undefined) s[g][q] = def[g][q];
@@ -11994,8 +12120,8 @@ DS.fixSave = function (s) {
     var c = s.chars[id], C = c && typeof c === 'object' && own(DS.CLASSES, c.cls) && DS.CLASSES[c.cls];
     if (!C || !(+id >= 1)) { delete s.chars[id]; continue; }
     c.id = +id; maxId = Math.max(maxId, c.id); n++;
-    var lo = (C.start - 1) * 10 + 1, hi = C.master || +c.L > 70 ? 100 : 70;      // ⑮ 함께 오른 깃발은 8단부터 (L71~100)
-    c.L = Math.max(lo, Math.min(hi, Math.round(+c.L || lo))); c.exp = Math.max(0, +c.exp || 0);
+    c.L = Math.max(1, Math.min(100, Math.round(+c.L || 1))); c.exp = Math.max(0, +c.exp || 0);      // r42: 가문 줄의 레벨은 가주의 개인 레벨을 비춘다 (맞춤은 끝의 DS.pSync)
+    c.hx = Math.max(0, +c.hx || 0); if (!c.hx) delete c.hx;      // r42: 가문 공훈
     ['w', 'a'].forEach(function (sl) { if (c[sl] && DS.gearRepair) c[sl] = DS.gearRepair(c[sl]); var gd = DS.gear(c[sl]); if (!gd || gd.slot !== sl || DS.CLS_GEAR[c.cls][sl].indexOf(gd.cat) < 0) c[sl] = null; });
     delete c.mc; delete c.mg;
     if (c.relic && s.relics.indexOf(c.relic) < 0) c.relic = null;
@@ -12016,7 +12142,9 @@ DS.fixSave = function (s) {
     if (!m.n || typeof m.n !== 'string') m.n = DS.MERC_NAMES[(Math.abs(m.id) * 7 + 3) % DS.MERC_NAMES.length];
     m.v = Math.max(0, Math.min(3, Math.round(m.v == null ? m.id % 4 : +m.v || 0)));
     if (!own(DS.TRAITS, m.t)) { var tk = Object.keys(DS.TRAITS); m.t = tk[(Math.abs(m.id) * 5 + 1) % tk.length]; }
-    m.x = Math.max(0, +m.x || 0); m.k = Math.max(0, Math.round(+m.k || 0)); m.b = Math.max(0, Math.round(+m.b || 0));
+    delete m.x; m.k = Math.max(0, Math.round(+m.k || 0)); m.b = Math.max(0, Math.round(+m.b || 0));
+    if (m.L == null && m.o && own(s.chars, m.o)) { m.L = +s.chars[m.o].L || 1; if (m.L > 70) m.fz = 1; }      // 레벨 칸이 없는 줄(시험용 옛 저장): 선 가문의 레벨에서 (이어 하기는 Save.read 가 이미 막는다)
+    if (m.fz != null) { if (m.fz) m.fz = 1; else delete m.fz; } m.L = Math.max(1, Math.min(m.fz ? 100 : 70, Math.round(+m.L || 1))); m.exp = Math.max(0, +m.exp || 0);      // r42: 개인 단·레벨
     if (m.q != null && !(DS.QUIRKS && own(DS.QUIRKS, m.q))) delete m.q;
     if (m.s != null && !own(DS.SKILLS, m.s)) delete m.s;
     if (m.it != null && !(DS.MGEAR && own(DS.MGEAR, m.it))) delete m.it;
@@ -12056,7 +12184,8 @@ DS.fixSave = function (s) {
   if (DS.lootFix) DS.lootFix(s);      // 장비 내력(save.gh): 깨진 칸·지니지 않는 기록을 걷는다. 옛 저장은 빈 칸 (SAVE_V 그대로)
   if (DS.ageFix) DS.ageFix(s);      // 나이: 세계 달력·나이·수명 (옛 저장은 결정적으로, SAVE_V 그대로)      // 가계도(2.9): 성별·성·사람 명부·관. 옛 저장은 결정적으로 배정 (SAVE_V 를 올리지 않아도 된다)
   if (DS.bnFix) DS.bnFix(s, wasBn);      // 4.0: 부대원 + 깃발 — 불변식 넷을 검사하고 어긴 줄만 변환한다 (두 번 돌려도 같다)
-  if (DS.fuseUnions) DS.fuseUnions(s);      // 1.0.1: 합일 묶음 기록(save.fuU) — 깨진 칸을 걷고, 정해진 묶음으로 오른 옛 판은 묶음 기록으로 옮긴다
+  if (DS.fuseUnions) DS.fuseUnions(s);      // r42: 옛 묶음 기록은 없어졌다 (비운다)
+  if (DS.pSync) DS.pSync(s);      // r42: 가문 줄 ← 가주의 개인 레벨
   return s;
 };
 DS.Save = {
@@ -12069,7 +12198,10 @@ DS.Save = {
     if (!s && raw) set(KEY + '_broken', raw);      // 살리지 못한 저장은 버리지 않고 따로 남긴다 (새로 시작해도 이 칸은 덮어쓰지 않는다)
     return s;
   },
-  oldRaw: function () { return get(OLD) || get(OLD + '_bak'); },      // ㉑ 옛 판의 저장 (읽기 전용 — 「새 시대를 연다」 창이 사람 목록을 뽑는다)
+  oldRaw: function () { return get(OLD) || get(OLD + '_bak') || get(OLD1) || get(OLD1 + '_bak'); },      // 옛 판의 저장 (읽기 전용 — r42: 안내만 한다)
+  archived: function () { return !!this.oldRaw(); },      // r42: 이 기기에 보관된 옛 기록이 있는가
+  archNote: function () { var m = this.meta(); if (m.arch3 || !this.archived()) return false; return true; },      // 처음 한 번 「새 시대가 열렸다」
+  archSeen: function () { this.setMeta({ arch3: 1 }); },
   isOld: function (raw) { var s = typeof raw === 'string' ? parse(raw) : raw; return !!(s && typeof s === 'object' && s.chars && !newerOf(s) && verOf(s) < DS.SAVE_V); },
   // 저장 글을 읽어 지금 구조로 만든다. 살릴 수 없으면 null (넘어질 수도 있다 — load 가 받는다).
   read: function (raw) {
@@ -21014,14 +21146,14 @@ function vetDots() {      // 1.0.5: 공훈 계급이 바뀌면 표식만 바꿔 
   for (var id in G.chipEls) { var c = G.chipEls[id], ch = sv.chars[+id.slice(1)]; if (!ch) continue; var r = vetOfCh(sv, ch); if (c.vr === r) continue; c.vr = r; var o = c.el.querySelector('.vet'); if (o) o.outerHTML = vetBadge(r); }
 }
 // 1.0.5: 위 초상에 공훈 계급 표식 (갈매기 1~3 · 별 · 금별) — 가주(대장은 대장 줄)의 공훈
-function vetOfCh(sv, ch) { var w = ch.id === sv.hero ? ch.ps : (DS.bearer ? DS.bearer(sv, ch) : null); return w ? DS.vetRank(w.x || 0) + 10 * (DS.vetStars ? DS.vetStars(w.x) : 0) : -1; }      // r32: 10의 자리 = 불멸 뒤의 별
+function vetOfCh(sv, ch) { return ch ? DS.hRank(ch) : -1; }      // r42: 가문 공훈 계급 (위 초상의 표식은 가문의 것)      // r32: 10의 자리 = 불멸 뒤의 별
 function vetBadge(r) {
   if (!(r >= 1)) return '<i class="vet" hidden></i>';
   var st = Math.floor(r / 10); r = r % 10;
   var nm = (DS.VET[r] ? DS.VET[r].name : '') + (st && DS.STAR_NAME ? ', ' + DS.STAR_NAME[st] : ''), g = '';
   if (r <= 3) { for (var i = 0; i < r; i++) g += '<path d="M2 ' + (9 - i * 3.2) + 'l4-3 4 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'; }
   else g = '<path d="M6 1.2l1.4 3 3.3.4-2.4 2.3.6 3.3L6 8.6 3.1 10.2l.6-3.3L1.3 4.6l3.3-.4z" fill="currentColor"/>';
-  return '<i class="vet v' + r + (st ? ' st st' + st : '') + '" title="공훈 ' + nm + '" aria-label="공훈 ' + nm + '"><svg viewBox="0 0 12 12" width="12" height="12">' + g + '</svg>' + (st ? '<b class="vst">' + '★★★'.slice(0, st) + '</b>' : '') + '</i>';
+  return '<i class="vet v' + r + (st ? ' st st' + st : '') + '" title="가문 공훈 ' + nm + '" aria-label="가문 공훈 ' + nm + '"><svg viewBox="0 0 12 12" width="12" height="12">' + g + '</svg>' + (st ? '<b class="vst">' + '★★★'.slice(0, st) + '</b>' : '') + '</i>';
 }
 DS.vetBadge = vetBadge;
 function renderChips() {
@@ -21639,14 +21771,17 @@ function onEvents(evs) {
         var ups = DS.gainExp(sv, e.exp, e.L), ripe = null;
         if (ups.length) {
           lvl = true;
-          ups.forEach(function (up) {
-            var cu = sim.byId['c' + up.id], ch = sv.chars[up.id];
-            if (cu) {      // r16 fx: 그 유닛 위에서 — 레벨업은 빛기둥·한 바퀴·「Lv n」, 승급은 금빛 고리·빙글·새 모습·「n단 → m단」 (view.cere: 실제 시간, 겹치면 합치거나 줄 선다)
-              var shown = G.view.cere ? G.view.cere(cu.id, up.promo ? 'promo' : 'lv', { lv: up.to, from: DS.tierOfL(up.from), to: DS.tierOfL(up.to), sub: up.promo ? DS.tierName(ch.cls, DS.tierOfL(up.to)) : '' }) : false;
-              if (!shown) { G.view.float(cu.x, cu.y, up.promo ? '승급!' : 'LEVEL UP', '#f6cf57', { dy: -10, life: 1.4 }); G.view.burst(cu.x, cu.y, ['#f6cf57', '#fff6d0'], 14, { up: 40, grav: -10, spd: 14, life: 0.9 }); }
+          ups.forEach(function (up) {      // r42: 사람마다 — 가주·맹주는 깃발 유닛('c'), 가솔은 제 유닛('m')
+            var ch = sv.chars[up.id], cu = up.bear ? sim.byId['c' + up.id] : sim.byId['m' + up.mid];
+            if (cu && up.dep) {      // r16 fx: 그 유닛 위에서 — 레벨업은 빛기둥·한 바퀴·「Lv n」, 승급은 금빛 고리·빙글·새 모습·「n단 → m단」 (view.cere: 실제 시간, 겹치면 합치거나 줄 선다)
+              var shown = G.view.cere && up.bear ? G.view.cere(cu.id, up.promo ? 'promo' : 'lv', { lv: up.to, from: DS.tierOfL(up.from), to: DS.tierOfL(up.to), sub: up.promo && ch ? DS.tierName(ch.cls, DS.tierOfL(up.to)) : '' }) : false;
+              if (!shown) { G.view.float(cu.x, cu.y, up.promo ? DS.tierOfL(up.to) + '단!' : 'LEVEL UP', '#f6cf57', { dy: -10, life: 1.4 }); G.view.burst(cu.x, cu.y, ['#f6cf57', '#fff6d0'], up.bear ? 14 : 8, { up: 40, grav: -10, spd: 14, life: 0.9 }); }
             }
-            if (up.promo) G.promos.push({ id: up.id, from: DS.tierOfL(up.from), to: DS.tierOfL(up.to), cls: ch.cls });
-            if (up.from < DS.FUSE_MIN && up.to >= DS.FUSE_MIN && !DS.CLASSES[ch.cls].master) ripe = ch;
+            if (up.promo && up.bear && ch && up.dep) G.promos.push({ id: up.id, from: DS.tierOfL(up.from), to: DS.tierOfL(up.to), cls: ch.cls });
+            if (up.promo && up.dep && DS.tmRankMsg && (up.pg || []).length) later(DS.tmRankMsg({ who: up.who, name: up.who.ttl || up.who.n || (ch ? DS.charName(ch) : ''), t1: DS.tierOfL(up.to), gains: up.pg, flag: up.bear }), 4200);      // r41 temper → r42: 개인 단이 오를 때 성장
+            if (up.hero && up.promo && DS.heroUlt && DS.heroUlt(sv) && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { if (up.to >= q[0] && up.from < q[0]) { later('맹주의 필살기 「' + SK[DS.heroUlt(sv)].name + '」가 세졌다 (+' + Math.round(q[1] * 100) + '%)', 4200); A('star'); } });      // r42: 맹주의 개인 5단 · 8단
+            if (up.hero && DS.vetStars(up.to) > DS.vetStars(up.from) && DS.heroUlt && DS.heroUlt(sv)) later('맹주, ' + DS.STAR_NAME[DS.vetStars(up.to)] + '. 필살기 세기 +' + Math.round(DS.ULT.starP * 100) + '%', 3600);
+            if (up.from < DS.FUSE_MIN && up.to >= DS.FUSE_MIN && !up.who.fz) ripe = up;
           });
           A('level');
           if (ripe) fuseNews(ripe);
@@ -21916,10 +22051,11 @@ function ultCut(u, S) {
 }
 DS.ultCut = ultCut;
 // 누군가 7단 10레벨에 닿았다: 그 깃발이 얼마나 모였는지 알린다. 다 모였으면 교회로.
-function fuseNews(ch) {
+function fuseNews(up) {
   var sv = G.save, P = DS.fuseProg(sv); if (!P.can) return;
-  if (P.ok) banner('합일 준비 끝', '교회에서 세 가문을 골라 함께 오른다', 3400);
-  else banner(DS.flagName(ch.cls) + ' 7단 Lv10', '합일: 7단 Lv10 가문 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대는 아직'), 2800);
+  var nm = up && up.who ? (up.hero ? DS.charName(sv.chars[sv.hero]) : (up.who.ttl || up.who.n || '')) : '';
+  if (P.ok) banner('합일 준비 끝', '교회에서 7단 Lv10 세 사람을 골라 함께 오른다', 3400);
+  else banner((nm ? nm + ', ' : '') + '7단 Lv10', '합일: 7단 Lv10 사람 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대는 아직'), 2800);
   if (!G.scn) updateQuest();
 }
 // ───────── r17 boss: 이름 지우기 (30번 어스름의 왕) ─────────
@@ -22078,21 +22214,19 @@ function meritAll(pts) {
     if (u.dead || u.side !== 'ally') return;
     var m = u.role === 'merc' && u.mid ? mercOf(u.mid) : u.role === 'cmd' && DS.bearer ? DS.bearer(sv, sv.chars[u.ch]) : null; if (!m) return;      // 4.0: 깃발을 든 사람도 같은 길로 공훈을 받는다
     if (u.surv && !u.svDone) { u.svDone = true; m.sv = (m.sv || 0) + 1; }      // 구사일생으로 버티고 살아 돌아왔다
-    var r0 = DS.vetRank(m.x), s0 = DS.vetStars ? DS.vetStars(m.x) : 0, tmo = DS.tmRankMsg ? tmPow(sv, u, m) : null, pg0 = DS.pgSteps ? DS.pgSteps(m) : 0; DS.meritAdd(m, pts); m.b = (m.b || 0) + 1;
-    var r1 = DS.vetRank(m.x), s1 = DS.vetStars ? DS.vetStars(m.x) : 0;
-    if (tmo && (r1 > r0 || s1 > s0)) { var tg = DS.pgRecord(m, pg0), tm1 = tmPow(sv, u, m); later(DS.tmRankMsg({ who: m, name: m.ttl || m.n || u.name, r0: r0, r1: r1, s0: s0, s1: s1, gains: tg, flag: tmo.flag, b0: tmo.b, b1: tm1.b, p0: tmo.p, p1: tm1.p, lord: !!(DS.ultHeroWho && DS.ultHeroWho(sv) === m) }), 4600); s0 = s1; tmo.done = 1; }      // r41 temper: 개인 성장 + 숫자로 보이는 공훈
-    var isLord = DS.ultHeroWho && DS.ultHeroWho(sv) === m, x1 = +m.x || 0, x0 = x1 - pts * (DS.potMul ? DS.potMul(m) : 1);
-    if (isLord && DS.heroUlt && DS.heroUlt(sv) && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { if (x1 >= q[0] && x0 < q[0]) { later('맹주의 필살기 「' + SK[DS.heroUlt(sv)].name + '」가 세졌다 (+' + Math.round(q[1] * 100) + '%)', 4200); A('star'); } });      // r36: 용사 · 불멸 → 맹주 필살기 세기
-    if (tmo && tmo.done && DS.vetStars(m.x) > DS.vetStars(m.x - pts * (DS.potMul ? DS.potMul(m) : 1))) G.view.float(u.x, u.y, DS.STAR_NAME[s1] + '!', '#ffe27a', { dy: -22, life: 1.8, delay: 0.5 });
-    if (s1 > s0) { G.view.float(u.x, u.y, DS.STAR_NAME[s1] + '!', '#ffe27a', { dy: -22, life: 1.8, delay: 0.5 }); later((m.ttl || m.n || u.name || '') + ', 공훈 ' + DS.ULT.stars[s1 - 1] + '. ' + DS.STAR_NAME[s1] + (isLord ? ' (필살기 세기 +' + Math.round(DS.ULT.starP * 100) + '%)' : ''), 3600); }      // r32: 불멸 뒤의 별
-    if (r1 > r0) { ups.push({ m: m, from: r0, to: r1 }); if (!(G.view.cere && G.view.cere(u.id, 'rank', { txt: DS.VET[r1].name }))) G.view.float(u.x, u.y, DS.VET[r1].name + '!', '#f6cf57', { dy: -10, life: 1.6 }); mercTalk(u, 'rank', false, 0.9); }      // r16 fx: 작은 별 반짝임 + 「정예」
+    var hh = DS.whoHouse(sv, m), r0 = DS.hRank(hh); DS.meritAdd(m, pts, sv); m.b = (m.b || 0) + 1;      // r42: 공은 가문의 공훈으로
+    if (hh && DS.hRank(hh) > r0 && ups.every(function (x) { return x.ch !== hh; })) {
+      var cu = sim.byId['c' + hh.id], r1 = DS.hRank(hh); ups.push({ ch: hh, from: r0, to: r1 });
+      if (cu && !(G.view.cere && G.view.cere(cu.id, 'rank', { txt: DS.hName(r1) }))) G.view.float(cu.x, cu.y, DS.hName(r1) + '!', '#f6cf57', { dy: -10, life: 1.6 });
+      mercTalk(u, 'rank', false, 0.9);
+    }
   });
-  if (pts >= 10 && G.scn && DS.BN) DS.charList(sv).forEach(function (c) {      // 4.0: 대기 깃발에 붙은 사람(든 사람·따르는 이)은 승리 때 +2 — 대기 5% 경험치와 같은 문법
+  if (pts >= 10 && G.scn && DS.BN) DS.charList(sv).forEach(function (c) {      // 대기 가문은 승리 때 +2 (가문 공훈)
     if (sv.party.indexOf(c.id) >= 0) return;
-    var b = DS.bearer(sv, c); [b].concat(DS.mercsOf(sv, c.id)).forEach(function (x) { if (x) DS.meritAdd(x, DS.BN.bench); });
+    var r0 = DS.hRank(c); DS.hAdd(sv, c, DS.BN.bench); if (DS.hRank(c) > r0) ups.push({ ch: c, from: r0, to: DS.hRank(c) });
   });
-  var big = ups.filter(function (x) { return x.to >= 3; });      // r8 hud: 토스트는 「정예」부터 — 그 아래는 머리 위 글자로만
-  if (ups.length) { refreshUnits(); try { renderActs(); } catch (x) {} A('level'); if (big.length && (!G.scn || pts < 10) && !DS.tmRankMsg) toast(big.map(function (x) { return (x.m.n || '') + ' → ' + DS.VET[x.to].name; }).join(', ') + '. 공훈으로 능력이 올랐다', 3600); }
+  if (ups.length) { refreshUnits(); try { renderActs(); } catch (x) {} A('level'); later(ups.map(function (x) { return DS.flagName(x.ch.cls) + ' 가문 공훈 ' + DS.hName(x.to) + ' (가주 +' + DS.HVET[x.to].pct + '%, 가솔 ×' + DS.HVET[x.to].mul.toFixed(2) + ')'; }).join(' · '), 4200); }
+  DS.hUps = [];
   return ups;
 }
 // 전투가 끝나면 대기 용병이 빈자리를 채우고, 흩어졌던 용병이 주인 곁으로 돌아온다 (쓰러진 용병은 돌아오지 않는다)
@@ -22899,7 +23033,7 @@ function quirkOf(m) { return m.q && DS.QUIRKS && DS.QUIRKS[m.q] ? DS.QUIRKS[m.q]
 function mercTtl(m) { var t = DS.mercTitle ? DS.mercTitle(m) : ''; return t ? '<i class="ttl">' + esc(t) + '</i> ' : ''; }      // 전공 별명
 // r8 menus (trim 6): 줄에는 [별명] 이름 · 종류 · 공훈 · 특성 이름까지만. 특성 효과·버릇·든 물건·나이는 「살펴보기」에서 (노년·인구 2만 줄에 남긴다)
 function mercSub(m) {
-  var out = [DS.VET[DS.vetRank(m.x)].name];
+  var out = [lv(DS.pL(m))];      // r42: 개인 단·레벨
   if (DS.TRAITS[m.t]) out.push(DS.TRAITS[m.t].name);
   if (DS.mercPop(m) > 1) out.push('두 자리');
   var agw = agTag(m); if (agw) out.push(agw.trim());      // r16 person: 나이는 늘 (노년, 장수 꼬리표)
@@ -22920,7 +23054,7 @@ function mercStatLine(n, base) {
 }
 // ── r12 screen: 부대원 한 줄 · 사람 창 · 고르기 시트 · 막사(여럿 고르기) ──
 // 단추 위치 문법: 줄을 누르면 살펴본다(「살펴보기」 단추 없음) · 명부의 사람 줄 끝에는 단추가 없다 · 맡기는 일은 깃발 카드의 칸에서 · 되돌릴 수 없는 것은 창 맨 아래 붉은 단추 하나
-function mercLine(m) { return '<b>' + esc(DS.mercCall(m) || '') + '</b> ' + gpips(m.g) + ' <i class="own">' + DS.MERCS[m.type].name + ', ' + DS.VET[DS.vetRank(m.x)].name + '</i>'; }
+function mercLine(m) { return '<b>' + esc(DS.mercCall(m) || '') + '</b> ' + gpips(m.g) + ' <i class="own">' + DS.MERCS[m.type].name + ', ' + lv(DS.pL(m)) + '</i>'; }
 // 내보낸다: 들린 물건은 가방으로 (쓰러질 때만 잃는다). 가방으로 돌아온 물건 이름들
 function fireMercs(s, list) {
   var back = [];
@@ -22983,7 +23117,7 @@ function mercPowBlock(s, m, pl) {
   var seat0 = pplSeat(m); if (!(n > 0)) n = seatPow(seat0, m);      // 막사 대기: 대장 가문 가솔 자리 기준 숫자
   var h = radarBlock('m' + m.id, seat0, m, '<div class="pwhead">' + pwBox(n, bf ? '전투력 (가주)' : own ? '전투력 (가솔)' : '전투력', 'big') + '</div>');      // r16 person: 육각형 능력치와 함께
   if (!bf && !own) return h;
-  h += foldBtn('mpow', '전투력 내역', bf ? '기본, 장비, 공훈, 등급, 특성, 기질, 성장' : '기본, 등급, 공훈, 특성, 물건, 기질, 성장');
+  h += foldBtn('mpow', '전투력 내역', bf ? '기본, 장비, 가문 공훈, 등급, 특성, 기질, 성장' : '기본, 등급, 가문 공훈, 특성, 물건, 기질, 성장');
   if (FOLD.mpow) h += '<div class="fold-in">' + pwTable(bf ? DS.powerParts(s, bf, m) : DS.mercParts(s, own, m)) + '</div>';
   return h;
 }
@@ -22993,14 +23127,14 @@ U.mercInfo = function (id, parent) { return mercInfo(id, parent); };      // r13
 function mercInfo(id, parent) {
   var o = sheet('부대원', function () {
     var s = G.save, m = mercById(id); if (!m) return '<p class="hint">떠난 부대원</p>';
-    var r = DS.vetRank(m.x), nx = DS.VET[r + 1], T = DS.TRAITS[m.t], q = quirkOf(m), ttl = DS.mercTitle ? DS.mercTitle(m) : '', pl = placeOf(m);
+    var T = DS.TRAITS[m.t], q = quirkOf(m), ttl = DS.mercTitle ? DS.mercTitle(m) : '', pl = placeOf(m), ph = pl.ch && s.chars[pl.ch] ? s.chars[pl.ch] : null;
     var og = null; if (DS.mercOrigin) { try { og = DS.mercOrigin(m); } catch (x) { og = null; } }
     var tag = DS.castTag ? DS.castTag(m) : '';
-    var html = '<div class="chead">' + mercSpr(m, 4) + '<div><div class="chn">' + (DS.vetBadge ? '<span class="pvet">' + DS.vetBadge(DS.vetRank(m.x || 0)) + '</span>' : '') + '<h2>' + esc(m.n || '') + (m.sn ? ' <small class="snm">' + esc(m.sn) + '</small>' : '') + '</h2>' + agBadges(m, true) + '</div><p>' + (ttl ? '<i class="ttl">' + esc(ttl) + '</i> ' : '') + gpips(m.g) + ' <b class="gnm" style="color:' + ((DS.GRADES[m.g] || {}).col || '') + '">' + esc((DS.GRADES[m.g] || {}).name || '') + '</b> ' + DS.MERCS[m.type].name + (m.sx ? ', ' + esc(lgSexTxt(m.sx)) : '') + (DS.mercPop(m) > 1 ? ', 두 자리' : '') + (tag ? ', ' + esc(tag) : '') + '</p>' + (pl.ch && s.chars[pl.ch] ? '<p class="hln">' + crestH(s.chars[pl.ch], 18) + '<b>' + esc(pl.t) + '</b></p>' : '<p class="hln none"><b>막사 대기</b></p>') +
-      vnBar(m.x) + '</div></div>';
+    var html = '<div class="chead">' + mercSpr(m, 4) + '<div><div class="chn">' + pTier(m) + '<h2>' + esc(m.n || '') + (m.sn ? ' <small class="snm">' + esc(m.sn) + '</small>' : '') + '</h2>' + agBadges(m, true) + '</div><p>' + (ttl ? '<i class="ttl">' + esc(ttl) + '</i> ' : '') + gpips(m.g) + ' <b class="gnm" style="color:' + ((DS.GRADES[m.g] || {}).col || '') + '">' + esc((DS.GRADES[m.g] || {}).name || '') + '</b> ' + DS.MERCS[m.type].name + (m.sx ? ', ' + esc(lgSexTxt(m.sx)) : '') + (DS.mercPop(m) > 1 ? ', 두 자리' : '') + (tag ? ', ' + esc(tag) : '') + '</p>' + (pl.ch && s.chars[pl.ch] ? '<p class="hln">' + crestH(s.chars[pl.ch], 18) + '<b>' + esc(pl.t) + '</b></p>' : '<p class="hln none"><b>막사 대기</b></p>') +
+      vnBar(m) + '</div></div>';
     html += rankBlock(m, true, !m.h && !!m.o);
     html += mercPowBlock(s, m, pl);
-    html += '<button class="row place" data-goflag="' + pl.ch + '"' + (pl.ch ? '' : ' disabled') + '><span class="lbl">자리</span><span class="tx"><b>' + esc(pl.t) + '</b><small class="fx2"><i class="fxt">가주일 때 +' + DS.bnPct(m) + '%</i><i class="fxt">가솔일 때 ×' + DS.VET[r].mul.toFixed(2) + '</i></small></span>' + (pl.ch ? '<i class="go" aria-hidden="true">›</i>' : '') + '</button>';
+    html += '<button class="row place" data-goflag="' + pl.ch + '"' + (pl.ch ? '' : ' disabled') + '><span class="lbl">자리</span><span class="tx"><b>' + esc(pl.t) + '</b><small class="fx2">' + (ph ? hFx(ph, !m.h) : '<i class="fxt">막사. 가문 공훈 없음</i>') + '</small></span>' + (pl.ch ? '<i class="go" aria-hidden="true">›</i>' : '') + '</button>';
     var bfl = DS.bearsFlag ? DS.bearsFlag(s, m) : null;      // r27: 태생 병과 (가주면 그 가문과 맞는지)
     html += '<dl class="kv tr2"><dt>태생</dt><dd>' + esc(DS.nativeName ? DS.nativeName(m) : '') + (bfl && DS.bnNative ? ' ' + natTag(bfl, m) + '<small class="dim">' + (DS.bnNative(bfl.cls, m) ? ' 가문의 기술을 제대로 살린다' : ' 제 능력치로 ' + esc(DS.CLASSES[bfl.cls].name) + ' 기술을 쓴다') + '</small>' : '') + '</dd><dt>특성</dt><dd>' + (T ? esc(T.name) + (trShort(m.t) ? ' <i class="fxt">' + esc(trShort(m.t)) + '</i>' : '') : '없음') + '</dd>' + (q ? '<dt>버릇</dt><dd>' + esc(q.name) + (q.short ? ' <i class="fxt">' + esc(q.short) + '</i>' : '') + '</dd>' : '') + natureRow(m) + (DS.KIND_GROW && DS.KIND_GROW[m.type] ? '<dt>성장</dt><dd>장수 종족 <i class="fxt">더디게 큼</i></dd>' : '');
     html += '<dt>함께한 전투</dt><dd class="num">' + (m.b || 0) + '</dd><dt>처치</dt><dd class="num">' + (m.k || 0) + '</dd>' + (og && og.name ? '<dt>출신</dt><dd><b>' + esc(og.name) + '</b>' + (og.desc ? ' <small class="dim">' + esc(og.desc) + '</small>' : '') + '</dd>' : '') + '</dl>';
@@ -23030,15 +23164,15 @@ function mercInfo(id, parent) {
 function heroInfo(parent) {
   var o = sheet('대장', function () {
     var s = G.save, ch = s.chars[s.hero]; if (!ch) return '';
-    var p = ch.ps || {}, T = DS.TRAITS[p.t], q = quirkOf(p), r = DS.vetRank(p.x || 0), nx = DS.VET[r + 1];
-    var html = '<div class="chead">' + charSpr(ch, 4) + '<div><div class="chn">' + (DS.vetBadge ? '<span class="pvet">' + DS.vetBadge(DS.vetRank((ch.ps || {}).x || 0)) + '</span>' : '') + '<h2>' + esc(DS.heroCall ? DS.heroCall(s) : DS.charName(ch)) + '</h2>' + agBadges(ch, true) + '</div><p>' + gpips(p.g || 3) + ' <b class="gnm" style="color:' + ((DS.GRADES[p.g || 3] || {}).col || '') + '">' + esc((DS.GRADES[p.g || 3] || {}).name || '') + '</b> ' + (p.type && DS.MERCS[p.type] ? DS.MERCS[p.type].name : '사람') + (ch.sx ? ', ' + esc(lgSexTxt(ch.sx)) : '') + '</p>' + '<p class="hln">' + crestH(ch, 18) + '<b>' + esc(DS.flagName(ch.cls)) + ' 가주</b> <i class="tg">맹주</i></p>' +
-      vnBar(p.x) + '</div></div>';
+    var p = ch.ps || {}, T = DS.TRAITS[p.t], q = quirkOf(p);
+    var html = '<div class="chead">' + charSpr(ch, 4) + '<div><div class="chn">' + pTier(p) + '<h2>' + esc(DS.heroCall ? DS.heroCall(s) : DS.charName(ch)) + '</h2>' + agBadges(ch, true) + '</div><p>' + gpips(p.g || 3) + ' <b class="gnm" style="color:' + ((DS.GRADES[p.g || 3] || {}).col || '') + '">' + esc((DS.GRADES[p.g || 3] || {}).name || '') + '</b> ' + (p.type && DS.MERCS[p.type] ? DS.MERCS[p.type].name : '사람') + (ch.sx ? ', ' + esc(lgSexTxt(ch.sx)) : '') + '</p>' + '<p class="hln">' + crestH(ch, 18) + '<b>' + esc(DS.flagName(ch.cls)) + ' 가주</b> <i class="tg">맹주</i></p>' +
+      vnBar(p) + '</div></div>';
     html += rankBlock(p, false);
     html += ultBlock(p);      // r32 필살기 (r36: 맹주만)
     html += radarBlock('h', { k: 'hero', ch: ch }, p, '<div class="pwhead">' + pwBox(DS.flagPower(s, ch, p), '전투력 (가주)', 'big') + '</div>');      // r16 person: 육각형 능력치와 함께
-    html += foldBtn('mpow', '전투력 내역', '기본, 장비, 공훈, 등급, 특성, 기질, 성장');
+    html += foldBtn('mpow', '전투력 내역', '기본, 장비, 가문 공훈, 등급, 특성, 기질, 성장');
     if (FOLD.mpow) html += '<div class="fold-in">' + pwTable(DS.powerParts(s, ch, p)) + '</div>';
-    html += '<button class="row place" data-goflag="' + ch.id + '"><span class="lbl">자리</span><span class="tx"><b>' + esc(DS.flagName(ch.cls)) + ' 가주</b><small class="fx2"><i class="tg">대장 고정</i><i class="fxt">가주일 때 +' + DS.bnPct(p) + '%</i></small></span><i class="go" aria-hidden="true">›</i></button>';
+    html += '<button class="row place" data-goflag="' + ch.id + '"><span class="lbl">자리</span><span class="tx"><b>' + esc(DS.flagName(ch.cls)) + ' 가주</b><small class="fx2"><i class="tg">대장 고정</i>' + hFx(ch, false) + '</small></span><i class="go" aria-hidden="true">›</i></button>';
     var bfl = ch;      // r27: 태생 병과 — 대장은 늘 대장 가문의 가주 (r32: 옛 줄은 없는 m 을 읽어 대장 창이 열리지 않았다)
     html += '<dl class="kv tr2"><dt>태생</dt><dd>' + esc(DS.nativeName ? DS.nativeName(p) : '') + (bfl && DS.bnNative ? ' ' + natTag(bfl, p) + '<small class="dim">' + (DS.bnNative(bfl.cls, p) ? ' 가문의 기술을 제대로 살린다' : ' 제 능력치로 ' + esc(DS.CLASSES[bfl.cls].name) + ' 기술을 쓴다') + '</small>' : '') + '</dd><dt>특성</dt><dd>' + (T ? esc(T.name) + (trShort(p.t) ? ' <i class="fxt">' + esc(trShort(p.t)) + '</i>' : '') : '없음') + '</dd>' + (q ? '<dt>버릇</dt><dd>' + esc(q.name) + '</dd>' : '') + natureRow(p) + '</dl>';
     html += agRow(ch) + wedBox() + lgSpouseRow('ch', ch.id);      // r16 person: 혼인 칸
@@ -23065,7 +23199,7 @@ function showPull(list, cb) {
     list.map(function (m, i) {
       var T = DS.TRAITS[m.t], q = quirkOf(m);
       return '<div class="pcard2 g' + m.g + (calm ? '' : ' back' + (i === best && m.g >= 3 ? ' hint' + m.g : '')) + '" data-pi="' + i + '" style="--i:' + i + '">' + mercSpr(m, many ? 2 : 4) + '<b>' + esc(m.n || '') + '</b>' + gpips(m.g) + '<span>' + DS.MERCS[m.type].name + (DS.mercPop(m) > 1 ? ', 두 자리' : '') + '</span>' +
-        '<span class="tr">' + (T ? T.name + '. ' + T.desc : '') + (q ? (T ? ' ' : '') + esc(q.name) + '. ' + esc(q.desc || '') : '') + '</span>' + (m.g >= 4 ? '<span class="tr hi">가솔일 때 빛나고, 가주일 때 +' + DS.bnPct(m) + '%</span>' : '') + (DS.rnBtn ? DS.rnBtn('m', m.id) : '') + '</div>';
+        '<span class="tr">' + (T ? T.name + '. ' + T.desc : '') + (q ? (T ? ' ' : '') + esc(q.name) + '. ' + esc(q.desc || '') : '') + '</span>' + (m.g >= 4 ? '<span class="tr hi">가솔일 때 고유 기술, 가주일 때 등급 +' + DS.bnGrade(m) + '%</span>' : '') + '<span class="tr">' + lv(DS.pL(m)) + '</span>' + (DS.rnBtn ? DS.rnBtn('m', m.id) : '') + '</div>';
     }).join('') +
     '</div><div class="pbtns">' + (calm ? '' : '<button class="btn" data-flipall>모두 열기</button>') + '<button class="btn gold wide" data-close>확인</button></div></div>', 'modal center pullov');
   var timers = [], left = calm ? 0 : list.length, order = list.map(function (m, i) { return i; }).sort(function (a, b) { return list[a].g - list[b].g || a - b; });
@@ -23158,7 +23292,7 @@ U.listTools = listTools;
 // ── r38 막사 창: 「막사가 너무 보기 어렵다」 — 부대 탭 아래 작은 접힘 단추였다. 이제 부대 탭 위쪽의 막사 카드 → 이 창.
 //   카드 목록(초상·이름·등급 색·종류·태생·공훈·나이·잠금) · 정렬(등급·공훈·나이·병과) · 거르기(병과·등급) · 누르면 사람 창 · 카드 끝 빠른 일(잠금 · 보내기) · 「여럿 고르기」로 방출
 var BV = { sort: 'g', cls: '', g: 0, sel: false, seen: null };
-var BSORT = [['g', '등급'], ['x', '공훈'], ['a', '나이'], ['c', '병과']];
+var BSORT = [['g', '등급'], ['x', '레벨'], ['a', '나이'], ['c', '병과']];      // r42: 공훈 → 개인 레벨
 function barNatives(m) { if (m.cast && DS.CLASSES[m.cast]) return [m.cast]; return Object.keys(DS.CLASSES).filter(function (c) { return !DS.CLASSES[c].master && DS.mercTypes(c).indexOf(m.type) >= 0; }); }
 function barOwnCls(s) { var o = {}; DS.charList(s).forEach(function (ch) { var C = DS.CLASSES[ch.cls]; if (!C) return; o[ch.cls] = 1; if (C.master && DS.FAMILY[C.fam]) DS.FAMILY[C.fam].members.forEach(function (c) { o[c] = 1; }); }); return o; }
 // 이 사람을 가솔로 세울 수 있는 출전 가문 (빈자리가 있고, 아이면 부모 가문)
@@ -23175,7 +23309,7 @@ function barNewMark(s) { var sn = s.seen || (s.seen = {}), mx = 0; s.mercs.forEa
 DS.barNew = function (s) { if (!s || !s.mercs) return 0; var b = barNewMark(s); return DS.reserve(s).filter(function (m) { return m.id > b; }).length; };
 function barAge(m) { var a = lgTry(function () { return agInfo(m); }); return a && !a.dead ? a : null; }
 function barCard(s, m, own, seen) {
-  var G0 = DS.GRADES[m.g] || {}, nat = barNatives(m), fit = nat.some(function (c) { return own[c]; }), a = barAge(m), r = DS.vetRank(m.x || 0), room = barRoom(s, m).length, isNew = seen != null && m.id > seen;
+  var G0 = DS.GRADES[m.g] || {}, nat = barNatives(m), fit = nat.some(function (c) { return own[c]; }), a = barAge(m), pLv = DS.pL(m), room = barRoom(s, m).length, isNew = seen != null && m.id > seen;
   var can = mercCan(m), on = BV.sel && !!MSEL[m.id] && can;
   var natT = nat.length ? '<i class="bnat' + (fit ? ' ok' : '') + '" title="' + (fit ? '맞는 가문이 있다' : '맞는 가문이 아직 없다') + '">태생 ' + esc(nat.map(function (c) { return DS.CLASSES[c].name; }).join('·')) + '</i>' : '';
   return '<div class="bcard g' + m.g + (on ? ' on' : '') + (m.lk ? ' lk' : '') + '" style="--gc:' + (G0.col || '#888') + '">' +
@@ -23183,7 +23317,7 @@ function barCard(s, m, own, seen) {
     '<button class="bmain" data-binfo="' + m.id + '" aria-label="' + esc((m.n || '') + ' 살펴보기') + '"><span class="bpt">' + mercSpr(m, 2) + '</span><span class="btx">' +
     '<span class="b1">' + mercTtl(m) + '<b>' + esc(m.n || '') + '</b>' + gpips(m.g) + (isNew ? '<i class="bnew">새로</i>' : '') + '</span>' +
     '<span class="b2"><em style="color:' + (G0.col || '') + '">' + esc(G0.name || '') + '</em> ' + esc(DS.MERCS[m.type].name) + (DS.mercPop(m) > 1 ? ' <i class="bpop">두 자리</i>' : '') + '</span>' +
-    '<span class="b3">' + natT + (r ? '<i class="brk r' + Math.min(r, 6) + '">' + esc(DS.VET[r].name) + '</i>' : '') + (a ? '<i class="bag' + (a.old ? ' old' : '') + '">' + a.y + '살' + (a.old ? ', ' + esc(AGL().elderWord || '노년') : '') + '</i>' : '') + '</span>' +
+    '<span class="b3">' + natT + '<i class="brk r' + Math.min(6, Math.max(1, DS.tierOfL(pLv) - 3)) + '">' + esc(lv(pLv)) + '</i>' + (a ? '<i class="bag' + (a.old ? ' old' : '') + '">' + a.y + '살' + (a.old ? ', ' + esc(AGL().elderWord || '노년') : '') + '</i>' : '') + '</span>' +
     '</span></button>' +
     '<span class="bact"><button class="blk' + (m.lk ? ' on' : '') + '" data-block="' + m.id + '" aria-pressed="' + !!m.lk + '" aria-label="' + (m.lk ? '잠금 풀기' : '잠그기') + '">' + (U.svg ? U.svg('lock', 18) : '잠금') + '</button>' +
     '<button class="btn small bsend' + (room ? ' gold' : '') + '" data-bsend="' + m.id + '"' + (room ? '' : ' disabled aria-disabled="true"') + '>' + (room ? '보내기' : '자리 없음') + '</button></span></div>';
@@ -23203,7 +23337,7 @@ function barView(s) {
     '<nav class="bchips" aria-label="등급">' + '<button data-bg="0"' + (BV.g ? '' : ' aria-current="true"') + '>등급 전체</button>' + [5, 4, 3, 2, 1].filter(function (g) { return cntG[g]; }).map(function (g) { return '<button data-bg="' + g + '"' + (BV.g === g ? ' aria-current="true"' : '') + ' style="--gc:' + DS.GRADES[g].col + '"><i class="gdot"></i>' + esc(DS.GRADES[g].name) + ' <b class="num">' + cntG[g] + '</b></button>'; }).join('') + '</nav></div>';
   var list = res.filter(function (m) { return (!BV.g || m.g === BV.g) && (!BV.cls || barNatives(m).indexOf(BV.cls) >= 0); });
   var ageOf = function (m) { var a = barAge(m); return a ? a.y : -1; }, ck = function (m) { var n = barNatives(m); return n.length ? Object.keys(DS.CLASSES).indexOf(n[0]) : 99; };
-  var by = { g: function (a, b) { return b.g - a.g || (b.x || 0) - (a.x || 0); }, x: function (a, b) { return (b.x || 0) - (a.x || 0) || b.g - a.g; }, a: function (a, b) { return ageOf(a) - ageOf(b) || b.g - a.g; }, c: function (a, b) { return ck(a) - ck(b) || b.g - a.g; } }[BV.sort] || function (a, b) { return b.g - a.g; };
+  var by = { g: function (a, b) { return b.g - a.g || DS.pL(b) - DS.pL(a); }, x: function (a, b) { return DS.pL(b) - DS.pL(a) || b.g - a.g; }, a: function (a, b) { return ageOf(a) - ageOf(b) || b.g - a.g; }, c: function (a, b) { return ck(a) - ck(b) || b.g - a.g; } }[BV.sort] || function (a, b) { return b.g - a.g; };
   list.sort(by);
   if (BV.sel) { var canV = list.filter(mercCan), ns = mselList().length; html += '<p class="bselp">' + (ns ? '<b class="num">' + ns + '</b>명 고름 · <button class="lnk" data-msel="none">해제</button>' : '방출할 사람을 고른다') + (canV.length ? ' · <button class="lnk" data-bselall="1">보이는 ' + canV.length + '명</button>' : '') + '</p>'; }
   if (!list.length) return html + '<p class="mempty">조건에 맞는 부대원이 없다. <button class="lnk" data-breset="1">모두 보기</button></p>';
@@ -23262,7 +23396,7 @@ DS.barBadge = function () {
 // 용병소: 모집만 (1회·5회 · 확률 · 확정 · 추모). 편성·막사·내보내기는 부대 탭으로 옮겼다
 // r32 추모 한 줄: [별명] 이름 · 종류 · 공훈 / 쓰러진 곳 · 전투 · 처치 / 마지막 말
 function fallenRow(f) {
-  return '<div class="row fallen"><div class="tx"><b>' + (f.nk ? '<i class="ttl">' + esc(f.nk) + '</i> ' : '') + esc(f.n || '') + ' ' + gpips(f.g) + ' <i class="own">' + (DS.MERCS[f.type] ? DS.MERCS[f.type].name : '') + ', ' + DS.VET[DS.vetRank(f.x)].name + (f.f && G.save.chars[f.f] ? ', ' + esc(DS.flagName(G.save.chars[f.f].cls)) + ' 가주' : '') + '</i></b><small>' + esc(f.at || '') + '에서 쓰러짐, 전투 ' + (f.b || 0) + ', 처치 ' + (f.k || 0) + '</small>' +
+  return '<div class="row fallen"><div class="tx"><b>' + (f.nk ? '<i class="ttl">' + esc(f.nk) + '</i> ' : '') + esc(f.n || '') + ' ' + gpips(f.g) + ' <i class="own">' + (DS.MERCS[f.type] ? DS.MERCS[f.type].name : '') + ', ' + (f.L ? lv(f.L) : '') + (f.f && G.save.chars[f.f] ? ', ' + esc(DS.flagName(G.save.chars[f.f].cls)) + ' 가주' : '') + '</i></b><small>' + esc(f.at || '') + '에서 쓰러짐, 전투 ' + (f.b || 0) + ', 처치 ' + (f.k || 0) + '</small>' +
     (f.lw ? '<small class="lw">마지막 말 「' + esc(f.lw) + '」</small>' : '') + '</div></div>';
 }
 function mercShop() {
@@ -23270,7 +23404,7 @@ function mercShop() {
     var s = G.save, cost = DS.recruitPrice(s, 0), next = DS.recruitPrice(s, 1), base = DS.mercCost(DS.heroTier(s)), c5 = DS.recruitTotal(s, 5), res = DS.reserve(s), html = '', nfl = (s.fallen || []).length;
     var nEmpty = emptySlots(), first = !s.mercs.length && !nfl, pityLeft = Math.max(1, DS.PITY - (s.pity || 0)), mainGold = s.tickets > 0 || nEmpty > 0, ease = DS.recruitEase(s), pg = (DS.GRADES[DS.PITY_G || 4] || {}).name || '';
     html += '<div class="gacha"><div class="gh"><b>모집</b><span>모집권 <b class="num">' + (s.tickets || 0) + '</b>장</span></div>' +
-      (first ? '<p class="hint sm">공훈이 쌓일수록 강함 <b class="warn">쓰러지면 잃음</b></p>' : '') +
+      (first ? '<p class="hint sm">레벨이 오를수록 강함 <b class="warn">쓰러지면 잃음</b></p>' : '') +
       '<div class="gprice"><span>지금 ' + coin(cost) + '</span><i aria-hidden="true">→</i><span>다음 ' + coin(next) + '</span></div>' +      // r35: 부를 때마다 오른다
       '<p class="gwhy">부를 때마다 값이 오른다. 계절이 지나면 조금씩 내려간다.' + (ease > 0 ? ' <b>기본값 ' + coin(base) + '까지 ' + ease + '계절</b>' : '') + '</p>' +
       '<div class="gbtn"><button class="btn' + (mainGold ? ' gold' : '') + '" data-pull="1"><span>1회 모집</span><small>' + (s.tickets > 0 ? '모집권 1장' : coin(cost)) + '</small></button>' +
@@ -23357,11 +23491,15 @@ function fuRow(s, u) {      // 이미 맺은 묶음 한 줄: 문장 셋 + 이름
   var cs = u.ids.map(function (id) { return s.chars[id]; }).filter(Boolean);
   return '<div class="row fuu-row"><span class="fucr">' + cs.map(function (c) { return crestH(c, 22); }).join('') + '</span><div class="tx"><b>' + esc(DS.unionName(s, u)) + '</b><small>' + esc(cs.map(function (c) { return hsShort(c.cls); }).join(', ') + ' 가문') + '' + '</small></div></div>';
 }
+// r42: 합일은 사람 셋 — 후보 한 줄 = 선 가문의 문장 · 이름 · 자리 · 태생 · 단 Lv
+function fuWho(s, c) { return c.role === 'hero' ? DS.charName(s.chars[s.hero]) : (c.who.ttl || c.who.n || ''); }
+function fuRole(c) { return c.role === 'hero' ? '맹주' : c.role === 'bear' ? '가주' : c.role === 'follow' ? '가솔' : '막사'; }
+function fuSpr(s, c) { return c.role === 'hero' ? charSpr(s.chars[s.hero], 1.2) : mercSpr(c.who, 1.2); }
 function fuPickRow(s, c, on) {
-  var b = c.id === s.hero ? null : DS.bearer(s, c), who = c.id === s.hero ? DS.charName(c) : b ? (b.ttl || b.n || '') : '';
-  return '<button class="row fupick' + (on ? ' on' : '') + '" data-fupick="' + c.id + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + crestH(c, 28) +
-    '<span class="tx"><b>' + esc(DS.flagName(c.cls)) + (c.id === s.hero ? ' <i class="tg">맹주</i>' : '') + '</b><small>' + DS.CLASSES[c.cls].name + ' ' + lv(c.L) + (who ? ', 가주 ' + esc(who) : ', 가주 없음') + '</small></span>' +
-    '<span class="fumx"><small>공훈</small><b class="num">' + fmtN(DS.houseMerit(s, c)) + '</b></span><i class="fuck">' + (on ? '✓' : '') + '</i></button>';
+  var nat = DS.CLASSES[DS.pNative(s, c.who)] || {};
+  return '<button class="row fupick' + (on ? ' on' : '') + '" data-fupick="' + c.key + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + (c.ch ? crestH(c.ch, 22) : '') + '<span class="fusp">' + fuSpr(s, c) + '</span>' +
+    '<span class="tx"><b>' + esc(fuWho(s, c)) + ' <i class="tg">' + fuRole(c) + '</i></b><small>' + (c.ch ? esc(hsShort(c.ch.cls)) + ' 가문, ' : '') + esc(c.role === 'hero' || c.role === 'bear' ? (nat.name || '') : DS.mercKind(c.who)) + ', ' + lv(c.L) + '</small></span>' +
+    '<i class="fuck">' + (on ? '✓' : '') + '</i></button>';
 }
 function church() {
   var pick = null;      // 고른 가문 번호들 (창이 열려 있는 동안)
@@ -23373,27 +23511,17 @@ function church() {
     html += lgChurchRow();      // r4 가문: 관
     // r38: 「맹주의 필살기」 바꾸기 줄은 없앴다 — 필살기는 고르는 것이 아니라 타고난다 (사람 창의 「타고난 필살기」)
     var P = DS.fuseProg(s), cands = P.ready;
-    html += '<h4>가문의 합일 <i class="own' + (P.ok ? ' ok' : '') + '">7단 Lv10 ' + cands.length + '곳</i></h4><p class="hint">7단 Lv10 가문 셋을 고르면 함께 8단에 오른다. 어느 가문끼리든 된다. 맹세의 깃대 ' + (s.crest ? '보유' : '<b class="warn">없음</b>') + '</p>';
-    DS.fuseUnions(s).forEach(function (u) { html += fuRow(s, u); });
-    if (pick == null) pick = cands.length === DS.FUSE_N ? cands.map(function (c) { return c.id; }) : [];
-    pick = pick.filter(function (id) { return cands.some(function (c) { return c.id === id; }); });
+    html += '<h4>합일 <i class="own' + (P.ok ? ' ok' : '') + '">7단 Lv10 ' + cands.length + '명</i></h4><p class="hint">7단 Lv10 사람 셋을 고르면 셋이 함께 8단에 오르고, 레벨 70을 넘어 자란다. 누구끼리든 된다. 맹세의 깃대 ' + (s.crest ? '보유' : '<b class="warn">없음</b>') + (P.fused ? '. 합일한 사람 ' + P.fused + '명' : '') + '</p>';
+    if (pick == null) pick = cands.length === DS.FUSE_N ? cands.map(function (c) { return c.key; }) : [];
+    pick = pick.filter(function (k) { return cands.some(function (c) { return c.key === k; }); });
     if (cands.length) {
-      html += '<p class="fuhd">고른 가문 <b class="num">' + pick.length + ' / ' + DS.FUSE_N + '</b></p>';
-      cands.forEach(function (c) { html += fuPickRow(s, c, pick.indexOf(c.id) >= 0); });
+      html += '<p class="fuhd">고른 사람 <b class="num">' + pick.length + ' / ' + DS.FUSE_N + '</b></p>';
+      cands.forEach(function (c) { html += fuPickRow(s, c, pick.indexOf(c.key) >= 0); });
     }
-    var jn = DS.fuseJoinable && DS.fuseJoinable(s);
-    if (jn) {      // 1.0.1: 남은 한 가문은 대가문 하나에 넷째로
-      html += '<p class="fuhd">남은 한 가문, 대가문에 합류</p><p class="hint sm">' + esc(DS.flagName(jn.cls)) + '이 고른 대가문의 넷째가 되어 8단에 오른다. 대가문 이름은 그대로다.</p>';
-      DS.fuseUnions(s).forEach(function (u, i) { if (u.ids.length < 4) html += '<button class="row fupick" data-fujoin="' + i + '">' + crestH(jn, 28) + '<span class="tx"><b>' + esc(DS.unionName(s, u)) + '에 합류</b><small>' + u.ids.map(function (id) { return hsShort(s.chars[id].cls); }).join(', ') + ' 가문</small></span><i class="fuck"></i></button>'; });
-    }
-    if (cands.length < DS.FUSE_N && !jn) {
+    if (cands.length < DS.FUSE_N) {
       var near = P.low.slice(0, DS.FUSE_N - cands.length + 1);
-      html += '<p class="hint sm">' + (P.can ? '합일: 7단 Lv10 가문 ' + P.n + '/' + P.of : '묶을 가문이 셋 남지 않았다') + '</p>';
-      near.forEach(function (c) { html += '<div class="row fupick off">' + crestH(c, 28) + '<span class="tx"><b>' + esc(DS.flagName(c.cls)) + '</b><small>' + DS.CLASSES[c.cls].name + ' ' + lv(c.L) + ', ' + (DS.FUSE_MIN - c.L) + '레벨 남음</small></span></div>'; });
-    }
-    if (pick.length) {
-      var top = DS.idsTop(s, pick);
-      html += '<div class="fuprev"><small>묶음 이름</small><b>' + esc(top ? top + ' 대가문' : '대가문') + '</b><small>고른 가문 중 가주 공훈이 가장 큰 가문의 이름. 합일하면 바뀌지 않는다</small></div>';
+      html += '<p class="hint sm">' + (P.can ? '합일: 7단 Lv10 사람 ' + P.n + '/' + P.of : '합일할 사람이 셋 남지 않았다') + '</p>';
+      near.forEach(function (c) { html += '<div class="row fupick off">' + (c.ch ? crestH(c.ch, 22) : '') + '<span class="fusp">' + fuSpr(s, c) + '</span><span class="tx"><b>' + esc(fuWho(s, c)) + ' <i class="tg">' + fuRole(c) + '</i></b><small>' + lv(c.L) + ', ' + (DS.FUSE_MIN - c.L) + '레벨 남음</small></span></div>'; });
     }
     return html;
   });
@@ -23410,42 +23538,24 @@ function church() {
     }
     var pk = e.target.closest('[data-fupick]');
     if (pk) {
-      var id = +pk.dataset.fupick, i = pick.indexOf(id);
-      if (i >= 0) pick.splice(i, 1); else if (pick.length < DS.FUSE_N) pick.push(id); else { A('cancel'); toast('가문은 ' + DS.FUSE_N + '곳까지 고른다'); return; }
+      var id = pk.dataset.fupick, i = pick.indexOf(id);
+      if (i >= 0) pick.splice(i, 1); else if (pick.length < DS.FUSE_N) pick.push(id); else { A('cancel'); toast('사람은 ' + DS.FUSE_N + '명까지 고른다'); return; }
       A('tap'); o.draw(); return;
-    }
-    var fj = e.target.closest('[data-fujoin]');
-    if (fj) {
-      if (busy()) { no('전투 중', '싸우는 중에는 할 수 없다'); return; }
-      var jc = DS.fuseJoinable(s); if (!jc) return;
-      if (!s.crest) { A('cancel'); toast('맹세의 깃대가 없다'); return; }
-      var jm = DS.fuseJoin(s, jc.id, +fj.dataset.fujoin); if (!jm) { A('cancel'); return; }
-      if (DS.relicTidy) DS.relicTidy(s);
-      DS.rebuildParty(); DS.updateQuest(); U.persist(); o.close();
-      var ju = DS.unionOf(s, jm.id), jun = DS.unionName(s, ju);
-      DS.showPromo({ id: jm.id, from: 7, to: 8, cls: jm.cls, fused: jun, note: hsShort(jm.cls) + ' 가문이 ' + jun + '의 넷째가 되어 8단에 올랐다.' }, partyGapNote);
-      return;
     }
     if (!e.target.closest('[data-fugo]')) return;
     if (busy()) { no('전투 중', '싸우는 중에는 할 수 없다'); return; }
     var chk = DS.fuseOk(s, pick); if (!chk.ok) { A('cancel'); toast(chk.why); return; }
-    var ids = pick.slice(), held = [];
-    ids.forEach(function (id) { var c = s.chars[id]; if (c && c.relic && DS.RELICS[c.relic]) held.push(c.relic); });
-    var m = DS.fuse(s, ids); if (!m) return;
-    if (DS.relicTidy) DS.relicTidy(s);      // 쥘 수 없는 유물은 가방으로
+    var m = DS.fuse(s, pick.slice()); if (!m) return;
+    if (DS.relicTidy) DS.relicTidy(s);
     DS.rebuildParty(); DS.updateQuest(); U.persist(); o.close();
-    var back = held.filter(function (r) { return r !== m.relic && !relicHolder(s, r); }).map(function (r) { return DS.RELICS[r].name; });      // 이어 쥐지 못한 유물은 가방으로
-    var LF = DS.lastFuse && DS.lastFuse.id === m.id ? DS.lastFuse : null;      // 기획팀: 막사로 돌아간 용병·막사 한도 넘침
-    var u = DS.unionOf(s, m.id), un = DS.unionName(s, u), hs = ids.map(function (id) { return hsShort(s.chars[id].cls); }).join(', ') + ' 가문';
-    var note = hs + ', 함께 8단에 올랐다. 장비, 유물, 가주, 가솔은 그대로다.' + (back.length ? ' ' + back.join(', ') + '은(는) 가방으로 돌아갔다.' : '') +
-      (LF && LF.mercsBack ? ' 부대원 ' + LF.mercsBack + '명은 자리가 모자라 막사로 갔다.' : '') + (LF && LF.over ? ' 막사가 ' + LF.over + '명 넘쳤다. 넘는 동안은 모집할 수 없다.' : '');
-    var reveal = function () { DS.showPromo({ id: m.id, from: 7, to: 8, cls: m.cls, fused: un, note: note }, partyGapNote); };
-    var clss = ids.map(function (id) { return s.chars[id].cls; }).sort().join(), old = Object.keys(DS.FAMILY).filter(function (f) { return DS.FAMILY[f].members.slice().sort().join() === clss; })[0];
-    var FL = LORE().fuse || {}, ll = (old && FL[old] ? FL[old] : FL.any || []).map(function (t) { return typeof t === 'string' ? t.replace(/\{h\}/g, hs).replace(/\{u\}/g, un).replace(/\{t\}/g, u && u.name ? u.name + ' 가문' : '가문') : t; });      // 옛 묶음 그대로면 그 장면, 아니면 고른 셋의 장면 (r24: 옛 묶음 장면에도 묶음 이름 {u})
-    var go = function () { if (ll && ll.length) story(ll, reveal, un + ' 합일'); else reveal(); };
-    // r16 fx: 세 깃발이 함께 오른다 — 전장의 세 유닛이 동시에 금빛으로 감싸였다가 새 모습으로
-    var V0 = G.view; if (V0 && V0.cere && LF && LF.ids) { LF.ids.forEach(function (id) { var fc = s.chars[id], fu = G.sim && G.sim.byId['c' + id]; if (!fc || !fu) return; var nn = ''; try { nn = DS.unitSpriteName(fu); } catch (x) { nn = ''; } var a7 = DS.lookName(fc.cls, 7), a8 = DS.lookName(fc.cls, 8); V0.cere(fu.id, 'fuse', { to: 8, old: nn && a7 !== a8 ? nn.replace(a8, a7) : null }); }); }
-    go();      // 이야기 띠는 화면 아래 — 연출과 함께 흐른다 (창 흐름·시험의 순서는 그대로)
+    var LF = DS.lastFuse || {}, names = (LF.names || []).join(', ');
+    var lead = (LF.who || []).map(function (w) { return DS.whoHouse(s, w); }).filter(function (h, i) { var w = LF.who[i]; return h && (h.id === s.hero ? DS.heroPs(s) === w : DS.bearer(s, h) === w); })[0];
+    var note = names + ', 셋이 뜻을 모아 함께 8단에 올랐다. 이제 레벨 70을 넘어 자란다. 장비, 유물, 자리는 그대로다.';
+    var reveal = function () { if (lead) DS.showPromo({ id: lead.id, from: 7, to: 8, cls: lead.cls, fused: '세 사람', note: note }, partyGapNote); else toast(note, 4200); };
+    var FL = LORE().fuse || {}, ll = (FL.any || []).map(function (t) { return typeof t === 'string' ? t.replace(/\{h\}/g, names).replace(/\{u\}/g, '세 사람').replace(/\{t\}/g, '세 사람') : t; });
+    var go = function () { if (ll && ll.length) story(ll, reveal, '합일'); else reveal(); };
+    var V0 = G.view; if (V0 && V0.cere) (LF.who || []).forEach(function (w) { var h = DS.whoHouse(s, w); if (!h) return; var fu = G.sim && G.sim.byId[(h.id === s.hero ? DS.heroPs(s) === w : DS.bearer(s, h) === w) ? 'c' + h.id : 'm' + w.id]; if (!fu) return; var nn = ''; try { nn = DS.unitSpriteName(fu); } catch (x) { nn = ''; } var a7 = DS.lookName(h.cls, 7), a8 = DS.lookName(h.cls, 8); V0.cere(fu.id, 'fuse', { to: 8, old: nn && a7 !== a8 ? nn.replace(a8, a7) : null }); });
+    go();
   });
 }
 // 출전 자리가 비었는데 대기 중인 지휘관이 있으면 알려 준다 (합일 뒤에 흔하다)
@@ -23572,7 +23682,7 @@ function takeSnap(s) {
   var sv = G.save; snap = { key: s.pit ? 'p' + s.pit : 's' + s.id, L: {}, mx: {}, mt: {} };
   DS.charList(sv).forEach(function (c) { snap.L[c.id] = c.L; });
   snap.pw = DS.partyPower ? DS.partyPower(sv) : 0; snap.cp = {}; sv.party.forEach(function (id) { snap.cp[id] = DS.cardPower(sv, sv.chars[id]); });      // r15: 결과 창의 「이번 판 전투력 변화」
-  sv.mercs.forEach(function (m) { snap.mx[m.id] = m.x || 0; snap.mt[m.id] = DS.mercTitle ? DS.mercTitle(m) || '' : ''; });      // 판 전의 별명 (결과 창이 새로 붙은 별명을 알린다)
+  sv.mercs.forEach(function (m) { snap.mx[m.id] = DS.pL(m); snap.mt[m.id] = DS.mercTitle ? DS.mercTitle(m) || '' : ''; });      // 판 전의 별명 (결과 창이 새로 붙은 별명을 알린다)
 }
 DS.openGate = function (s, lock) {
   var sv = G.save, B = s.boss ? DS.BOSSES[s.boss] : null, pl = DS.partyL(sv), rec = DS.recLOf ? DS.recLOf(s) : s.L, low = DS.recLow ? !!DS.recLow(sv, s) : pl < rec - 2;
@@ -23626,7 +23736,7 @@ function nextLine() {      // 결과 창 맨 아래 한 줄: 이제 무엇을 �
   }
   return n.id + '. ' + n.name + ' — ' + DS.ZONES[n.zone].name;
 }
-function vetBar(m) { var r = DS.vetRank(m.x), nx = DS.VET[r + 1]; return nx ? Math.max(0, Math.min(100, (m.x - DS.VET[r].at) / (nx.at - DS.VET[r].at) * 100)) : 100; }
+function vetBar(m) { var L = DS.pL(m); return L >= DS.pCap(m) ? 100 : Math.max(0, Math.min(100, (+m.exp || 0) / DS.expNeed(L) * 100)); }      // r42: 개인 경험치
 DS.showResult = function (s, out, cb) {
   var sv = G.save, sn = snap && snap.key === (s.pit ? 'p' + s.pit : 's' + s.id) ? snap : null, st = G.stats || null, kills = st && st.kills ? st.kills : null;
   // r8 menus (newbie 1): 지휘관을 잃었으면 제목 바로 아래에 — 금색 「승리」 밑 스크롤 끝에 묻히지 않게
@@ -23693,12 +23803,14 @@ DS.showResult = function (s, out, cb) {
   });
   if (anyUp && sv.seen && !sv.seen.lvx) { sv.seen.lvx = 1; lvHint = '<p class="dim lvx">10레벨마다 단 +1 (새 기술)</p>'; }      // 「단」 첫 설명 (한 번)
   var benchUp = sn ? DS.charList(sv).filter(function (c) { return sv.party.indexOf(c.id) < 0 && sn.L[c.id] != null && c.L > sn.L[c.id]; }) : [];
+  var hup = (G.vetUps || []).filter(function (x) { return x && x.ch; });
+  if (hup.length) lvHint += '<p class="dim hup">' + hup.map(function (x) { return esc(DS.flagName(x.ch.cls)) + ' 가문 공훈 <b>' + esc(DS.hName(x.to)) + '</b>'; }).join(', ') + '</p>';      // r42: 가문 공훈 계급이 올랐다
   if (crows) html += '<h5>가문</h5><ul class="rc">' + crows + '</ul>' + lvHint + (benchUp.length ? '<p class="dim">대기 가문도 올랐다. ' + benchUp.map(function (c) { return esc(DS.charName(c)) + ' ' + lvS(c.L); }).join(', ') + '</p>' : '');
   // 용병: 이번 싸움의 처치 수, 최다 처치 한 명, 공훈 막대
   var ms = [], topId = null, topK = 0;
   sv.party.forEach(function (id) { if (sv.chars[id]) DS.mercsOf(sv, id).forEach(function (m) { ms.push(m); }); });
   if (kills) ms.forEach(function (m) { var n = kills['m' + m.id] || 0; if (n > topK) { topK = n; topId = m.id; } });
-  var ups = {}; (G.vetUps || []).forEach(function (x) { ups[x.m.id] = x; });
+  var ups = {}; ms.forEach(function (m) { var b0 = sn && sn.mx ? sn.mx[m.id] : null; if (b0 != null && DS.pL(m) > b0) ups[m.id] = { from: b0, to: DS.pL(m) }; });      // r42: 가솔의 개인 레벨 전 → 후
   var lostN = G.lost ? G.lost.length : 0;
   if (ms.length || lostN) {
     // r8 menus (trim 7): 공훈이 오른 용병·새 별명·최다 처치만 줄로, 나머지는 한 줄로 모은다
@@ -23708,7 +23820,7 @@ DS.showResult = function (s, out, cb) {
     if (msShow.length) html += '<ul class="rm">' + msShow.map(function (m) {
       var up = ups[m.id], kn = kills ? kills['m' + m.id] || 0 : null, ttl = DS.mercTitle ? DS.mercTitle(m) || '' : '', newT = ttl && sn && sn.mt && sn.mt[m.id] !== undefined && sn.mt[m.id] !== ttl;
       return '<li' + (up || newT ? ' class="up"' : '') + '><b>' + (ttl ? '<i class="ttl">' + esc(ttl) + '</i> ' : '') + esc(m.n || DS.MERCS[m.type].name) + '</b>' + (newT ? '<em class="top nt">새 별명</em>' : '') + (m.id === topId ? '<em class="top">최다 처치</em>' : '') +
-        '<span>' + (kn != null ? '처치 ' + kn + ', ' : '') + (up ? DS.VET[up.from].name + ' → <b>' + DS.VET[up.to].name + '</b>' : DS.VET[DS.vetRank(m.x)].name) + '</span><i class="bar"><u style="width:' + vetBar(m) + '%"></u></i></li>';
+        '<span>' + (kn != null ? '처치 ' + kn + ', ' : '') + (up ? (DS.tierOfL(up.from) === DS.tierOfL(up.to) ? DS.tierOfL(up.to) + '단 Lv' + DS.lvOfL(up.from) + '→<b>' + DS.lvOfL(up.to) + '</b>' : lvS(up.from) + '→<b>' + lvS(up.to) + '</b>') : lvS(DS.pL(m))) + '</span><i class="bar"><u style="width:' + vetBar(m) + '%"></u></i></li>';
     }).join('') + (msRest && msShow.length ? '<li class="rest">그 외 ' + msRest + '명 귀환</li>' : '') + '</ul>';
     if (lostN) html += '<ul class="loot"><li class="lost">쓰러진 부대원 ' + lostN + '명. ' + G.lost.map(function (m) { return esc(DS.mercCall(m)); }).join(', ') + '</li></ul>';
   }
@@ -23760,12 +23872,12 @@ function bestEnh(sv) {
 }
 DS.showRecord = function (cb, ending) {
   var sv = G.save, t = Math.floor(+sv.time || 0), fl = sv.fallen || [], be = bestEnh(sv), cleared = Object.keys(sv.cleared || {}).length;
-  var flags = DS.fuseUnions(sv).map(function (u) { return DS.unionName(sv, u); });
+  var fz = DS.fuseProg ? DS.fuseProg(sv).fused : 0;      // r42: 합일한 사람 수
   var html = '<div class="result record"><p class="eyebrow">' + (ending ? '엔딩' : '기록') + '</p>' + (ending ? scene('ending') : '') + '<h2>' + esc(sv.name) + '의 가문</h2><dl class="rec">' +
     (t >= 60 ? '<dt>플레이 시간</dt><dd><b class="num">' + (t >= 3600 ? Math.floor(t / 3600) + '</b>시간 <b class="num">' : '') + Math.floor(t % 3600 / 60) + '</b>분</dd>' : '') +
     '<dt>끝낸 시나리오</dt><dd><b class="num">' + cleared + '</b> / ' + DS.SCENARIOS.length + (sv.pit > 1 ? ', 갱도 ' + sv.pit + '층까지 열림' : '') + '</dd>' +
     '<dt>쓰러뜨린 적</dt><dd><b class="num">' + (sv.kills || 0) + '</b></dd>' +
-    '<dt>합일한 가문</dt><dd>' + (flags.length ? flags.join(', ') : '아직 없음') + '</dd>' +
+    '<dt>합일한 사람</dt><dd>' + (fz ? '<b class="num">' + fz + '</b>명' : '아직 없음') + '</dd>' +
     '<dt>최고 강화</dt><dd>' + (be ? '<span class="' + enhCls(be.enh) + '">' + esc(be.name) + '</span>' : '아직 없음') + '</dd></dl>';
   html += '<h5>깃대에 새긴 이름들 ' + (fl.length ? fl.length + '명' : '') + '</h5>' +
     (fl.length ? '<p class="names">' + fl.map(function (f) { return '<i style="color:' + gcol(f.g) + '">' + esc(f.n || (DS.MERCS[f.type] ? DS.MERCS[f.type].name : '')) + '</i>'; }).join('') + '</p>' : '<p class="dim">새길 이름이 없다. 한 사람도 잃지 않았다.</p>');
@@ -23856,24 +23968,19 @@ function pwBox(n, lab, cls) { return '<span class="pwb' + (cls ? ' ' + cls : '')
 function pwDelta(a, b) { var d = b - a; return '<span class="pwd"><i class="num">' + fmtN(a) + '</i> → <b class="num">' + fmtN(b) + '</b> <em class="num ' + (d > 0 ? 'up' : d < 0 ? 'dn' : '') + '">' + (d > 0 ? '+' : d < 0 ? '−' : '±') + fmtN(Math.abs(d)) + '</em></span>'; }
 // 공훈 효과: 계급 이름은 그대로 두고, 옆에 실제 효과를 숫자로. follow = 따르는 자리(배율), 아니면 깃발 얹힘(%)
 // 4.0.6: 등급과 공훈 단계표 — 지금 단계에 불이 들어오고, 효과를 숫자로
+// r42: 사람의 사다리 — 등급 · 개인 단(단마다 받은 성장, 맹주는 필살기 표식). 공훈은 이제 가문의 것 (가문 창)
 function rankBlock(who, merc, follow) {
   if (!who) return '';
-  var g = Math.max(1, Math.min(5, Math.round(+who.g || (merc ? 1 : 3)))), G0 = DS.GRADES[g] || {}, x = Math.max(0, +who.x || 0), r = DS.vetRank(x), V = DS.VET[r], nx = DS.VET[r + 1];
+  var g = Math.max(1, Math.min(5, Math.round(+who.g || (merc ? 1 : 3)))), G0 = DS.GRADES[g] || {}, L = DS.pL(who), t = DS.tierOfL(L);
   var gEff = [merc && G0.mul ? '능력 ×' + G0.mul.toFixed(2) : '', '가주일 때 +' + DS.bnGrade(who) + '%'].filter(Boolean).join(', ');
-  var vEff = ['공훈 ' + Math.floor(x), '가솔일 때 ×' + V.mul.toFixed(2), '가주일 때 +' + DS.bnMerit(who) + '%'].join(', ');
   var h = '<div class="rkbox">';
   h += '<div class="rkhd"><span class="rkk">등급</span><b style="color:' + (G0.col || '#efe6d0') + '">' + esc(G0.name || '') + '</b><small>' + esc(gEff) + '</small></div>';
   h += '<ol class="rkl">' + DS.GRADES.slice(1).map(function (q, i) { var k = i + 1; return '<li class="' + (k === g ? 'on' : k < g ? 'past' : '') + '" style="--rc:' + q.col + '">' + esc(q.name) + '</li>'; }).join('') + '</ol>';
-  h += '<div class="rkhd"><span class="rkk">공훈</span><b>' + esc(V.name) + '</b><small>' + esc(vEff) + '</small></div>';
-  var lord = !!(DS.ultHeroWho && DS.ultHeroWho(G.save) === who), uv = {}; if (lord && DS.ULT && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { uv[q[0]] = q[1]; });      // r36: 필살기 표식은 맹주만 (용사 · 불멸 = 세기 +15%)
-  var pgl = DS.pgList ? DS.pgList(who) : [];      // r41 temper: 그 계급이 이 사람에게 준 것
-  h += '<ol class="rkl v">' + DS.VET.map(function (q, i) { var uu = uv[q.at], gg = i ? pgl[i - 1] : null; return '<li class="' + (i === r ? 'on' : i < r ? 'past' : '') + (uu ? ' ult' : '') + '">' + esc(q.name) + '<small class="num">' + q.at + '</small>' + (uu ? '<i class="rku">필살 +' + Math.round(uu * 100) + '%</i>' : '') + (gg ? '<i class="rkg">' + esc(DS.pgText(gg)) + '</i>' : '') + '</li>'; }).join('') + '</ol>';
-  if (pgl.length > 5 && !lord) h += '<p class="rkgs">' + esc('불멸 뒤의 별: ' + pgl.slice(5).map(function (g, j) { return DS.STAR_NAME[j + 1] + ' ' + DS.pgText(g); }).join(', ')) + '</p>';
-  if (DS.ULT && lord) {      // r32: 불멸 뒤의 별 셋 — 별마다 필살기 세기 +8%, 차는 빠르기 +12%
-    var st = DS.vetStars(x);
-    h += '<div class="rkhd"><span class="rkk">별</span><b>' + (st ? esc(DS.STAR_NAME[st]) : '없음') + '</b><small>' + esc('불멸 뒤. 별마다 필살기 세기 +' + Math.round(DS.ULT.starP * 100) + '%, 충전 +' + Math.round(DS.ULT.starR * 100) + '%') + '</small></div>';
-    h += '<ol class="rkl s">' + DS.ULT.stars.map(function (at, i) { var gg = pgl[5 + i]; return '<li class="' + (i + 1 === st ? 'on' : i + 1 < st ? 'past' : '') + '"><span class="rks">' + '★★★'.slice(0, i + 1) + '</span><small class="num">' + at + '</small>' + (gg ? '<i class="rkg">' + esc(DS.pgText(gg)) + '</i>' : '') + '</li>'; }).join('') + '</ol>';
-  }
+  h += '<div class="rkhd"><span class="rkk">단</span><b>' + t + '단 Lv' + DS.lvOfL(L) + '</b><small>' + esc((who.fz ? '합일함. 레벨 100까지' : L >= 70 ? '7단 Lv10. 교회에서 합일하면 70을 넘는다' : '단이 오를 때마다 기질에 맞는 능력치가 오른다')) + '</small></div>';
+  var lord = !!(DS.ultHeroWho && DS.ultHeroWho(G.save) === who), uv = {}; if (lord && DS.ULT && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { uv[DS.tierOfL(q[0])] = q[1]; });      // 맹주: 5단 · 8단 = 필살기 +15%
+  var pgl = DS.pgList ? DS.pgList(who) : [], st = DS.vetStars(L);
+  h += '<ol class="rkl v t10">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (k) { var uu = uv[k], gg = k > 1 ? pgl[k - 2] : null, sk = lord && DS.ULT && DS.ULT.stars.indexOf((k - 1) * 10 + 1) >= 0; return '<li class="' + (k === t ? 'on' : k < t ? 'past' : '') + (uu || sk ? ' ult' : '') + '">' + k + '단' + (uu ? '<i class="rku">필살 +' + Math.round(uu * 100) + '%</i>' : '') + (sk ? '<i class="rku">★</i>' : '') + (gg ? '<i class="rkg">' + esc(DS.pgText(gg)) + '</i>' : '') + '</li>'; }).join('') + '</ol>';
+  if (DS.ULT && lord && st) h += '<p class="rkgs">' + esc('맹주의 별: ' + DS.STAR_NAME[st] + '. 별마다 필살기 세기 +' + Math.round(DS.ULT.starP * 100) + '%, 충전 +' + Math.round(DS.ULT.starR * 100) + '%') + '</p>';
   return h + '</div>';
 }
 // r32: 필살기 칸 (사람 창). r36: 맹주만 · r38: 「타고난 필살기」 — 깨어나기 전에도 무엇인지 보인다 (흐리게, 「3번 시나리오를 깨면 깨어난다」). 고르기·바꾸기는 없다
@@ -23884,9 +23991,9 @@ function ultBlock(who) {
   var tag = S.cls && DS.CLASSES[S.cls] ? DS.CLASSES[S.cls].name + ' 몫' : '성격 몫';
   if (!on) return '<div class="ultbox inn lock"><span class="ulab">타고난 필살기</span><b>' + esc(S.name) + ' <i class="tg">' + esc(tag) + '</i></b><small class="ud">' + esc(S.desc) + '</small>' + (S.fl ? '<small class="uf">「' + esc(S.fl) + '」</small>' : '') +
     '<small class="uw lk">' + (U.svg ? U.svg('lock', 14) : '') + esc(DS.ULT.unlock + '번 시나리오를 깨면 깨어난다') + '</small></div>';
-  var pw = DS.ultPow(who), rt = DS.ultRate(who), st = DS.vetStars(who.x);
+  var pw = DS.ultPow(who), rt = DS.ultRate(who), st = DS.pStars(who);
   return '<div class="ultbox inn"><span class="ulab">타고난 필살기</span><b>' + esc(S.name) + ' <i class="tg">' + esc(tag) + '</i></b><small class="ud">' + esc(S.desc) + '</small>' + (S.fl ? '<small class="uf">「' + esc(S.fl) + '」</small>' : '') +
-    '<small class="uw">' + esc('맹주만 지닌다. 싸우는 동안 게이지가 찬다. 직접 눌러야 쓴다. 용사, 불멸에 오르면 세진다' + (pw > 1.001 ? '. 세기 ×' + pw.toFixed(2) : '') + (rt > 1.001 ? ', 충전 ×' + rt.toFixed(2) : '') + (st ? ' (' + DS.STAR_NAME[st] + ')' : '')) + '</small></div>';
+    '<small class="uw">' + esc('맹주만 지닌다. 싸우는 동안 게이지가 찬다. 직접 눌러야 쓴다. 맹주가 5단, 8단에 오르면 세지고 9단, 10단, 레벨 100에 별이 붙는다' + (pw > 1.001 ? '. 세기 ×' + pw.toFixed(2) : '') + (rt > 1.001 ? ', 충전 ×' + rt.toFixed(2) : '') + (st ? ' (' + DS.STAR_NAME[st] + ')' : '')) + '</small></div>';
 }
 // r38: 깨어남 — 시나리오 3을 깬 뒤(또는 대를 이은 새 맹주가 처음) 한 번. 「타고난 필살기가 깨어났다」 + 이름·효과·내력
 function ultRevealOpen() {
@@ -23899,17 +24006,19 @@ function ultRevealOpen() {
   return o;
 }
 DS.ultRevealOpen = ultRevealOpen;
-function vnBar(x) {      // 공훈 막대: 다음 계급(불멸 뒤에는 다음 별)까지
-  x = +x || 0; var vn = DS.vetNext ? DS.vetNext(x) : null;
-  return '<div class="bar exp"><u style="width:' + (vn ? Math.max(0, Math.min(100, (x - vn.from) / (vn.at - vn.from) * 100)) : 100) + '%"></u></div><small class="fx2">' + (vn ? '<i class="nx">다음 ' + esc(vn.name) + ' <b class="num">' + Math.ceil(vn.at - x) + '</b></i>' : '') + '</small>';
+function vnBar(who) {      // r42: 사람의 경험치 막대 — 다음 레벨까지
+  var L = DS.pL(who), cap = DS.pCap(who), e = +(who && who.exp) || 0, need = DS.expNeed(L);
+  return '<div class="bar exp"><u style="width:' + (L >= cap ? 100 : Math.max(0, Math.min(100, e / need * 100))) + '%"></u></div><small class="fx2"><i class="nx">' + (L >= cap ? (cap < 100 ? '7단 Lv10. 합일을 기다린다' : '최고 레벨') : '다음 레벨까지 <b class="num">' + fmtN(Math.ceil(need - e)) + '</b>') + '</i></small>';
 }
+function pTier(who) { var L = DS.pL(who); return '<span class="ptier num">' + DS.tierOfL(L) + '단 <i>Lv' + DS.lvOfL(L) + '</i></span>'; }      // r42: 사람의 단 (사람 창 이름 옆)
+function hFx(ch, follow) { if (!ch) return ''; var r = DS.hRank(ch); return '<i class="vtag">가문 공훈 ' + DS.hName(r) + '</i>' + (follow ? '<i class="fxt">가솔 ×' + DS.hMul(ch).toFixed(2) + '</i>' : '<i class="fxt">가주 +' + DS.hPct(ch) + '%</i>'); }
 function natureRow(who) {
   var N = DS.mercNature ? DS.mercNature(who) : null; if (!N) return '';
   return '<dt>성격</dt><dd><b>' + esc(N.name) + '</b> <small class="dim">' + esc(N.desc) + '</small></dd>';
 }
-function vetFx(who, follow) { if (!who) return ''; var r = DS.vetRank(who.x || 0); return '<i class="vtag">공훈 ' + DS.VET[r].name + '</i>' + (follow ? '<i class="fxt">가솔일 때 ×' + DS.VET[r].mul.toFixed(2) + '</i>' : '<i class="fxt">가주일 때 +' + DS.bnMerit(who) + '%</i>'); }
+function vetFx(who, follow) { if (!who) return ''; return pTier(who).replace('ptier', 'ptier vtag'); }      // r42: 사람의 단
 function gradeFx(who) { var g = DS.bnGrade(who); return g ? '<i class="fxt">등급 +' + g + '%</i>' : ''; }
-var PW_ROW = { base: '기본', gear: '장비와 강화', merit: '공훈', grade: '등급', trait: '특성', native: '태생', tm: '기질', pg: '개인 성장', age: '노년과 비탄' };
+var PW_ROW = { base: '기본', gear: '장비와 강화', merit: '가문 공훈', grade: '등급', trait: '특성', native: '태생', tm: '기질', pg: '개인 성장', age: '노년과 비탄' };
 function pwTable(pp) {
   if (!pp || !pp.rows) return '';
   var top = 1, h = '<table class="pwt"><tbody>';
@@ -23937,16 +24046,16 @@ function bnPick(chId, parent) {
     var s = G.save, ch = s.chars[chId], cur = DS.bearer(s, ch), html = '', w = bnWhere();
     if (!ch) return '';
     var base = cur ? flagPow(ch, cur) : 0;
-    var list = s.mercs.filter(function (m) { return m !== cur; }).map(function (m) { var p = flagPow(ch, m); return { m: m, p: p, d: p - base }; }).sort(function (a, b) { return b.d - a.d || (b.m.x || 0) - (a.m.x || 0); });
+    var list = s.mercs.filter(function (m) { return m !== cur; }).map(function (m) { var p = flagPow(ch, m); return { m: m, p: p, d: p - base }; }).sort(function (a, b) { return b.d - a.d || DS.pL(b.m) - DS.pL(a.m); });
     html += '<div class="pkhd"><span><b>' + crestH(ch, 18) + esc(DS.flagName(ch.cls)) + '</b><small>' + esc(DS.houseTitle(s, ch).sub) + '</small></span>' + pwBox(base, '지금 전투력') + '</div>';
     html += '<p class="hint sm">가주는 제 모습과 능력치로 싸우고 기술만 가문의 것을 쓴다. 태생 병과가 ' + esc(DS.CLASSES[ch.cls].name) + '이면 기술을 제대로 살린다' + (w !== 'town' ? '. 마을 밖에서는 교체만' : '') + '</p>';
     var cand = cmpId ? mercById(cmpId) : null; if (cand === cur) cand = null;
     html += pickRadar({ k: 'bear', ch: ch }, cur, cand);
-    if (cur) html += '<div class="row merc now pk" data-info="' + cur.id + '">' + mercChip(cur, null) + '<span class="pkv">' + natTag(ch, cur) + '<em class="bp">+' + DS.bnPct(cur) + '%</em><small>지금 가주</small></span>' + (w === 'town' ? '<button class="btn small" data-bnoff="1">해임</button>' : '') + '</div>';
+    if (cur) html += '<div class="row merc now pk" data-info="' + cur.id + '">' + mercChip(cur, null) + '<span class="pkv">' + natTag(ch, cur) + '<em class="bp">+' + DS.bnPct(cur, ch) + '%</em><small>지금 가주, ' + lv(DS.pL(cur)) + '</small></span>' + (w === 'town' ? '<button class="btn small" data-bnoff="1">해임</button>' : '') + '</div>';
     else if (list.length) { var rec = list.filter(function (x) { return DS.bnPickable(x.m); })[0]; if (rec) html += '<p class="mshow">추천 <b>' + esc(rec.m.n || '') + '</b></p>'; }
     list.slice(0, 60).forEach(function (x) {
       var m = x.m, bf = DS.bearsFlag(s, m), at = bf ? DS.flagName(bf.cls) + ' 가주' : m.o && s.chars[m.o] ? DS.flagName(s.chars[m.o].cls) + ' 가솔' : '막사';
-      html += '<div class="row merc pk" data-info="' + m.id + '">' + mercChip(m, null) + '<span class="pkv">' + natTag(ch, m) + '<em class="bp">+' + DS.bnPct(m) + '%</em><small>' + esc(at) + '</small></span><button class="btn small gold" data-bnto="' + m.id + '">' + (cur ? '교체' : '가주 임명') + '</button><p class="ms pwl">' + (cur ? pwDelta(base, x.p) : '<span class="pwd"><b class="num">' + fmtN(x.p) + '</b></span>') + cmpBtn(m.id, cmpId) + '</p></div>';
+      html += '<div class="row merc pk" data-info="' + m.id + '">' + mercChip(m, null) + '<span class="pkv">' + natTag(ch, m) + '<em class="bp">+' + DS.bnPct(m, ch) + '%</em><small>' + esc(at) + ', ' + lv(DS.pL(m)) + '</small></span><button class="btn small gold" data-bnto="' + m.id + '">' + (cur ? '교체' : '가주 임명') + '</button><p class="ms pwl">' + (cur ? pwDelta(base, x.p) : '<span class="pwd"><b class="num">' + fmtN(x.p) + '</b></span>') + cmpBtn(m.id, cmpId) + '</p></div>';
     });
     if (!list.length && !cur) html += '<p class="hint">부대원 없음 (용병소에서 모집)</p>';
     return html;
@@ -23987,27 +24096,33 @@ function flagPast(ch) {
   return out.slice(-12).reverse();
 }
 // 합일 조건 진행: ■■□ (7단 Lv10 가문 수 / 셋). 묶음에 들었으면 그 이름
-function fuseLine(s, ch) {
-  var C = DS.CLASSES[ch.cls]; if (C.master || !DS.fuseProg) return '';
-  var u = DS.unionOf(s, ch.id); if (u) return '<p class="fzl"><i>합일</i><small>' + esc(DS.unionName(s, u)) + '</small></p>';
-  if (ch.L > 70) return '';
-  var P = DS.fuseProg(s), ok = P.n, n = P.of, near = ch.L >= DS.FUSE_MIN || DS.FUSE_MIN - ch.L <= FUSE_NEAR; if (!P.can || (!near && !ok)) return '';
+function fuseLine(s, ch) {      // r42: 그 가문 가주의 합일 (사람 셋)
+  var C = DS.CLASSES[ch.cls], b = ch.id === s.hero ? DS.heroPs(s) : DS.bearer(s, ch); if (C.master || !DS.fuseProg || !b) return '';
+  if (b.fz) return '<p class="fzl"><i>합일</i><small>가주가 합일했다. 레벨 100까지</small></p>';
+  var L = DS.pL(b), P = DS.fuseProg(s), ok = P.n, n = P.of, near = L >= DS.FUSE_MIN || DS.FUSE_MIN - L <= FUSE_NEAR; if (!P.can || (!near && !ok)) return '';
   var box = ''; for (var i = 0; i < n; i++) box += i < ok ? '■' : '□';
-  return '<p class="fzl"><i>합일 조건</i><b class="fzb" aria-label="' + ok + ' / ' + n + '">' + box + '</b><small>7단 Lv10 가문 ' + ok + '/' + n + '</small></p>';
+  return '<p class="fzl"><i>합일 조건</i><b class="fzb" aria-label="' + ok + ' / ' + n + '">' + box + '</b><small>7단 Lv10 사람 ' + ok + '/' + n + '</small></p>';
+}
+// r42: 가문 공훈 칸 — 표식 · 계급 · 효과 · 다음 계급까지 막대
+function hMeritBox(ch) {
+  var r = DS.hRank(ch), nx = DS.hNext(ch), x = +(ch.hx || 0);
+  return '<div class="hmbox">' + (DS.vetBadge ? DS.vetBadge(r) : '') + '<b>가문 공훈 ' + esc(DS.hName(r)) + '</b><small>가주 +' + DS.hPct(ch) + '%, 가솔 ×' + DS.hMul(ch).toFixed(2) + '</small>' +
+    '<div class="bar exp hm"><u style="width:' + (nx ? Math.max(0, Math.min(100, (x - nx.from) / (nx.at - nx.from) * 100)) : 100) + '%"></u></div><small class="fx2"><i class="nx">' + (nx ? '다음 ' + esc(nx.name) + ' <b class="num">' + fmtN(Math.ceil(nx.at - x)) + '</b>' : '가장 높은 계급') + '</i></small></div>';
 }
 // 깃발 창: 머리 → 출전/대기 → 든 사람 → 따르는 이 두 칸 → 능력치 → 장비·유물 → 통솔 → 기술(접힘) → 이 깃발을 들었던 이(접힘)
 function charSheet(id, parent) {
   var o = sheet('가문', function () {
     var s = G.save, ch = s.chars[id]; if (!ch) return '';
     var c = DS.CLASSES[ch.cls], st = DS.charStats(ch), pi = s.party.indexOf(ch.id), inP = pi >= 0, cap = DS.capL(ch), fam = famOf(ch.cls);
-    var html = '<div class="chead" style="--fc:' + (DS.FLAG[ch.cls] || '#f6cf57') + '">' + charSpr(ch, 4) + '<div><h2 class="hct">' + crestH(ch, 26) + esc(DS.flagName(ch.cls)) + (id === s.hero ? ' <i class="tg">맹주</i>' : '') + fuTag(s, ch) + '</h2><p>' + c.name + ' ' + DS.charTitle(ch) + ' Lv' + DS.lvOfL(ch.L) + (ch.down ? ', <b class="warn">쓰러짐</b>' : '') + '</p>' +
-      '<div class="bar exp"><u style="width:' + (ch.L >= cap ? 100 : Math.min(100, ch.exp / DS.expNeed(ch.L) * 100)) + '%"></u></div><small>' + (ch.L >= cap ? '최고 레벨' : '다음 레벨까지 <b class="num">' + fmtN(Math.ceil(DS.expNeed(ch.L) - ch.exp)) + '</b>') + '</small>' + fuseLine(s, ch) + '</div></div>';
+    var hb0 = id === s.hero ? DS.heroPs(s) : DS.bearer(s, ch);      // r42: 가문의 단은 가주의 개인 단 — 머리에는 가문 공훈
+    var html = '<div class="chead" style="--fc:' + (DS.FLAG[ch.cls] || '#f6cf57') + '">' + charSpr(ch, 4) + '<div><h2 class="hct">' + crestH(ch, 26) + esc(DS.flagName(ch.cls)) + (id === s.hero ? ' <i class="tg">맹주</i>' : '') + fuTag(s, ch) + '</h2><p>' + c.name + (hb0 ? ', 가주 ' + DS.charTitle(ch) + ' Lv' + DS.lvOfL(ch.L) : ', 가주 없음') + (ch.down ? ', <b class="warn">쓰러짐</b>' : '') + '</p>' +
+      hMeritBox(ch) + fuseLine(s, ch) + '</div></div>';
     // 으뜸 행동: 머리 바로 아래 한 줄
     html += '<div class="duty' + (inP ? ' in' : '') + '"><span><b>' + (inP ? '출전 ' + (pi + 1) + '번' : '대기') + '</b><small>' + (inP ? '경험치 100%' : '경험치 ' + Math.round(DS.BAL.bench * 100) + '%') + '</small></span>' +
       '<button class="btn small' + (inP ? '' : ' gold') + '" data-act="toggle">' + (inP ? '대기' : '출전') + '</button></div>';
     var bw = id === s.hero ? ch.ps : DS.bearer(s, ch);
     html += '<div class="pwhead">' + pwBox(DS.cardPower(s, ch), '가문 전투력', 'big') + pwBox(bw ? DS.flagPower(s, ch, bw) : 0, '가주') + '</div>';
-    html += foldBtn('cpow', '전투력 내역', bw ? '기본, 장비, 공훈, 등급, 특성, 기질, 성장' : '가주 없음');
+    html += foldBtn('cpow', '전투력 내역', bw ? '기본, 장비, 가문 공훈, 등급, 특성, 기질, 성장' : '가주 없음');
     if (FOLD.cpow) html += '<div class="fold-in">' + pwTable(DS.powerParts(s, ch, bw)) + '</div>';
     html += bnRow(ch);
     var ms = DS.mercsOf(s, ch.id), used = DS.popOf(s, ch.id);
@@ -24167,13 +24282,13 @@ function hgMeta(s, ch) {
   return { hero: hero, b: b, pi: pi, n: n, max: 1 + DS.MERC_SLOTS, pw: DS.cardPower(s, ch), bn: hero ? DS.charName(ch) : b ? (b.ttl || b.n || '') : '' };
 }
 // 1.0.1 부대 탭 한 화면: 가문 칸 안에 가주와 가솔 두 칸을 작은 얼굴로 (누르면 바꾸기 시트). 칸 머리를 누르면 가문 창
-function hgChip(attrs, spr, name, g, cls) { return '<button class="hch' + (cls ? ' ' + cls : '') + '" ' + attrs + ' style="--gc:' + (g ? gcol(g) : 'transparent') + '">' + spr + '<small>' + esc(name || '') + '</small></button>'; }
+function hgChip(attrs, spr, name, g, cls, L) { return '<button class="hch' + (cls ? ' ' + cls : '') + '" ' + attrs + ' style="--gc:' + (g ? gcol(g) : 'transparent') + '">' + spr + (L ? '<i class="hcl num">' + DS.tierOfL(L) + '·' + DS.lvOfL(L) + '</i>' : '') + '<small>' + esc(name || '') + '</small></button>'; }      // r42: 사람마다 단·Lv (「4·7」 = 4단 Lv7)
 function hgChips(s, ch, hero) {
   var b = hero ? null : DS.bearer(s, ch), fol = DS.mercsOf(s, ch.id), pop = DS.popOf(s, ch.id), h = '';
-  if (hero) h += hgChip('data-hinfo="1"', charSpr(ch, 1), ch.vac || ch.down ? '없음' : DS.charName(ch), (ch.ps && ch.ps.g) || 3, 'lead' + (ch.vac || ch.down ? ' empty' : ''));
-  else if (b) h += hgChip('data-bnslot="' + ch.id + '"', mercSpr(b, 1), b.ttl || b.n || '', b.g, 'lead');
+  if (hero) h += hgChip('data-hinfo="1"', charSpr(ch, 1), ch.vac || ch.down ? '없음' : DS.charName(ch), (ch.ps && ch.ps.g) || 3, 'lead' + (ch.vac || ch.down ? ' empty' : ''), ch.vac || !ch.ps ? 0 : DS.pL(ch.ps));
+  else if (b) h += hgChip('data-bnslot="' + ch.id + '"', mercSpr(b, 1), b.ttl || b.n || '', b.g, 'lead', DS.pL(b));
   else h += hgChip('data-bnslot="' + ch.id + '"', '<i class="add">+</i>', '가주', 0, 'lead empty');
-  fol.forEach(function (m) { h += hgChip('data-slot="' + ch.id + '" data-m="' + m.id + '"', mercSpr(m, 1), m.n || '', m.g, DS.mercPop(m) > 1 ? 'wide' : ''); });
+  fol.forEach(function (m) { h += hgChip('data-slot="' + ch.id + '" data-m="' + m.id + '"', mercSpr(m, 1), m.n || '', m.g, DS.mercPop(m) > 1 ? 'wide' : '', DS.pL(m)); });
   for (var k = pop; k < DS.MERC_SLOTS; k++) h += hgChip('data-slot="' + ch.id + '" data-m="0"', '<i class="add">+</i>', '가솔', 0, 'empty');
   return '<div class="hgm">' + h + '</div>';
 }
@@ -24185,7 +24300,7 @@ function hgCell(s, ch, cls) {
   var m = hgMeta(s, ch);
   return '<div class="hgc' + (m.pi >= 0 ? ' in' : '') + (ch.down ? ' down' : '') + (m.b ? '' : ' nob') + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '">' +
     '<button class="hgh" data-ch="' + ch.id + '">' + (m.pi >= 0 ? '<i class="hgo">' + (m.pi + 1) + '</i>' : '') + DS.houseCrestOf(s, ch, 20) + '<b>' + esc(hgShort(ch)) + '</b>' +
-    '<small class="hgl">' + lv(ch.L) + (ch.down ? ' <em class="warn">쓰러짐</em>' : pwNum(m.pw, 'sm')) + '</small>' + fuTag(s, ch, 'sm') + '</button>' + hgChips(s, ch, false) + gaTag(s, ch) + '</div>';
+    '<small class="hgl">' + (m.b ? lv(ch.L) : '가주 없음') + (ch.down ? ' <em class="warn">쓰러짐</em>' : pwNum(m.pw, 'sm')) + '</small><span class="hgv">' + DS.vetBadge(DS.hRank(ch)) + '<small>' + esc(DS.hName(DS.hRank(ch))) + '</small></span></button>' + hgChips(s, ch, false) + gaTag(s, ch) + '</div>';
 }
 function houseGrid(s) {
   var hero = s.chars[s.hero], cells = [], inGrid = {}, html = '<div class="hgrid">';
@@ -24193,7 +24308,7 @@ function houseGrid(s) {
     var m = hgMeta(s, hero), t = DS.houseTitle(s, hero);
     html += '<div class="hgc lord' + (m.pi >= 0 ? ' in' : '') + (hero.down ? ' down' : '') + '" style="--fc:' + (DS.FLAG[hero.cls] || '#c9a96a') + '">' +
       '<button class="hgh" data-ch="' + hero.id + '">' + DS.houseCrestOf(s, hero, 34) +
-      '<span class="hgn"><b>' + esc(t.name) + ' <i class="tg">맹주</i>' + (DS.lgBadge ? DS.lgBadge(s) : '') + fuTag(s, hero) + '</b><small>' + esc(t.sub) + '</small></span>' +
+      '<span class="hgn"><b>' + esc(t.name) + ' <i class="tg">맹주</i>' + (DS.lgBadge ? DS.lgBadge(s) : '') + '</b><small>' + esc(t.sub) + ' <span class="hgv">' + DS.vetBadge(DS.hRank(hero)) + '가문 공훈 ' + esc(DS.hName(DS.hRank(hero))) + '</span></small></span>' +
       '<span class="hgr">' + (m.pi >= 0 ? '<i class="hgo">출전 ' + (m.pi + 1) + '</i>' : '<i class="hgo off">대기</i>') + pwNum(m.pw) + '</span></button>' + hgChips(s, hero, true) + gaTag(s, hero) + '</div>';
     inGrid[hero.id] = 1;
   }
@@ -24386,22 +24501,22 @@ function tabHelp() {
   var S = [
     ['부대원과 가문', '가문', [
       '부대에는 <b>대장</b> 한 명과 <b>부대원</b>들이 있다. 가문은 열 개이고, 대장은 자기 가문의 가주다.',
-      '나머지 가문에는 부대원을 <b>가주로 임명한다</b>. 가주의 공훈 100마다 가문이 1% 강해지고, 등급이 높을수록 조금 더 오른다. 특성도 그대로 적용된다.',
+      '나머지 가문에는 부대원을 <b>가주로 임명한다</b>. 가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다. 특성도 그대로 적용된다.',
       '가문마다 <b>가솔</b> 자리가 둘 있다. 큰 부대원은 혼자 두 자리를 차지한다. 병과가 맞으면 능력치가 10% 오른다.',
       '가주와 가솔 배치는 부대 탭의 가문 카드에서 한다. 마을 밖에서는 서로 교체만 할 수 있다.',
       '가주가 없는 가문은 전투에 나서지 않는다. 전투가 끝나면 가솔이나 막사에서 자동으로 채운다. 영웅, 전설 등급과 잠근 부대원은 직접 배치해야 한다.',
       '대장의 <b>아이</b>는 부모가 이끄는 가문의 가솔로만 설 수 있다. 다른 가문의 가주나 가솔은 될 수 없다. 대장이 쓰러지면 후계로 고를 수 있다.',
       '<b>부대원은 쓰러지면 돌아오지 않는다.</b> 많이 다치면 스스로 물러난다.',
-      '가문에 속하지 않은 부대원은 <b>막사</b>에 머문다. 부대 창 아래 금빛 「막사」 단추로 연다 (점이 뜨면 빈 가솔 자리를 채울 사람이 있다). 등급, 공훈, 나이, 병과로 늘어놓고 병과, 등급으로 거른다. 카드를 누르면 사람 창, 「보내기」로 빈 가솔 자리에 세우고, 자물쇠로 잠근다. 「여럿 고르기」로 한꺼번에 방출한다.']],
-    ['등급과 공훈', 0, [
+      '가문에 속하지 않은 부대원은 <b>막사</b>에 머문다. 부대 창 아래 금빛 「막사」 단추로 연다 (점이 뜨면 빈 가솔 자리를 채울 사람이 있다). 등급, 레벨, 나이, 병과로 늘어놓고 병과, 등급으로 거른다. 카드를 누르면 사람 창, 「보내기」로 빈 가솔 자리에 세우고, 자물쇠로 잠근다. 「여럿 고르기」로 한꺼번에 방출한다.']],
+    ['등급, 단, 가문 공훈', 0, [
       '<b>등급</b>은 타고난 그릇이다. ' + DS.GRADES.slice(1).map(function (q) { return '<b style="color:' + q.col + '">' + q.name + '</b> ×' + q.mul.toFixed(2); }).join(', ') + '. 모집할 때 정해지고 바뀌지 않는다.',
       '등급이 높은 부대원이 가주가 되면 가문이 더 강해진다. ' + DS.GRADES.slice(1).map(function (q, i) { return q.name + ' +' + DS.BN.grade[i + 1] + '%'; }).join(', ') + '.',
-      '<b>공훈</b>은 싸울수록 쌓인다. ' + DS.VET.map(function (q) { return q.name + ' ' + q.at; }).join(', ') + '.',
-      '공훈 단계가 오르면 가솔로 싸울 때 능력치가 오른다. ' + DS.VET.map(function (q) { return q.name + ' ×' + q.mul.toFixed(2); }).join(', ') + '.',
-      '가주로 있을 때는 공훈 100마다 가문이 1% 강해진다. 최대 +' + DS.BN.cap + '%.',
-      '잠재력 ★ 이 높을수록 공훈이 빨리 쌓인다. ★3 이 보통이고 ★1 은 30% 느리고 ★5 는 30% 빠르다.',
-      '위쪽 초상: 아래 알약은 「단과 레벨」, 오른쪽 위 표식은 공훈 계급이다. 갈매기 하나 숙련, 둘 고참, 셋 정예, 별 용사, 빛나는 별 불멸.',
-      '지금 등급과 공훈은 인물 정보 맨 위 단계표에서 본다.']],
+      '<b>단과 레벨</b>은 사람마다 따로다. 싸우면 경험치를 얻어 오르고, 10레벨마다 단이 오른다. 단이 오를 때마다 기질에 맞는 능력치가 하나씩 더 오른다. 합일하지 않은 사람은 7단 Lv10에서 멈춘다.',
+      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주와 가솔이 싸우고 이길수록 가문에 쌓인다. ' + DS.HVET.map(function (q, i) { return DS.hName(i) + ' ' + q.at; }).join(', ') + '.',
+      '가문 공훈이 오르면 그 가문의 가주와 가솔이 강해진다. 가주 ' + DS.HVET.map(function (q, i) { return DS.hName(i) + ' +' + q.pct + '%'; }).join(', ') + '. 가솔 ×' + DS.HVET.map(function (q) { return q.mul.toFixed(2); }).join(', ') + '.',
+      '잠재력 ★ 이 높을수록 경험치가 빨리 쌓인다. ★3 이 보통이고 ★1 은 30% 느리고 ★5 는 30% 빠르다.',
+      '위쪽 초상: 아래 알약은 그 가문 가주의 「단과 레벨」, 오른쪽 위 표식은 <b>가문 공훈</b>이다. 갈매기 하나 숙련, 둘 고참, 셋 정예, 별 용사, 빛나는 별 불멸.',
+      '사람의 등급과 단은 인물 정보의 단계표에서, 가문 공훈은 가문 창 맨 위에서 본다.']],
     ['조작', 0, [
       '<b>화면 왼쪽 아래를 누른 채 끌면 조이스틱으로 이동</b>, <b>적을 누르면 공격</b>. 선택한 가문이 앞장서고 나머지가 따라온다. 손을 떼면 그 자리에 선다.',
       '가게, 마을 사람, 시나리오 입구, 지역 출구는 눌러도 그리로 걸어간다. PC에서는 WASD나 방향키로도 걷는다.',
@@ -24425,13 +24540,12 @@ function tabHelp() {
       '<b>유물</b>은 한 가문에 하나만 장착한다. 가문 정보의 유물 칸이나 가방에서 바꾼다.',
       '가방 목록도 다중 선택이 기본이다. 고른 뒤 아래 붉은 버튼으로 한꺼번에 판매한다. 잠근 장비는 선택할 수 없다.']],
     ['성장과 합일', 0, [
-      '<b>출전</b>한 가문 셋만 경험치를 모두 받는다. 대기 가문은 5%만 받는다.',
-      '레벨 10마다 <b>단</b>이 오르고 기술이 바뀐다. 대장은 모습도 바뀐다.',
+      '경험치는 <b>사람마다</b> 받는다. 출전한 가문 셋의 가주, 가솔, 맹주는 모두 받고, 막사와 대기 가문의 사람은 5%만 받는다. 뒤처진 사람은 더 빨리 따라잡는다.',
+      '레벨 10마다 <b>단</b>이 오른다. 맹주는 모습이 바뀌고, 가주와 가솔은 테두리 빛이 바뀐다. 가주의 단만큼 가문의 기술이 열리고, 가솔은 3단, 5단, 7단에 제 기술을 익힌다.',
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
-      '<b>7단 Lv10</b> 가문 셋과 맹세의 깃대가 있으면, 교회에서 가문 셋을 골라 함께 8단에 오른다. 어느 가문끼리든 묶을 수 있다.',
-      '한 가문은 한 번만 묶인다. 8단부터의 모습과 기술은 가문마다 제 계열(강철, 바람, 별)을 따른다.',
-      '묶음은 고른 셋 중 <b>가주의 공훈이 가장 큰 가문</b>의 이름을 따 「○○ 대가문」으로 불린다. 이름은 합일하는 순간 정해진다.',
-      '셋씩 묶고 <b>한 가문이 남으면</b>, 교회에서 이미 있는 대가문 하나에 넷째로 합류해 8단에 오른다.']],
+      '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다.',
+      '8단부터의 모습과 기술은 그 사람이 선 가문의 계열(강철, 바람, 별)을 따른다.',
+      '맹주가 다른 가문 사람에게 대를 넘기면 맹주 가문이 그 가문으로 옮겨 간다. 후계는 선대와의 레벨 차이 가운데 핏줄 절반, 양자 1/4을 받는다.']],
     ['혼인과 아이', '혼인', [
       '혼인은 <b>대장만</b> 할 수 있다. 성별이 다른 부대원이면 누구나 배우자로 맞을 수 있다. 혼인은 마을에서 한다.',
       '<b>인물 탭</b>의 「배우자 후보」 필터에서 혼인할 수 있는 사람과 아이 잠재력 예상 ★ 을 볼 수 있다.',
@@ -24455,7 +24569,7 @@ function tabHelp() {
 function PSL() { return LORE().person || {}; }
 function pst(k, d) { var v = PSL()[k]; return v == null ? d : v; }
 var PV = { sort: 'p', f: '' };
-var PSORT = [['p', '전투력'], ['a', '나이'], ['g', '등급'], ['x', '공훈']];
+var PSORT = [['p', '전투력'], ['a', '나이'], ['g', '등급'], ['x', '레벨']];
 var PFILT = [['', '모두'], ['bar', '막사'], ['out', '출전'], ['wait', '대기'], ['fam', '가족'], ['wed', '배우자 후보']];      // r38: 막사가 둘째 (인물 탭이 막사를 흡수했다)
 function heroCh() { var s = G.save; return s && s.chars[s.hero] || null; }
 // 한 사람의 자리: hero(대장 깃발) · bear(깃발을 든다) · fol(따른다) · bar(막사 — 대장 깃발을 따른다고 치고 잰다)
@@ -24477,11 +24591,11 @@ function pplOne(m) {
   var s = G.save, hero = heroCh();
   if (m === 'h') {
     var p = hero.ps || {}, fl = DS.houseTitle(s, hero);
-    return { key: 'h', kind: 'ch', ref: hero.id, ent: hero, who: p, name: DS.charName(hero), house: DS.houseName ? String(DS.houseName(s)).replace(/ 가문$/, '') : '', g: p.g || 3, xp: p.x || 0, sx: hero.sx || '', ag: agInfo(hero),
+    return { key: 'h', kind: 'ch', ref: hero.id, ent: hero, who: p, name: DS.charName(hero), house: DS.houseName ? String(DS.houseName(s)).replace(/ 가문$/, '') : '', g: p.g || 3, xp: DS.pL(p), sx: hero.sx || '', ag: agInfo(hero),
       seat: { k: 'hero', ch: hero, t: fl.name + ' 가주' }, place: '대장, ' + fl.name + ' 가주', spr: charSpr(hero, 2), out: true, wait: false, bar: false };
   }
   var st = pplSeat(m), inP = st.k !== 'bar' && s.party.indexOf(st.ch.id) >= 0;
-  return { key: 'm' + m.id, kind: 'merc', ref: m.id, ent: m, who: m, name: m.n || '', house: m.sn || '', g: m.g, xp: m.x || 0, sx: m.sx || '', ag: agInfo(m),
+  return { key: 'm' + m.id, kind: 'merc', ref: m.id, ent: m, who: m, name: m.n || '', house: m.sn || '', g: m.g, xp: DS.pL(m), sx: m.sx || '', ag: agInfo(m),
     seat: st, place: st.k === 'bar' ? '막사' : DS.flagName(st.ch.cls) + (st.k === 'bear' ? ' 가주' : ' 가솔'), spr: mercSpr(m, 2), out: inP, wait: st.k !== 'bar' && !inP, bar: st.k === 'bar' };
 }
 // 배우자감: 대장과 성별이 다른 성년 부대원 가운데 지금 맺을 수 있는 사람 (마을 밖이라는 까닭은 빼고 본다)
@@ -25623,6 +25737,7 @@ function renderTitle() {
   var fresh = meta.seenVer !== DS.VERSION, nv = !s && DS.Save.newerLocal ? DS.Save.newerLocal() : 0;      // 더 새 판의 저장: 읽지 않고, 덮어쓸 「새로 시작」도 내지 않는다
   // 제목 「전민 戰民」, 부제 「열 개의 깃발」. 맺음(30번)을 본 저장이면 한자가 「傳民」(전할 전)으로 바뀐다 — 싸우던 백성이 다음 대에 전하는 백성이 된다.
   var passed = !!(s && s.cleared && s.cleared[30]);
+  var arch = !s && DS.Save.archNote && DS.Save.archNote();      // r42: 처음 한 번 「새 시대가 열렸다」 (옛 저장은 보관만 한다)
   el.innerHTML = '<div class="title-top pad">' +
     '<h1 class="logo" aria-label="전민 ' + (passed ? '傳民' : '戰民') + '"><span class="lg-ko" data-t="전민">전민</span><span class="lg-han' + (passed ? ' passed' : '') + '">' + (passed ? '傳民' : '戰民') + '</span></h1>' +
     '<p class="logo-sub">열 가문의 시대</p>' + (passed ? '<p class="logo-gloss">싸우던 백성이 이제 전하는 백성이 되었다</p>' : '') + '</div>' +
@@ -25632,7 +25747,7 @@ function renderTitle() {
     (!s && !nv && brokenSave() ? '<p class="welcome warnbox"><b>저장을 읽지 못했습니다.</b> 깨진 저장은 지우지 않고 따로 두었습니다. 새로 시작하면 새로 저장합니다.</p>' : '') +
     (r && !s ? '<p class="welcome"><b>회귀자로 맞이합니다.</b> 예전 기록에 따라 특전을 드립니다. 진행은 처음부터입니다.</p>' : '') +
     (s ? '<button class="btn gold wide" id="btnCont">이어하기 <small>' + esc(s.name) + ', ' + DS.ZONES[s.zone].name + '</small></button>' : '') +
-    (!nv && oldEra() ? '<p class="welcome"><b>4.0 은 처음부터 시작합니다.</b> 옛 진행은 지우지 않습니다. 그 가운데 한 사람을 새 대장으로 데려올 수 있습니다.</p><button class="btn' + (s ? '' : ' gold') + ' wide" id="btnEra">새 시대를 연다</button>' : '') +
+    (!nv && arch ? '<p class="welcome arch"><b>새 시대가 열렸다 — 이전 기록은 보관되었다.</b> 2.0.0 은 처음부터 시작합니다. 이제 단과 레벨은 사람마다, 공훈은 가문의 것입니다. 옛 저장은 지우지 않고 이 기기에 그대로 둡니다.</p>' : '') +
     (nv ? '' : '<button class="btn wide' + (s || oldEra() ? '' : ' gold') + '" id="btnNew">' + (r && !s ? '회귀자로 새로 시작' : oldEra() ? '새 대장으로 시작' : '새로 시작') + '</button>') +
     '<div class="tver"><button id="btnNotes" class="lnk">공지사항<i class="dot"' + (fresh ? '' : ' hidden') + '></i></button><span class="num">v' + DS.VERSION + '</span></div>' +
     '<p class="title-note">저장은 이 브라우저에 남습니다.</p></div>';
@@ -25643,13 +25758,18 @@ function renderTitle() {
   if (!nv) $('#btnNew').addEventListener('click', function () { DS.Audio.unlock(); A('tap'); newGame(!!s, r); });
   else { $('#btnReload').addEventListener('click', function () { try { location.reload(); } catch (e) {} }); setTimeout(function () { toast(DS.NEWER_MSG, 4200); }, 300); }
   $('#btnNotes').addEventListener('click', function () { DS.Audio.unlock(); A('tap'); DS.openNotes(); });
-  if (fresh && (s || r || oldEra())) setTimeout(function () { if (!$('.ov') && !$('#s-title').hidden) DS.openNotes(); }, 500);   // 판이 바뀐 뒤 처음이면 공지를 먼저 보여 준다
+  if (arch) DS.Save.archSeen();
+  if (fresh && (s || r || arch)) setTimeout(function () { if (!$('.ov') && !$('#s-title').hidden) DS.openNotes(); }, 500);   // 판이 바뀐 뒤 처음이면 공지를 먼저 보여 준다
 }
 // ㉑ 새 시대를 연다: 옛 저장(읽기 전용)의 사람 목록에서 한 사람 → 새 판의 대장(1세, 레벨 1). 옛 지휘관이면 그 병과, 용병이면 병과를 고른다
-function oldEra() { try { var raw = DS.Save.oldRaw && DS.Save.oldRaw(); return !!(raw && DS.Save.isOld(raw) && DS.oldPeople(raw).length); } catch (e) { return false; } }
+function oldEra() { return false; }      // r42 (2.0.0): 옛 저장에서 사람을 데려오는 길은 닫았다 — 보관만 한다 (DS.Save.archNote)
 // r12 screen: 옛 사람 목록(초상 · 이름 · 옛 자리 · 등급 눈금)을 갈래별로 → 한 사람을 고르면 아래 줄에 「이 사람으로 시작」 또는 병과 둘 → 시작. 맨 아래 「처음 사람으로」
 //   QA 17 · t9 가 쓰는 선택자: #btnEra · [data-era] · [data-ec] (고르면 [data-ec] 가 늘 나온다)
-DS.openNewEra = function (raw, hasSave) {
+DS.openNewEraOld = function (raw, hasSave) { return newEra0(raw, hasSave); };      // 옛 길 (2.0.0 에서는 부르지 않는다 — 시험용)
+DS.openNewEra = function () {      // r42 (2.0.0): 옛 판 저장(1.x)은 이어 하지도, 사람을 데려오지도 않는다 — 안내만
+  overlay('<div class="result"><h2>새 시대가 열렸다</h2><p>이전 기록은 보관되었다. 2.0.0 은 단과 레벨이 사람마다, 공훈이 가문의 것이라 옛 저장을 이어 할 수 없습니다. 옛 저장은 지우지 않고 그대로 둡니다.</p><button class="btn gold wide" data-close>확인</button></div>', 'modal center');
+};
+var newEra0 = function (raw, hasSave) {
   var L = DS.oldPeople(raw), ver = '', pick = -1; try { ver = JSON.parse(raw).ver || ''; } catch (e) {}
   var SRC = { hero: '옛 대장', cmd: '가주였던 이', merc: '부대원', young: '아이', coffin: '관 속' };
   function face(p) {
@@ -26628,7 +26748,7 @@ DS.egCallPane = function (S, pane, h) {
       put(html2); if (full) { var yb = pane.querySelector('[data-cyes]'); setTimeout(function () { if (yb) yb.disabled = true; }, LOCK + 10); } return;
     }
     if (st.at === 'fire') {
-      var R = DS.reserve(S).filter(function (m) { return !m.lk; }).slice().sort(function (a, b) { return a.g - b.g || (a.x || 0) - (b.x || 0); });
+      var R = DS.reserve(S).filter(function (m) { return !m.lk; }).slice().sort(function (a, b) { return a.g - b.g || DS.pL(a) - DS.pL(b); });
       put('<h5>' + esc(DS.egT1('call.fire')) + '</h5>' + R.slice(0, 12).map(function (m) { return '<div class="egfire"><span>' + esc(DS.mercName(m)) + '</span><button class="btn small" data-fire="' + m.id + '">방출</button></div>'; }).join('') + '<button class="btn wide" data-cback2="1">' + esc(DS.egT1('call.other')) + '</button>');
       return;
     }
@@ -26960,7 +27080,7 @@ DS.LG_BOON = {
   coffin: { n: '넉넉한 관', d: '빈 관 하나를 바로 들인다', v: 1, u: '개', line: '모실 자리가 하나 더 생긴다.' },
   birth:  { n: '번성', d: '아이가 태어날 확률 +{v}%', v: 5, u: '%', line: '집에 아이 울음이 끊이지 않는다.' },
   enh:    { n: '대장장이의 연', d: '강화 성공률 +{v}%p', v: 3, u: '%p', line: '대대로 같은 대장간을 쓴다.' },
-  merit:  { n: '기억되는 공', d: '공훈 획득 +{v}%', v: 5, u: '%', line: '세운 공은 집이 기억한다.' },
+  merit:  { n: '기억되는 공', d: '가문 공훈 획득 +{v}%', v: 5, u: '%', line: '세운 공은 집이 기억한다.' },
   gold:   { n: '두터운 곳간', d: '시나리오 보상 골드 +{v}%', v: 5, u: '%', line: '곳간 문이 닫힐 날이 없다.' },
   call:   { n: '부르는 목소리', d: '다시 부름 가망 +{v}%p', v: 3, u: '%p', line: '부르는 목소리가 한 대씩 두꺼워진다.' },
   herb:   { n: '약초밭', d: '약초 회복량 +{v}%', v: 10, u: '%', line: '집 뒤에 약초밭을 일군다.' },
@@ -27251,8 +27371,8 @@ if (en0) DS.enhance = function (save) {
 };
 if (er0) DS.enhRate = function (g) { var r = er0.apply(this, arguments), v = DS.lgVal(null, 'enh'); return v ? enhAdd(r, v) : r; };
 // 공훈
-var pmu0 = DS.potMul;
-if (pmu0) DS.potMul = function (m) { var k = pmu0.apply(this, arguments), v = DS.lgVal(null, 'merit'); return v ? k * (1 + v / 100) : k; };
+var ha0 = DS.hAdd;      // r42: 공훈은 가문의 것 — 가호는 가문 공훈이 쌓이는 몫에
+if (ha0) DS.hAdd = function (s, ch, pts) { var v = DS.lgVal(s, 'merit'); return ha0.call(this, s, ch, v && pts > 0 ? pts * (1 + v / 100) : pts); };
 // 보상 골드
 var sg0 = DS.scnGold;
 if (sg0) DS.scnGold = function (sc) { var g = sg0.apply(this, arguments), v = DS.lgVal(null, 'gold'); return v ? Math.round(g * (1 + v / 100)) : g; };
@@ -27266,10 +27386,9 @@ if (ge0) DS.gainExp = function (save, amount, eL) {
   if (v) amount = amount * (1 + v / 100);
   if (L && DS.capL && DS.egOn && DS.egOn(save)) {
     var add = 0;
-    DS.charList(save).forEach(function (ch) {
-      if (ch.L < 100 || DS.capL(ch) > 100) return;
-      var inP = save.party.indexOf(ch.id) >= 0 && !ch.down && !ch.vac;
-      add += amount * (inP ? 1 : DS.BAL.bench) * DS.BAL.exp;
+    (DS.persons ? DS.persons(save) : []).forEach(function (q) {      // r42: 레벨 100 에 닿은 사람마다
+      if (DS.pL(q.who) < 100 || q.role === 'bench' || q.role === 'follow' && !q.dep) return;
+      add += amount * (q.dep ? 1 : DS.BAL.bench) * DS.BAL.exp / 3;      // 가솔까지 세므로 셋으로 나눈다 (옛 가문 하나의 몫)
     });
     if (add > 0) {
       var need = DS.expNeed(100) * DS.LG.brkNeed; L.ovx += add;
@@ -28049,7 +28168,8 @@ function O() { return DS.Online || {}; }
 var BE = DS.OnlineBE = {
   name: 'firebase', maxDoc: 900 * 1024,
   savePath: function (uid) { return 'saves/' + uid; },
-  savePath2: function (uid) { return 'saves2/' + uid; },      // 4.0: v10 은 새 문서에만 (㉑ 옛 문서는 읽기 전용 보관)
+  savePath2: function (uid) { return 'saves2/' + uid; },
+  savePath3: function (uid) { return 'saves3/' + uid; },      // r42 (2.0.0): 새 시대 — 사람마다 단·레벨. 옛 문서(saves2 · saves)는 읽지도 쓰지도 않는다 (보관)      // 4.0: v10 은 새 문서에만 (㉑ 옛 문서는 읽기 전용 보관)
   T: {
     nope: '<p class="hint onl-no">이 사이트에는 Firebase 설정이 없어 현황이 안 보입니다. 게임은 그대로 됩니다.</p>',
     pubNoId: '로그인하면 내 기록도 올라갑니다. 목록은 로그인 없이 보입니다.',
@@ -28442,7 +28562,7 @@ var T = {
   liveN: function (n) { return n ? '지금 다른 ' + n + '명이 게임을 열어 두었습니다' : '지금 게임을 연 다른 사람은 없습니다'; }
 };
 // claude.ai 런타임: claude.use('db'/'user'/'room') — uid 는 열 때 한 번 정해진다
-var claudeBE = { name: 'claude', savePath: function (uid) { return 'data/users/' + uid + '/save'; }, savePath2: function (uid) { return 'data/users/' + uid + '/save2'; }, start: function () { claudeInit(); } };      // 4.0: v10 은 새 문서(save2) — 옛 문서(save)는 읽기만
+var claudeBE = { name: 'claude', savePath: function (uid) { return 'data/users/' + uid + '/save'; }, savePath2: function (uid) { return 'data/users/' + uid + '/save2'; }, savePath3: function (uid) { return 'data/users/' + uid + '/save3'; }, start: function () { claudeInit(); } };      // 4.0: v10 은 새 문서(save2) — 옛 문서(save)는 읽기만
 var BE = DS.OnlineBE || claudeBE;
 if (BE.T) for (var tk in BE.T) T[tk] = BE.T[tk];
 function kind(e) { var c = code(e); return c === 'invalid_argument' || c === 'not_granted' || c === 'permission-denied' || c === 'unauthenticated' || c === 'invalid-argument' ? 'denied' : c === 'quota_exceeded' || c === 'resource-exhausted' ? 'full' : 'later'; }
@@ -28674,15 +28794,15 @@ O.opt = function () { if (O.st === 'ready' && O.uid && O.cloudState !== 'loading
 
 // ── 클라우드 저장: data/users/<uid>/save (본인만 읽고 쓴다) ──
 function cref() { return O.db.doc(BE.savePath(O.uid)); }      // 옛 문서 (3.x 판이 쓰는 곳 — 4.0 은 읽기만, 또는 새 칸 병합 쓰기)
-function cref2() { return O.db.doc(BE.savePath2 ? BE.savePath2(O.uid) : BE.savePath(O.uid) + '_v2'); }      // 4.0: 새 문서
+function cref2() { return O.db.doc(BE.savePath3 ? BE.savePath3(O.uid) : BE.savePath(O.uid) + '_v3'); }      // r42 (2.0.0): 새 시대의 문서 (saves3) — 옛 문서(saves2 · saves)는 보관만 한다
 // 4.0 (설계서 ②-2-1): 클라우드 읽기 — 새 문서가 있으면 그것, 없으면 옛 문서의 새 칸(병합 쓰기로 올린 것, data2), 그것도 없으면 옛 문서(옛 판 저장 — 「옛 판 저장 가져오기」)
 //   돌려주는 것: { data, v, at, ver, sum, src: 'new' | 'merged' | 'old' } 또는 null
 function cget() {
   return safeCall(function () { return cref2().get(); }).then(function (snap) {
     var d = snap && snap.exists ? snap.data() : null;
     if (d && typeof d.data === 'string') { d.src = 'new'; return d; }
-    return oldGet();
-  }, function () { return oldGet(); });
+    return null;      // r42: 옛 문서는 읽지 않는다 (새 시대 — 이어 하지 않는다)
+  }, function () { return null; });
 }
 function oldGet() {
   return safeCall(function () { return cref().get(); }).then(function (snap) {
