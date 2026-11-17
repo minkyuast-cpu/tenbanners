@@ -3452,6 +3452,13 @@ html body #app#app #s-game .chip .md { left: auto !important; right: 3px; top: 5
 html body #app#app #s-game .chip .md .d { width: 4px; height: 4px; } html body #app#app #s-game .chip .md .d.big { width: 4px; height: 8px; }
 html body #app#app #s-game .chip .bars { margin-right: 6px; }
 html body #app#app #s-game .chip .agc { right: 9px; }
+
+/* 1.0.7: 새로 시작 — 맹주 가문 이름 고르기 (두 줄 격자) */
+.gh-pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 4px 0 10px; }
+.gh-pick .gh { display: grid; gap: 2px; min-height: 52px; padding: 7px 10px; text-align: left; border-radius: 6px; border: 1px solid rgba(201,169,106,.35); background: linear-gradient(180deg, #2a2016, #17110b); color: #e9dfc8; }
+.gh-pick .gh b { font-size: 14px; font-weight: 700; color: #f3d58a; }
+.gh-pick .gh small { font-size: 11px; color: #b9a98a; line-height: 1.3; word-break: keep-all; }
+.gh-pick .gh.on { border-color: #f6cf57; box-shadow: 0 0 0 1px #f6cf57, 0 0 10px rgba(246,207,87,.35); background: linear-gradient(180deg, #3a2c1b, #1d150c); }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -3521,7 +3528,7 @@ DS.CLASSES = {
     spd: 12, mv: 0.7, rng: [1, 2], atk: 'thrust', dtype: 'phys',
     skills: [['cmd_fly', 3], ['dive', 3], ['whirl', 5]], merc: 'm_griffin',
     blurb: '이동력이 가장 좋고 물과 산을 그냥 넘는다. 가호 기술은 없고 화살에 약하다.' },
-  mar: { name: '수병', fam: 'tactics', start: 2, kind: 'inf', mt: 'swim',
+  mar: { name: '해병', fam: 'tactics', start: 2, kind: 'inf', mt: 'swim',
     tiers: ['캡틴', '서펜트나이트', '서펜트로드', '서펜트마스터', '크라켄나이트', '크라켄마스터'],
     base: { hp: 58, mp: 10, atk: 13, def: 9, mag: 5, res: 5 }, grow: { hp: 4.8, mp: 0.6, atk: 1.2, def: 0.95, mag: 0.45, res: 0.55 },
     spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys', passive: 'marine',
@@ -3575,7 +3582,7 @@ DS.CLASSES = {
     base: { hp: 66, mp: 16, atk: 17, def: 8, mag: 6, res: 6 }, grow: { hp: 4.8, mp: 0.9, atk: 1.5, def: 0.85, mag: 0.6, res: 0.6 },
     spd: 12, mv: 1, rng: [1, 4], atk: 'arrow', dtype: 'phys', passive: 'marine',
     skills: [['charisma', 8], ['tm_rain', 10], ['tm_gale', 9], ['aimed', 8], ['slow', 8], ['tidal', 8], ['arrowRain', 8]], merc: 'm_archer', mercs: ['m_merman', 'm_pike', 'm_archer'],
-    blurb: '수병, 창병, 궁병이 하나로 합일한 전술의 달인. 9단에 「바람길 화살」, 10단에 「소나기 화살」을 익힌다.' },
+    blurb: '해병, 창병, 궁병이 하나로 합일한 전술의 달인. 9단에 「바람길 화살」, 10단에 「소나기 화살」을 익힌다.' },
   mm: { name: '매직마스터', short: '매직', fam: 'magic', start: 8, kind: 'mage', mt: 'foot', master: true,
     tiers: ['매직마스터', '그랑메이지', '그랜드메이지'],
     base: { hp: 56, mp: 44, atk: 8, def: 6, mag: 19, res: 12 }, grow: { hp: 4.2, mp: 2.6, atk: 0.6, def: 0.65, mag: 1.65, res: 1.1 },
@@ -4052,7 +4059,7 @@ DS.TERRAIN = {
   plain: { name: '평지', note: '효과 없음' }, road: { name: '길', note: '효과 없음' }, bridge: { name: '다리', note: '효과 없음' },
   floor: { name: '석판', note: '효과 없음' }, ice: { name: '얼음', note: '효과 없음' }, sand: { name: '모래', note: '이동이 조금 느림' },
   forest: { name: '숲', note: '받는 피해 -20%, 이동 느림' }, hill: { name: '고지', note: '받는 피해 -10%, 궁병 사거리 +1' },
-  ford: { name: '여울', note: '얕은 물, 수병 유리' }, water: { name: '물', note: '수병, 비병만 진입' }, swamp: { name: '늪', note: '받는 피해 +10%, 이동 느림' },
+  ford: { name: '여울', note: '얕은 물, 해병 유리' }, water: { name: '물', note: '해병, 비병만 진입' }, swamp: { name: '늪', note: '받는 피해 +10%, 이동 느림' },
   lava: { name: '용암', note: '서 있으면 화상' }, mount: { name: '산', note: '비병만 통과' }, wall: { name: '벽', note: '통과 불가' },
   pillar: { name: '기둥', note: '통과 불가' }, house: { name: '건물', note: '' }, fence: { name: '울타리', note: '통과 불가' }, void: { name: '허공', note: '비병만 통과' }
 };
@@ -4137,10 +4144,17 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '1.0.6';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '4.0.14';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '1.0.7';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '4.0.15';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '1.0.7', date: '2026-11-17', tag: '변경', title: '이름 있는 집',
+    lead: '맹주 가문의 이름을 고를 수 있습니다. 수병은 해병이 되었습니다.',
+    items: [
+      ['새로', '새로 시작할 때 맹주 가문의 이름을 고릅니다. 펜드래곤, 타르가르옌, 아트레이데스, 벨몬트, 스타크, 우치하, 브리타니아, 죠스타.'],
+      ['새로', '하던 판은 가계도의 「가문의 성」 창 맨 위 「맹주 가문의 이름」에서 바꿀 수 있습니다.'],
+      ['변경', '병과 이름 수병이 해병으로 바뀌었습니다.']
+    ] },
   { ver: '1.0.6', date: '2026-11-17', tag: '변경', title: '악! 앗쎄이',
     lead: '수군 가문의 이름이 앗쎄이 가문이 되었습니다.',
     items: [
@@ -5983,7 +5997,7 @@ var T = {
   heartstone:{ g: '나', r: 3, name: '석수의 심장석', lore: '무덤 문 앞을 한 걸음도 떠나지 않던 돌짐승의 심장.', desc: '쓰러질 피해를 전투마다 한 번 버틴다.', set: { trait: 'survivor' }, from: 'boss:tombbeast' },
   lantern:   { g: '나', r: 2, name: '수렁의 호롱불', lore: '서로를 잊은 마을에서 끝까지 꺼지지 않던 등.', desc: '적을 쓰러뜨릴 때마다 HP 8% 회복.', fx: { killHp: 0.08 }, from: 'boss:mire' },
   dewdrop:   { g: '나', r: 1, name: '누리의 물방울', lore: '물빛이 돌아온 달못에서 정령이 건넨 한 방울.', desc: '마나 +50%.', st: { mp: 1.5 }, from: 'boss:nuri' },
-  ember:     { g: '나', r: 2, name: '바르간의 불씨', lore: '끓는 고개의 거인이 식어 가며 남긴 불씨.', desc: '용암에 데지 않는다. HP가 절반 아래면 주는 피해 +20%.', only: ['inf', 'cav', 'fly', 'pike', 'arc', 'cle', 'mon', 'mag', 'sha'], who: '수병이 아닌 병과', set: { passive: 'fireborn', trait: 'brave' }, from: 'boss:bargan' },
+  ember:     { g: '나', r: 2, name: '바르간의 불씨', lore: '끓는 고개의 거인이 식어 가며 남긴 불씨.', desc: '용암에 데지 않는다. HP가 절반 아래면 주는 피해 +20%.', only: ['inf', 'cav', 'fly', 'pike', 'arc', 'cle', 'mon', 'mag', 'sha'], who: '해병이 아닌 병과', set: { passive: 'fireborn', trait: 'brave' }, from: 'boss:bargan' },
   firewedge: { g: '나', r: 2, name: '식은 불 쐐기', lore: '문짝에 물려 있던 불 쐐기가 식어 굳은 조각.', desc: '방어, 마방 +15%, 행동 회복 -10%.', st: { def: 1.15, res: 1.15, spd: 0.9 }, from: 'boss:ignar' },
   kilndoor:  { g: '나', r: 2, name: '카르단의 화덕 문', lore: '영지를 땔감으로 때던 성주의 화덕에서 떼어 낸 문.', desc: '마방 +40%, 이동에 드는 틱 +15%.', st: { res: 1.4, mv: 1.15 }, from: 'boss:kardan' },
   censer:    { g: '나', r: 2, name: '모르가의 약사발', lore: '같은 병을 나눠 앓던 성주가 끝내 마시지 않은 약.', desc: '중독, 둔화에 걸리지 않는다.', fx: { immune: { poison: 1, slow: 1 } }, from: 'boss:morga' },
@@ -5996,7 +6010,7 @@ var T = {
   windbell:  { g: '다', r: 2, name: '바람 띠의 방울', lore: '옛 바람의 세 집 문장 띠 끝에서 울리던 방울.', desc: '「신속」을 쓸 수 있다.', only: ['mar', 'pike', 'arc'], sk: ['quick'], from: 'pit', shop: 50000 },
   // ── 라. 일격 ──
   basilfang: { g: '라', r: 2, name: '바실의 독니', lore: '첨탑 계단을 감고 있던 독사가 부러뜨리고 간 이.', desc: '치명타 +15%.', add: { crit: 0.15 }, from: 'boss:basil' },
-  slough:    { g: '라', r: 3, name: '쌍두 구렁이의 허물', lore: '한 머리가 다른 머리를 물기 전에 벗어 둔 허물.', desc: '기본 공격을 두 번 한다(한 번에 65%). 흡혈과 치명타도 두 번 걸린다.', only: ['inf', 'cav', 'fly', 'pike', 'arc', 'cle', 'mon', 'mag', 'sha'], who: '수병이 아닌 병과', set: { passive: 'twin' }, from: 'boss:twinsnake' },
+  slough:    { g: '라', r: 3, name: '쌍두 구렁이의 허물', lore: '한 머리가 다른 머리를 물기 전에 벗어 둔 허물.', desc: '기본 공격을 두 번 한다(한 번에 65%). 흡혈과 치명타도 두 번 걸린다.', only: ['inf', 'cav', 'fly', 'pike', 'arc', 'cle', 'mon', 'mag', 'sha'], who: '해병이 아닌 병과', set: { passive: 'twin' }, from: 'boss:twinsnake' },
   club:      { g: '라', r: 1, name: '그록의 쇠 팔찌', lore: '방앗간 두목이 보수 대신 내밀던 쇠고리.', desc: '기본 공격 +20%, 행동 회복 -10%.', st: { basic: 1.2, spd: 0.9 }, from: 'boss:grok' },
   glove:     { g: '라', r: 2, name: '로엔의 장갑', lore: '맨 먼저 무릎을 꿇은 대공이 끝내 벗지 않은 장갑.', desc: '보스에게 주는 피해 +20%.', fx: { bossDmg: 0.2 }, from: 'boss:roen' },
   horn:      { g: '라', r: 2, name: '토르막의 뿔', lore: '울림 바위를 울리던 뿔거인의 꺾인 뿔.', desc: '「선풍」을 쓸 수 있다 (둘레의 적 모두에게 115%, 밀어냄).', only: ['inf', 'cav', 'mar', 'pike'], who: '근접 병과', sk: ['whirl'], from: 'boss:tormak' },
@@ -6016,7 +6030,7 @@ var T = {
   kingcrown: { g: '사', r: 3, name: '옛 왕의 왕관', lore: '옛 싸움을 본 왕이 잠들며 벗어 준 관.', desc: '「망자 부름」을 쓸 수 있다. HP -15%.', only: ['inf', 'cav', 'fly', 'mar', 'pike', 'arc', 'cle', 'mon', 'mag'], who: '사교가 아닌 병과', sk: ['summon'], st: { hp: 0.85 }, from: 'boss:king' },
   moonspear: { g: '사', r: 1, name: '달빛 작살', lore: '물비늘 해안의 어부가 달밤에만 던지던 작살.', desc: '「작살」을 쓸 수 있다 (2~3칸에 130%, 둔화).', only: ['inf', 'cav', 'pike', 'cle', 'mon'], who: '보병, 기병, 창병, 승려, 신관', sk: ['harpoon'], from: 'zone:coast' },
   pillbox:   { g: '사', r: 1, name: '순례자의 약함', lore: '돌마루 고원을 넘던 순례자가 두고 간 약함.', desc: '「치유」를 쓸 수 있다 (마공이 낮으면 조금만 낫는다).', only: ['inf', 'cav', 'fly', 'mar', 'pike', 'arc', 'mag', 'sha'], who: '치유를 모르는 병과', sk: ['heal'], from: 'zone:stone' },
-  stormdrum: { g: '사', r: 2, name: '번개 북', lore: '붉은 모래 사막에 비를 부르던 북.', desc: '「번개」를 쓸 수 있다 (1~3칸에 150%, 마법 저항으로 막는다).', only: ['inf', 'fly', 'mar', 'pike', 'arc'], who: '보병, 비병, 수병, 창병, 궁병', sk: ['thunder'], from: 'zone:desert' },
+  stormdrum: { g: '사', r: 2, name: '번개 북', lore: '붉은 모래 사막에 비를 부르던 북.', desc: '「번개」를 쓸 수 있다 (1~3칸에 150%, 마법 저항으로 막는다).', only: ['inf', 'fly', 'mar', 'pike', 'arc'], who: '보병, 비병, 해병, 창병, 궁병', sk: ['thunder'], from: 'zone:desert' },
   // ── 아. 어스름 — 대가가 있는 유물 ──
   duskshard: { g: '아', r: 3, name: '어스름 조각', lore: '문 안에 남았던 대장의 갑옷에서 떨어진, 빛깔 없는 조각.', desc: '공격, 마공 +20%, HP -25%.', st: { atk: 1.2, mag: 1.2, hp: 0.75 }, from: 'boss:herald' },
   pact:      { g: '아', r: 3, name: '벨마르의 은화 자루', lore: '깃대를 걸고 받은 은화. 한 닢도 쓰지 못했다.', desc: '준 피해의 25%를 회복. 방어, 마방 -30%.', add: { drain: 0.25 }, st: { def: 0.7, res: 0.7 }, from: 'boss:belmar' },
@@ -6028,7 +6042,7 @@ var T = {
   f_inf:     { g: '자', r: 2, name: '푸른 깃술', lore: '옛 보병들이 깃발 끝에 달던 술. 늘 맨 앞에서 젖었다.', desc: '방어 +15%, HP +10%.', only: ['inf'], st: { def: 1.15, hp: 1.1 }, from: 'flag', shop: 50000 },
   f_cav:     { g: '자', r: 2, name: '금빛 깃술', lore: '옛 기병들이 깃발 끝에 달던 술. 먼지보다 먼저 닿았다.', desc: '이동에 드는 틱 -25%, 기본 공격 +10%.', only: ['cav'], st: { mv: 0.75, basic: 1.1 }, from: 'flag', shop: 50000 },
   f_fly:     { g: '자', r: 2, name: '하늘빛 깃술', lore: '옛 비병들이 깃발 끝에 달던 술. 구름 위에서 바랬다.', desc: '치명타 +12%, 행동 회복 +8%.', only: ['fly'], add: { crit: 0.12 }, st: { spd: 1.08 }, from: 'flag', shop: 50000 },
-  f_mar:     { g: '자', r: 2, name: '쪽빛 깃술', lore: '옛 수병들이 깃발 끝에 달던 술. 밀물에 먼저 젖었다.', desc: 'HP +20%, 준 피해의 8%만큼 회복.', only: ['mar'], st: { hp: 1.2 }, add: { drain: 0.08 }, from: 'flag', shop: 50000 },
+  f_mar:     { g: '자', r: 2, name: '쪽빛 깃술', lore: '옛 해병들이 깃발 끝에 달던 술. 밀물에 먼저 젖었다.', desc: 'HP +20%, 준 피해의 8%만큼 회복.', only: ['mar'], st: { hp: 1.2 }, add: { drain: 0.08 }, from: 'flag', shop: 50000 },
   f_pike:    { g: '자', r: 2, name: '옥빛 깃술', lore: '옛 창병들이 깃발 끝에 달던 술. 한 줄에서 빠진 적이 없다.', desc: '받은 피해의 15%를 돌려준다. 방어 +10%.', only: ['pike'], st: { def: 1.1 }, fx: { reflect: 0.15 }, from: 'flag', shop: 50000 },
   f_arc:     { g: '자', r: 2, name: '풀빛 깃술', lore: '옛 궁병들이 깃발 끝에 달던 술. 바람을 먼저 읽었다.', desc: '붙은 적에게도 온전히 쏜다(최소 사거리 1). 공격 -12%.', only: ['arc'], add: { rng0: -1 }, st: { atk: 0.88 }, from: 'flag', shop: 50000 },
   f_cle:     { g: '자', r: 2, name: '흰 깃술', lore: '옛 승려들이 깃발 끝에 달던 술. 상처 곁을 떠난 적이 없다.', desc: '마나 +30%, 마공 +10%.', only: ['cle'], st: { mp: 1.3, mag: 1.1 }, from: 'flag', shop: 50000 },
@@ -6340,6 +6354,9 @@ DS.SURNAME_SRC = [      // [묶음, 성들] — 「가문의 성」 창이 묶�
   ['판타지, SF 소설', ['말포이', '위즐리', '배긴스', '하코넨']],
   ['영화, TV', ['솔로', '케노비', '코를레오네', '심슨', '맥플라이']]
 ];
+// 1.0.7: 맹주 가문 후보 — 시작할 때와 「가문의 성」 창 맨 위에서 고른다 (부대원 성 풀과 따로, 이름에 힘이 있는 집). [이름, 한 줄]
+DS.GRAND_HOUSES = [['펜드래곤', '바위에서 검을 뽑은 왕의 핏줄'], ['타르가르옌', '불과 피, 용을 타던 집'], ['아트레이데스', '모래 위의 매, 약속을 지키는 집'], ['벨몬트', '밤을 사냥해 온 집'],
+  ['스타크', '겨울이 와도 무릎 꿇지 않는 집'], ['우치하', '눈에 불꽃을 품은 집'], ['브리타니아', '황제의 깃발을 든 집'], ['죠스타', '목덜미에 별을 지닌 집']];
 DS.SURNAMES = DS.SURNAME_SRC.reduce(function (a, g) { return a.concat(g[1]); }, []);
 // 아홉 집·세 마스터의 성 (주인공 가문은 save.lin.sur). 각 집의 이야기 속 역할과 맞물리는 이름 — 표는 r13/names.md
 DS.LIN_HOUSE = { inf: '로저스', cav: '라니스터', fly: '스카이워커', mar: '앗쎄이', pike: '프레이', arc: '퀸', cle: '센주', mon: '카마도', mag: '그레인저', sha: '아담스', bm: '타르가르옌', tm: '아트레이데스', mm: '죠스타' };
@@ -7048,7 +7065,7 @@ function linSurMove(s, Lr) {
 }
 function linHouseMove(s, Lr) {
   var O = DS.LIN_HOUSE_OLD, N = DS.LIN_HOUSE; if (!O || !N) return;
-  var V = { bm: '엘릭', tm: '템페스트', mm: '우치하', mar: '스패로우' };      // 1.0.0: 합일 가문 옛 이름 → 새 이름 · r29: 수병 집 「스패로우」 → 「앗쎄이」
+  var V = { bm: '엘릭', tm: '템페스트', mm: '우치하', mar: '스패로우' };      // 1.0.0: 합일 가문 옛 이름 → 새 이름 · r29: 해병 집 「스패로우」 → 「앗쎄이」
   function mv(sn, key) { return key && N[key] && ((O[key] && sn === O[key]) || (V[key] && sn === V[key]) || (N[key].length === 1 && sn === surMap(N[key]))) ? N[key] : sn; }      // r22: 「퀸」이 잘못 옮겨 간 성도 되돌린다
   for (var k in Lr.P) { var p = Lr.P[k]; if (!p || typeof p !== 'object') continue;
     if ((p.cast || p.hof) && !p.hb) { p.sn = mv(p.sn, p.cast || p.hof); continue; }      // 대장 집 핏줄 아이가 맡아 든 경우(hb)는 대장 성이라 둔다
@@ -7057,7 +7074,7 @@ function linHouseMove(s, Lr) {
   (s.mercs || []).forEach(function (m) { if (m && m.cast && typeof m.sn === 'string' && !(m.pid && Lr.P[m.pid] && Lr.P[m.pid].hb)) m.sn = mv(m.sn, m.cast); });
   linMarMove(s, Lr, V.mar, N.mar);
 }
-// r29 사용자 「해병계열 가문 명을 앗쎄이 가문으로」: 옛 이름 「스패로우」는 풀에 없는 수병 집 이름뿐이라(DS.SURNAMES 에 없을 때만) 그 집 핏줄·문패·기록까지 모두 옮긴다
+// r29 사용자 「해병계열 가문 명을 앗쎄이 가문으로」: 옛 이름 「스패로우」는 풀에 없는 해병 집 이름뿐이라(DS.SURNAMES 에 없을 때만) 그 집 핏줄·문패·기록까지 모두 옮긴다
 //   (대장이 그 집을 이어 문패가 「스패로우 가문」이 된 저장, 너울의 아이들, 관, 연대기의 문패 기록)
 function linMarMove(s, Lr, o, n) {
   if (!o || !n || o === n || (DS.SURNAMES || []).indexOf(o) >= 0) return;
@@ -8515,7 +8532,7 @@ DS.SCENARIOS = [
     ['볼코의 깃발이 내려갔다. 부두의 배들이 닻을 올린다.', '선원들이 수군거렸다. 섬 나루의 돌지기가 요즘 사람을 못 알아본다고.']),
   T(9, '석상 나루', 'isle', 'warden', 31, 'field', 'coast', ['golem', 'lizard', 'harpy'], { join: 'mar' },
     ['가온 섬 나루. 길을 지키던 석상 돌지기가 나그네를 치기 시작했다.', '눈에 박힌 푸른 돌이 잿빛으로 바랬다. 뱃사람 하나가 「악!」 소리를 지르며 혼자 맞선다.'],
-    ['돌지기가 주저앉았다. 눈의 돌에 푸른빛이 조금 돌아왔다.', say('mar', '악… 스무 해를 경례했는데. 저 영감, 해병 이름도 잊었다는 것이다.'), '수병 너울. 쪽빛 깃발, 여덟 번째.']),
+    ['돌지기가 주저앉았다. 눈의 돌에 푸른빛이 조금 돌아왔다.', say('mar', '악… 스무 해를 경례했는데. 저 영감, 해병 이름도 잊었다는 것이다.'), '해병 너울. 쪽빛 깃발, 여덟 번째.']),
   T(10, '달못', 'coast', 'nuri', 35, 'lake', 'lake', ['lizard', 'harpy', 'skelArcher'], { relic: 'oath' },
     ['해안 북쪽 달못. 못의 정령 누리가 어스름에 빛깔을 잃고 날뛴다.', '이번 일에는 보수를 건 사람이 없다. 그래도 간다.', say('mar', '누리는 길 잃은 배를 뭍까지 밀어 주던 정령이다. 해병은 은인을 패지 않는다. 살살!'), say('memo', '누리도 물에 서면 강해진다. 못 한가운데로 따라 들어가지 말 것.')],
     ['못이 잔잔해졌다. 누리의 물빛이 돌아왔다.', say('nuri', '빛깔이 빠지니 내 못도 낯설었어요. 북쪽에서 누가 자꾸 불렀고요.'), '물 밑에서 검 한 자루가 떠올랐다. 옛 대장이 돌아오면 찾겠다며 맡긴 검.', '못 건너 어둑한 데서 그림자 하나가 돌아섰다. 빛깔 없는 깃발을 든 채.']),
@@ -9145,7 +9162,7 @@ DS.SN_SAY = {
   '코를레오네': { start: ['거절 못 할 제안을 하지. 같이 싸우자.'] },
   '심슨':       { low: ['도오!'] },
   '맥플라이':   { start: ['이 싸움, 미래에서는 이겼다던데.'] },
-  // r29 수병 집 앗쎄이 가문의 핏줄(너울 본인은 아홉 집이라 안 쓴다) — 「해병 기합」 말버릇 (사용자 「앗쎄이 해병기합 문체」)
+  // r29 해병 집 앗쎄이 가문의 핏줄(너울 본인은 아홉 집이라 안 쓴다) — 「해병 기합」 말버릇 (사용자 「앗쎄이 해병기합 문체」)
   '앗쎄이':     { start: ['악! 앗쎄이 해병, 출격!', '기합 넣고 간다!'], kill: ['기합! 해병은 물러서지 않는다!'], low: ['악… 이 정도는 기합이다.', '여기서 눕는 건 기열이다!'], rank: ['악! 짜세가 들어갔다는 것이다!'], heal: ['악! 해병은 다시 선다!'] }
 };
 var HELP = [
@@ -9201,9 +9218,9 @@ var HELP = [
 var GLOSSARY = [
   '어스름 — 북쪽 끝 「어스름의 문」 너머에서 번져 오는 저녁. 죽이지 않고 빛깔을 지운다. 빛깔을 잃은 것은 제 편과 제 이름을 잊는다.',
   '가문 — 세상의 중심. 집마다 문장(빛깔과 사물)과 가훈이 있고, 가주가 집안을 맡아 가솔을 이끈다. 흩어지면 문장이 바래고, 나란히 서면 빛이 돈다.',
-  '열 가문의 빛깔 — 보병 푸른빛, 기병 금빛, 비병 하늘빛 / 수병 쪽빛, 창병 옥빛, 궁병 풀빛 / 승려 흰빛, 신관 감빛, 법사 보랏빛, 사교 자줏빛.',
-  '열 집의 가주 — 보병 바우, 기병 우레, 비병 제비, 수병 너울, 창병 서슬, 궁병 솔개, 승려 달래, 신관 등불, 법사 슬기, 사교 그믐. 주인공의 병과는 주인공 자신이다(보병이면 바우, 법사이면 슬기는 나오지 않는다).',
-  '세 계열 — 강철(보병, 기병, 비병, 쇠 달군 붉은빛), 바람(수병, 창병, 궁병, 저 혼자 나부끼는 비췻빛), 별(승려, 신관, 법사, 사교, 낮에도 보이는 금빛). 8단부터의 모습과 기술은 계열을 따른다. 합일 묶음은 계열과 상관없이 고른다(1.0.1).',
+  '열 가문의 빛깔 — 보병 푸른빛, 기병 금빛, 비병 하늘빛 / 해병 쪽빛, 창병 옥빛, 궁병 풀빛 / 승려 흰빛, 신관 감빛, 법사 보랏빛, 사교 자줏빛.',
+  '열 집의 가주 — 보병 바우, 기병 우레, 비병 제비, 해병 너울, 창병 서슬, 궁병 솔개, 승려 달래, 신관 등불, 법사 슬기, 사교 그믐. 주인공의 병과는 주인공 자신이다(보병이면 바우, 법사이면 슬기는 나오지 않는다).',
+  '세 계열 — 강철(보병, 기병, 비병, 쇠 달군 붉은빛), 바람(해병, 창병, 궁병, 저 혼자 나부끼는 비췻빛), 별(승려, 신관, 법사, 사교, 낮에도 보이는 금빛). 8단부터의 모습과 기술은 계열을 따른다. 합일 묶음은 계열과 상관없이 고른다(1.0.1).',
   '맹세의 깃대 — 열 가문의 이름을 새긴 쇠 장대. 빛깔 없는 쇠로 벼려 어스름이 지우지 못한다. 매듭 자리가 셋이고, 키(단)가 같은 집끼리 한 매듭에 묶인다.',
   '합일 — 키(7단 Lv10)가 같은 세 집이 문장 띠를 한 매듭에 묶어 뜻을 모아 함께 오르는 것(셋이 저마다 8단). 어느 집끼리든 묶인다. 집도 사람도 줄지 않고, 집은 저마다 제 문장 그대로다. 묶음은 가주 공훈이 가장 큰 집의 이름을 따 「○○ 대가문」이라 부른다.',
   '옛 열 가문 — 옛날 한 깃대에 이름을 새기고 어스름을 문 너머로 밀어낸 집들. 맹주를 안에 둔 채 잠그기로 아홉 집이 손을 들어 정했고(깃대의 금 아홉 개), 밖에서 빗장을 질렀다. 「맹주가 스스로 남았다」「맹주 가문이 문을 열어 두었다」는 그 뒤에 덮은 말이다.',
@@ -9651,7 +9668,7 @@ var lore = {
     S('memo', '마을 위쪽 출구로 나가세요. 땅을 누르면 이동, 적을 누르면 공격.')],
   // 다른 팀이 이름을 맞춰 쓰기 위한 표 (화면에는 안 나온다)
   'glossary+': [
-    '열 가문 — 세계의 중심은 집이다. 집마다 가주가 있고 가솔이 따른다. 성은 DS.LIN_HOUSE: 로저스 가문(보병·푸른 방패·앞에 선다), 라니스터 가문(기병·금빛 말굽·말은 제 주인을 안다), 스카이워커 가문(비병·하늘빛 깃털·먼저 본다), 앗쎄이 가문(수병·쪽빛 닻·해병은 물길을 연다 — 「악!」「기합!」으로 말하는 해병 기합의 집), 프레이 가문(창병·옥빛 문·빗장은 안에서 건다), 퀸 가문(궁병·풀빛 화살 하나·한 대면 된다), 센주 가문(승려·흰 매듭·가리지 않는다), 카마도 가문(신관·감빛 등잔·불은 꺼뜨리지 않는다), 그레인저 가문(법사·보랏빛 붓·모르면 적는다), 아담스 가문(사교·자줏빛 그믐달·죽은 이도 편이 있다).',
+    '열 가문 — 세계의 중심은 집이다. 집마다 가주가 있고 가솔이 따른다. 성은 DS.LIN_HOUSE: 로저스 가문(보병·푸른 방패·앞에 선다), 라니스터 가문(기병·금빛 말굽·말은 제 주인을 안다), 스카이워커 가문(비병·하늘빛 깃털·먼저 본다), 앗쎄이 가문(해병·쪽빛 닻·해병은 물길을 연다 — 「악!」「기합!」으로 말하는 해병 기합의 집), 프레이 가문(창병·옥빛 문·빗장은 안에서 건다), 퀸 가문(궁병·풀빛 화살 하나·한 대면 된다), 센주 가문(승려·흰 매듭·가리지 않는다), 카마도 가문(신관·감빛 등잔·불은 꺼뜨리지 않는다), 그레인저 가문(법사·보랏빛 붓·모르면 적는다), 아담스 가문(사교·자줏빛 그믐달·죽은 이도 편이 있다).',
     '세 묶음 — 합일은 키(7단 Lv10)가 같은 세 집이 뜻을 모아 함께 8단으로 오르는 일(1.0.1: 계열과 상관없이 고른다). 집도 사람도 줄지 않고, 집은 저마다 제 문장 그대로다(「혼인」은 대장의 집에만 쓰는 낱말). 강철, 바람, 별은 묶음의 이름. 글에서는 성보다 문장의 사물(방패, 말굽, 깃털 / 닻, 문, 화살 / 매듭, 등잔, 붓, 그믐달)로 부른다.',
     '맹주 가문 — 주인공(가주)의 집. 열 가문 가운데 한 집으로, 제 문장 없이 나머지 아홉 집을 한 맹약으로 묶던 집, 옛 가주가 옛 대장 먼동. 「문을 열어 두었다」는 누명을 쓰고 족보에서 지워졌다(진상: 아홉 집이 손을 들어 정하고 밖에서 빗장을 질렀다 — 깃대의 금 아홉 개). 혼인과 출산은 이 집의 일이다. 4.0: 대를 잇는 열쇠는 피가 아니라 가주의 손목 끈 매듭(먼동이 처음 맨 매듭) — 양자도 같은 매듭을 맨다. 다른 집에 몸담던 양자가 이으면 문패만 새로 걸고, 마을은 여전히 「맹주 가문」이라 부른다. 문장은 열 집 이름을 새긴 깃대(= 맹세의 깃대), 옛 가훈 「맹주는 맨 뒤에 선다」, 새 가훈 「아무도 두고 가지 않는다」. 가보는 달못의 검, 집터는 해밀 언덕.',
     '빗장 인장 — 협곡의 대공 로엔의 인장. 지워진 집들의 땅을 넘기는 증서·허가장마다 찍혀 있다(1·4·6·8번).',
@@ -9734,7 +9751,7 @@ var scn = {
                S('mar', '악… 스무 해를 경례했는데. 저 영감, 해병 이름도 잊었다는 것이다.', { no: S('inf', '저 영감, 내 이름도 잊었더군. 해마다 인사했는데.') }),
                T('돌지기는 이름이 지워진 집 사람만 적으로 보았다. 너울도, {hero}도.', { me: '돌지기는 이름이 지워진 집 사람만 적으로 보았다. {hero}도 그 가운데 하나였다.',  ab: 'mar', no: '돌지기는 이름이 지워진 집 사람만 적으로 보았다. 바우도, {hero}도.' }),
                S('mar', '이름이 지워지면 저리 된다. 우리 앗쎄이 집 배도 그렇게 남의 것이 됐다.', { no: S('inf', '이름이 지워지면 저리 된다. 우리 집 성벽도 그렇게 남의 것이 됐지.') }),
-               T('쪽빛 닻 문장, 「악!」으로 인사하는 앗쎄이 가문의 수병 너울. 여덟 번째 가문.', { me: '쪽빛 닻 문장, 앗쎄이 가문의 수병 너울. 그날 곁에 선 그 집이 지금은 맹주 가문이다.',  ab: 'mar', no: '푸른 방패 문장, 로저스 가문의 보병 바우. 여덟 번째 가문.' })] },
+               T('쪽빛 닻 문장, 「악!」으로 인사하는 앗쎄이 가문의 해병 너울. 여덟 번째 가문.', { me: '쪽빛 닻 문장, 앗쎄이 가문의 해병 너울. 그날 곁에 선 그 집이 지금은 맹주 가문이다.',  ab: 'mar', no: '푸른 방패 문장, 로저스 가문의 보병 바우. 여덟 번째 가문.' })] },
   10: { intro: ['해안 북쪽 달못. 못의 정령 누리가 어스름에 빛깔을 잃고 날뛴다.',
                 '이번 일에는 보수를 건 사람이 없다. 그래도 간다.',
                 S('mar', '누리는 길 잃은 배를 뭍까지 밀어 주던 정령이다. 해병은 은인을 패지 않는다. 살살!'),
@@ -23076,7 +23093,8 @@ function lgHouseClick(e, o) {
     var L = LS(), cur = L && L.sur, btn = function (n) { return '<button class="lgl' + (cur === n ? ' on' : '') + '" data-lgsn="' + esc(n) + '">' + esc(n) + '</button>'; };
     var groups = DS.SURNAME_SRC || [['', DS.SURNAMES || []]], inPool = groups.some(function (g) { return g[1].indexOf(cur) >= 0; });
     return '<p class="hint">대장 가문의 성을 고른다. 이름은 그대로다. 「' + esc(DS.snName(cur || '', DS.charName(G.save.chars[G.save.hero]))) + '」</p>' +
-      (cur && !inPool ? '<h5 class="lgsg">옛 시대의 성</h5><div class="lgsurs">' + btn(cur) + '</div>' : '') +
+      (DS.GRAND_HOUSES ? '<h5 class="lgsg">맹주 가문의 이름</h5><div class="lgsurs">' + DS.GRAND_HOUSES.map(function (g) { return btn(g[0]); }).join('') + '</div>' : '') +
+      (cur && !inPool && !(DS.GRAND_HOUSES || []).some(function (g) { return g[0] === cur; }) ? '<h5 class="lgsg">옛 시대의 성</h5><div class="lgsurs">' + btn(cur) + '</div>' : '') +
       groups.map(function (g) { return (g[0] ? '<h5 class="lgsg">' + esc(g[0]) + '</h5>' : '') + '<div class="lgsurs">' + g[1].map(btn).join('') + '</div>'; }).join('');
   }, 'sub lgs');
   q.addEventListener('click', function (ev) { var b = ev.target.closest('[data-lgsn]'); if (!b) return; lgTry(function () { return DS.linSetSurname(s, b.dataset.lgsn); }); lgCache = null; A('ok'); U.persist(); q.close(); toast(DS.houseOf(b.dataset.lgsn) + '이 되었다'); });
@@ -23693,14 +23711,16 @@ function eraStart(p, cls, ver) {
   story(['옛 시대에서 온 이름, ' + p.name + '.'].concat(pro), null, '전민 새 시대');
 }
 function newGame(hasSave, r) {
-  var pick = 'inf', perk = r ? DS.returneePerk(r) : null;
+  var pick = 'inf', perk = r ? DS.returneePerk(r) : null, ghI = Math.floor(Math.random() * ((DS.GRAND_HOUSES || [1]).length));      // 1.0.7: 맹주 가문 이름을 고른다 (처음엔 무작위 하나)
   var o = overlay('<header class="sh"><h3>새로 시작</h3></header><div class="sb">' +
     '<label class="fld"><span>대장의 이름</span><input id="cmdName" maxlength="8" value="' + esc((r && r.name) || '대장') + '" autocomplete="off"></label>' +
+    (DS.GRAND_HOUSES ? '<p class="hint">맹주 가문의 이름</p><div class="gh-pick">' + DS.GRAND_HOUSES.map(function (g, i) { return '<button class="gh' + (i === ghI ? ' on' : '') + '" data-gh="' + i + '"><b>' + esc(g[0]) + '</b><small>' + esc(g[1]) + '</small></button>'; }).join('') + '</div>' : '') +
     '<p class="hint">첫 가문을 고르세요. 나머지 아홉은 시나리오를 깨며 모입니다.</p><div class="pick">' +
     ['inf', 'mag'].map(function (k) { var c = DS.CLASSES[k]; return '<button class="pcard' + (k === pick ? ' on' : '') + '" data-c="' + k + '">' + sprTag(k + '_1', '', 4) + '<b>' + c.name + '</b><em>' + c.tiers[0] + '</em><small>' + c.blurb + '</small></button>'; }).join('') +
     '</div>' + (perk ? '<div class="perkbox"><b>' + esc(perk.rank) + ' 특전</b><ul>' + perk.lines.slice(1).map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>' : '') +
     (hasSave ? '<p class="lock">저장된 진행이 있습니다. 새로 시작하면 덮어씁니다.</p>' : '') + '</div><div class="sfoot two"><button class="btn" data-close>닫기</button><button class="btn gold" id="goNew">출발</button></div>');
   o.addEventListener('click', function (e) {
+    var gb = e.target.closest('[data-gh]'); if (gb) { ghI = +gb.dataset.gh; A('tap'); o.querySelectorAll('.gh').forEach(function (b) { b.classList.toggle('on', b === gb); }); return; }
     var c = e.target.closest('[data-c]'); if (!c) return;
     pick = c.dataset.c; A('tap'); $$('.pcard', o).forEach(function (b) { b.classList.toggle('on', b === c); });
   });
@@ -23708,6 +23728,7 @@ function newGame(hasSave, r) {
     var name = Array.from((($('#cmdName', o).value || '').trim())).slice(0, 8).join('') || '대장';      // 한글 입력기가 조합 중에 maxlength 를 넘길 수 있다
     A('ok'); o.close();
     G.save = DS.newSave(name, pick);
+    if (DS.GRAND_HOUSES && DS.GRAND_HOUSES[ghI] && DS.linSetSurname) { try { DS.linSetSurname(G.save, DS.GRAND_HOUSES[ghI][0]); } catch (x) {} }
     if (r) DS.grantReturnee(G.save, r, false);
     DS.Save.setMeta({ seenVer: DS.VERSION });
     U.persist();
