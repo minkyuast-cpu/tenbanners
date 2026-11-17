@@ -3463,6 +3463,31 @@ html body #app#app #s-game .chip .agc { right: 9px; }
 /* 1.0.9: 첫 접속 맹주 가문 이름 권유 */
 .result.ghask .gh-pick { margin: 10px 0 12px; }
 .result.ghask .btn.wide { margin-top: 6px; }
+
+/* 1.0.10: 「스무 해」 창 — 스크롤 되살리기 + 세월이 흐르는 연출.
+   r26 의 「.ov:not(.story) .sheet { overflow: visible }」가 이 창의 스크롤까지 꺼서 긴 해에 진행이 막혔다 → 창은 세로로 꽉 차는 기둥, 해 목록은 제 칸 안에서 스크롤, 고르는 칸은 아래에 늘 보인다 */
+html body #app#app .ov.egpass .sheet { display: flex; flex-direction: column; height: 94%; max-height: 94%; overflow: hidden; }
+html body #app#app .ov.egpass .sheet > .egp { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+html body #app#app .ov.egpass .egph { flex: none; }
+.ov.egpass .egclock { flex: none; display: grid; justify-items: center; gap: 6px; padding: 2px 0 4px; }
+.ov.egpass .egyear { font: 700 30px/1 var(--f-num, monospace); color: var(--a-gold-hi, #f3d58a); text-shadow: 0 2px 0 #000, 0 0 18px rgba(246,207,87,.35); letter-spacing: .02em; min-height: 30px; }
+.ov.egpass .egyear.tick { animation: egTick .55s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes egTick { 0% { transform: translateY(10px) scale(.9); opacity: .2; filter: blur(2px); } 100% { transform: none; opacity: 1; filter: none; } }
+.ov.egpass .egbar { position: relative; display: block; width: 72%; height: 4px; border-radius: 3px; background: rgba(0,0,0,.55); box-shadow: inset 0 1px 2px #000; overflow: hidden; }
+.ov.egpass .egbar i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #8a6a2e, #f6cf57); transition: width .6s ease; }
+html body #app#app .ov.egpass .egpl { flex: 1 1 auto; min-height: 90px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 30px 2px 14px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 26px, #000 64px, #000 calc(100% - 10px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 26px, #000 64px, #000 calc(100% - 10px), transparent 100%); }
+.ov.egpass .egpl .egy.in { animation: egRise .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes egRise { 0% { opacity: 0; transform: translateY(18px); filter: blur(3px); } 60% { opacity: 1; filter: none; } 100% { opacity: 1; transform: none; } }
+html body #app#app .ov.egpass .egpp { flex: 0 1 auto; max-height: 55%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+html body #app#app .ov.egpass .egpp:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .ov.egpass .egpl .egy.in, .ov.egpass .egyear.tick { animation: none; } }
+html.calm .ov.egpass .egpl .egy.in, html.calm .ov.egpass .egyear.tick { animation: none; }
+
+/* 고르는 칸(모심·멈춤)이 나오면 해 목록은 위쪽 일부만 차지하고, 고르는 칸이 넓게 */
+html body #app#app .ov.egpass .egp:has(.egpp:not(:empty)) .egpl { flex: 0 1 26%; min-height: 70px; }
+html body #app#app .ov.egpass .egp:has(.egpp:not(:empty)) .egpp { flex: 1 1 auto; max-height: none; }
+html body #app#app .ov.egpass .egp:has(.egpp:not(:empty)) .egclock .egyear { font-size: 22px; min-height: 22px; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -4166,10 +4191,16 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '1.0.9';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '4.0.17';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '1.0.10';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '4.0.18';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '1.0.10', date: '2026-11-17', tag: '고침', title: '흘러가는 스무 해',
+    lead: '다음 세대로 넘어가는 「스무 해」 창이 내려가지 않아 막히던 것을 고쳤습니다.',
+    items: [
+      ['고침', '「스무 해」 창에서 아래로 내려갈 수 없어 진행이 막히던 것을 고쳤습니다.'],
+      ['변경', '해마다 일이 아래에서 떠올라 위로 흘러가며 바래고, 큰 해 숫자와 막대가 넘어갑니다. 고를 일이 생기면 아래 칸이 넓게 열립니다.']
+    ] },
   { ver: '1.0.9', date: '2026-11-17', tag: '변경', title: '새 문패',
     lead: '맹주 가문은 이제 이름 있는 여덟 집 가운데 하나입니다.',
     items: [
@@ -24685,16 +24716,21 @@ var LOCK = 900, STEP = 700;
 DS.egPassOpen = function (S) {
   S = S || sv(); var e = E(S); if (!e.pass) return null;
   var old = document.querySelector('.ov.egpass'); if (old) return old;
-  var o = U.overlay('<div class="egp"><header class="egph"></header><div class="egpl"></div><div class="egpp"></div></div>', 'modal egpass'); trace('open', 'pass');
+  var o = U.overlay('<div class="egp"><header class="egph"></header><div class="egclock"><b class="egyear"></b><span class="egbar"><i></i></span></div><div class="egpl"></div><div class="egpp"></div></div>', 'modal egpass'); trace('open', 'pass');
   var box = o.querySelector('.egp'), list = o.querySelector('.egpl'), pane = o.querySelector('.egpp'), tm = null, shownAt = 0, ui = { more: false, picks: {}, open: false, bury: -1, step: '', res: null, kid: null };
   function head() {
     var ps = e.pass || { y0: yr(S) }, y0 = ps.y0 || yr(S);
     o.querySelector('.egph').innerHTML = '<p class="egey">' + esc(DS.egT1('pass.top', { n: e.gen, y0: y0, y1: y0 + DS.EG.years })) + '</p><h2>' + esc(DS.egT1('pass.title')) + '</h2>' + P_(DS.egT1('pass.who', { a: DS.heroCall(S) }), 'dim');
   }
-  function lineHtml(l) { return '<div class="egy"><b>' + esc(l.y + '년') + '</b><span>' + l.t.map(esc).join('<br>') + '</span></div>'; }
+  function lineHtml(l, anim) { return '<div class="egy' + (anim ? ' in' : '') + '"><b>' + esc(l.y + '년') + '</b><span>' + l.t.map(esc).join('<br>') + '</span></div>'; }
   function redrawLines() { list.innerHTML = ((e.pass && e.pass.L) || []).map(lineHtml).join(''); }
-  function addLines(ls) { (ls || []).forEach(function (l) { list.insertAdjacentHTML('beforeend', lineHtml(l)); }); }
-  function scrollEnd() { var sb = o.querySelector('.sheet'); if (sb) sb.scrollTop = sb.scrollHeight; }
+  function addLines(ls) { (ls || []).forEach(function (l, i) { list.insertAdjacentHTML('beforeend', lineHtml(l, true)); var el = list.lastElementChild; if (el) el.style.animationDelay = (i * 0.18) + 's'; }); yearTick(ls); }
+  // 1.0.10: 세월이 흐르는 연출 — 해마다 줄이 아래에서 떠올라 위로 흘러가며 바래고, 큰 해 숫자가 넘어간다. 목록은 제 칸 안에서 스크롤된다 (전에는 창 전체가 스크롤되지 않아 진행이 막혔다)
+  function yearTick(ls) { var last = ls && ls.length ? ls[ls.length - 1] : null, yb = o.querySelector('.egyear'); if (!last || !yb) return; yb.textContent = last.y + '년'; yb.classList.remove('tick'); void yb.offsetWidth; yb.classList.add('tick'); var bar = o.querySelector('.egbar i'), ps = e.pass || {}, y0 = ps.y0 || yr(S); if (bar) bar.style.width = Math.max(0, Math.min(100, (last.y - y0) / DS.EG.years * 100)) + '%'; }
+  function scrollEnd() {
+    var go = function () { if (list) list.scrollTo ? list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' }) : (list.scrollTop = list.scrollHeight); if (pane && pane.firstElementChild) { var sb = o.querySelector('.sheet'); if (sb) sb.scrollTop = sb.scrollHeight; } };
+    go(); setTimeout(go, 220);
+  }
   function lockBtns() { shownAt = performance.now(); var bs = pane.querySelectorAll('[data-lk]'); bs.forEach(function (b) { b.disabled = true; }); setTimeout(function () { bs.forEach(function (b) { if (b.isConnected) b.disabled = false; }); }, LOCK); }
   function locked() { return performance.now() - shownAt < LOCK; }
   function persist() { try { U.persist(); } catch (x) {} }
@@ -24822,7 +24858,7 @@ DS.egPassOpen = function (S) {
     if (b.dataset.hkid) { if (locked()) return; U.A('tap'); ui.kid = +b.dataset.hkid; trace('press', 'hkid'); handFace(); return; }
     if (b.dataset.go === 'call') { if (locked()) return; U.A('tap'); trace('press', 'handGo'); step(); return; }
   });
-  head(); redrawLines(); scrollEnd();
+  head(); redrawLines(); yearTick((e.pass && e.pass.L || []).slice(-1)); scrollEnd();
   var st0 = e.pass.f === 'years' ? DS.egStop(S) : null;
   if (st0) showStop(st0); else setTimeout(step, e.pass.f === 'years' ? STEP : 0);
   o.onclose = function () { clearTimeout(tm); };
