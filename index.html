@@ -4418,6 +4418,36 @@ html body #app#app #s-game .chip .vet.v7 { color: #fff; background: radial-gradi
 html body #app#app #s-game .chip .vet.v8 { color: #fff; background: radial-gradient(circle at 50% 35%, #1c5a7a, #081a2a); box-shadow: 0 1px 0 #000, 0 0 10px rgba(140, 220, 255, .95); }
 .vet.v6 { color: #ffd39a; } .vet.v7 { color: #f1b6ff; } .vet.v8 { color: #a8e6ff; }
 /* ───────── 2.1.0 끝 ───────── */
+
+/* 2.1.1: 귀한 장비 획득 — 화면 가운데 큰 카드 (유니크 보랏빛 · 전설 금빛 빛살). 싸움은 멈추지 않고, 누르면 닫힌다 */
+html body #app#app .lootcall { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px var(--gut-r, 16px) 16px var(--gut-l, 16px); background: radial-gradient(closest-side, color-mix(in srgb, var(--lc) 26%, transparent), rgba(6,4,12,.55) 70%, rgba(6,4,12,.72)); animation: lcIn .28s ease-out both; cursor: pointer; overflow: hidden; }
+html body #app#app .lootcall.out { animation: lcOut .26s ease-in both; }
+.lootcall .lcrays { position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax; pointer-events: none; opacity: .55;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--lc) 55%, transparent) 0deg 6deg, transparent 6deg 18deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 12%, transparent 34%); mask-image: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 12%, transparent 34%); animation: lcSpin 9s linear infinite; }
+.lootcall.uq .lcrays { opacity: .38; }
+.lootcall .lccard { position: relative; display: grid; justify-items: center; gap: 6px; min-width: min(300px, 86vw); max-width: min(360px, 92vw); padding: 18px 18px 12px; text-align: center; border-radius: 12px;
+  background: linear-gradient(180deg, #2a2236, #17121f); border: 2px solid var(--lc); box-shadow: 0 0 0 1px #000, 0 0 28px color-mix(in srgb, var(--lc) 60%, transparent), inset 0 1px 0 rgba(255,255,255,.08); animation: lcPop .5s cubic-bezier(.2,1.4,.4,1) both; }
+.lootcall.lg .lccard { box-shadow: 0 0 0 1px #000, 0 0 44px color-mix(in srgb, var(--lc) 80%, transparent), 0 0 90px color-mix(in srgb, var(--lc) 35%, transparent), inset 0 1px 0 rgba(255,255,255,.12); }
+.lootcall .lctag { font-weight: 700; font-size: 12px; letter-spacing: .14em; color: #1a1208; background: var(--lc); padding: 3px 10px; border-radius: 999px; }
+.lootcall .lcic { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 12px; background: radial-gradient(circle, color-mix(in srgb, var(--lc) 40%, transparent), rgba(0,0,0,.4) 70%); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lc) 70%, transparent); animation: lcGlow 1.4s ease-in-out infinite alternate; }
+.lootcall .lcic img, .lootcall .lcic canvas, .lootcall .lcic svg { width: 56px; height: 56px; image-rendering: pixelated; }
+.lootcall .lcnm { font-size: 22px; line-height: 1.25; color: var(--lc); text-shadow: 0 2px 0 #000, 0 0 14px color-mix(in srgb, var(--lc) 50%, transparent); text-wrap: balance; }
+.lootcall .lcsuf { font-style: normal; font-size: 13px; color: #d9cfe8; margin-top: -4px; }
+.lootcall .lcst { font-size: 13px; color: #efe6d0; opacity: .92; }
+.lootcall .lclore { font-size: 12.5px; color: #cdbf9f; line-height: 1.5; quotes: '「' '」'; max-width: 30em; }
+.lootcall .lcok { font-size: 11px; color: #8f86a3; margin-top: 4px; }
+@keyframes lcIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lcOut { to { opacity: 0; transform: scale(1.04); } }
+@keyframes lcPop { 0% { transform: scale(.4) translateY(20px); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes lcSpin { to { transform: rotate(360deg); } }
+@keyframes lcGlow { from { filter: brightness(1); } to { filter: brightness(1.35); } }
+@media (prefers-reduced-motion: reduce) { .lootcall, .lootcall .lccard, .lootcall .lcrays, .lootcall .lcic { animation: none !important; } }
+html.calm .lootcall, html.calm .lootcall .lccard, html.calm .lootcall .lcrays, html.calm .lootcall .lcic { animation: none !important; }
+/* 결과 창의 귀한 장비 칸도 빛난다 */
+.ov.res26 .slot.gr4 .box, .ov.res26 .slot.gr5 .box { animation: lcGlow 1.2s ease-in-out infinite alternate; }
+.ov.res26 .slot.gr5 .box { box-shadow: 0 0 0 2px #f0b64a, 0 0 18px rgba(240,182,74,.6); }
+.ov.res26 .slot.gr4 .box { box-shadow: 0 0 0 2px #b181e6, 0 0 14px rgba(177,129,230,.5); }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -5195,10 +5225,19 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.1.0';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '6.0.0';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.1.1';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '6.0.1';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.1.1', date: '2026-11-19', tag: '변경', title: '귀한 장비',
+    lead: '장비가 덜 떨어지고, 귀한 장비는 얻는 순간을 크게 보여 줍니다. 치유는 절반으로 줄었습니다.',
+    items: [
+      ['변경', '시나리오를 깨면 보통 장비는 많아야 한 점입니다. 처음 깰 때 절반쯤, 다시 깰 때 셋에 하나꼴로 나옵니다.'],
+      ['변경', '시나리오 싸움 중에는 장비가 떨어지지 않고, 들판의 장비도 전보다 드뭅니다.'],
+      ['변경', '보스의 고유 장비와 유니크는 운이 좋아야 나옵니다. 못 얻었으면 다시 깨서 노릴 수 있습니다.'],
+      ['변경', '치유 기술과 치유 용병의 회복량을 절반으로 줄였습니다. 필살기, 물약, 적의 치유는 그대로입니다.'],
+      ['새로', '유니크나 전설 장비를 얻으면 화면 가운데에 크게 뜹니다. 전설은 금빛 빛살과 팡파르가 함께 나옵니다.']
+    ] },
   { ver: '2.1.0', date: '2026-11-19', tag: '안내', title: '새 판',
     lead: '판의 뼈대를 다시 짰습니다. 이전 저장은 보관하고 모두 새로 시작합니다.',
     items: [
@@ -6896,22 +6935,22 @@ DS.giveMercItem = function (save, mercId, key) {
 DS.DROP = {
   mul: 1,                      // 드랍 전체 배율 — 통합 때 캠페인으로 재서 맞춘다 (0 이면 끔)
   minL: -8,                    // 적 레벨 >= 부대 평균 레벨 - 8 일 때만 떨어진다
-  mob: { gear: 0.005, item: 0.04 },             // 장비는 귀하다: 처치 200번에 한 점쯤 (r10 전에는 0.015)
-  big: { gear: 0.008, item: 0.06 },             // 덩치 큰 적 (전에는 0.025)
-  boss: 0.7,                                    // 시나리오 승리의 유니크 한 점 (전에는 늘)
+  mob: { gear: 0.0025, item: 0.04 },            // 2.1.1: 유니크는 처치 400번에 한 점쯤 (2.1.0 0.005)
+  big: { gear: 0.004, item: 0.06 },             // 덩치 큰 적 (2.1.0 0.008)
+  boss: [0.1, 0.05],                            // 2.1.1: 시나리오 승리의 유니크 한 점 — 첫 격파 10% · 다시 깨면 5% (2.1.0 늘 70%)
   leg: { mob: 0.5, boss: 6 },                   // 떨어진 장비가 전설(그 지역 것 먼저 — DS.legPool)일 확률 %
-  zl: 0.0012,                                   // 2.1.0: 처치 한 번에 그 지역의 전설 하나 (덩치 큰 적 ×2 · 정예 ×6 · 출몰 지역 ×1.6) — 「사냥할 곳」이 고를 거리가 된다
+  zl: 0.0004,                                   // 2.1.1: 0.0012 → 0.0004. 2.1.0: 처치 한 번에 그 지역의 전설 하나 (덩치 큰 적 ×2 · 정예 ×6 · 출몰 지역 ×1.6) — 「사냥할 곳」이 고를 거리가 된다
   zlOwn: 0.25,                                  //   이미 가진 전설이면 다시 떨어질 확률 배율 (같은 것을 둘째로)
   uq: { mob: { two: 0.34, hi: 0.08 }, boss: { two: 1, hi: 0.36 } },      // 유니크 굴림: two 옵션 둘 · hi 높은 굴림(눈금 7~9 · 높은 굴림 전용 옵션, 옵션 둘)
-  own: [1, 0.12],              // 보스의 고유 장비: 첫 격파 / 다시 깼을 때
+  own: [0.2, 0.04],            // 보스의 고유 장비: 첫 격파 / 다시 깼을 때 (2.1.1: 늘 주던 것을 20% · 4%로)
   tierUp: [0.25, 0.05],        // 2.1.0: 장비에 단이 없다 — 「한 단 위」 굴림은 등급과 옵션의 질만 올린다 (한 번마다 옵션 둘 +15%p · 높은 굴림 +4%p)
   enh: [0.04, 0.015, 0.005],   // 무기·방어구가 +1, +2, +3 인 채로 나올 확률
   bag: 40,                     // 유니크·전설 소지 한도 (가득 차면 높은 굴림이 아닌 유니크는 그 자리에서 판다)
   // r37: 무기점·방어구점이 없어졌다 — 보통 장비(옵션 없음)도 적이 떨어뜨린다. 계열은 주로 출전 가문이 쓰는 것 (2.1.0: 수치는 입은 사람의 레벨)
   plain: {
-    mob: 0.035, big: 0.06,       // 처치 한 번에 보통 장비 (유니크가 안 나왔을 때)
-    boss: 1, first: 2,           // 시나리오 승리: 보통 장비 몇 점 (첫 격파 first 점) — 장비가 가장 처진 출전 가문 몫 먼저
-    pit: 1,                      // 갱도 층을 깰 때
+    mob: 0.012, big: 0.02,       // 처치 한 번에 보통 장비 (유니크가 안 나왔을 때) — 2.1.1: 0.035·0.06 에서 줄임
+    boss: 0.3, first: 0.55,      // 2.1.1: 시나리오 승리의 보통 장비는 많아야 한 점 — 첫 격파 55% · 다시 깨면 30% (2.1.0: 1점·2점 확정). 장비가 가장 처진 출전 가문 몫
+    pit: 0.5,                    // 갱도 층을 깰 때 보통 장비 한 점의 확률 (2.1.1: 늘 → 50%)
     tierUp: [0.3, 0.06],         // 「한 단 위」 굴림 (보스는 tierUp[0] 이 두 배) — 2.1.0: 한 번마다 강화된 채 나올 확률 ×2
     enh: [0.06, 0.02],           // +1, +2 인 채로 나올 확률
     aim: [0.6, 0.25],            // 출전 가문의 계열 · 가문 누구든의 계열 (나머지는 적이 쓰던 계열이나 아무것)
@@ -7062,6 +7101,7 @@ DS.rollDrop = function (save, e, rnd) {
   var R = BIG[e.type] ? T.big : T.mob, zone = e.zone || save.zone, d, bm = DS.bountyMul ? DS.bountyMul(save, zone, 'drop') : 1;
   if (e.elite != null || e.eliteCrew != null) bm *= e.elite != null ? 6 : 2;      // 정예 무리는 더 잘 떨어뜨린다 (우두머리 장비는 현상금 보상으로 따로)
   DS.gearRefSave(save);
+  if (e.scn) { if (rnd() < R.item * T.mul * bm) { d = rollItem(save, zone, rnd, 1); if (d) out.push(d); } return out; }      // 2.1.1: 시나리오 싸움의 처치는 장비를 떨어뜨리지 않는다 — 장비는 승리 보상(bossLoot) 한 번에서만
   if (rnd() < T.zl * T.mul * bm * (BIG[e.type] ? 2 : 1)) {      // 2.1.0: 그 지역의 전설 (가진 것이면 zlOwn 배율로 한 번 더 굴린다)
     var zp = DS.legPool(zone), zid = zp.length ? zp[Math.floor(rnd() * zp.length)] : null;
     if (zid && (!legOwned(save, zid) || rnd() < T.zlOwn)) { d = putGear(save, zid, { at: zoneName(zone) }); if (d) { d.zl = 1; out.push(d); } }
@@ -7106,13 +7146,13 @@ DS.bossLoot = function (save, scn, first, rnd) {
   var fresh = scn.L >= DS.partyL(save) + T.minL;
   lootState(save);
   if (first || fresh) {
-    if (rnd() < T.mul * T.boss) { d = putGear(save, DS.rollGear({ L: scn.L + 1, type: scn.boss, boss: true, cats: rosterCats(save), zone: scn.zone, save: save }, rnd), { at: scn.name || zoneName(scn.zone) }); if (d) out.push(d); }
+    if (rnd() < T.mul * (first ? T.boss[0] : T.boss[1])) { d = putGear(save, DS.rollGear({ L: scn.L + 1, type: scn.boss, boss: true, cats: rosterCats(save), zone: scn.zone, save: save }, rnd), { at: scn.name || zoneName(scn.zone) }); if (d) out.push(d); }
     d = rollItem(save, scn.zone, rnd, 1); if (d) out.push(d);
-    for (var pn = first ? T.plain.first : T.plain.boss, pi = 0; pi < pn; pi++) { d = putGear(save, DS.rollPlain({ L: scn.L, type: scn.boss, boss: true, save: save, need: pi === 0 }, rnd)); if (d) out.push(d); }      // r37: 보스는 보통 장비도 (처진 가문 몫 먼저, 단이 잘 오른다)
+    if (rnd() < T.mul * (first ? T.plain.first : T.plain.boss)) { d = putGear(save, DS.rollPlain({ L: scn.L, type: scn.boss, boss: true, save: save, need: true }, rnd)); if (d) out.push(d); }      // 2.1.1: 많아야 한 점      // r37: 보스는 보통 장비도 (처진 가문 몫 먼저, 단이 잘 오른다)
   }
   bossKeys(scn).forEach(function (b) {
     var u = uniqFrom(b); if (!u) return;
-    var give = first ? !save.lootGot[b] || rnd() < T.own[0] : fresh && rnd() < T.own[1];
+    var give = first ? rnd() < T.mul * T.own[0] : fresh && rnd() < T.mul * T.own[1];      // 2.1.1: 첫 격파도 확정이 아니다 (20%) — 못 받았으면 다시 깨서 노린다 (4%)
     if (!give) return;
     save.lootGot[b] = 1;
     d = putGear(save, u, { at: bossName(b) || scn.name || '', w: bossName(b) ? 1 : 0 }); if (d) { d.boss = b; out.push(d); }
@@ -7130,7 +7170,7 @@ DS.pitLoot = function (save, floor, rnd) {
   if (first || (fresh && rnd() < 0.5 * T.mul)) {
     d = putGear(save, DS.rollGear({ L: L, type: 'golem', boss: true, cats: rosterCats(save), grade: first && floor % 5 === 0 ? 4 : 0, save: save }, rnd), { at: '갱도 ' + floor + '층' }); if (d) out.push(d);
     d = rollItem(save, 'stone', rnd, 1); if (d) out.push(d);
-    for (var pi = 0; pi < T.plain.pit; pi++) { d = putGear(save, DS.rollPlain({ L: L, type: 'golem', boss: true, save: save, need: true }, rnd)); if (d) out.push(d); }      // r37
+    if (rnd() < T.plain.pit) { d = putGear(save, DS.rollPlain({ L: L, type: 'golem', boss: true, save: save, need: true }, rnd)); if (d) out.push(d); }      // r37
   }
   if (floor >= 10 && u && (first || (fresh && rnd() < T.own[1]))) { save.lootGot.keeper = 1; d = putGear(save, u, { at: bossName('keeper') || '갱도 ' + floor + '층', w: bossName('keeper') ? 1 : 0 }); if (d) { d.boss = 'keeper'; out.push(d); } }
   return out;
@@ -12830,6 +12870,7 @@ if (DS.BAL.nameErase == null) DS.BAL.nameErase = true;
 // ── r32 필살기: 유닛의 u.ult(기술 id) · u.uc(필살 게이지 0~100) · u.ultP(세기 배율) · u.ultR(차는 빠르기). 끄면(DS.BAL.ult=false) 사양이 ult 를 싣지 않아 그 전과 똑같다.
 //   게이지는 싸움 중에만 찬다 (DS.ULT.charge 초에 100). 때리면 hitGain, 맞으면 받은 피해 ÷ 최대 체력 × hurtGain 만큼 더. 쓰면 0. 엔진 난수는 부르지 않는다.
 if (DS.BAL.ult == null) DS.BAL.ult = true;
+if (DS.BAL.healAlly == null) DS.BAL.healAlly = 0.5;      // 2.1.1: 우리 편 치유 기술·치유 용병의 회복량 배율 (사용자 「힐러가 너무 사기 — 절반쯤」). 필살기·소모품·흡혈·장비 재생은 그대로, 적의 치유도 그대로
 //   r36 (1.3.0): 필살기는 맹주만 지니고(DS.ultSpec), 사람이 눌러야만 나간다 — 자동 조작·전체 자동에서도 스스로 쓰지 않는다 (가득 찬 게이지는 그대로 기다린다).
 //   DS.BAL.ultAuto = true 는 검사 도구(봇)만 켠다: 사람이 가득 차면 누른다고 치고 옛 자동 판단(P.aiUlt)을 그대로 쓴다.
 if (DS.BAL.ultAuto == null) DS.BAL.ultAuto = false;
@@ -13299,7 +13340,7 @@ P.resolve = function (u, id, tiles, unitTgt) {
         if (e.drain) self.heal(u, d * e.drain);
         else if (self.drainOf(u)) self.leech(u, d * self.drainOf(u));
       }); break;
-      case 'heal': vs.forEach(function (v) { self.heal(v, (u.mag * e.m * pw + 8) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1)); }); break;      // healUp: 자비의 홀 등
+      case 'heal': var hk = u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1; vs.forEach(function (v) { self.heal(v, (u.mag * e.m * pw + 8) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1) * hk); }); break;      // healUp: 자비의 홀 등
       case 'buff': vs.forEach(function (v) {
         if (v.dead) return;
         var p = e.p; if (p < 0 && v.role === 'boss') p = Math.round(p / 2);
@@ -14003,7 +14044,7 @@ P.aiMerc = function (u) {
     if (t) {
       u.gauge -= 40; u.cd.heal = 5; u.busy = 0.5;
       this.emit({ t: 'skill', id: u.id, sk: 'heal', fx: 'heal', tiles: [[t.x, t.y]], from: [u.x, u.y] });
-      this.heal(t, u.mag * u.heal * 1.6 + 6); return;
+      this.heal(t, (u.mag * u.heal * 1.6 + 6) * (u.side === 'ally' ? DS.BAL.healAlly : 1)); return;      // 2.1.1: 치유 용병도 절반
     }
   }
   var foes = this.foes(u);
@@ -14380,7 +14421,7 @@ DS.FIELD = {
     escort: 2,                   // 곁을 지키는 그 지역 몹
     dist: [9, 11],               // 선두에서 몇 칸 떨어져 나타나는가 (보스는 12칸 넘게 떨어지면 진정한다)
     expMul: 1.5, goldMul: 2,     // 쓰러뜨렸을 때 경험치·골드 (보스 기본 ×8·×6 위에)
-    grade: 4, drops: 2,          // 높은 굴림 유니크 하나 보장 + 옵션 둘 유니크
+    grade: 4, drops: 1,          // 높은 굴림 유니크 하나 보장 (2.1.1: 둘째 유니크는 뺐다 — 귀하게)
     merit: 20,                   // 출전 가문마다 가문 공훈 (× 가솔 수) — 정예 현상금과 같은 무게
     idle: 40, life: 300,         // 맞선 뒤 이 초 동안 아무도 때리지 않으면 / 나타난 지 이 초가 넘고 진정해 있으면 물러간다
     cd: 240,                     // 한 번 끝난 뒤 다음까지
@@ -14874,6 +14915,7 @@ function onEv(sim, e) {
         v.float(e.x, e.y, d.name, col, { dy: -12 - i * 9, life: 2.6, big: true, delay: 0.5 + i * 0.25 });
       });
       var bm = $('#bMenu'); if (bm && e.drops && e.drops.length) bm.classList.add('newdot');
+      if (DS.lootCall && e.drops && e.drops.length) DS.lootCall(e.drops, { delay: 2300 });      // 2.1.1: 필드 보스의 유니크를 가운데에 크게
       if (DS.ui) setTimeout(function () { DS.ui.toast(e.name + ' 격파. 전리품 ' + (e.drops || []).map(function (d) { return d.name; }).join(', ') + (e.merit ? ' · 출전 가문 공훈 +' + e.merit : ''), 4200); }, 2800);
       shout('bossWin', 'any', 1500);
     } else if (e.k === 'leave') { bossHud(null, false); if (DS.ui) DS.ui.toast(josa(e.name, '이가') + ' 들판 저편으로 물러갔다', 3000); }
@@ -21435,6 +21477,8 @@ var SFX = {
   // 영웅 이상 모집: 반짝이며 오르는 소리 끝에 종
   pullHi: function () { [784, 988, 1175, 1568, 1976].forEach(function (f, i) { tone(f, f, 0.09, 'sine', 0.055, i * 0.055); }); [784, 1175, 1568].forEach(function (f, i) { tone(f, f, 0.6, 'triangle', i ? 0.04 : 0.05, 0.3); }); noise(0.4, 0.015, 7000, 1, 0.3, 'highpass'); },      // 2.8: 맨 위 2349Hz 를 빼고 끝 화음을 한 옥타브 내림 (귀를 찌르던 소리)
   // 전설 장비·귀한 물건: 낮은 울림 위의 두 번 종소리
+  // 2.1.1 전설 장비: 낮은 북 · 오르는 팡파르 · 길게 번지는 금빛 화음과 종
+  legend: function () { tone(73, 73, 1.2, 'sine', 0.1); noise(0.5, 0.05, 400, 0.4, 0, 'lowpass'); [392, 523, 659, 784].forEach(function (f, i) { tone(f, f, 0.12, 'square', 0.05, 0.12 + i * 0.09); }); [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone(f, f, 1.3, i < 2 ? 'triangle' : 'square', i < 2 ? 0.07 : 0.03, 0.5); }); tone(1568, 1568, 0.9, 'triangle', 0.05, 0.62); tone(2093, 2093, 1.1, 'sine', 0.035, 0.8); },
   rare:   function () { tone(110, 110, 0.9, 'sine', 0.08); tone(880, 880, 0.5, 'triangle', 0.07, 0.05); tone(1320, 1320, 0.5, 'triangle', 0.045, 0.05); tone(1109, 1109, 0.7, 'triangle', 0.07, 0.4); tone(1661, 1661, 0.7, 'triangle', 0.045, 0.4); },
   // 용병 전사: 내려앉는 단조 네 음과 낮은 지속음
   mourn:  function () { tone(98, 92, 1.5, 'sine', 0.09); [392, 370, 311, 262].forEach(function (f, i) { tone(f, f, i === 3 ? 0.8 : 0.3, 'triangle', 0.075, 0.1 + i * 0.3); }); tone(131, 131, 0.8, 'triangle', 0.05, 1.0); },
@@ -23084,8 +23128,40 @@ function showDrop(d, x, y, i) {
   G.view.float(x, y, nm, col, { dy: -6 - i * 8, life: g >= 4 ? 2.2 : 1.5, big: g >= 4, delay: 0.15 + i * 0.12 });
   G.view.burst(x, y, [col, '#fff6d0'], g >= 4 ? 14 : 6, { up: 30, grav: -12, spd: 12, life: 0.8 });
   lootFly(x, y, d);      // r26: 귀한 것은 그림이 부대(가방) 단추로 날아가고 붉은 점이 남는다
+  if (d.kind === 'gear' && g >= 4) { DS.lootCall([d], { delay: 350 }); return; }      // 2.1.1: 귀한 장비는 가운데에 크게 (소리도 거기서)
   A(g >= 4 ? 'rare' : 'star');
 }
+// 2.1.1: 귀한 장비(유니크·전설)를 얻으면 화면 가운데에 크게 띄운다 — 싸움은 멈추지 않는다. 누르면 닫히고, 몇 초 뒤 저절로 사라진다. 여러 점이면 차례로.
+//   전설: 금빛 빛살·번쩍임·흔들림·팡파르 · 유니크: 보랏빛 빛살·종소리. 결과 창 위에도 뜬다 (시나리오 승리 보상).
+var lcQ = [], lcCur = null;
+function lcInfo(d) { var g = null; try { g = DS.gear(d.id); } catch (x) { g = null; } return g; }
+DS.lootCall = function (list, o) {
+  (list || []).forEach(function (d) { if (d && d.kind === 'gear' && (d.grade || 0) >= 4 && !d._lc) { d._lc = 1; lcQ.push(d); } });      // _lc: 한 번 보인 것은 다시 띄우지 않는다 (들판에서 주워 결과 창에도 실린 것)
+  lcQ.sort(function (a, b) { return (b.grade || 0) - (a.grade || 0); });
+  if (!lcCur) setTimeout(lcNext, (o && o.delay) || 0);
+};
+function lcNext() {
+  if (lcCur) return;
+  var d = lcQ.shift(), host = $('#app'); if (!d || !host) return;
+  var g = lcInfo(d), leg = (d.grade || 0) >= 5, col = (DS.gearCol && DS.gearCol(d.grade)) || (leg ? '#f0b64a' : '#b181e6');
+  var ic = ''; try { ic = DS.iconHtml ? DS.iconHtml('gear', d.id, { size: 56 }) : ''; } catch (x) { ic = ''; }
+  var lore = g && (g.lore || (g.def && g.def.lore)) || '', st = g ? String(g.stat || '') : '';
+  var el = document.createElement('div'); el.className = 'lootcall ' + (leg ? 'lg' : 'uq'); el.setAttribute('role', 'status'); el.style.setProperty('--lc', col);
+  el.innerHTML = '<i class="lcrays"></i><div class="lccard"><small class="lctag">' + (leg ? '전설 장비' : '유니크 장비') + (d.sold ? ' · 가방이 가득 차 팔았다' : '') + '</small>' +
+    '<span class="lcic">' + ic + '</span><b class="lcnm">' + esc(String((g && g.short) || d.name || '')) + '</b>' +
+    (g && g.name && g.short && g.name !== g.short ? '<em class="lcsuf">' + esc(g.name.slice(g.short.length).trim()) + '</em>' : '') +
+    (st ? '<span class="lcst">' + esc(st) + '</span>' : '') + (lore ? '<q class="lclore">' + esc(lore) + '</q>' : '') + '<small class="lcok">눌러서 닫기</small></div>';
+  host.appendChild(el);
+  var cm = calm(), done = false;
+  var close = function () { if (done) return; done = true; clearTimeout(t); el.classList.add('out'); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); lcCur = null; lcNext(); }, 260); };
+  el.addEventListener('click', function (ev) { ev.stopPropagation(); close(); });
+  var t = setTimeout(close, leg ? 4600 : 3400);
+  lcCur = { d: d, el: el, close: close };
+  A(leg ? 'legend' : 'rare'); if (DS.Audio && DS.Audio.duck) DS.Audio.duck(leg ? 8 : 5, leg ? 2200 : 1400);
+  if (G.view && !cm) { G.view.flashA = Math.max(G.view.flashA || 0, leg ? 0.22 : 0.1); if (leg) G.view.shake = Math.max(G.view.shake || 0, 0.35); }
+  try { if (leg && navigator.vibrate && !cm) navigator.vibrate([40, 60, 90]); } catch (x) {}
+}
+DS.lootCallClear = function () { lcQ.length = 0; if (lcCur) lcCur.close(); };
 function lootFly(x, y, d) {
   var bm = $('#bMenu'), cv = $('#cv'), host = $('#s-game'); if (!bm || !cv || !host || !G.view) return;
   bm.classList.add('newdot'); G.bagNew = true;
@@ -23101,6 +23177,7 @@ function lootFly(x, y, d) {
 }
 function onDrops(e) {
   var sv = G.save, drops = null;
+  if (G.scn && e && !e.scn) e.scn = 1;      // 2.1.1: 시나리오 싸움에서는 장비가 떨어지지 않는다 (승리 보상에서 한 번)
   if (DS.rollDrop) { try { drops = DS.rollDrop(sv, e); } catch (x) { drops = null; } }
   if (drops && drops.length) { G.gain.loot = G.gain.loot || []; var k = 0; drops.forEach(function (d) { if (!d) return; G.gain.loot.push(d); showDrop(d, e.x, e.y, d.kind === 'bounty' ? 0 : k++); }); }
 }
@@ -24955,8 +25032,10 @@ DS.showResult = function (s, out, cb) {
   // r8 menus (trim 7): 결과 창의 「가문」 줄(lgResultRows)은 뺐다 — 지휘관의 죽음은 제목 아래에, 출생·성년은 창을 닫은 뒤의 소식 창 한 곳에서만 (같은 소식을 두 번 듣지 않게)
   if (s.pit && s.pit < 10) html += '<p class="dim">갱도 ' + (s.pit + 1) + '층 열림</p>';
   html += '<div class="rfoot"><p class="nextl"><i>다음</i>' + esc(nextLine()) + '</p><button class="btn gold wide" data-close>계속' + (U.svg ? U.svg('chev', 16) : '') + '</button></div></div>';      // 「다음」과 「계속」은 늘 보이게 아래에 붙여 둔다
-  if (gotR.length) A2('rare', 'star');
+  var rareD = (out.drops || []).filter(function (d) { return d && d.kind === 'gear' && (d.grade || 0) >= 4; });      // 2.1.1: 승리 보상의 귀한 장비는 결과 창 위에 크게 (소리도 거기서)
+  if (gotR.length && !(rareD.length && DS.lootCall)) A2('rare', 'star');
   var o = overlay(html, 'modal center res26');
+  if (rareD.length && DS.lootCall) DS.lootCall(rareD, { delay: 900 });
   snap = null;
   // r26: 별이 하나씩 튀고 · 골드·경험치가 0 부터 차오른다 (움직임 줄이기면 바로 끝값)
   setTimeout(function () { $$('[data-cu]', o).forEach(function (el, i) { setTimeout(function () { U.countUp(el, +el.dataset.cu, 650, el.dataset.pre || ''); }, i * 120); }); }, U.calm && U.calm() ? 0 : 420);
