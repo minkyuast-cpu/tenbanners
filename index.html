@@ -3459,6 +3459,10 @@ html body #app#app #s-game .chip .agc { right: 9px; }
 .gh-pick .gh b { font-size: 14px; font-weight: 700; color: #f3d58a; }
 .gh-pick .gh small { font-size: 11px; color: #b9a98a; line-height: 1.3; word-break: keep-all; }
 .gh-pick .gh.on { border-color: #f6cf57; box-shadow: 0 0 0 1px #f6cf57, 0 0 10px rgba(246,207,87,.35); background: linear-gradient(180deg, #3a2c1b, #1d150c); }
+
+/* 1.0.9: 첫 접속 맹주 가문 이름 권유 */
+.result.ghask .gh-pick { margin: 10px 0 12px; }
+.result.ghask .btn.wide { margin-top: 6px; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -4162,10 +4166,15 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '1.0.8';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '4.0.16';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '1.0.9';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '4.0.17';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '1.0.9', date: '2026-11-17', tag: '변경', title: '새 문패',
+    lead: '맹주 가문은 이제 이름 있는 여덟 집 가운데 하나입니다.',
+    items: [
+      ['새로', '예전부터 하던 판은 들어올 때 새 맹주 가문 이름 여덟 가운데 하나를 꼭 고릅니다. 홈즈, 캐퓰렛 같은 옛 이름은 더 쓰지 않습니다.']
+    ] },
   { ver: '1.0.8', date: '2026-11-17', tag: '고침', title: '멈추지 않는 길',
     lead: '다른 기기에서도 저장이 이어지고, 게임이 저절로 멈추던 것을 고쳤습니다.',
     items: [
@@ -23872,7 +23881,7 @@ function renderTitle() {
     '<div class="tver"><button id="btnNotes" class="lnk">공지사항<i class="dot"' + (fresh ? '' : ' hidden') + '></i></button><span class="num">v' + DS.VERSION + '</span></div>' +
     '<p class="title-note">저장은 이 브라우저에 남습니다.</p></div>';
   if (DS.titleArt) { try { DS.titleArt($('canvas', el)); } catch (x) { drawTitleArt($('canvas', el)); } } else drawTitleArt($('canvas', el)); if (DS.Audio && DS.Audio.bgm) DS.Audio.bgm('title');
-  if (s) $('#btnCont').addEventListener('click', function () { DS.Audio.unlock(); A('ok'); G.save = s; DS.Audio.set({ sfx: s.opt.sfx, bgm: s.opt.bgm }); DS.startGame(); DS.showNews(); });
+  if (s) $('#btnCont').addEventListener('click', function () { DS.Audio.unlock(); A('ok'); G.save = s; DS.Audio.set({ sfx: s.opt.sfx, bgm: s.opt.bgm }); DS.startGame(); DS.showNews(); setTimeout(askGrand, 2500); });
   var be = $('#btnEra'); if (be) be.addEventListener('click', function () { DS.Audio.unlock(); A('tap'); DS.openNewEra(DS.Save.oldRaw(), !!s); });
   if (!nv) $('#btnNew').addEventListener('click', function () { DS.Audio.unlock(); A('tap'); newGame(!!s, r); });
   else { $('#btnReload').addEventListener('click', function () { try { location.reload(); } catch (e) {} }); setTimeout(function () { toast(DS.NEWER_MSG, 4200); }, 300); }
@@ -23926,6 +23935,32 @@ function eraStart(p, cls, ver) {
   var pro = (LORE().prologue && LORE().prologue.length) ? LORE().prologue : ['그대는 해밀 마을의 풋내기 용병대장. 이름 하나와 300골드가 전부다.'];
   story(['옛 시대에서 온 이름, ' + p.name + '.'].concat(pro), null, '전민 새 시대');
 }
+// 1.0.9: 맹주 가문 이름이 여덟 이름 밖(옛 판의 홈즈·캐퓰렛 등)이면 반드시 고르게 한다 — 닫을 수 없고, 고를 때까지 접속마다 다시 묻는다 (사용자 「지금 이대로는 없어 반드시 바꿔야해」)
+function askGrand(tries) {
+  var s = G.save; tries = tries || 0;
+  if (!s || !s.lin || !s.opt || !DS.GRAND_HOUSES || !DS.linSetSurname || document.querySelector('.result.ghask')) return;
+  var cur = s.lin.sur || '';
+  if (DS.GRAND_HOUSES.some(function (g) { return g[0] === cur; })) { s.opt.ghAsked = 1; U.persist(); return; }
+  if (G.scn || (G.sim && G.sim.combat) || G.ending || document.querySelector('.ov')) { if (tries < 40) setTimeout(function () { askGrand(tries + 1); }, 3000); return; }
+  var pick = 0;
+  var o = overlay('<div class="result ghask"><p class="eyebrow">맹주 가문</p><h2>맹주 가문의 이름을 정하세요</h2>' +
+    '<p class="dim">지금은 「' + esc(DS.houseOf ? DS.houseOf(cur) : cur + ' 가문') + '」입니다. 맹주 가문은 아래 여덟 이름 가운데 하나를 씁니다. 대장의 이름과 진행은 그대로입니다.</p>' +
+    '<div class="gh-pick">' + DS.GRAND_HOUSES.map(function (g, i) { return '<button class="gh' + (i === pick ? ' on' : '') + '" data-gh="' + i + '"><b>' + esc(g[0]) + '</b><small>' + esc(g[1]) + '</small></button>'; }).join('') + '</div>' +
+    '<button class="btn gold wide" data-ghok="1">이 이름으로 정한다</button></div>', 'modal center');
+  o.classList.add('nodismiss'); o.onclose = function () { var cs = G.save && G.save.lin && G.save.lin.sur; if (!DS.GRAND_HOUSES.some(function (g) { return g[0] === cs; })) setTimeout(askGrand, 600); };
+  o.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-gh]');
+    if (b) { pick = +b.dataset.gh; A('tap'); o.querySelectorAll('.gh').forEach(function (x) { x.classList.toggle('on', x === b); }); return; }
+    if (e.target.closest('[data-ghok]')) {
+      var nm = DS.GRAND_HOUSES[pick][0];
+      try { DS.linSetSurname(s, nm); } catch (x) {}
+      s.opt.ghAsked = 1; lgCache = null; U.persist(); A('ok'); o.close();
+      try { if (DS.refreshUnits) DS.refreshUnits(); if (DS.rebuildParty) DS.rebuildParty(); } catch (x) {}
+      toast((DS.houseOf ? DS.houseOf(nm) : nm + ' 가문') + '이 되었다', 3200); return;
+    }
+  });
+}
+DS.askGrand = askGrand;
 function newGame(hasSave, r) {
   var pick = 'inf', perk = r ? DS.returneePerk(r) : null, ghI = Math.floor(Math.random() * ((DS.GRAND_HOUSES || [1]).length));      // 1.0.7: 맹주 가문 이름을 고른다 (처음엔 무작위 하나)
   var o = overlay('<header class="sh"><h3>새로 시작</h3></header><div class="sb">' +
@@ -23945,6 +23980,7 @@ function newGame(hasSave, r) {
     A('ok'); o.close();
     G.save = DS.newSave(name, pick);
     if (DS.GRAND_HOUSES && DS.GRAND_HOUSES[ghI] && DS.linSetSurname) { try { DS.linSetSurname(G.save, DS.GRAND_HOUSES[ghI][0]); } catch (x) {} }
+    if (G.save.opt) G.save.opt.ghAsked = 1;
     if (r) DS.grantReturnee(G.save, r, false);
     DS.Save.setMeta({ seenVer: DS.VERSION });
     U.persist();
@@ -23962,7 +23998,7 @@ function boot() {
   function start(data) {
     renderTitle(); U.show('s-title');
     var s = data && data.resume ? U.load() : null;     // 페이지가 새로 올라오면 하던 자리에서 잇는다
-    if (s) { G.save = s; DS.Audio.set({ sfx: s.opt.sfx, bgm: s.opt.bgm }); DS.startGame(); DS.showNews(); }
+    if (s) { G.save = s; DS.Audio.set({ sfx: s.opt.sfx, bgm: s.opt.bgm }); DS.startGame(); DS.showNews(); setTimeout(askGrand, 2500); }
   }
   if (hot && hot.snapshot) { try { hot.snapshot(function () { U.persist(); return { resume: !!(G.sim && G.save) }; }); } catch (e) {} }
   if (hot && hot.ready) { try { hot.ready(start); } catch (e) { start({}); } } else start((hot && hot.data) || {});
