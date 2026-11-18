@@ -6,7 +6,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 DS.LV_PER_TIER = 10;      // 단마다 레벨 1~10
 DS.MAX_TIER = 10;
 DS.TICK = { regen: 11, attack: 40, item: 25, step: 12, quick: 0.65 };   // 틱(행동) 게이지 규칙
-DS.PARTY_MAX = 3;         // 시나리오에 함께 나가는 지휘관 수
+DS.PARTY_MAX = 99;        // 2.2.0: 출전 고르기는 없다 — 가주가 선 가문은 모두 싸운다 (s.party 는 저절로 맞춘 목록)
 
 // 깃발(합일 단위)
 DS.FAMILY = {
@@ -55,7 +55,7 @@ DS.CLASSES = {
     base: { hp: 44, mp: 12, atk: 14, def: 5, mag: 4, res: 5 }, grow: { hp: 3.6, mp: 0.7, atk: 1.3, def: 0.55, mag: 0.4, res: 0.5 },
     spd: 11, mv: 1, rng: [2, 4], atk: 'arrow', dtype: 'phys',
     skills: [['charisma', 4], ['aimed', 2], ['arrowRain', 6]], merc: 'm_archer',
-    blurb: '멀리서 활을 쏜다. 「통솔」은 용병의 능률을 끌어올린다. 비병에게 강하다.' },
+    blurb: '멀리서 활을 쏜다. 「통솔」은 아군 모두를 북돋운다. 비병에게 강하다.' },
   cle: { name: '승려', fam: 'magic', start: 1, kind: 'holy', mt: 'foot',
     tiers: ['클레릭', '프리스트', '하이프리스트', '에이전트', '하이에이전트', '프린세스', '퀸'],
     base: { hp: 46, mp: 30, atk: 10, def: 6, mag: 12, res: 10 }, grow: { hp: 3.8, mp: 2.0, atk: 0.85, def: 0.6, mag: 1.1, res: 0.95 },
@@ -116,8 +116,8 @@ DS.SKILLS = {
   slow:      { name: '둔화', mp: 6, tick: 40, rng: [1, 4], tg: 'enemy', fx: 'dark', eff: [{ t: 'status', s: 'slow', dur: 15 }], desc: '보조 마법. 적 하나의 게이지 회복을 15초 동안 늦춘다.' },
   pierce:    { name: '관통', mp: 5, tick: 50, tg: 'dir', len: 3, fx: 'thrust', eff: [{ t: 'dmg', m: 1.3 }], desc: '직선 3칸을 꿰뚫어 130% 피해.' },
   aimed:     { name: '조준 사격', mp: 4, tick: 50, rng: [2, 5], tg: 'enemy', fx: 'arrow', eff: [{ t: 'dmg', m: 1.8 }], desc: '최대 5칸. 180% 피해.' },
-  charisma:  { name: '통솔', mp: 10, tick: 50, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', mercOnly: true,
-               eff: [{ t: 'buff', s: 'atk', p: 40, dur: 30 }, { t: 'buff', s: 'def', p: 40, dur: 30 }, { t: 'gauge', v: 50 }], desc: '호령 — 모든 아군 용병의 공격, 방어 +40% (30초), 게이지 +50.' },
+  charisma:  { name: '통솔', mp: 10, tick: 50, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold',
+               eff: [{ t: 'buff', s: 'atk', p: 20, dur: 30 }, { t: 'buff', s: 'def', p: 20, dur: 30 }, { t: 'gauge', v: 25 }], desc: '호령 — 모든 아군의 공격, 방어 +20% (30초), 게이지 +25.' },
   arrowRain: { name: '화살비', mp: 10, tick: 60, rng: [2, 4], tg: 'tile', area: 'r1', fx: 'arrowRain', eff: [{ t: 'dmg', m: 1.25 }], desc: '십자 범위에 125% 피해.' },
   heal:      { name: '치유', mp: 6, tick: 40, rng: [0, 3], tg: 'ally', fx: 'heal', eff: [{ t: 'heal', m: 2.4 }], desc: '아군 하나의 HP를 회복.' },
   cure:      { name: '정화', mp: 5, tick: 35, rng: [0, 3], tg: 'ally', fx: 'heal', eff: [{ t: 'cleanse' }, { t: 'heal', m: 1.0 }], desc: '상태 이상을 풀고 조금 회복.' },
@@ -133,19 +133,19 @@ DS.SKILLS = {
   summon:    { name: '망자 부름', mp: 14, tick: 60, tg: 'self', fx: 'dark', ai: 'summon', cap: 2, eff: [{ t: 'summon', type: 'm_skeleton', n: 1, dur: 45 }], desc: '45초 동안 싸워 줄 해골 병사를 부른다 (최대 2).' },
   curse:     { name: '저주', mp: 8, tick: 45, rng: [1, 4], tg: 'enemy', fx: 'dark', eff: [{ t: 'buff', s: 'atk', p: -25, dur: 20 }, { t: 'buff', s: 'def', p: -25, dur: 20 }], desc: '적 하나의 공격, 방어 -25% (20초).' },
   deathCloud:{ name: '독안개', mp: 14, tick: 60, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'poison', eff: [{ t: 'dmg', m: 1.1, type: 'magic' }, { t: 'status', s: 'poison', dur: 12, p: 4 }], desc: '십자 범위에 독안개. 피해와 중독.' },
-  // ── 호령: 용병이 있어야 쓰는 지휘 기술. 병과마다 하나 (궁병·택틱스마스터는 위의 「통솔」). 통솔 이름과 짝을 이룬다.
-  //    모든 아군 용병에게 걸린다 (mercOnly). 자동 전투는 첫 효과(버프)가 꺼진 용병이 둘 이상인 큰 싸움에서 쓴다.
-  cmd_inf:  { name: '방패 올려!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', mercOnly: true, eff: [{ t: 'buff', s: 'def', p: 35, dur: 15 }], desc: '호령 — 모든 아군 용병의 방어 +35% (15초).' },
-  cmd_cav:  { name: '돌격!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', mercOnly: true, eff: [{ t: 'buff', s: 'atk', p: 25, dur: 12 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군 용병의 공격 +25% (12초), 게이지 +40.' },
-  cmd_fly:  { name: '강습 신호', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', mercOnly: true, eff: [{ t: 'buff', s: 'quick', p: 30, dur: 15 }], desc: '호령 — 모든 아군 용병의 행동 소모 −30% (15초).' },
-  cmd_mar:  { name: '버텨라!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', mercOnly: true, eff: [{ t: 'buff', s: 'def', p: 25, dur: 20 }, { t: 'gauge', v: 25 }], desc: '호령 — 모든 아군 용병의 방어 +25% (20초), 게이지 +25.' },
-  cmd_pike: { name: '창벽 세워!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', mercOnly: true, eff: [{ t: 'buff', s: 'def', p: 30, dur: 15 }, { t: 'buff', s: 'atk', p: 10, dur: 15 }], desc: '호령 — 모든 아군 용병의 방어 +30%, 공격 +10% (15초).' },
-  cmd_cle:  { name: '곁을 지켜라', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', mercOnly: true, eff: [{ t: 'buff', s: 'def', p: 30, dur: 20 }], desc: '호령 — 모든 아군 용병의 방어 +30% (20초).' },
-  cmd_mon:  { name: '축복의 구령', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', mercOnly: true, eff: [{ t: 'buff', s: 'quick', p: 25, dur: 20 }, { t: 'buff', s: 'def', p: 15, dur: 20 }], desc: '호령 — 모든 아군 용병의 행동 소모 −25%, 방어 +15% (20초).' },
-  cmd_mag:  { name: '마력을 받아라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', mercOnly: true, eff: [{ t: 'buff', s: 'atk', p: 35, dur: 15 }], desc: '호령 — 모든 아군 용병의 공격 +35% (15초).' },
-  cmd_sha:  { name: '피의 계약', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', mercOnly: true, eff: [{ t: 'buff', s: 'atk', p: 45, dur: 12 }, { t: 'buff', s: 'def', p: -15, dur: 12 }], desc: '호령 — 모든 아군 용병의 공격 +45%, 대신 방어 −15% (12초).' },
-  cmd_bm:   { name: '전군 돌격', mp: 12, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', mercOnly: true, eff: [{ t: 'buff', s: 'quick', p: 30, dur: 20 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군 용병의 행동 소모 −30% (20초), 게이지 +40.' },
-  cmd_mm:   { name: '별빛 가호', mp: 14, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', mercOnly: true, eff: [{ t: 'buff', s: 'atk', p: 30, dur: 20 }, { t: 'buff', s: 'quick', p: 30, dur: 20 }], desc: '호령 — 모든 아군 용병의 공격 +30%, 행동 소모 −30% (20초).' },
+  // ── 호령: 병과마다 하나인 지휘 기술 (궁병·택틱스마스터는 위의 「통솔」).
+  //    2.2.0: 가솔이 없어져 모든 아군에게 걸린다 (예전 mercOnly — 세기는 절반). 자동 전투는 버프가 꺼진 아군이 둘 이상인 큰 싸움에서 쓴다.
+  cmd_inf:  { name: '방패 올려!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 18, dur: 15 }], desc: '호령 — 모든 아군의 방어 +18% (15초).' },
+  cmd_cav:  { name: '돌격!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 12, dur: 12 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군의 공격 +12% (12초), 게이지 +40.' },
+  cmd_fly:  { name: '강습 신호', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 15 }], desc: '호령 — 모든 아군의 행동 소모 −15% (15초).' },
+  cmd_mar:  { name: '버텨라!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 12, dur: 20 }, { t: 'gauge', v: 25 }], desc: '호령 — 모든 아군의 방어 +12% (20초), 게이지 +25.' },
+  cmd_pike: { name: '창벽 세워!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 15 }, { t: 'buff', s: 'atk', p: 5, dur: 15 }], desc: '호령 — 모든 아군의 방어 +15%, 공격 +5% (15초).' },
+  cmd_cle:  { name: '곁을 지켜라', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 20 }], desc: '호령 — 모든 아군의 방어 +15% (20초).' },
+  cmd_mon:  { name: '축복의 구령', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 12, dur: 20 }, { t: 'buff', s: 'def', p: 8, dur: 20 }], desc: '호령 — 모든 아군의 행동 소모 −12%, 방어 +8% (20초).' },
+  cmd_mag:  { name: '마력을 받아라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 18, dur: 15 }], desc: '호령 — 모든 아군의 공격 +18% (15초).' },
+  cmd_sha:  { name: '피의 계약', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 22, dur: 12 }, { t: 'buff', s: 'def', p: -8, dur: 12 }], desc: '호령 — 모든 아군의 공격 +22%, 대신 방어 −8% (12초).' },
+  cmd_bm:   { name: '전군 돌격', mp: 12, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 20 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군의 행동 소모 −15% (20초), 게이지 +40.' },
+  cmd_mm:   { name: '별빛 가호', mp: 14, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'atk', p: 15, dur: 20 }, { t: 'buff', s: 'quick', p: 15, dur: 20 }], desc: '호령 — 모든 아군의 공격 +15%, 행동 소모 −15% (20초).' },
   // ── 합일한 마스터의 고유 기술 (9단·10단). 자동 전투는 목록의 앞쪽 기술부터 살피므로 병과 표에서 앞에 둔다 ──
   bm_charge: { name: '강철 돌격', mp: 12, tick: 55, tg: 'dir', len: 4, fx: 'thrust', eff: [{ t: 'dmg', m: 1.6 }, { t: 'knock', n: 1 }], desc: '직선 4칸을 꿰뚫어 160%, 1칸 밀어낸다.' },
   bm_storm:  { name: '강철 폭풍', mp: 18, tick: 65, tg: 'self', area: 'r2', side: 'enemy', fx: 'slash', eff: [{ t: 'dmg', m: 1.7 }, { t: 'gauge', v: -30 }], desc: '둘레 2칸의 모든 적에게 170%, 게이지를 깎는다.' },
@@ -505,46 +505,21 @@ DS.GRADES = [null,
   { name: '희귀', mul: 1.15, p: 30, col: '#5fc4d6' },
   { name: '영웅', mul: 1.32, p: 20, col: '#b181e6' },
   { name: '전설', mul: 1.52, p: 10, col: '#f0b64a' }];      // r44: 1.5 → 1.52 (전설 가솔은 종류가 달라도 희귀 평균 밑으로 내려가지 않는다 · 전설/일반 1.79배). 가주·맹주의 등급 배율은 banner.js DS.BN.gmul
-// 통솔: 지휘관의 병과마다 이끄는 용병에게 주는 버프와 패널티가 다르다 (배율. hp·at 공격·def 방어·res 마방·spd 행동 회복)
-DS.LEAD = {
-  inf:  { name: '방패 대열', def: 1.15, spd: 0.92 },
-  cav:  { name: '돌격 대형', at: 1.15, def: 0.9 },
-  fly:  { name: '강습', spd: 1.12, hp: 0.88 },
-  mar:  { name: '뱃사람의 끈기', hp: 1.15, at: 0.92 },
-  pike: { name: '창벽', def: 1.1, at: 1.05, spd: 0.9 },
-  arc:  { name: '사냥꾼의 눈', at: 1.12, spd: 1.05, def: 0.88 },
-  cle:  { name: '돌봄', hp: 1.12, res: 1.15, at: 0.88 },
-  mon:  { name: '축복', spd: 1.1, res: 1.1, hp: 0.92 },
-  mag:  { name: '마력 부여', at: 1.18, hp: 0.88 },
-  sha:  { name: '어둠의 계약', at: 1.12, hp: 1.08, res: 0.8, def: 0.92 },
-  bm:   { name: '전장의 주인', at: 1.12, def: 1.12, spd: 0.95 },
-  tm:   { name: '전술의 달인', at: 1.1, spd: 1.1, hp: 0.92 },
-  mm:   { name: '마도의 정점', at: 1.15, res: 1.15, def: 0.9 }
-};
-// 병과의 호령(용병 전용 지휘 기술) id — 통솔 표와 짝. 화면이 통솔 줄 옆에 보여 줄 때 쓴다
+// 2.2.0: 통솔(지휘관이 이끄는 가솔에게 주던 버프·패널티 표 DS.LEAD)은 없어졌다 — 가솔이 없다. 호령 기술은 모든 아군에게 절반 세기로 걸린다
+// 병과의 호령(지휘 기술) id
 DS.ORDER = { inf: 'cmd_inf', cav: 'cmd_cav', fly: 'cmd_fly', mar: 'cmd_mar', pike: 'cmd_pike', arc: 'charisma', cle: 'cmd_cle', mon: 'cmd_mon', mag: 'cmd_mag', sha: 'cmd_sha', bm: 'cmd_bm', tm: 'charisma', mm: 'cmd_mm' };
 // 지휘관의 깃발 색
 DS.FLAG = { inf: '#5b8fd6', cav: '#e8bb45', fly: '#62b0ee', mar: '#2f86a6', pike: '#4c9a8a', arc: '#5fae5a', cle: '#f4efe2', mon: '#f09a4a', mag: '#8d6be0', sha: '#9a6ad0', bm: '#e0525e', tm: '#3fa88a', mm: '#f6cf57' };
-DS.LEAD_STAT = { hp: 'HP', at: '공격', def: '방어', res: '마방', spd: '행동 회복' };
-// 통솔 효과를 [버프 글, 패널티 글]로
-DS.leadText = function (cls) {
-  var L = DS.LEAD[cls], up = [], dn = [];
-  ['hp', 'at', 'def', 'res', 'spd'].forEach(function (k) {
-    if (!L[k] || L[k] === 1) return;
-    var p = Math.round((L[k] - 1) * 100);
-    (p > 0 ? up : dn).push(DS.LEAD_STAT[k] + ' ' + (p > 0 ? '+' : '−') + Math.abs(p) + '%');
-  });
-  return [up.join(', '), dn.join(', ')];
-};
-DS.MERC_SLOTS = 2;      // 지휘관 한 명의 인구수 (보통 용병 1, 큰 용병 2)
-DS.MERC_MAX = 50;       // 막사(대기)에 둘 수 있는 수. 지휘관이 이끄는 용병은 세지 않는다
+DS.MERC_SLOTS = 2;      // (2.2.0: 가솔이 없어졌다 — 옛 저장을 옮길 때만 읽는다)
+DS.SB_MAX = 2;          // 2.2.0: 가문마다 대기조 (모집한 영웅이 기다리는 자리) 최대
+DS.MERC_MAX = 50;       // (2.2.0: 막사가 없어졌다 — 옛 화면 코드가 읽어도 넘어지지 않게 남긴다)
 DS.PITY = 20;           // r35: 이 횟수 안에 전설이 한 번은 나온다 (예전: 40회 안에 영웅 이상)
 DS.PITY_G = 5;
 DS.PULL5_G = 3;         // r35: 5회 모집은 희귀 이상 한 명 (예전: 고급 이상)
 DS.mercCost = function (tier) { return [300, 300, 450, 650, 900, 1200, 1600, 2000, 2500, 3000, 3600][Math.max(1, Math.min(10, tier))]; };      // 기본값 (열기가 0일 때)
 // r35 모집 값: 부를 때마다 열기가 1 오르고 값은 기본값의 +step 만큼 오른다. 열기는 계절마다 ease 씩 식는다 (save.rh = { h 열기, t 마지막으로 잰 달력 초 })
-DS.RECRUIT = { step: 0.5, ease: 0.5, max: 40 };
-DS.TICKET_EVERY = 5;   // r35: 모집권은 다섯 번째 시나리오마다 한 장 (예전 세 번째마다)
+DS.RECRUIT = { step: 0.5, ease: 0.5, max: 40, k: 8 };      // 2.2.0: k = 영웅 모집 값 배율 (기본값 × 8)
+DS.TICKET_EVERY = 10;  // 2.2.0: 영웅 모집권은 열 번째 시나리오마다 한 장 (r35: 다섯 번째마다)
 
 // ───────── 몬스터 ─────────
 // 능력치는 레벨지수 L 기준 (base + grow*(L-1))

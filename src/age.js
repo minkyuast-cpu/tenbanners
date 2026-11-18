@@ -31,7 +31,7 @@ DS.ageLsHuman = function (id, salt) {
 DS.ageLong = function (e, s) { s = s || (DS.G && DS.G.save); var a = e && s ? DS.ageOf(s, e) : null; return a != null && a > DS.AGE_CMD.life[1]; };      // ㉒ 「장수」: 72 를 실제로 넘긴 이 (정해진 수명을 미리 내비치지 않는다)
 DS.AGE_TXT = {
   deathNat: ['{a}{이가} 천수를 누리고 눈을 감았다.'],
-  adult: ['{a}{이가} 성년이 되어 막사에 들어왔다.'],      // {a} = 호 + 성이름 (「민규 2세 불꽃 스타크」)
+  adult: ['{a}{이가} 성년이 되어 가문원으로 싸움에 나선다.'],      // {a} = 호 + 성이름 (「민규 2세 불꽃 스타크」)
   elder: ['{a}의 머리에 서리가 내렸다. 노년에 들었다.']
 };
 var NAT = '천수를 누림';
@@ -87,7 +87,7 @@ DS.ageLife = function (s, e) {
 DS.ageMood = function (s, e) { return e && DS.ageStage(s, e) === 'elder' ? { k: 'elder', name: '노년', desc: '수명이 얼마 남지 않았다. 공격, 마공 −' + Math.round((1 - DS.AGE.elderMul) * 100) + '%' } : null; };
 
 // ── 성년 (미성년 자식은 가계도에만 있다: P.st 'young', P.ya = 용병이 될 때의 사양) ──
-// lineage.js 의 출산이 부른다: 막사 대신 가계도에 갓난아기로
+// lineage.js 의 출산이 부른다: 가계도에 갓난아기로 (15살에 가문원이 된다)
 DS.ageYoung = function (s, hp, sp, type, g, r) {
   var Lr = s.lin, ch = s.chars[hp.c], keys = Object.keys(DS.TRAITS);
   var ya = { type: type, g: g, t: keys[Math.floor(r() * keys.length) % keys.length], v: Math.floor(r() * 4), sx: r() < 0.5 ? 'm' : 'f', n: DS.pickMercName(s, r) };
@@ -100,9 +100,8 @@ function grow(s, at, evs) {
   Object.keys(P).map(Number).sort(function (a, b) { return a - b; }).forEach(function (k) {
     var p = P[k]; if (!p || p.st !== 'young' || !p.ya) return;
     if (DS.ageOf(s, p) < DS.AGE.adult) return;
-    if (DS.reserve(s).length >= DS.MERC_MAX) { if (!p.wait) { p.wait = 1; evs.push({ t: 'adultWait', a: p.id, text: DS.linName(s, p.id) + '이(가) 성년이 되었다. 막사가 차서 자리가 나길 기다린다' }); } return; }
-    var y = p.ya, m = DS.addMerc(s, y.type, y.g, 0);
-    m.L = DS.kidL ? DS.kidL(s) : 1; m.exp = 0;      // r42: 아이는 낮은 레벨로 막사에 들어와 부모 가문 가솔로 자란다
+    var y = p.ya, m = DS.addMerc(s, y.type, y.g, s.hero);
+    m.kn = 1; m.L = DS.kidL ? DS.kidL(s) : 1; m.exp = 0;      // 2.2.0: 아이는 낮은 레벨로 맹주 가문의 가문원이 되어 함께 싸운다 (빈 가문의 가주로 보낼 수 있다)
     m.n = y.n; m.sx = y.sx; m.sn = p.sn; if (p.ttl) m.ttl = p.ttl; m.t = y.t; m.v = y.v; if (y.q) m.q = y.q; else delete m.q;
     m.by = p.by; m.ls = p.ls; m.pid = p.id; if (p.pot != null) m.pot = p.pot;      // ⑭-4 잠재력
     p.st = 'live'; p.m = m.id; p.type = y.type; p.g = y.g; p.n = y.n; delete p.ya; delete p.wait;

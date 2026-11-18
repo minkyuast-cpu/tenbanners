@@ -11,7 +11,8 @@ DS.spdOf = function (v) { v = +v || 1; return v >= 1.75 ? 2 : v >= 1.25 ? 1.5 : 
 // r42 (2.0.0 「새 시대」): 사람마다 단·레벨, 가문 공훈 — 다시 모두 새로 시작한다. 새 키 tenbanners_v3 에 v11 만 쓰고 읽는다.
 //   옛 저장(tenbanners_v2 · tenbanners_v1 과 그 _bak, 클라우드 saves2 · saves 문서)은 지우지도 바꾸지도 않는다 — 처음 한 번 「새 시대가 열렸다」 안내만.
 var KEY = 'tenbanners_v4', OLD = 'tenbanners_v3', OLD1 = 'tenbanners_v2', META = 'tenbanners_meta', LEGACY = 'darksaver_muta_v1';
-DS.SAVE_V = 12;      // 2.1: 다시 새로 시작 (v12 · tenbanners_v4 · saves4)
+DS.SAVE_V = 13;      // 2.2.0 「한 사람 한 사람」: v12 → v13 판 올림 (가솔·막사가 없어졌다 — MIGRATE[12]). 키·클라우드 문서(tenbanners_v4 · saves4)는 그대로
+DS.SAVE_MIN = 12;    // 이어 할 수 있는 가장 옛 판 (2.1: 다시 새로 시작한 v12)
 //      // 저장 구조 번호. 2 = 2.0.0, 3 = 2.1.0, 4 = 2.2.0, 5 = 2.3.0, 6 = 2.4.0, 7 = 2.5.0, 8 = 2.6.0, 9 = 2.7.0, 10 = 4.0.0 (부대원 + 깃발)
 function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
@@ -31,9 +32,9 @@ DS.saveNeedNewer = needNewer;
 // 저장 구조 번호. 번호가 빠졌거나 엉뚱하면 모양을 보고 짐작한다 — 지금 판의 저장을 2.0 저장으로 잘못 보면 용병과 장비를 새로 만들어 버린다.
 function verOf(s) {
   var v = +s.v, id, c;
-  if (int(v) && v >= DS.SAVE_V && oldShape(s)) return 9;      // r15 bug: 꼬리표(v)만 10 인 옛 진행은 옛 판으로 본다 — 4.0 은 합일 마스터 줄을 만들지 않고, 대장 줄에는 늘 사람 한 줄(ps)이 있다
+  if (int(v) && v >= DS.SAVE_MIN && oldShape(s)) return 9;      // r15 bug: 꼬리표(v)만 10 인 옛 진행은 옛 판으로 본다 — 4.0 은 합일 마스터 줄을 만들지 않고, 대장 줄에는 늘 사람 한 줄(ps)이 있다
   if (int(v) && v >= 2) return v;
-  var cur = s.bn === 1 ? DS.SAVE_V : 9;      // 4.0: 새 구조 표시가 없으면 3.x 모양(9)으로 본다 — 사람 옮기기는 어느 쪽이든 DS.bnFix 의 불변식이 한다
+  var cur = s.bn === 1 ? DS.SAVE_MIN : 9;      // 4.0: 새 구조 표시가 없으면 3.x 모양(9)으로 본다 — 사람 옮기기는 어느 쪽이든 DS.bnFix 의 불변식이 한다
   if (Array.isArray(s.mercs) || (s.gear && typeof s.gear === 'object')) return cur;
   for (id in s.chars) { c = s.chars[id]; if (c && (typeof c.w === 'string' || typeof c.a === 'string')) return cur; }
   return 2;
@@ -111,7 +112,57 @@ var MIGRATE = {
   9: function (s) {   // (㉑ 로 쓰이지 않는다 — read/peek 이 v9 이하를 받지 않는다. 시험·도구가 fixSave 를 직접 부를 때만 번호를 올린다)
     s.news = (s.news || []).concat(['4.0.0: 지휘관이던 이들은 부대원이 되었습니다. 레벨과 장비는 가문에 남았습니다. 가주의 공훈만큼 가문이 세집니다.']);
     s.v = 10;
+  },
+  12: function (s) {   // 2.1.x → 2.2.0 「한 사람 한 사람」: 가솔·막사가 없어졌다
+    DS.mig13(s);
+    s.v = 13;
   }
+};
+// 2.2.0 판 올림: 가주는 그대로 · 맹주 집 사람(핏줄 아이·배우자·물러난 선대)은 맹주 가문의 가문원 · 가솔은 그 가문의 대기조(등급 → 레벨 순으로 둘, 아홉 집 사람과 합일한 이 먼저)
+//   · 남는 가솔과 막사의 사람은 떠나며 골드를 남긴다 (사람마다 기본 모집값 × 등급 몫 × ½) · 2.1 에서 「곧 온다」던 다음 가주는 빈 가문이면 그대로 선다 (DS.migSucc). 결과는 DS.lastMig13
+DS.MIG13 = { gk: [0, 0.5, 0.75, 1, 1.6, 2.5], k: 0.5 };
+DS.mig13 = function (s) {
+  var R = { sb: 0, kin: 0, left: 0, gold: 0, succ: 0, seat: 0 }; DS.lastMig13 = R;
+  if (!s || !s.chars) return R;
+  if (!Array.isArray(s.mercs)) s.mercs = [];
+  s.mercs = s.mercs.filter(function (m) { return m && typeof m === 'object'; });
+  var hid = +s.hero, P = (s.lin && s.lin.P) || {}, hc = s.chars[hid], hp = hc && hc.pid ? P[hc.pid] : null;
+  var line = function (m) { var p = m.pid && P[m.pid]; if (!p || p.m !== m.id) return false; return !!((p.hb && !p.ad) || p.hand || (hp && hp.sp && hp.sp === p.id)); };
+  var valid = function (o) { return !!(o && own(s.chars, o)); };
+  s.mercs.forEach(function (m) { if (m.h && (!valid(+m.o) || +m.o === hid)) delete m.h; });
+  var seen = {}; s.mercs.forEach(function (m) { if (!m.h) return; if (seen[m.o]) delete m.h; else seen[m.o] = 1; });
+  try { R.succ = DS.migSucc ? DS.migSucc(s) : 0; } catch (e) { R.succ = 0; }
+  var by = {}, leave = [];
+  s.mercs.forEach(function (m) {
+    delete m.sb;
+    if (m.h) return;
+    if (line(m)) { m.kn = 1; m.o = hid; R.kin++; return; }
+    var home = m.cast && DS.castFlag ? DS.castFlag(s, m.cast) : null, o = home ? home.id : +m.o;
+    if (valid(o)) { m.o = o; (by[o] = by[o] || []).push(m); } else leave.push(m);
+  });
+  Object.keys(by).forEach(function (o) {
+    by[o].sort(function (a, b) { return (b.cast ? 1 : 0) - (a.cast ? 1 : 0) || (b.fz ? 1 : 0) - (a.fz ? 1 : 0) || (+b.g || 1) - (+a.g || 1) || (+b.L || 1) - (+a.L || 1) || a.id - b.id; });
+    by[o].forEach(function (m, i) { if (i < (DS.SB_MAX || 2)) { m.sb = 1; R.sb++; } else leave.push(m); });
+  });
+  var M = DS.MIG13, gone = {};
+  leave.forEach(function (m) {
+    var g = Math.max(1, Math.min(5, Math.round(+m.g || 1))), t = DS.tierOfL(Math.max(1, Math.min(100, Math.round(+m.L || 1))));
+    R.gold += Math.round(DS.mercCost(t) * M.gk[g] * M.k / 10) * 10; R.left++;
+    if (m.it && s.items && typeof s.items === 'object') s.items[m.it] = (s.items[m.it] || 0) + 1;
+    gone[m.id] = 1;
+  });
+  s.mercs = s.mercs.filter(function (m) { return !gone[m.id]; });
+  s.gold = Math.max(0, Math.round(+s.gold || 0)) + R.gold;
+  if (s.opt && typeof s.opt === 'object') delete s.opt.refill;
+  for (var id in s.chars) if (s.chars[id] && typeof s.chars[id] === 'object') { delete s.chars[id].gm; delete s.chars[id].manual0; }
+  try { if (DS.sbTick) R.seat = DS.sbTick(s).length; } catch (e) { R.seat = 0; }
+  var news = '2.2.0 「한 사람 한 사람」: 가솔과 막사가 없어졌다. 가주가 선 가문은 모두 싸운다.';
+  if (R.sb) news += ' 가솔 ' + R.sb + '명은 그 가문의 대기조가 되었다.';
+  if (R.kin) news += ' 맹주 집 사람 ' + R.kin + '명은 가문원으로 함께 싸운다.';
+  if (R.left) news += ' ' + R.left + '명은 떠나며 ' + R.gold.toLocaleString() + ' 골드를 남겼다.';
+  if (R.succ) news += ' 오기로 한 가주 ' + R.succ + '명이 자리에 섰다.';
+  s.news = (Array.isArray(s.news) ? s.news : []).concat([news, '영웅 모집은 이제 비싸고 병과는 무작위다. 빈 가문은 모집이나 맹주의 아이로 채운다.']);
+  return R;
 };
 // 되감기의 저주: 성장이 너무 빨랐던 판에서 앞서 나간 부대를 2단으로 되돌린다. 대신 전설 용병 하나.
 DS.CURSE_L = 20;       // 2단 10레벨
@@ -189,7 +240,7 @@ DS.fixSave = function (s) {
   // 가방의 장비, 용병 명부
   if (!s.gear || typeof s.gear !== 'object' || Array.isArray(s.gear)) s.gear = {};
   for (k in s.gear) { var gn = Math.round(+s.gear[k] || 0), gk = DS.gearRepair ? DS.gearRepair(k) : (DS.gear(k) ? k : null); delete s.gear[k]; if (gk && gn > 0) s.gear[gk] = (s.gear[gk] || 0) + gn; }      // 모르는 옵션은 벗겨서 기본형으로 살린다
-  var cnt = {}, mid = 0;
+  var mid = 0;
   s.mercs = (Array.isArray(s.mercs) ? s.mercs : []).filter(function (m) {
     if (!m || typeof m !== 'object' || !own(DS.MERCS, m.type)) return false;
     m.g = Math.max(1, Math.min(5, Math.round(+m.g || 1))); m.id = Math.round(+m.id || 0); m.o = own(s.chars, m.o) ? +m.o : 0; m.hp = m.hp == null ? 1 : Math.max(0.01, Math.min(1, +m.hp || 1));
@@ -206,14 +257,17 @@ DS.fixSave = function (s) {
     if (m.bk != null) m.bk = Math.max(0, Math.round(+m.bk || 0)); if (m.sv != null) m.sv = Math.max(0, Math.round(+m.sv || 0));
     if (m.h != null) { if (m.h && m.o) m.h = 1; else delete m.h; }      // 4.0: 깃발을 든다 (인구를 차지하지 않는다)
     if (m.cast != null && !(DS.CAST_NAME && own(DS.CAST_NAME, m.cast))) delete m.cast;
-    if (m.o && !m.h) { var mp = DS.mercPop(m); if ((cnt[m.o] || 0) + mp > DS.MERC_SLOTS) m.o = 0; else cnt[m.o] = (cnt[m.o] || 0) + mp; }      // 들어가는 용병만 센다 (mercsOf 와 같은 셈 — 큰 용병이 밀려나도 뒤의 보통 용병은 남는다)
+    if (m.sb != null) { if (m.sb && m.o && !m.h) m.sb = 1; else delete m.sb; }      // 2.2.0: 대기조
+    if (m.kn != null) { if (m.kn) m.kn = 1; else delete m.kn; }      // 2.2.0: 맹주 집 사람 (가문원)
+    if (m.nc != null && !(own(DS.CLASSES, m.nc) && !DS.CLASSES[m.nc].master)) delete m.nc;      // 2.2.0: 받은 가문 병과
+    delete m.gm;
     mid = Math.max(mid, m.id);
     return m.id > 0;
   });
   // 깨진 저장의 거대한 배열만 막는다 (300). 4.0 (②-2-4): 가계·깃발에 걸린 줄(든 사람 h · 열쇠 cast · 가계도 pid · 잠금 lk · 깃발 밑 o)은 앞으로 모으고, 자를 때는 막사 일반 줄만 자른다
   if (DS.bnCap) DS.bnCap(s, 300); else s.mercs = s.mercs.slice(0, 300);
   if (s.lock != null && (typeof s.lock !== 'object' || Array.isArray(s.lock))) s.lock = {};      // 장비 잠금: 배열이면 JSON 에 남지 않아 잠금이 사라진다
-  if (DS.mercTidy) DS.mercTidy(s);      // 주인이 없거나 자리(인구 2) 밖으로 밀린 "숨은" 용병을 막사로 (plan 2.8.0 — 합일 때 큰 용병이 끼면 생기던 것)
+  if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 (가주 하나 · 가문원은 맹주 가문 · 그 밖은 대기조)
   if (!Array.isArray(s.fallen)) s.fallen = [];
   s.fallen = DS.fallenTrim(s.fallen.filter(function (f) { return f && typeof f === 'object'; }));
   s.fallen.forEach(function (f) { f.g = Math.max(1, Math.min(5, Math.round(+f.g || 1))); if (typeof f.n !== 'string') f.n = ''; if (f.nk != null && typeof f.nk !== 'string') delete f.nk; if (f.lw != null) { if (typeof f.lw !== 'string') delete f.lw; else f.lw = Array.from(f.lw).slice(0, 24).join(''); } });      // r32: 마지막 한마디 (24자)      // 막사의 추모 목록이 GRADES[f.g] 를 읽는다
@@ -223,8 +277,8 @@ DS.fixSave = function (s) {
   s.nid = Math.max(+s.nid || 1, maxId + 1);
   if (!own(s.chars, s.hero)) s.hero = +Object.keys(s.chars)[0];
   s.hero = +s.hero;
-  s.party = (Array.isArray(s.party) ? s.party : []).map(function (p) { return +p; }).filter(function (p, i, a) { return own(s.chars, p) && a.indexOf(p) === i; }).slice(0, DS.PARTY_MAX);
-  if (!s.party.length) s.party = [s.hero];
+  s.party = (Array.isArray(s.party) ? s.party : []).map(function (p) { return +p; }).filter(function (p, i, a) { return own(s.chars, p) && a.indexOf(p) === i; });
+  if (!s.party.length) s.party = [s.hero];      // 2.2.0: 끝의 DS.pSync → DS.partySync 가 가주가 선 가문 모두로 맞춘다
   for (k in s.cleared) if (!(+k >= 1 && +k <= DS.SCENARIOS.length)) delete s.cleared[k];
   if (!own(DS.ZONES, s.town) || !DS.ZONES[s.town].town) s.town = 'haemil';
   if (!own(DS.ZONES, s.zone)) { s.zone = s.town; s.pos = null; }
@@ -257,13 +311,13 @@ DS.Save = {
   archived: function () { return !!this.oldRaw(); },      // r42: 이 기기에 보관된 옛 기록이 있는가
   archNote: function () { var m = this.meta(); if (m.arch4 || !this.archived()) return false; return true; },      // 2.1.0: 새 판 — 2.0.0 의 안내를 본 이도 한 번 더 (arch4)      // 처음 한 번 「새 시대가 열렸다」
   archSeen: function () { this.setMeta({ arch3: 1, arch4: 1 }); },
-  isOld: function (raw) { var s = typeof raw === 'string' ? parse(raw) : raw; return !!(s && typeof s === 'object' && s.chars && !newerOf(s) && verOf(s) < DS.SAVE_V); },
+  isOld: function (raw) { var s = typeof raw === 'string' ? parse(raw) : raw; return !!(s && typeof s === 'object' && s.chars && !newerOf(s) && verOf(s) < DS.SAVE_MIN); },
   // 저장 글을 읽어 지금 구조로 만든다. 살릴 수 없으면 null (넘어질 수도 있다 — load 가 받는다).
   read: function (raw) {
     var s = parse(raw);
     if (!s || typeof s !== 'object' || !s.chars || typeof s.chars !== 'object') return null;
     if (newerOf(s)) return null;      // 더 새 판의 저장은 읽지 않는다 (판 내림은 없다)
-    if (verOf(s) < DS.SAVE_V) return null;      // ㉑ 옛 판(v9 이하)의 저장은 이어 하지 않는다 — 사람만 데려온다 (DS.oldPeople)
+    if (verOf(s) < DS.SAVE_MIN) return null;      // ㉑ 옛 판(v11 이하)의 저장은 이어 하지 않는다 — v12 는 판 올림
     s.v = verOf(s);
     var from = s.v, moved = false;
     if (from < DS.SAVE_V) {
@@ -285,7 +339,7 @@ DS.Save = {
       var s = parse(raw);
       if (!s || typeof s !== 'object' || !s.chars || typeof s.chars !== 'object') return null;
       if (newerOf(s)) return null;      // 더 새 판 — 부르는 쪽은 DS.Save.newer(raw) 로 먼저 가려 안내한다
-      if (verOf(s) < DS.SAVE_V) return null;      // ㉑ 옛 판 저장 — 부르는 쪽은 DS.Save.isOld(raw) 로 가려 「새 시대를 연다」로
+      if (verOf(s) < DS.SAVE_MIN) return null;      // ㉑ 옛 판 저장 — 부르는 쪽은 DS.Save.isOld(raw) 로 가려 「새 시대를 연다」로
       s.v = verOf(s);
       var from = s.v;
       if (from < DS.SAVE_V) { scrub(s); while (s.v < DS.SAVE_V) { var m = MIGRATE[s.v]; if (!m) break; m(s); } }
@@ -323,8 +377,8 @@ DS.returneePerk = function (r) {
   var c = r ? r.cleared || 0 : 0;
   var p = { rank: c >= 32 ? '끝을 본 회귀자' : c >= 16 ? '노련한 회귀자' : c >= 5 ? '돌아온 회귀자' : '회귀자',
             exp: c >= 32 ? 0.2 : c >= 16 ? 0.15 : 0.1, gold: 500 + 100 * c, items: { herb: 5 + (c >= 8 ? 3 : 0), mana: 3, endo: 2 }, cleared: c };
-  p.tickets = c >= 32 ? 10 : c >= 16 ? 6 : 4;
-  p.lines = ['칭호 「' + p.rank + '」', '시작 골드 +' + p.gold, '약초 ' + p.items.herb + ', 마나초 3, 기운초 2', '고급 용병 둘이 처음부터 함께합니다', '용병 모집권 ' + p.tickets + '장', '경험치 +' + Math.round(p.exp * 100) + '% (계속 유지)'];
+  p.tickets = c >= 32 ? 4 : c >= 16 ? 3 : 2;      // 2.2.0: 영웅 모집권 (값이 비싸져 장 수를 줄였다)
+  p.lines = ['칭호 「' + p.rank + '」', '시작 골드 +' + p.gold, '약초 ' + p.items.herb + ', 마나초 3, 기운초 2', '영웅 모집권 ' + p.tickets + '장', '경험치 +' + Math.round(p.exp * 100) + '% (계속 유지)'];
   return p;
 };
 // 저장에 특전을 적용한다. late = 이미 진행 중인 저장에 뒤늦게 드리는 경우
@@ -334,8 +388,7 @@ DS.grantReturnee = function (s, r, late) {
   s.gold = (s.gold || 0) + p.gold;
   for (k in p.items) s.items[k] = (s.items[k] || 0) + p.items[k];
   s.tickets = (s.tickets || 0) + p.tickets;
-  if (h && !late) { var ty = DS.baseMercTypes(h.cls); for (var i = 0; i < DS.MERC_SLOTS; i++) DS.addMerc(s, ty[i % ty.length], 2, h.id); }
-  if (late) s.news = (s.news || []).concat(['회귀자 특전 — 1.0 판을 해 주셔서 고맙습니다. 골드 ' + p.gold + ', 소모품, 모집권 ' + p.tickets + '장, 경험치 +' + Math.round(p.exp * 100) + '%를 드렸습니다.']);
+  if (late) s.news = (s.news || []).concat(['회귀자 특전 — 1.0 판을 해 주셔서 고맙습니다. 골드 ' + p.gold + ', 소모품, 영웅 모집권 ' + p.tickets + '장, 경험치 +' + Math.round(p.exp * 100) + '%를 드렸습니다.']);
   return p;
 };
 })();

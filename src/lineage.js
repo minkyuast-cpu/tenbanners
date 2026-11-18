@@ -262,7 +262,7 @@ DS.linWed = function (s, a, b, opt) {
   if (A.k !== 'c') { var t = A; A = B; B = t; }      // 집의 주인은 지휘관 (지휘관끼리면 a)
   A.p.sp = B.p.id; B.p.sp = A.p.id;
   L0(s).bd[bkey(A.p.id, B.p.id)] = { b: 0, h: A.p.id, w: Math.round((s.cal && s.cal.t) || 0), y: 0 };      // ⑲ w = 혼인한 때(달력), y = 굴린 해
-  if (B.k === 'm' && B.ent) B.ent.lk = 1;      // 4.0: 대장의 배우자는 잠겨 온다 (자동 채움이 뽑지 않는다)
+  if (B.k === 'm' && B.ent) { B.ent.lk = 1; if (B.ent.sb) { delete B.ent.sb; B.ent.o = s.hero; B.ent.kn = 1; if (DS.mercTidy) DS.mercTidy(s); } else if (!B.ent.h) B.ent.kn = 1; }      // 4.0: 대장의 배우자는 잠겨 온다 · 2.2.0: 대기조였으면 맹주 가문의 가문원이 되어 함께 싸운다 (가주는 제 가문에 남는다)
   return logE(s, 'wed', A.p.id, B.p.id);
 };
 function part(s, p, why) {
@@ -287,7 +287,6 @@ function griefFam(s, p, evs) {      // p 가 죽었다: 배우자·부모·자�
 
 // ── 출산 ──
 DS.linBirthBlock = function (s, hpid) {
-  if (DS.reserve(s).length >= DS.MERC_MAX) return '막사가 차서 아이를 맞지 못한다';
   var hp = L0(s).P[hpid]; if (hp && kidsOf(s, hp, true).filter(function (q) { return !q.ad; }).length >= DS.LIN_KIDS) return '이 집에는 이미 아이가 셋입니다';
   return '';
 };
@@ -313,15 +312,15 @@ function birth(s, hp, sp, rnd) {
   var pot = DS.potOf(s, sp, r(), DS.potHi(s)), g = pot;      // ⑰-2: 아이의 잠재력(별 1~5) = 배우자 등급 + 운 — 아이 등급 = 잠재력
   var ps = ch.ps && DS.MERCS[ch.ps.type] && !DS.MERCS[ch.ps.type].pop ? ch.ps.type : DS.baseMercTypes(ch.cls)[0], alt = sp.k === 'm' ? (DS.MERCS[se.type].pop ? null : se.type) : DS.baseMercTypes(se.cls)[0];
   var type = alt && r() < 0.5 ? alt : ps;      // 4.0: 종류 = 배우자의 종류 또는 대장의 사람 종류
-  if (DS.ageYoung) {      // 나이(age.js): 갓난아기로 가계도에만 태어나, 15살 성년에 막사로 (DS.ageCheck)
+  if (DS.ageYoung) {      // 나이(age.js): 갓난아기로 가계도에만 태어나, 15살 성년에 맹주 가문의 가문원으로 (DS.ageCheck)
     var y = DS.ageYoung(s, hp, sp, type, g, r), ttl = heroName(s, hp.gen + 1);
     var yp = mkP(s, { k: 'm', sn: houseSn(s, ch), n: y.ya.n, sx: y.ya.sx, gen: hp.gen + 1, pa: [hp.id, sp.id], ttl: ttl, type: type, g: g, m: 0, gv: 1, hb: 1 });
     yp.pot = pot; yp.st = 'young'; yp.ya = y.ya; yp.by = y.by; yp.ls = y.ls; yp.nf = 1;      // 4.0.6: 이름은 처음 한 번 무료로 정한다
     if (DS.tmBirth) DS.tmBirth(s, yp, hp, sp);      // r41 temper: 부모의 기질을 닮는다 (성년에 DS.tmSync 가 부대원에게 옮긴다)
     return { t: 'birth', a: yp.id, young: 1, pa: [hp.id, sp.id], ev: logE(s, 'birth', yp.id, 0, { pa: [hp.id, sp.id], young: 1 }) };
   }
-  var m = DS.addMerc(s, type, g, 0);
-  m.sx = r() < 0.5 ? 'm' : 'f'; m.sn = houseSn(s, ch); m.ttl = heroName(s, hp.gen + 1); m.lk = 1;
+  var m = DS.addMerc(s, type, g, s.hero);
+  m.kn = 1; m.sx = r() < 0.5 ? 'm' : 'f'; m.sn = houseSn(s, ch); m.ttl = heroName(s, hp.gen + 1); m.lk = 1;
   var p = mkP(s, { k: 'm', sn: m.sn, n: m.n, sx: m.sx, gen: hp.gen + 1, pa: [hp.id, sp.id], ttl: m.ttl, type: type, g: g, m: m.id, gv: 1, hb: 1 });
   m.pid = p.id; m.pot = p.pot = pot; m.nf = 1;
   if (DS.tmBirth) m.tm = DS.tmBirth(s, p, hp, sp).slice();      // r41 temper
@@ -445,8 +444,8 @@ DS.houseDefault = function (s, p, bf) { return (p && (p.osn || p.sn) ? DS.houseO
 DS.NAME_BAN = ['운영', '관리자', 'GM', 'gm', 'admin', '개발자', '시발', '씨발', '병신', '좆', '존나', '새끼', 'fuck', 'shit'];
 DS.nameOK = function (t) { t = String(t || '').trim(); var bare = t.replace(/ /g, ''); if (bare.length < 1 || bare.length > 8 || !/^[가-힣A-Za-z ]+$/.test(t)) return false; var low = t.toLowerCase(); return !DS.NAME_BAN.some(function (w) { return low.indexOf(w.toLowerCase()) >= 0; }); };
 DS.linHouseOK = function (t) { return DS.nameOK(t); };
-// 돌려주는 줄: { kind:'kid'|'adopt'|'pull', blood, kin(0 핏줄 · 2 막사 · 3 따르는 이 · 4 깃발 든 이 · 5 모집), mid, pid, name, full, sx, g, type, x, o, h(든 깃발 번호), L, loss:0, why, move, house }
-DS.LIN_WHY = { kid: '핏줄. 선대와의 레벨 차이 일부를 잇는다', adopt: '양자. 선대와의 레벨 차이 일부를 잇는다', pull: '부대에 이을 사람이 없다. 해밀 용병소가 한 사람을 보낸다.', move: '다른 가문의 가주. 맹주만 바뀌고 가문은 그대로다' };
+// 돌려주는 줄: { kind:'kid'|'adopt'|'pull', blood, kin(0 핏줄 · 2 가문 밖 · 3 대기조·가문원 · 4 다른 가문의 가주 · 5 모집), mid, pid, name, full, sx, g, type, x, o, h(든 깃발 번호), L, loss:0, why, move, house }
+DS.LIN_WHY = { kid: '핏줄. 선대와의 레벨 차이 일부를 잇는다', adopt: '양자. 선대와의 레벨 차이 일부를 잇는다', pull: '이을 사람이 없다. 영웅관이 한 사람을 보낸다.', move: '다른 가문의 가주. 맹주만 바뀌고 가문은 그대로다' };
 // 2.1.0 대물림: 선대와의 레벨 차이 가운데 잇는 몫 — 그 가문의 공훈 계급이 높을수록 크다 (계급 0 → 맨 위). 대가 내려가며 약해져도 된다 (따라잡기 보정 없음)
 //   house: 맹주 밖 가문의 자동 후계 · kid: 맹주의 핏줄 · adopt: 맹주의 양자, 맹주로 세운 다른 가문의 가주 (그 사람 가문의 계급으로)
 DS.HEIR = { house: [0.35, 0.55], kid: [0.5, 0.7], adopt: [0.25, 0.4] };
@@ -488,7 +487,7 @@ DS.linHeirs = function (s, chId) {
     var age = DS.ageOf ? DS.ageOf(s, q) : null;
     list.push({ kind: 'kid', young: true, blood: true, kin: 9, inY: age == null ? null : Math.max(1, ((DS.AGE && DS.AGE.adult) || 15) - age), pid: q.id, name: DS.linName(s, q.id), sx: q.sx, L: L, loss: 0 });
   });
-  if (!list.filter(function (h) { return !h.young; }).length) list.push({ kind: 'pull', blood: false, kin: 5, mid: null, pid: 0, name: '해밀 용병소가 보낼 사람', L: L, loss: 0, why: DS.LIN_WHY.pull });
+  if (!list.filter(function (h) { return !h.young; }).length) list.push({ kind: 'pull', blood: false, kin: 5, mid: null, pid: 0, name: '영웅관이 보낼 사람', L: L, loss: 0, why: DS.LIN_WHY.pull });
   return list.concat(cast.sort(by));      // r22: 아홉은 맨 뒤 (자동 후계는 고르지 않는다 — kin 6, 값없는 모집 다음)
 };
 // r22 아홉의 후계 줄: 성은 그대로, 그 집(병과 key)이 맹주 가문이 된다 = ⑬ move 길을 그대로 쓴다 (row.move · row.house · row.hf = 그 집 깃발)
@@ -502,7 +501,7 @@ function castRow(s, m, p, ch, L) {
   if (m.pot) row.pot = m.pot;
   return row;
 }
-// 자동(봇·화면 없음·저장 읽기): 핏줄(공훈 순) → 막사 부대원(공훈 순, 아홉 제외) → 따르는 이 → 깃발 든 이 → 모집 한 번
+// 자동(봇·화면 없음·저장 읽기): 핏줄(레벨 순) → 대기조(레벨 순, 아홉 제외) → 다른 가문의 가주 → 영웅관이 보낸 한 사람
 DS.linAutoPick = function (s, chId, opt) { var skip = opt && opt.skip; return DS.linHeirs(s, chId).filter(function (h) { return !h.young && !h.cast && !(skip && skip(h)); }).sort(function (a, b) { return a.kin - b.kin; })[0] || null; };
 // opt.ho: 가문이 옮겨 갈 때의 호 — { k: 'new' (기본 — 「{이름} 1세」) | 'cont' (대수를 이어 「{이름} N세」) | 'free', t: 직접 입력 (한글 1~6자 + 선택적 「N세」) }
 DS.linHoOK = function (t) { var m = /^(.+?)( ?[0-9]{1,3}세)?$/.exec(String(t || '').trim()); return !!m && DS.nameOK(m[1]); };
@@ -514,7 +513,7 @@ DS.linSucceed = function (s, chId, pick, opt) {
   if (!pick) pick = DS.linAutoPick(s, chId, opt);
   var m = null, fresh = false;
   if (!pick || pick.kind === 'pull' || pick.mid == null) {      // 이을 사람이 없다: 모집 한 번이 값없이 돈다
-    var pity = s.pity; m = DS.pullMerc(s, opt.rnd || Math.random, opt.minG || 0); s.pity = pity; fresh = true;
+    m = DS.rollPerson(s, opt.rnd || Math.random, opt.minG || 0); fresh = true;      // 2.2.0: 천장(pity)은 건드리지 않는다
     evs.push({ t: 'pull', mid: m.id, text: DS.LIN_WHY.pull });
   } else m = merc(s, +pick.mid);
   if (!m) return null;
@@ -551,11 +550,10 @@ DS.linSucceed = function (s, chId, pick, opt) {
     if (ck) { p.cast = ck; if (!Lr.ca || typeof Lr.ca !== 'object') Lr.ca = {}; Lr.ca[ck] = scnN(s) + 1; }      // r22: 이 집 사람이 맹주가 된 때 (이야기 열쇠는 대장에게 — story.js DS.castHero)
     seat = bf;
   }
-  var mWasFollow = move && m.o === bf.id && !m.h;
   DS.loseMerc(s, m.id); p.m = 0;
   if (move) {
     var cb = DS.bearer ? DS.bearer(s, bf, 1) : null;
-    if (cb && cb !== m) { delete cb.h; cb.o = mWasFollow ? bf.id : 0; }      // 그 가문의 가주였던 이는 비워진 가솔 자리로 (못 서면 막사)
+    if (cb && cb !== m) { delete cb.h; cb.o = bf.id; cb.sb = 1; }      // 2.2.0: 그 가문의 가주였던 이는 그 가문의 대기조로
     seatMove(s, ch, bf);
   }
   delete seat.vac; delete seat.cu;
@@ -572,7 +570,7 @@ DS.linSucceed = function (s, chId, pick, opt) {
   var e = logE(s, 'heir', p.id, dp ? dp.id : 0, { kind: kind, L: ps.L, from: DS.pL(m), cls: seat.cls });
   evs.push({ t: 'heir', a: p.id, b: dp ? dp.id : 0, ch: seat.id, kind: kind, L: ps.L, from: DS.pL(m), pre: dps.L != null ? DS.pL(dps) : ps.L, move: move, ev: e });
   if (DS.ghTouch) DS.ghTouch(s);      // 장비 내력: 대장 깃발을 새 손이 든다
-  if (move && DS.succNeed && !(DS.bearer && DS.bearer(s, ch))) { var sw = DS.succNeed(s, ch, dps, dp, '맹주'); if (sw) evs.push(sw); }      // 2.1.0: 옛 맹주의 가문은 자동 후계를 맞는다 (싸움 밖이면 곧바로 — DS.succTick)
+      // 2.2.0: 옛 맹주의 가문은 대기조가 있으면 그이가 잇고(DS.sbTick), 없으면 빈 가문으로 남는다
   if (DS.mercTidy) DS.mercTidy(s);
   if (DS.pSync) DS.pSync(s);
   return evs;
@@ -584,8 +582,7 @@ function seatMove(s, from, to) {
   SEATK.forEach(function (k) { if (from[k] !== undefined) to[k] = from[k]; else delete to[k]; delete from[k]; });
   delete from.Ls; delete to.Ls;
   s.hero = to.id;
-  var pi = s.party.indexOf(from.id), ti = s.party.indexOf(to.id);
-  if (ti < 0) { if (pi >= 0) s.party[pi] = to.id; else if (s.party.length < DS.PARTY_MAX) s.party.push(to.id); else s.party[s.party.length - 1] = to.id; }
+  if (s.party.indexOf(to.id) < 0) s.party.push(to.id);      // 2.2.0: 출전 목록은 DS.partySync 가 다시 맞춘다
   if (to.manual) delete to.manual;
 }
 DS.linSeatMove = seatMove;
@@ -762,14 +759,14 @@ DS.heroCall = function (s) {
   var own = p && p.gv && p.n ? p.n : '';
   return own && own !== call && call.indexOf(own) < 0 ? own + ' (' + call + ')' : call;
 };
-// 깃대 넘김 (설계서 규칙 18·19): 노년 가주가 다 자란 기수 가문 아이에게 넘긴다. 선대는 영웅 등급 부대원으로 곁에 남고, 아이가 자리(레벨·장비 그대로)를 잇는다
+// 깃대 넘김 (설계서 규칙 18·19): 노년 가주가 다 자란 기수 가문 아이에게 넘긴다. 선대는 영웅 등급 가문원으로 곁에 남아 함께 싸우고, 아이가 자리(레벨·장비 그대로)를 잇는다
 DS.linHandOver = function (s, mid) {
   var Lr = L0(s), P = Lr.P, ch = s.chars[s.hero]; if (!ch || ch.vac || ch.down) return null;
   var km = merc(s, +mid), kp = km && km.pid && P[km.pid]; if (!kp || kp.m !== km.id) return null;
   var A = charP(s, ch), ttl = DS.heroCall(s), call = DS.charName(ch, s), ps = ch.ps || {}, by = ch.by, ls = ch.ls, keys = Object.keys(DS.TRAITS);
   var type = DS.MERCS[ps.type] && !DS.MERCS[ps.type].pop ? ps.type : (DS.RET_KIND[ch.cls] || DS.baseMercTypes(ch.cls)[0]);
   // 4.0: 선대는 제 사람 기록(ps — 종류·특성·공훈) 그대로 영웅 등급 부대원으로 곁에 남는다 (난수를 쓰지 않는다)
-  var m = { id: s.mnid++, type: type, g: Math.max(4, +ps.g || 1), o: 0, hp: ch.hp == null ? 1 : ch.hp, n: A.n, v: +ps.v || 0, t: own(DS.TRAITS, ps.t) ? ps.t : keys[Math.floor(hsh(A.id, 61, 3) * keys.length) % keys.length],
+  var m = { id: s.mnid++, type: type, g: Math.max(4, +ps.g || 1), o: s.hero, kn: 1, hp: ch.hp == null ? 1 : ch.hp, n: A.n, v: +ps.v || 0, t: own(DS.TRAITS, ps.t) ? ps.t : keys[Math.floor(hsh(A.id, 61, 3) * keys.length) % keys.length],
     L: DS.pL(ps), exp: +ps.exp || 0, k: +ps.k || 0, b: +ps.b || 0, sn: A.sn, sx: A.sx, ttl: call, pk: ps.pk || 100000 + A.id };
   if (ps.fz) m.fz = 1; if (ps.tm) m.tm = ps.tm.slice(); if (ps.pgn) m.pgn = ps.pgn;
   ['q', 'bk', 'sv', 's', 'nk'].forEach(function (k) { if (ps[k] != null) m[k] = ps[k]; });
@@ -828,7 +825,7 @@ DS.egOldSkill = function (cls, tier, seed) {
   return L.length ? L[Math.floor(hsh(seed, 79, 11) * L.length) % L.length] : null;
 };
 
-// ── 봇·자동: 짝 없는 출전 지휘관에게 성별이 다른 가장 귀한 용병을 짝지어 준다 ──
+// ── 봇·자동: 짝 없는 맹주에게 성별이 다른 가장 귀한 사람(대기조 · 다른 가문의 가주)을 짝지어 준다 ──
 DS.linAutoWed = function (s) {
   var n = 0;
   [s.hero].forEach(function (id) {      // 4.0: 혼인은 대장만

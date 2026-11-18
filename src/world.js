@@ -484,7 +484,7 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
     var boss = put(null, 6, 2, 'boss', { boss: s.boss, L: s.L + 1 }); boss.obj = true;
     for (var q = 0; q < guard; q++) put(s.mobs[q % s.mobs.length], 6 + (q % 2 ? 1 : -1) * (1 + Math.floor(q / 2)), 3 + (q % 3 === 2 ? 1 : 0), 'boss', { L: s.L });
   }
-  var start = [[6, 17], [4, 17], [8, 17], [6, 18], [5, 18], [7, 18], [4, 18], [8, 18], [5, 19], [7, 19], [6, 19], [3, 18], [9, 18]];
+  var start = [[6, 17], [4, 17], [8, 17], [6, 18], [5, 18], [7, 18], [4, 18], [8, 18], [5, 19], [7, 19], [6, 19], [3, 18], [9, 18], [5, 17], [7, 17], [3, 17], [9, 17], [4, 19], [8, 19], [3, 19], [9, 19], [6, 16], [5, 16], [7, 16]];      // 2.2.0: 모두 싸운다 — 열 가문 + 가문원까지 (출발 칸 y16~19 · x3~9 는 늘 비워 둔다)
   return { map: rowsOf(g), theme: s.theme, units: units, start: start, objective: objective, waves: waves, mk: mk, seed: s.id * 13 + 1 };
 };
 // 보상 적용. 돌려주는 값: 화면에 보여 줄 목록
@@ -530,12 +530,12 @@ DS.applyClear = function (save, s) {
   save.cleared[s.id] = (save.cleared[s.id] || 0) + 1;
   if (!first) return out;
   var r = s.reward;
-  out.tickets = s.id % (DS.TICKET_EVERY || 5) === 0 ? 1 : 0; save.tickets = (save.tickets || 0) + out.tickets;      // 용병 모집권은 다섯 번째 시나리오마다 한 장 (r35: 예전 세 번째마다)
+  out.tickets = s.id % (DS.TICKET_EVERY || 10) === 0 ? 1 : 0; save.tickets = (save.tickets || 0) + out.tickets;      // 2.2.0: 영웅 모집권은 열 번째 시나리오마다 한 장 (r35: 다섯 번째마다)
   var j = DS.joinOf(save, s);
   if (j && !DS.hasClass(save, j) && !DS.hasClass(save, DS.FAMILY[DS.CLASSES[j].fam].master)) {
     var ch = DS.addChar(save, j, Math.max(1, s.L - 3), '');
-    if (DS.castJoin) out.bearer = DS.castJoin(save, j, ch);      // 4.0: 합류 = 깃발 하나 + 그 깃발을 든 본인 + 따르던 부대원 하나
-    DS.addMerc(save, DS.baseMercTypes(j)[0], 2, ch.id);      // 따르던 용병 하나와 함께 온다
+    if (DS.castJoin) out.bearer = DS.castJoin(save, j, ch);      // 4.0: 합류 = 가문 하나 + 그 가문을 든 본인 (2.2.0: 따르던 부대원은 없다)
+    if (DS.mercTidy) DS.mercTidy(save);
     out.joins.push(ch);
   } else if (j) { out.gold += 400; save.gold += 400; }
   if (r.items) for (var k in r.items) { save.items[k] = (save.items[k] || 0) + r.items[k]; out.items[k] = r.items[k]; }

@@ -19,7 +19,7 @@ DS.hash2 = function (x, y, s) {
 };
 
 // 전체 균형 손잡이 (시뮬레이션으로 맞춘 값)
-DS.BAL = { ehp: 1.5, eatk: 0.75, edef: 1.0, exp: 1.0, gold: 1.0, bench: 0.05, bossCast: true };
+DS.BAL = { ehp: 1.5, eatk: 0.75, edef: 1.0, exp: 1.0, gold: 1.0, bench: 0.05, sbExp: 0.5, bossCast: true };      // 2.2.0: sbExp = 대기조(싸우지 않고 기다리는 영웅)가 받는 경험치 몫 · bench = 가문 밖 사람(없어야 한다)
 
 // 레벨지수 L(1~100) ↔ 단·레벨
 DS.tierOfL = function (L) { return Math.min(DS.MAX_TIER, Math.floor((L - 1) / DS.LV_PER_TIER) + 1); };
@@ -286,7 +286,8 @@ DS.pStars = function (who) { return DS.vetStars(who ? DS.pL(who) : 0); };
 DS.ultPool = function (who) {
   if (!who) return [];
   var cl = [], out = [], k;
-  if (who.cast && DS.CLASSES[who.cast]) { var C = DS.CLASSES[who.cast]; cl = C.master ? DS.FAMILY[C.fam].members.slice() : [who.cast]; }
+  var ck = who.cast || who.nc;      // 2.2.0: nc = 그 사람이 받은 가문 병과 (모집한 영웅 · 가문을 맡은 아이)
+  if (ck && DS.CLASSES[ck]) { var C = DS.CLASSES[ck]; cl = C.master ? DS.FAMILY[C.fam].members.slice() : [ck]; }
   else if (who.type && DS.MERCS[who.type]) Object.keys(DS.CLASSES).forEach(function (c) { if (!DS.CLASSES[c].master && DS.mercTypes(c).indexOf(who.type) >= 0) cl.push(c); });
   for (k in DS.ULTS) if (cl.indexOf(DS.ULTS[k].cls) >= 0) out.push(k);
   var pk = DS.mercPersona(who).key;
@@ -357,18 +358,63 @@ DS.ultCost = function (s) { var ch = s && s.chars && s.chars[s.hero]; return DS.
 DS.ultPick = function (s, id) { var p = DS.ultHeroWho(s); if (!p || !DS.ultOpen(s) || DS.ultOpts(s).indexOf(id) < 0 && id !== p.ul) return false; p.ul = id; return true; };      // r38: 화면에서는 더 부르지 않는다 (옛 시험 도구용)
 DS.ultSpec = function (u, who, hero, cmd) { var id = !(DS.BAL && DS.BAL.ult !== false) || !who || !DS.ultAwake(who) ? null : hero ? (who.ul && DS.ULTS[who.ul] ? who.ul : null) : cmd ? DS.ultOf(who) : null; u.ult = id; u.ultP = id ? DS.ultPow(who) : 1; u.ultR = id ? DS.ultRate(who) : 1; return u; };      // 2.1.0: 가주(지휘하는 사람)는 누구나 제 필살기 — 쓰는 것은 조작하는 사람만 (game.js 단추 · 엔진은 스스로 쓰지 않는다)
 DS.mercKind = function (m) { return DS.GRADES[m.g].name + ' ' + DS.MERCS[m.type].name; };
-DS.mercsOf = function (save, chId) { var pop = 0; return save.mercs.filter(function (m) { if (m.o !== chId || m.h) return false; var p = DS.mercPop(m); if (pop + p > DS.MERC_SLOTS) return false; pop += p; return true; }); };      // 4.0: 깃발을 든 사람(m.h)은 따르는 이가 아니다 (인구를 차지하지 않는다)
-// 자리 정리: 이끌 수 있는 인구를 넘겨 맡겨졌거나(예: 합일 때 큰 용병이 둘째로 붙음) 없는 지휘관에게 맡겨진 용병을 막사로 돌린다. 옮긴 수.
-//   2.7.0 까지는 넘친 용병이 명부에도 막사에도 안 보이는 채로 자리를 막아, 자동 편성이 막사의 용병을 하나씩 그 안 보이는 자리로 빨아들였다 (봇 한 판 모집 163회의 까닭).
+// ───────── 2.2.0 「한 사람 한 사람」: 사람의 자리는 셋뿐이다 ─────────
+//   가주(m.h, m.o = 가문) — 그 가문의 깃발 유닛으로 싸운다. 맹주는 대장 줄의 사람(ch.ps).
+//   대기조(m.sb, m.o = 가문, !h) — 모집한 영웅이 그 가문에서 기다린다. 싸우지 않는다 (경험치 BAL.sbExp). 가문마다 DS.SB_MAX.
+//      그 가문의 가주가 떠나면(쓰러짐·천수·맹주가 됨) 싸움 밖에서 가장 나은 대기조가 저절로 가주가 된다 (banner.js DS.sbTick).
+//   가문원(!h, !sb, m.o = 맹주 가문) — 맹주 집 사람(핏줄 아이·배우자·물러난 선대). 어른은 모두 맹주 깃발을 따라 싸운다 (인구 칸이 없다).
+//   가솔·부대원·막사는 없다. DS.mercsOf = 그 가문을 따라 싸우는 사람 = 맹주 가문의 가문원.
+DS.isSb = function (m) { return !!m && !m.h && !!m.sb && !!m.o; };
+DS.isKin = function (m) { return !!m && !m.h && !m.sb && !!m.o; };
+DS.sbOf = function (save, chId) { return (save.mercs || []).filter(function (m) { return m.o === chId && !m.h && m.sb; }); };
+DS.kinOf = function (save) { return (save.mercs || []).filter(function (m) { return m.o && !m.h && !m.sb; }); };
+DS.mercsOf = function (save, chId) { return (save.mercs || []).filter(function (m) { return m.o === chId && !m.h && !m.sb; }); };
+// 맹주 집 사람인가 (가문원이 될 수 있는 이): 핏줄 아이 · 깃대를 넘긴 선대 · 맹주의 배우자 · 이미 가문원으로 적힌 이(m.kn)
+DS.lineOf = function (save, m) {
+  if (!m) return false; if (m.kn) return true;
+  var P = save && save.lin && save.lin.P, p = m.pid && P ? P[m.pid] : null; if (!p || p.m !== m.id) return false;
+  if ((p.hb && !p.ad) || p.hand) return true;
+  var h = save.chars && save.chars[save.hero], hp = h && h.pid && P[h.pid];
+  return !!(hp && hp.sp && hp.sp === p.id);
+};
+// 대기조 자리가 남은 가문 (빈 가문 먼저 — 곧 가주로 선다). 없으면 null
+DS.sbRoom = function (save, prefer) {
+  var hid = +save.hero, list = DS.charList(save).filter(function (ch) { return DS.sbOf(save, ch.id).length < DS.SB_MAX; });
+  if (prefer && list.some(function (c) { return c.id === prefer; })) return save.chars[prefer];
+  list.sort(function (a, b) { var va = a.id !== hid && !DS.bearer(save, a, 1) ? 1 : 0, vb = b.id !== hid && !DS.bearer(save, b, 1) ? 1 : 0; return vb - va || a.id - b.id; });
+  return list[0] || null;
+};
+// 자리 정리 (불변식): 가주는 가문마다 하나(맹주 가문에는 없다) · 가문원은 맹주 가문에 · 그 밖의 사람은 대기조. 주인 없는 줄(o = 0, 옛 막사·관에서 돌아온 이)도 여기서 자리를 찾는다. 고친 수
 DS.mercTidy = function (save) {
-  var n = 0, seen = {};
-  save.mercs.forEach(function (m) { if (m.o && !save.chars[m.o]) { m.o = 0; delete m.h; n++; } else if (m.h && (!m.o || m.o === save.hero)) { delete m.h; n++; } else if (m.h) m.h = 1; });      // 4.0: 대장 깃발은 대장이 든다
-  var bear = {}; save.mercs.forEach(function (m) { if (!m.h) return; if (bear[m.o]) { delete m.h; n++; } else bear[m.o] = 1; });      // 한 깃발에 든 사람은 하나 (앞의 줄이 남는다)
-  save.mercs.forEach(function (m) { if (!m.o || m.h) return; var c = seen[m.o] || (seen[m.o] = DS.mercsOf(save, m.o)); if (c.indexOf(m) < 0) { m.o = 0; n++; } });
+  var n = 0, hid = +save.hero, bear = {};
+  save.mercs.forEach(function (m) {
+    if (m.o && !save.chars[m.o]) { m.o = 0; delete m.h; n++; }
+    if (m.h && (!m.o || m.o === hid)) { delete m.h; if (m.o === hid && !DS.lineOf(save, m)) m.sb = 1; n++; }      // 맹주 가문의 깃발은 맹주가 든다
+    if (m.h) { m.h = 1; if (bear[m.o]) { delete m.h; m.sb = 1; n++; } else { bear[m.o] = 1; delete m.sb; } }      // 한 깃발에 든 사람은 하나 (앞의 줄이 남는다 — 나머지는 그 가문의 대기조)
+  });
+  save.mercs.forEach(function (m) {
+    if (m.h) return;
+    if (m.sb && m.o) { m.sb = 1; return; }
+    if (!m.sb && m.o === hid) return;      // 가문원
+    if (DS.lineOf(save, m)) { m.o = hid; delete m.sb; n++; return; }      // 맹주 집 사람은 맹주 가문의 가문원으로
+    var to = DS.sbRoom(save, m.o || 0); m.o = to ? to.id : hid; m.sb = 1; n++;      // 그 밖의 사람은 자리가 남은 가문의 대기조로 (없으면 맹주 가문 — 자리를 넘겨도 잃지 않는다)
+  });
+  if (DS.partySync) DS.partySync(save);
   return n;
 };
-DS.popOf = function (save, chId) { return DS.mercsOf(save, chId).reduce(function (a, m) { return a + DS.mercPop(m); }, 0); };
-DS.reserve = function (save) { return save.mercs.filter(function (m) { return !m.o; }); };
+DS.popOf = function (save, chId) { return DS.mercsOf(save, chId).length; };
+DS.reserve = function (save) { return (save.mercs || []).filter(function (m) { return !m.o; }); };      // 2.2.0: 막사가 없다 — 늘 비어 있어야 한다 (DS.mercTidy 가 자리를 준다)
+// 싸우는 가문: 가주가 선 가문 모두 (맹주 가문은 맹주가 살아 서 있을 때). s.party 는 이 목록을 비춘다 (DS.partySync — 출전 고르기는 없다)
+DS.partyIds = function (save) {
+  if (!save || !save.chars) return [];
+  return DS.charList(save).filter(function (ch) { return !ch.down && !ch.vac && (ch.id === +save.hero ? !!ch.ps : !!(DS.bearer && DS.bearer(save, ch, 1))); }).map(function (ch) { return ch.id; });
+};
+DS.partySync = function (save) {
+  if (!save || !save.chars) return [];
+  var ids = DS.partyIds(save); if (!ids.length && save.chars[save.hero]) ids = [+save.hero];      // 맹주 자리가 비었을 때(후계 의식 전)도 목록은 비지 않게
+  save.party = ids; return ids;
+};
+DS.vacant = function (save, ch) { return !!ch && ch.id !== +save.hero && !(DS.bearer && DS.bearer(save, ch, 1)); };      // 빈 가문: 가주가 없다 (대기조가 있으면 곧 선다)
 // 이름: 지금 명부에 있거나 추모에 남은 이름은 피해서 고른다 (명부 60 + 추모 30 < 이름 수 이므로 늘 남는 이름이 있다)
 DS.pickMercName = function (save, rnd) {
   var used = {}, r = rnd || Math.random;
@@ -390,15 +436,6 @@ DS.rollQuirk = function (type, rnd) {
   return list.length ? list[Math.floor(r() * list.length)] : null;
 };
 DS.loseMerc = function (save, id) { for (var i = 0; i < save.mercs.length; i++) if (save.mercs[i].id === id) return save.mercs.splice(i, 1)[0]; return null; };
-DS.assignMerc = function (save, id, chId, swap) {
-  var m = save.mercs.filter(function (x) { return x.id === id; })[0]; if (!m) return false;
-  if (m.h) return false;      // 4.0: 깃발을 든 사람은 DS.hand 로만 옮긴다
-  if (chId && DS.kidWhy && DS.kidWhy(save, m, chId, false)) return false;      // 1.0.1: 아이는 부모 가문 가솔만
-  if (chId && m.o !== chId && DS.popOf(save, chId) + DS.mercPop(m) > DS.MERC_SLOTS) return false;
-  if (!chId && m.o && !swap && DS.reserve(save).length >= DS.MERC_MAX) return false;      // 막사(DS.MERC_MAX) 를 넘기지 않는다 (맞바꿈은 수가 그대로라 허용)
-  m.o = chId || 0;
-  return true;
-};
 // 그 지휘관 아래에서의 실전 전력 (정렬·자동 편성·화면 비교용 숫자). 실제 능력치(mercSpec)로 셈하므로 병과 일치·통솔·등급·공훈·특성·버릇이 모두 담긴다.
 //   버티는 타수 × 주는 피해의 기하평균. 인구 2짜리 큰 용병은 두 자리 몫의 값이다 — 보통 용병 둘의 합과 견준다.
 DS.mercPower = function (ch, m) {
@@ -414,57 +451,44 @@ DS.mercPower = function (ch, m) {
   var big = DS.mercPop(m) > 1 ? 1.6 : 1;                           // 한 몸에 모인 능력의 값: 큰 용병 하나 ≈ 같은 등급 보통 용병 둘 (자동 전투로 잰 값)
   return Math.round(Math.sqrt(live * (hit * reach * u.spd / 10 + sup)) * 10 * big);
 };
-// 빈자리를 대기 용병으로 채운다: 그 지휘관 아래에서 실제로 가장 강한 쪽부터 (병과가 맞지 않으면 능력치를 제대로 물려받지 못하므로 저절로 뒤로 밀린다).
-// 이미 맡긴 용병은 건드리지 않는다. 두 자리가 비었으면 '큰 용병 하나'와 '보통 용병 둘'을 견주어 고른다.
-DS.autoAssign = function (save) {
-  var n = 0, guard = 0;
-  DS.mercTidy(save); if (DS.kidTidy) DS.kidTidy(save);
-  if (DS.bnAuto && !(save.opt && save.opt.refill === false)) DS.bnAuto(save).forEach(function (r) { if (r.mid) n++; });      // r36: 빈 가주 자리는 전체 자동(opt.refill)일 때만      // 4.0: 출전 칸의 빈 깃발을 먼저 (따르던 이 → 막사, 잠긴 사람·영웅·전설 제외)
-  while (guard++ < 12) {
-    var res = DS.reserve(save), best = null;
-    if (!res.length) break;
-    save.party.forEach(function (id) {
-      var ch = save.chars[id]; if (!ch) return;
-      if (DS.gaOn && !DS.gaOn(save, id)) return;      // r36: 「직접」 가문은 손대지 않는다
-      var room = DS.MERC_SLOTS - DS.popOf(save, id); if (room <= 0) return;
-      var s1 = null, s2 = null, bg = null, p1 = -1, p2 = -1, pb = -1, k1 = -1, k2 = -1, kb = -1;
-      res.forEach(function (m) {
-        if (DS.kidWhy && DS.kidWhy(save, m, id, false)) return;      // 1.0.1: 아이는 부모 가문 가솔만
-        var p = DS.mercPower(ch, m), k = p + (DS.bnNative && DS.bnNative(ch.cls, m) ? 1e7 : 0);      // r36: 태생 맞음 먼저, 그다음 전력 (k 는 고르는 순서, 견줌은 p 로)
-        if (DS.mercPop(m) > 1) { if (k > kb) { kb = k; pb = p; bg = m; } }
-        else if (k > k1) { k2 = k1; p2 = p1; s2 = s1; k1 = k; p1 = p; s1 = m; }
-        else if (k > k2) { k2 = k; p2 = p; s2 = m; }
-      });
-      var pick = null, val = -1;
-      if (room >= 2 && bg && pb >= p1 + Math.max(0, p2)) { pick = bg; val = pb / 2; }      // 큰 용병 하나가 보통 둘의 합보다 나을 때만
-      else if (s1) { pick = s1; val = room >= 2 ? (p1 + Math.max(0, p2)) / 2 : p1; }
-      else if (room >= 2 && bg) { pick = bg; val = pb / 2; }
-      if (pick && (!best || val > best.val)) best = { m: pick, id: id, val: val };
-    });
-    if (!best) break;
-    best.m.o = best.id; n++;
-  }
-  return n;
-};
-// 모집(뽑기) 한 번. 등급은 확률표, 종류는 지금 지휘관들의 병과 쪽으로 조금 쏠린다.
-DS.pullMerc = function (save, rnd, minG) {
+// 2.2.0: 사람 하나를 굴린다 (등급은 확률표 · 맹주 자리를 이을 사람이 끝내 없을 때의 값없는 한 사람 — DS.linSucceed 의 'pull'). 저장의 천장(pity)은 건드리지 않는다
+DS.rollPerson = function (save, rnd, minG, type) {
   rnd = rnd || Math.random;
   var r = rnd() * 100, g = 1, acc = 0, i;
   for (i = 5; i >= 1; i--) { acc += DS.GRADES[i].p; if (r < acc) { g = i; break; } }
-  var PG = DS.PITY_G || 4;
+  if (minG && g < minG) g = minG;
+  if (!type) { var hc = save.chars[save.hero], cls = hc ? hc.cls : 'inf'; type = DS.heroType(cls); }
+  return DS.addMerc(save, type, g, 0);
+};
+DS.pullMerc = function (save, rnd, minG) { var pity = save.pity; var m = DS.rollPerson(save, rnd, minG); save.pity = pity; return m; };      // 옛 이름 (봇·옛 호출)
+// ───────── 2.2.0 영웅 모집 (영웅관): 한 번에 한 사람, 값은 비싸다 ─────────
+// 등급은 확률표 + 천장(DS.PITY 번 안에 전설). 병과는 합류한 가문 가운데 자리가 있는 곳(빈 가문 · 대기조 SB_MAX 미만)에서 고르게 하나.
+//   빈 가문이면 곧바로 그 가문의 가주, 아니면 그 가문의 대기조. 생김새·태생은 그 가문 병과의 것 (m.nc = 병과).
+DS.heroType = function (cls) { var C = DS.CLASSES[cls], k = C && C.master && DS.FAMILY[C.fam] ? DS.FAMILY[C.fam].members[0] : cls, t = DS.CAST_KIND && DS.CAST_KIND[k]; return t && DS.MERCS[t] ? t : DS.baseMercTypes(k)[0]; };
+DS.heroRoom = function (save) {
+  return DS.charList(save).filter(function (ch) { return DS.vacant(save, ch) || DS.sbOf(save, ch.id).length < DS.SB_MAX; });
+};
+DS.recruitWhy = function (save) {
+  if (!DS.heroRoom(save).length) return '모집할 자리가 없다. 가문마다 대기조는 ' + DS.SB_MAX + '명까지';
+  return '';
+};
+DS.recruitHero = function (save, rnd, opt) {
+  rnd = rnd || Math.random; opt = opt || {};
+  var room = DS.heroRoom(save); if (!room.length) return null;
+  var r = rnd() * 100, g = 1, acc = 0, i;
+  for (i = 5; i >= 1; i--) { acc += DS.GRADES[i].p; if (r < acc) { g = i; break; } }
+  var PG = DS.PITY_G || 5;
   save.pity = (save.pity || 0) + 1;
   if (save.pity >= DS.PITY && g < PG) g = PG;
-  if (minG && g < minG) g = minG;
+  if (opt.minG && g < opt.minG) g = opt.minG;
   if (g >= PG) save.pity = 0;
-  var bigRoll = rnd() < 0.15;      // 가끔 인구수 2짜리 큰 용병이 온다
-  var types = Object.keys(DS.MERCS).filter(function (k) { return !!DS.MERCS[k].pop === bigRoll; }), mine = [];
-  DS.charList(save).forEach(function (c) { DS.mercTypes(c.cls).forEach(function (t) { if (!!DS.MERCS[t].pop === bigRoll) mine.push(t); }); });
-  var type = mine.length && rnd() < 0.6 ? mine[Math.floor(rnd() * mine.length)] : types[Math.floor(rnd() * types.length)];
-  if ((save.mnid || 1) <= 1 && !save.mercs.length) {      // 2.8.0: 생애 첫 용병은 앞에서 버텨 주는 이 (법사·궁병 주인공이 첫 판에 홀로 맞지 않게). 등급은 그대로
-    var front = Object.keys(DS.MERCS).filter(function (k) { return DS.MERCS[k].taunt && !DS.MERCS[k].pop; });
-    if (front.length && front.indexOf(type) < 0) type = front[Math.floor(rnd() * front.length)];
-  }
-  return DS.addMerc(save, type, g, 0);
+  var ch = opt.ch && room.indexOf(opt.ch) >= 0 ? opt.ch : room[Math.floor(rnd() * room.length) % room.length], vac = DS.vacant(save, ch);
+  var cls = DS.CLASSES[ch.cls].master && DS.FAMILY[DS.CLASSES[ch.cls].fam] ? DS.FAMILY[DS.CLASSES[ch.cls].fam].members[0] : ch.cls;
+  var m = DS.addMerc(save, DS.heroType(ch.cls), g, ch.id);
+  m.nc = cls;
+  if (vac) { m.h = 1; if (DS.nfGive) DS.nfGive(m); } else m.sb = 1;
+  if (DS.mercTidy) DS.mercTidy(save);
+  return { m: m, ch: ch, role: vac ? 'bear' : 'sb', g: g };
 };
 // r35 모집 값 (DS.RECRUIT). 모집권으로 부르면 열기가 오르지 않는다
 function rhNow(s) { try { return DS.calNow ? DS.calNow(s).t : Math.max(0, +s.time || 0); } catch (e) { return 0; } }
@@ -474,7 +498,7 @@ DS.recruitHeat = function (s) {
   if (t > r.t) { r.h = Math.max(0, r.h - (t - r.t) / q * DS.RECRUIT.ease); r.t = t; } else if (t < r.t) r.t = t;      // 달력이 뒤로 가면(옛 저장) 그 자리부터 다시 잰다
   return r.h;
 };
-DS.recruitPrice = function (s, k) { var h = DS.recruitHeat(s) + (k || 0); return Math.round(DS.mercCost(DS.heroTier(s)) * (1 + DS.RECRUIT.step * h) / 10) * 10; };      // k = 지금부터 몇 번째 뒤
+DS.recruitPrice = function (s, k) { var h = DS.recruitHeat(s) + (k || 0); return Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) * (1 + DS.RECRUIT.step * h) / 10) * 10; };      // 2.2.0: 영웅 값 = 기본값 × RECRUIT.k      // k = 지금부터 몇 번째 뒤
 DS.recruitTotal = function (s, n) { var t = 0; for (var i = 0; i < n; i++) t += DS.recruitPrice(s, i); return t; };
 DS.recruitPaid = function (s, n) { DS.recruitHeat(s); s.rh.h = Math.min(DS.RECRUIT.max, s.rh.h + (n || 1)); };
 DS.recruitEase = function (s) { var h = DS.recruitHeat(s), e = DS.RECRUIT.ease; return h > 0 && e > 0 ? Math.ceil(h / e) : 0; };      // 기본값으로 돌아올 때까지 남은 계절
@@ -498,8 +522,8 @@ DS.mercSpec = function (ch, m) {
   DS.stdGear(ref, t);
   var s = DS.charStats(ref), main = M.useMag ? s.mag : s.atk, vr = DS.hRank(ch), T = DS.TRAITS[m.t] || {};
   var Q = (m.q && DS.QUIRKS[m.q] && DS.quirkFits(m.type, m.q)) ? DS.QUIRKS[m.q] : {};      // 버릇(둘째 특성)
-  var k = DS.GRADES[m.g].mul * DS.hMul(ch) * (DS.mercMatch(ch, m) ? 1.1 : 1) * (mL > 70 ? 0.92 : 1);      // 등급 × 가문 공훈 × 병과 일치
-  var Ld = DS.LEAD[ch.cls] || {};      // 지휘관의 통솔 효과
+  var k = DS.GRADES[m.g].mul * DS.hMul(ch) * (DS.mercMatch(ch, m) ? 1.1 : 1) * (mL > 70 ? 0.92 : 1) * (DS.BN && DS.BN.kinK || 1);      // 등급 × 가문 공훈 × 병과 일치 × 2.2.0 가문원 배율
+  var Ld = {};      // 2.2.0: 통솔(지휘관 병과의 가솔 버프)은 없어졌다
   var hp = Math.round(s.hp * M.hp * k * (Ld.hp || 1) * (T.hp || 1) * (Q.hp || 1));
   var at = Math.round(main * M.at * k * (Ld.at || 1) * (T.at || 1) * (Q.at || 1));
   var sks = DS.mercSkills(m, mL);      // r42: 종류의 기술을 제 단으로 (3단·5단·7단) + 영웅·전설의 고유 기술 (엔진의 aiMerc 가 aiSkill 을 부르면 쓴다)
@@ -523,25 +547,16 @@ DS.mercOrigin = function (m) {
   var lo = DS.LORE && DS.LORE.origin && DS.LORE.origin[key];
   return { key: key, name: O.name, desc: (typeof lo === 'string' && lo) || O.desc };
 };
-// 부대(지휘관 + 용병) 전체
-// 4.0: 빈 깃발(든 사람 없음)은 싸우지 않는다 — 출전 칸에 남아 대기와 같은 5% 경험치를 받는다. 든 사람은 'm' 유닛을 만들지 않는다
+// 부대 전체: 2.2.0 — 가주가 선 가문은 모두 싸운다 (깃발 유닛) + 맹주 가문의 어른 가문원 (따르는 유닛). 빈 가문·대기조·미성년은 싸우지 않는다
 DS.partySpecs = function (save) {
   var out = [];
-  save.party.forEach(function (id) {
+  (DS.partySync ? DS.partySync(save) : save.party).forEach(function (id) {
     var ch = save.chars[id]; if (!ch || ch.down || ch.vac) return;
     var who = DS.bearer ? DS.bearer(save, ch) : null; if (DS.bearer && !who) return;
     out.push(DS.cmdSpec(ch, id === save.hero, who));
     DS.mercsOf(save, id).forEach(function (m) { out.push(DS.mercSpec(ch, m)); });
   });
   return out;
-};
-// 출전 깃발이 모두 비었다: 대장의 깃발을 출전 칸에 넣는다 (대장의 깃발에는 늘 사람이 있다). 넣었으면 true
-DS.bnEnsure = function (save) {
-  var h = save.chars[save.hero]; if (!h || h.vac || h.down) return false;
-  var any = save.party.some(function (id) { var c = save.chars[id]; return c && !c.down && !c.vac && (!DS.bearer || DS.bearer(save, c)); });
-  if (any || save.party.indexOf(h.id) >= 0) return false;
-  if (save.party.length < DS.PARTY_MAX) save.party.push(h.id); else save.party[save.party.length - 1] = h.id;
-  return true;
 };
 
 // ── 적 ──
@@ -601,7 +616,7 @@ DS.addChar = function (save, cls, L, name) {
   if (first || name) { ch.name = name || ''; ch.down = false; ch.hp = 1; }      // hp 는 사람 것 (대장 줄)
   DS.stdGear(ch, Math.max(1, t - 1));
   save.chars[ch.id] = ch;
-  if (save.party.length < DS.PARTY_MAX) save.party.push(ch.id);
+  if (save.party.indexOf(ch.id) < 0) save.party.push(ch.id);      // 2.2.0: 출전 고르기는 없다 (DS.partySync 가 가주 없는 가문을 뺀다)
   return ch;
 };
 DS.charList = function (save) { return Object.keys(save.chars).map(function (k) { return save.chars[k]; }).sort(function (a, b) { return a.id - b.id; }); };
@@ -614,14 +629,12 @@ DS.partyL = function (save) {
   var s = 0, n = 0; save.party.forEach(function (id) { var c = save.chars[id]; if (c) { s += c.L; n++; } });
   return n ? Math.round(s / n) : 1;
 };
-// 시험·시뮬레이션용: 그 단의 기본 장비와 병과에 맞는 용병 둘을 갖춘다
+// 시험·시뮬레이션용: 그 단의 기본 장비와 빈 가문의 시험용 가주를 갖춘다
 DS.kit = function (save, o) {
   o = o || {};
   DS.charList(save).forEach(function (c) {
     DS.stdGear(c, Math.max(1, DS.tierOfL(c.L) - (o.gearLag || 0)));
-    save.mercs = save.mercs.filter(function (m) { return m.o !== c.id || m.h; });      // 4.0: 든 사람은 남긴다
-    var ty = DS.baseMercTypes(c.cls);
-    for (var i = 0; i < DS.MERC_SLOTS; i++) { var km = DS.addMerc(save, ty[i % ty.length], o.grade || 2, c.id); km.t = null; km.v = 0; delete km.q; km.L = c.L; if (c.L > 70) km.fz = 1; }      // 시험용은 특성·버릇 없이
+    var ty = DS.baseMercTypes(c.cls);      // 2.2.0: 가솔이 없다 — 가주만 세운다
     if (c.id !== save.hero && DS.bearer && !DS.bearer(save, c)) { var kb = DS.addMerc(save, (DS.CAST_KIND && DS.CAST_KIND[c.cls]) || ty[0], 3, c.id); kb.h = 1; kb.t = null; kb.v = 0; delete kb.q; kb.L = c.L; if (c.L > 70) kb.fz = 1; }      // 빈 깃발에는 시험용 든 사람 (r44: 희귀 — 아홉 집 본인과 같은 등급 배율 ×1.05 · 특성 없음 · 공훈 0)
   });
 };
@@ -630,7 +643,7 @@ DS.kit = function (save, o) {
 // 사람 = 맹주(대장 가문 줄의 ps) · 부대원(save.mercs — 가주·가솔·막사). 사람마다 L(1~100)·exp·fz(합일함 — 70 을 넘을 수 있다)를 지닌다.
 // 가문 줄(save.chars)의 L·exp 는 지금 가주의 개인 레벨을 비춘 것이다 (DS.pSync). 빈 가문은 마지막 값을 지닌 채 싸우지 않는다.
 //   바깥(시험 도구·옛 코드)이 가문 줄의 L 을 직접 바꾸면 그 값이 가주에게로 간다 (ch.Ls = 마지막으로 맞춘 값).
-DS.PEXP = { catchCap: 1.5, recruit: { k: 0.9, d: 3 }, kid: 0.5, heir: { kid: 0.5, adopt: 0.25 } };
+DS.PEXP = { catchCap: 1.5, recruit: { k: 0.9, d: 3 }, kid: 0.8, heir: { kid: 0.5, adopt: 0.25 } };      // 2.2.0: kid 0.5 → 0.8 — 어른이 된 아이는 바로 싸움에 나선다
 DS.pL = function (who) { return who ? Math.max(1, Math.min(100, Math.round(+who.L || 1))) : 1; };
 DS.pCap = function (who) { return who && (who.fz || +who.L > 70) ? 100 : 70; };
 DS.heroPs = function (s) { var h = s && s.chars && s.chars[s.hero]; return h && !h.vac && h.ps ? h.ps : null; };
@@ -652,7 +665,8 @@ DS.pSync = function (s) {
   (s.mercs || []).forEach(function (m) { if (m.L == null || !(+m.L >= 1)) m.L = 1; m.L = DS.pL(m); if (!(+m.exp >= 0)) m.exp = 0; if (m.L > 70) m.fz = 1; });
   return s;
 };
-// 모든 사람 [{ who, ch: 선 가문(막사 null), role: 'hero'|'bear'|'follow'|'bench', dep: 싸우러 나갔는가 }]
+// 모든 사람 [{ who, ch: 선 가문(없으면 null), role: 'hero'|'bear'|'kin'|'sb'|'bench', dep: 싸우러 나갔는가 }]
+//   2.2.0: kin = 가문원(맹주 깃발을 따라 싸운다) · sb = 대기조(싸우지 않는다) · bench = 가문 밖(없어야 한다)
 DS.persons = function (s) {
   var out = [], seen = {}; if (!s || !s.chars) return out;
   DS.pSync(s);      // 바깥이 가문 줄의 레벨을 바꿨으면 먼저 가주에게
@@ -661,7 +675,8 @@ DS.persons = function (s) {
     var hero = ch.id === hid, b = hero ? DS.heroPs(s) : (DS.bearer ? DS.bearer(s, ch, 1) : null);
     var dep = party.indexOf(ch.id) >= 0 && !ch.down && !ch.vac && !!b;
     if (b) { out.push({ who: b, ch: ch, role: hero ? 'hero' : 'bear', dep: dep }); if (!hero) seen[b.id] = 1; }
-    DS.mercsOf(s, ch.id).forEach(function (m) { if (seen[m.id]) return; seen[m.id] = 1; out.push({ who: m, ch: ch, role: 'follow', dep: dep }); });
+    DS.mercsOf(s, ch.id).forEach(function (m) { if (seen[m.id]) return; seen[m.id] = 1; out.push({ who: m, ch: ch, role: 'kin', dep: dep }); });
+    DS.sbOf(s, ch.id).forEach(function (m) { if (seen[m.id]) return; seen[m.id] = 1; out.push({ who: m, ch: ch, role: 'sb', dep: false }); });
   });
   (s.mercs || []).forEach(function (m) { if (!seen[m.id]) out.push({ who: m, ch: null, role: 'bench', dep: false }); });
   return out;
@@ -670,7 +685,7 @@ DS.pAvgL = function (s) { var n = 0, t = 0; DS.persons(s).forEach(function (p) {
 // 새로 오는 사람의 레벨: 출전한 사람들의 평균에 가깝게 (조금 아래), 등급이 높을수록 조금 높게. 합일 전이라 70 을 넘지 않는다
 DS.recruitL = function (s, g) { var R = DS.PEXP.recruit, a = DS.pAvgL(s); if (a <= 1.5) return 1; return Math.max(1, Math.min(70, Math.round(a * R.k) - R.d + ((+g || 2) - 3))); };
 DS.kidL = function (s) { return Math.max(1, Math.min(70, Math.round(DS.pAvgL(s) * DS.PEXP.kid))); };
-// 경험치: 싸우러 나간 사람(출전 가문의 가주·가솔·맹주)은 전부, 나머지(막사·대기 가문)는 BAL.bench. 낮은 사람은 따라잡기 보정, 잠재력(★)만큼 빨리.
+// 경험치: 싸우러 나간 사람(가주·맹주·어른 가문원)은 전부, 대기조는 BAL.sbExp, 가문 밖은 BAL.bench. 낮은 사람은 따라잡기 보정, 잠재력(★)만큼 빨리.
 //   돌려주는 것: 레벨이 오른 사람 [{ id: 선 가문 번호(막사 0), mid: 부대원 번호(맹주 0), hero, bear(깃발 유닛인가), from, to, promo, who, pg: 새 성장 }]
 DS.gainExp = function (save, amount, eL) {
   var ups = [], list = DS.persons(save), top = 1, perk = (save.perk && save.perk.exp) || 0;
@@ -679,7 +694,7 @@ DS.gainExp = function (save, amount, eL) {
     var w = p.who; if (w.L == null) w.L = p.ch ? p.ch.L : 1;
     var cap = DS.pCap(w); if (w.L >= cap) { w.exp = 0; return; }
     var d = (eL || w.L) - w.L, f = d >= 0 ? Math.min(1.5, 1 + d * 0.08) : Math.max(0.25, 1 + d * 0.075);
-    f *= (p.dep ? 1 : DS.BAL.bench) * DS.BAL.exp * (1 + Math.min(DS.PEXP.catchCap, Math.max(0, top - w.L - 2) * 0.15)) * (1 + perk) * (DS.potMul ? DS.potMul(w) : 1);
+    f *= (p.dep ? 1 : p.role === 'sb' ? DS.BAL.sbExp : DS.BAL.bench) * DS.BAL.exp * (1 + Math.min(DS.PEXP.catchCap, Math.max(0, top - w.L - 2) * 0.15)) * (1 + perk) * (DS.potMul ? DS.potMul(w) : 1);
     w.exp = (+w.exp || 0) + amount * f;
     var from = w.L, pg0 = DS.pgSteps ? DS.pgSteps(w) : 0;
     while (w.L < cap && w.exp >= DS.expNeed(w.L)) { w.exp -= DS.expNeed(w.L); w.L++; }
@@ -739,8 +754,8 @@ DS.unionOf = function () { return null; };
 DS.unionName = function () { return ''; };
 DS.fuseState = function (save, fam) { return { done: false, have: [], miss: [], low: [], ok: false }; };
 // 합일: ids = 사람 열쇠 셋. 돌려주는 것: 첫 사람. DS.lastFuse = { ids, who: [사람 셋], names, id }
-// 2.1.0: 대표 가문 = 셋이 선 가문 가운데 공훈이 가장 큰 곳 (같으면 계급, 그다음 먼저 합류한 가문). 그 가문에 공훈 DS.FUSE_HX, 셋은 그 가문에 선다
-//   (맹주는 맹주 자리 그대로 · 대표 가문의 가주는 그대로 · 나머지는 그 가문의 가솔로 — 자리가 모자라면 그 가문의 다른 가솔이 막사로). 가주였던 사람이 떠난 가문은 자동 후계를 맞는다 (DS.succNeed)
+// 2.1.0: 대표 가문 = 셋이 선 가문 가운데 공훈이 가장 큰 곳 (같으면 계급, 그다음 먼저 합류한 가문). 그 가문에 공훈 DS.FUSE_HX
+//   2.2.0: 아무도 제 가문을 떠나지 않는다 — 셋은 제자리에서 8단으로 오른다 (가주는 가주, 대기조는 대기조, 가문원은 가문원)
 DS.FUSE_HX = 1000;
 DS.houseCmp = function (a, b) { return (+(b && b.hx) || 0) - (+(a && a.hx) || 0) || DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 공훈 → 계급 → 합류 차례
 DS.houseSort = function (save, list) { return (list || DS.charList(save)).slice().sort(DS.houseCmp); };
@@ -750,26 +765,11 @@ DS.fuse = function (save, ids, opt) {
   if (!DS.fuseOk(save, ids).ok) return null;
   var who = ids.map(function (k) { return DS.pByKey(save, k); }), hp = DS.heroPs(save), H = DS.fuseRep(save, who), keys = who.map(function (w) { return DS.pKey(save, w); });
   var names = who.map(function (w) { return w === hp ? (save.chars[save.hero].name || save.name || '맹주') : (w.ttl || w.n || ''); });
-  var pre = who.map(function (w) { return DS.pL(w); }), moved = [], left = [];
   who.forEach(function (w) { w.L = Math.max(DS.pL(w), 71); w.exp = 0; w.fz = 1; });
-  if (H) {
-    if (DS.hAdd) DS.hAdd(save, H, DS.FUSE_HX); else H.hx = (+H.hx || 0) + DS.FUSE_HX;
-    who.forEach(function (w, i) {
-      if (w === hp) return;      // 맹주는 맹주 그대로
-      var from = DS.whoHouse(save, w); if (from === H) return;
-      if (DS.kidWhy && DS.kidWhy(save, w, H.id, false)) return;      // 아이는 부모 가문 가솔만
-      var need = DS.mercPop(w), room = function () { return DS.MERC_SLOTS - DS.popOf(save, H.id); };
-      if (room() < need) DS.mercsOf(save, H.id).filter(function (m) { return who.indexOf(m) < 0; }).sort(function (a, b) { return DS.pL(a) - DS.pL(b); }).forEach(function (m) { if (room() < need) m.o = 0; });
-      if (room() < need) return;      // 큰 사람 둘처럼 자리가 끝내 모자라면 제자리
-      var wasB = w.h && from && from.id !== save.hero ? from : null;
-      delete w.h; w.o = H.id; moved.push(w);
-      if (wasB && DS.succNeed) { var o = { type: w.type, g: w.g, L: pre[i] }; var r = DS.succNeed(save, wasB, o, w.pid && save.lin && save.lin.P[w.pid], '합일'); if (r) left.push(r); }
-    });
-  }
+  if (H) { if (DS.hAdd) DS.hAdd(save, H, DS.FUSE_HX); else H.hx = (+H.hx || 0) + DS.FUSE_HX; }
   if (DS.mercTidy) DS.mercTidy(save);
   DS.pSync(save);
-  var arr = DS.succTick ? DS.succTick(save) : [];
-  DS.lastFuse = { ids: keys, who: who, names: names, id: keys[0], name: '', union: null, mercsBack: 0, over: 0, rep: H ? H.id : 0, repName: H ? DS.flagName(H.cls, save) : '', hx: H ? DS.FUSE_HX : 0, moved: moved.length, succ: left.concat(arr) };
+  DS.lastFuse = { ids: keys, who: who, names: names, id: keys[0], name: '', union: null, mercsBack: 0, over: 0, rep: H ? H.id : 0, repName: H ? DS.flagName(H.cls, save) : '', hx: H ? DS.FUSE_HX : 0, moved: 0, succ: [] };
   save.fuN2 = (+save.fuN2 || 0) + 1;
   return who[0];
 };
@@ -937,8 +937,8 @@ DS.bountyHit = function (save, e, rnd) {
     st.sh = (st.sh || 0) + (b.k === 'elite' ? DS.BTY.shard.elite : 1);      // 깃술 조각 (모이면 DS.bountyFlag 가 전설 장비로 바꾼다)
     save.gold += b.r.gold || 0;
     if (b.r.ticket) save.tickets = (save.tickets || 0) + b.r.ticket;
-    var mer = DS.BTY.merit + (b.k === 'elite' ? DS.BTY.elite.merit : 0);      // r42: 출전 가문 모두의 공훈 (가솔 수만큼)
-    save.party.forEach(function (id) { var hc = save.chars[id]; if (hc && DS.hAdd) DS.hAdd(save, hc, mer * Math.max(1, DS.mercsOf(save, id).length)); });
+    var mer = DS.BTY.merit + (b.k === 'elite' ? DS.BTY.elite.merit : 0);      // r42: 싸우는 가문 모두의 공훈 (2.2.0: 가솔이 없어 가문마다 두 몫)
+    save.party.forEach(function (id) { var hc = save.chars[id]; if (hc && DS.hAdd) DS.hAdd(save, hc, mer * 2); });
     b.title = fill(btxt(b.k, 'title'), b);
   });
   if (done.length) DS.bountyState(save, rnd);
@@ -961,30 +961,5 @@ DS.enemySpec = function (type, L, o) {
   if (M === E.boss) { u.name = b.name; u.elite = b.id; u.title = '현상금'; b.gm = u.gold; }
   else { u.name = '정예 ' + u.name; u.eliteCrew = b.id; }
   return u;
-};
-// ── r4 merc: 막사 용병 한꺼번에 내보내기 고르기 (순수 함수 — 저장을 바꾸지 않는다) ──
-//   opt.g = { 1: true, ... } 고른 등급, opt.keepNk 별명 있는 용병 빼기, opt.keepVet 공훈 계급(DS.VET 번호) 이상 빼기 (false 면 안 뺌),
-//   opt.keepLk 잠근 용병(m.lk) 빼기, opt.skip = { id: 1 } 하나하나 뺀 용병. 지휘관이 이끄는 용병은 늘 건드리지 않는다.
-//   돌려주는 것: { pick: [내보낼 용병], kept: [{ m, why: 'nk'|'vet'|'lk'|'skip' }] } — 등급만 맞고 빠진 용병이 kept.
-DS.MERC_KEEP_VET = 3;      // r42: 기본으로 아끼는 개인 단: 3단 이상
-function famOf(save, m) {      // 3.0 가계도: 배우자·자식·부모가 살아 있는 용병은 일괄 내보내기에서 늘 뺀다 (하나씩 내보내기는 확인 창에서 묻는다)
-  try {
-    if (!DS.linOf || !DS.linSpouse) return false;
-    var p = DS.linOf(save, m); if (!p) return false;
-    var sp = DS.linSpouse(save, p.id); if (sp && sp.st === 'live') return true;
-    if (DS.linKids && DS.linKids(save, p.id).some(function (q) { return q.st === 'live'; })) return true;
-    if (DS.linParents && DS.linParents(save, p.id).some(function (q) { return q.st === 'live'; })) return true;
-  } catch (e) {}
-  return false;
-}
-DS.mercBulkPick = function (save, opt) {
-  opt = opt || {};
-  var g = opt.g || {}, vet = opt.keepVet === false ? 99 : opt.keepVet == null || opt.keepVet === true ? DS.MERC_KEEP_VET : +opt.keepVet, skip = opt.skip || {}, pick = [], kept = [];
-  DS.reserve(save).forEach(function (m) {
-    if (!g[m.g]) return;
-    var why = opt.keepLk !== false && m.lk ? 'lk' : famOf(save, m) ? 'fam' : opt.keepNk !== false && DS.mercTitle(m) ? 'nk' : DS.tierOfL(DS.pL(m)) >= vet ? 'vet' : skip[m.id] ? 'skip' : '';
-    if (why) kept.push({ m: m, why: why }); else pick.push(m);
-  });
-  return { pick: pick, kept: kept };
 };
 })();

@@ -71,9 +71,9 @@ var AFFIX = {
   hex:    [0, '둔화의 끈', 'w', null, { skill: 'slow' }, '기술 「둔화」를 쓸 수 있다'],
   mend:   [0, '돌봄의 끈', ['wand', 'staff'], null, { skill: 'cure' }, '기술 「정화」를 쓸 수 있다'],
   bone:   [0, '초혼', ['staff', 'wand'], null, { skill: 'summon' }, '기술 「망자 부름」을 쓸 수 있다', 1],
-  bsteel: [0, '강철 매듭', 'wa', [0.04, 0.12], { lead: 'def' }, '가솔의 방어 +{p}%'],
-  bwind:  [0, '바람 매듭', 'wa', [0.03, 0.08], { lead: 'spd' }, '가솔의 행동 회복 +{p}%'],
-  bstar:  [0, '별 매듭', 'wa', [0.04, 0.12], { lead: 'at' }, '가솔의 공격 +{p}%'],
+  bsteel: [0, '강철 매듭', 'wa', [0.04, 0.12], { lead: 'def' }, '방어 +{p}% (깃발 유닛)'],
+  bwind:  [0, '바람 매듭', 'wa', [0.03, 0.08], { lead: 'spd' }, '행동 회복 +{p}% (깃발 유닛)'],
+  bstar:  [0, '별 매듭', 'wa', [0.04, 0.12], { lead: 'at' }, '공격 +{p}% (깃발 유닛)'],
   wing:   [0, '하피 깃', 'a', null, { tags: 'fly', mt: 'fly' }, '산과 물을 넘는다, 대신 화살에 1.5배로 맞는다', 1],
   breath: [0, '숨 고르기', 'a', [0.003, 0.010], { eng: 'mpRegen' }, '전투 중 마나가 초마다 최대치의 {m}% 더 찬다'],
   rush:   [0, '처치의 기세', 'w', [10, 30], { eng: 'killGauge' }, '적을 쓰러뜨리면 게이지 +{g}'],
@@ -272,7 +272,7 @@ function build(id) {
   var f = {}, list = [], hi = false, big = false;
   if (U && U.x) {
     for (k in X) {
-      if (k === 'lead') { f.lead = {}; for (i in X.lead) { f.lead[i] = X.lead[i]; g.special.push('가솔의 ' + LEAD_TXT[i] + ' +' + pct(X.lead[i] - 1) + '%'); } }
+      if (k === 'lead') { f.lead = {}; for (i in X.lead) { f.lead[i] = X.lead[i]; g.special.push(LEAD_TXT[i] + ' +' + pct(X.lead[i] - 1) + '%'); } }
       else if (k === 'skill') { f.skills = [X.skill]; g.special.push('기술 「' + DS.SKILLS[X.skill].name + '」을 쓸 수 있다'); }
       else if (k === 'drain') { f.drain = X.drain; g.special.push('준 피해의 ' + pct(X.drain) + '%만큼 HP 회복'); }
       else if (k === 'hpm') { f.hpm = X.hpm; g.special.push('최대 HP ' + (X.hpm < 1 ? '−' : '+') + Math.abs(pct(X.hpm - 1)) + '%'); }
@@ -432,12 +432,14 @@ DS.cmdSpec = function (ch, hero) {
   if (f.skills) f.skills.forEach(function (k) { if (DS.SKILLS[k] && u.skills.indexOf(k) < 0) u.skills = u.skills.concat([k]); });
   if (f.mvm !== 1) u.mv = u.mv * f.mvm;
   if (f.eng) u.fx = DS.fxMerge(u.fx, f.eng);
+  var L = f.lead;      // 2.2.0: 옛 「가솔의 ○○ +%」(매듭·고유 장비)는 입은 깃발 유닛 자신에게 걸린다 (가솔이 없다)
+  if (L) { if (L.at) { u.atk = Math.round(u.atk * L.at); u.mag = Math.round(u.mag * L.at); } if (L.def) u.def = Math.round(u.def * L.def); if (L.res) u.res = Math.round(u.res * L.res); if (L.spd) u.spd = u.spd * L.spd; if (L.hp) { u.hp = Math.round(u.hp * L.hp); u.mhp = u.hp; } }
   return u;
 };
-// 용병: 주인의 장비(매듭·고유)와 용병이 든 물건이 배율로 얹힌다
+// 따르는 이(가문원): 그 사람이 든 물건이 배율로 얹힌다 (2.2.0: 주인의 매듭은 주인 자신에게)
 var ms0 = DS.mercSpec;
 DS.mercSpec = function (ch, m) {
-  var u = ms0(ch, m), f = gearFx(ch), L = (f && f.lead) || {}, I = (m && m.it && own(MGEAR, m.it) && MGEAR[m.it]) || {};
+  var u = ms0(ch, m), L = {}, I = (m && m.it && own(MGEAR, m.it) && MGEAR[m.it]) || {};
   var at = (L.at || 1) * (I.at || 1), df = (L.def || 1) * (I.def || 1), rs = (L.res || 1) * (I.res || 1), sp = (L.spd || 1) * (I.spd || 1), hp = (L.hp || 1) * (I.hp || 1);
   if (at !== 1) { u.atk = Math.round(u.atk * at); u.mag = Math.round(u.mag * at); }
   if (df !== 1) u.def = Math.round(u.def * df);
@@ -469,8 +471,8 @@ var NEW_ITEMS = {
   holyw:   { name: '사당 성수', price: 220, max: 5, town: 'gaon', zone: 'mire', desc: '십자 범위에 신성 피해. 망자, 악마에게 1.5배.',
              sk: { tick: 25, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'holy', eff: [{ t: 'dmg', m: 1.1, type: 'holy', flat: true }] } },
   camp:    { name: '모닥불 꾸러미', price: 250, max: 2, town: 'gaon', zone: 'coast', ctl: 'camp', desc: '전투 중이 아닐 때, 부대 전체의 HP, 마나를 30% 회복.' },
-  drum:    { name: '용병대의 북', price: 350, max: 2, town: 'gaon', zone: 'spire', desc: '모든 부대원의 공격, 방어 +30% (20초).',
-             sk: { tick: 30, tg: 'self', area: 'all', side: 'ally', mercOnly: true, fx: 'buffGold', eff: [{ t: 'buff', s: 'atk', p: 30, dur: 20 }, { t: 'buff', s: 'def', p: 30, dur: 20 }] } },
+  drum:    { name: '용병대의 북', price: 350, max: 2, town: 'gaon', zone: 'spire', desc: '모든 아군의 공격, 방어 +15% (20초).',      // 2.2.0: 가솔 전용 → 모든 아군, 세기 절반
+             sk: { tick: 30, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'atk', p: 15, dur: 20 }, { t: 'buff', s: 'def', p: 15, dur: 20 }] } },
   frostj:  { name: '서리 단지', price: 300, max: 3, town: 'gaon', zone: 'ash', desc: '2칸 반경에 서리. 약한 피해와 둔화.',
              sk: { tick: 25, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'water', eff: [{ t: 'dmg', m: 0.6, type: 'magic', flat: true }, { t: 'status', s: 'slow', dur: 10 }] } },
   sc_bolt: { name: '번개 두루마리', price: 500, max: 2, zone: 'spire', desc: '한 번 읽으면 사라진다. 적 하나에 큰 뇌격.',
@@ -478,14 +480,14 @@ var NEW_ITEMS = {
   sc_star: { name: '별똥 두루마리', price: 900, max: 1, zone: 'end', desc: '한 번 읽으면 사라진다. 2칸 반경에 운석.',
              sk: { tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'meteor', eff: [{ t: 'dmg', m: 1.8, type: 'magic', flat: true }] } }
 };
-// 용병에게 들려 주는 물건: save.items 에 수량, 용병의 m.it 에 키. 용병이 쓰러지면 함께 잃는다. mercSpec 의 배율에 곱한다.
+// 사람에게 들려 주는 물건: save.items 에 수량, 사람 줄의 m.it 에 키. 쓰러지면 함께 잃는다. 가문원은 mercSpec, 가주는 banner.js 의 cmdSpec 배율에 곱한다 (2.2.0)
 var MGEAR = {
-  mg_whet:    { name: '숫돌', price: 600, max: 9, town: 'dodam', at: 1.08, desc: '부대원에게 장착한다. 공격 +8%.' },
-  mg_buckler: { name: '덧방패', price: 600, max: 9, town: 'dodam', def: 1.12, desc: '부대원에게 장착한다. 방어 +12%.' },
-  mg_ration:  { name: '마른 고기 자루', price: 600, max: 9, town: 'dodam', hp: 1.12, desc: '부대원에게 장착한다. HP +12%.' },
-  mg_boots:   { name: '가벼운 장화', price: 800, max: 9, town: 'gaon', spd: 1.06, desc: '부대원에게 장착한다. 행동 회복 +6%.' },
-  mg_charm:   { name: '문장 조각 부적', price: 800, max: 9, town: 'gaon', res: 1.25, desc: '부대원에게 장착한다. 마방 +25%.' },
-  mg_plume:   { name: '붉은 깃 장식', price: 1200, max: 9, town: 'gaon', at: 1.05, def: 1.05, hp: 1.05, desc: '부대원에게 장착한다. 공격, 방어, HP +5%.' }
+  mg_whet:    { name: '숫돌', price: 600, max: 9, town: 'dodam', at: 1.08, desc: '사람에게 장착한다. 공격 +8%.' },
+  mg_buckler: { name: '덧방패', price: 600, max: 9, town: 'dodam', def: 1.12, desc: '사람에게 장착한다. 방어 +12%.' },
+  mg_ration:  { name: '마른 고기 자루', price: 600, max: 9, town: 'dodam', hp: 1.12, desc: '사람에게 장착한다. HP +12%.' },
+  mg_boots:   { name: '가벼운 장화', price: 800, max: 9, town: 'gaon', spd: 1.06, desc: '사람에게 장착한다. 행동 회복 +6%.' },
+  mg_charm:   { name: '문장 조각 부적', price: 800, max: 9, town: 'gaon', res: 1.25, desc: '사람에게 장착한다. 마방 +25%.' },
+  mg_plume:   { name: '붉은 깃 장식', price: 1200, max: 9, town: 'gaon', at: 1.05, def: 1.05, hp: 1.05, desc: '사람에게 장착한다. 공격, 방어, HP +5%.' }
 };
 DS.MGEAR = MGEAR;
 // r15: 소모품은 회복 셋(약초·마나초·기운초)만 남긴다. 위의 물건들과 폭탄은 「없어진 물건」 — 표에 싣지 않고, 저장에 남은 것은 save.js fixSave 가 값만큼 골드로 바꾼다.
@@ -1101,10 +1103,10 @@ DS.lootUI = {
     var U = DS.ui, m = save.mercs.filter(function (x) { return x.id === mercId; })[0]; if (!m) return null;
     function body() {
       var cur = m.it && own(MGEAR, m.it) ? MGEAR[m.it] : null, h = '<div class="result ldet"><h2>' + esc(DS.mercCall(m)) + '의 물건</h2>' +
-        '<p class="rn">' + (cur ? '지금 ' + esc(cur.name) + '. ' + esc(cur.desc.replace('부대원에게 장착한다. ', '')) : '장착한 물건이 없다.') + '</p><p class="lock">쓰러지면 장착한 물건도 함께 잃는다.</p><div class="lcmp">', any = false;
+        '<p class="rn">' + (cur ? '지금 ' + esc(cur.name) + '. ' + esc(cur.desc.replace('사람에게 장착한다. ', '')) : '장착한 물건이 없다.') + '</p><p class="lock">쓰러지면 장착한 물건도 함께 잃는다.</p><div class="lcmp">', any = false;
       Object.keys(MGEAR).forEach(function (k) {
         var n = save.items[k] || 0; if (!n) return; any = true;
-        h += '<div class="row">' + (DS.iconHtml ? DS.iconHtml('item', k) : '') + '<div class="tx"><b>' + esc(MGEAR[k].name) + ' <i class="own">× ' + n + '</i></b><small>' + esc(MGEAR[k].desc.replace('부대원에게 장착한다. ', '')) + '</small></div><button class="btn small gold" data-mg="' + k + '">' + (cur ? '교체' : '장착') + '</button></div>';
+        h += '<div class="row">' + (DS.iconHtml ? DS.iconHtml('item', k) : '') + '<div class="tx"><b>' + esc(MGEAR[k].name) + ' <i class="own">× ' + n + '</i></b><small>' + esc(MGEAR[k].desc.replace('사람에게 장착한다. ', '')) + '</small></div><button class="btn small gold" data-mg="' + k + '">' + (cur ? '교체' : '장착') + '</button></div>';
       });
       if (!any) h += '<p class="hint">가방에 장착할 물건이 없다. 적이 가끔 떨어뜨린다.</p>';
       return h + '</div>' + (cur ? '<button class="btn wide" data-mg="">해제</button>' : '') + '<button class="btn wide" data-close>닫기</button></div>';
