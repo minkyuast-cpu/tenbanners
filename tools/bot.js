@@ -8,11 +8,11 @@
 //   · 다음 시나리오의 권장 레벨(DS.recL)에 부대 평균(DS.partyL)이 닿을 때까지 들판에서 싸운다. 들판 = 부대 평균에 맞는 지역의 무리 하나
 //     (그 무리 레벨이 평균 + 1 이하), 그 지역 지도 위에서 진짜 엔진으로. 걸어 다니는 시간은 싸움마다 FIELD_OVER 초를 더해 셈한다.
 //   · 합일: 맹세의 깃대를 얻은 뒤 7단 Lv10 셋이 모일 때마다 교회에서 합일(DS.fuseAuto). 단 문턱(8단 · 9단) 앞에서는 가장 앞선 사람의 레벨 쪽 무리를 잡는다.
-//   · 싸움 앞: 교회 치료(골드), 약초 다섯까지 사기, 가방의 더 좋은 장비 입히기(DS.lootAutoEquip), 맹주가 홀몸이면 혼인(DS.linAutoWed).
+//   · 싸움 앞: 교회 치료(골드), 약초 다섯까지 사기, 가방의 더 좋은 장비 입히기(DS.lootAutoEquip), 맹주가 홀몸이면 혼인(DS.linAutoWed — 막사의 같은 병과가 하나뿐이면 그이는 빼고).
 //   · 영웅 모집: 모집권은 바로 쓴다. 빈 가문(막사도 비었음)이 있으면 골드로도 부른다 (예비 골드 200 × 단은 남긴다).
 //     빈 가문이 없어도 골드가 값의 세 배를 넘고 막사가 싸우는 가문 수의 절반보다 적으면 부른다. 병과는 무작위다 (게임 규칙 그대로).
 //   · 맹주의 어른 아이(가문원)는 빈 가문이 생기면 레벨이 가장 높은 이를 그 가문의 가주로 보낸다 (DS.hand).
-//   · 싸움 뒤: 진짜 규칙 그대로 — 쓰러진 가주·가문원은 영영 잃는다(DS.loseMerc · DS.linMercDied), 맹주는 미뤄진 죽음 → 자동 후계(DS.linAutoAll),
+//   · 싸움 뒤: 진짜 규칙 그대로 — 쓰러진 가주·가문원은 영영 잃는다(DS.loseMerc · DS.linMercDied), 맹주는 미뤄진 죽음 → 자동 후계(DS.linAutoAll: 어른 핏줄 → 막사의 같은 병과 — 둘 다 없으면 대를 끊기 전에 다른 가문의 가주를 고른다),
 //     나이·출생(DS.ageCheck), 막사의 사람이 빈 가문을 잇기(DS.sbTick). 지면(전멸) 같은 시나리오를 다시 한다 (wipe 하나).
 //   · 필살기는 봇이 누른다 (DS.BAL.ultAuto — 조작하는 맹주 한 사람).
 // 시간: hours = (엔진 시간 + 걷는 몫) / 3600. 게임 달력도 엔진 시간만큼 흐른다 (DS.ageAdvance — 게임과 같다).
@@ -60,6 +60,10 @@ function check(where) {      // BOTCHECK=1: 싸움 밖마다 자리 불변식 (t
 function tidy() {
   if (OLD) return oldTidy();
   if (D.linVacant(s).length && process.env.BOTLOG) { const hs = D.linHeirs(s, s.hero); st.log.push('RITE @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' yr' + D.calNow(s).yr + ' heirs ' + hs.map(h => h.kind + (h.young ? 'Y' : '')).join(',') + ' mercs ' + s.mercs.length + ' party ' + D.partyIds(s).length); }
+  if (D.linVacant(s).length && D.linEnded(s, s.hero) && D.linChoices) {      // 사람이 하듯: 어른 핏줄도 막사의 같은 병과도 없으면 대를 끊기보다 다른 가문의 가주(레벨이 가장 높은 이)를 맹주로 고른다
+    const o3 = D.linChoices(s, s.hero).filter(h => h.opt === 3).sort((a, b) => (b.pL || 0) - (a.pL || 0))[0];
+    if (o3 && D.linSucceed(s, s.hero, o3, {})) { st.pick3 = (st.pick3 || 0) + 1; st.log.push('pick3 @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' → ' + (s.chars[s.hero] || {}).cls); }
+  }
   if (D.linVacant(s).length) { const ev = D.linAutoAll(s) || []; ev.forEach(e => { if (e.t === 'lapse') { st.lapse++; st.log.push('LAPSE @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' houses ' + D.partyIds(s).length + ' kin ' + D.mercsOf(s, s.hero).length); } }); }
   const seat = D.sbTick(s); st.sbSeat += seat.length;
   D.mercTidy(s); D.pSync(s);
@@ -94,7 +98,11 @@ function sendKin() {
 }
 function prep() {
   tidy();
-  if (D.linAutoWed) D.linAutoWed(s);
+  if (D.linAutoWed) {      // 혼인: 막사에 맹주와 같은 병과가 한 사람뿐이면 그이는 짝으로 고르지 않는다 (맹주의 뒤를 받칠 사람 — 사람이 하듯)
+    const hc = s.chars[s.hero], bk = hc && !OLD ? D.barracks(s).filter(m => D.sbFits(hc, m)) : [], keep = bk.length === 1 ? bk[0] : null, sx0 = keep && keep.sx;
+    if (keep && hc.sx) keep.sx = hc.sx;
+    try { D.linAutoWed(s); } finally { if (keep) keep.sx = sx0; }
+  }
   if (OLD) { oldRecruit(); tidy(); } else { recruit(); sendKin(); tidy(); }
   if (s.crest && D.fuseCands(s).length >= D.FUSE_N) { const k = D.fuseAuto(s); st.fuse += k; if (k) st.log.push('fuse ×' + k); }      // 맹세의 깃대가 있으면 7단 Lv10 셋이 모일 때마다 합일 (합일한 이는 70 을 넘어 자란다)
   D.lootAutoEquip(s); heal(); shop();
@@ -236,7 +244,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
 const H = (st.simT + st.over) / 3600;
 const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths,
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
-  births: st.births, inv: invBad, fuse: st.fuse, lapse: st.lapse, field: st.field, scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
+  births: st.births, inv: invBad, pick3: st.pick3 || 0, fuse: st.fuse, lapse: st.lapse, field: st.field, scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
 console.log(`${cls} seed${seed}: ${out.cleared}/30 in ${out.hours}h, wipes ${out.wipes}, deaths ${out.deaths} (hero ${out.heroDeaths}, bearer ${out.bearDeaths}, kin ${out.kinDeaths}), recruits ${out.recruits}, kin sent ${out.kinSent}, vacancies max ${out.vacMax}/avg ${out.vacAvg}`);
 console.log('BOT ' + JSON.stringify(out));

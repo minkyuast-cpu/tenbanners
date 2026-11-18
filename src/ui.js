@@ -355,14 +355,6 @@ function bestInBag(ch, sl) {
   for (var id in s.gear) { var g = DS.gear(id); if (g && g.slot === sl && s.gear[id] > 0 && DS.canEquip(ch, id) && DS.gearScore(g, ch) > bs + 0.5) { bs = DS.gearScore(g, ch); best = id; } }
   return best;
 }
-function cmdGearRow(ch, sl) {      // r12: 줄을 누르면 교체 시트, 줄 끝은 「강화」 하나
-  var g = DS.gear(ch[sl[0]]), r = g ? DS.enhRate(g) : 0, bb = bestInBag(ch, sl[0]), h = '';
-  var cst = g ? (DS.gearStatTxt ? DS.gearStatTxt(g, DS.gearAt(g, ch.L, ch.cls, ch.gt)) : g.stat) : '', coff = g && DS.gearFits && !DS.gearFits(ch.cls, g);      // 2.1.0: 그 사람의 레벨·병과로
-  h += '<div class="row cgear cg2" data-gear="' + sl[0] + '">' + (g && DS.iconHtml ? DS.iconHtml('gear', g.id) : '') + '<div class="tx">' + (g ? gearRowName(g) + (DS.statChips ? DS.statChips(cst, '', coff && DS.gearOffChip ? DS.gearOffChip() : '') : '<small>' + cst + offTag(ch, g) + '</small>') + '' : '<b>' + sl[1] + ' 없음</b><small>눌러서 가방에서 고른다</small>') + '</div>' +
-    (r ? enhBtn(g, 'data-enh-' + sl[0] + '="' + ch.id + '"') : '') + '</div>';
-  if (bb) { var bg = DS.gear(bb); h += '<div class="row cbetter"><div class="tx"><small class="lup">▲ 가방에 더 좋은 것 <b>' + esc(bg.name) + '</b></small><small class="df">' + diffHtml(gearDiff(ch, bb), 3) + '</small></div><button class="btn small" data-qwear="' + esc(bb) + '">장착</button></div>'; }
-  return h;
-}
 // charSheet 의 클릭에서 부른다: 처리했으면 true
 function cmdGearClick(e, chId, o) {
   var s = G.save, ch = s.chars[chId], b;
@@ -1445,7 +1437,7 @@ function charSheet(id, parent) {
     return '<div class="cs2">' + html + '</div>';
   });
   o.addEventListener('click', function (e) {
-    var s = G.save, ch = s.chars[id], ge = e.target.closest('[data-gear]');
+    var s = G.save, ch = s.chars[id];
     var bnb = e.target.closest('[data-bn]');
     if (bnb) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } A('tap'); bnPick(id, o); return; }
     var hb = e.target.closest('[data-gohall]'); if (hb) { if (DS.townBusy && DS.townBusy()) { A('cancel'); toast(DS.townWorkWhy(), 2600); return; } A('tap'); mercShop(); return; }
@@ -1454,11 +1446,6 @@ function charSheet(id, parent) {
     if (e.target.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return; }
     if (gearSlotClick(e, id, ch && id !== s.hero ? (DS.bearer(s, ch, 1) || {}).id : 0, o)) return;      // 2.2.0: 머리의 장비 칸
     if (cmdGearClick(e, id, o)) return;      // r4 forge (강화·바로 장착) — data-info 보다 먼저
-    if (ge) {
-      if (ge.dataset.gear === 'best') { var ok = DS.autoEquip(s, ch); A(ok ? 'ok' : 'cancel'); toast(ok ? '가방의 더 좋은 장비로 바꿨다.' : '가방에 더 좋은 장비가 없다.'); DS.refreshUnits(); U.persist(); o.draw(); }
-      else { A('tap'); pickGear(id, ge.dataset.gear, o); }
-      return;
-    }
     var inf = e.target.closest('[data-info]'); if (inf) { A('tap'); mercInfo(+inf.dataset.info, o); return; }
   });
   o.onclose = function () { if (parent && parent.isConnected && parent.draw) parent.draw(); };
@@ -1755,6 +1742,7 @@ function tabHelp() {
       '<b>맹주가 쓰러지면</b> 전투가 끝난 뒤에 누가 이을지 고른다. 시나리오 중이면 시나리오가 끝난 뒤에. 고르기 전에 게임을 꺼도 다시 켜면 그 창이 돌아온다.']],
     ['장비', 0, [
       '장비는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 누구나 어떤 장비든 장착한다. 병과에 맞지 않는 계열은 능력치가 ' + Math.round((1 - DS.GEAR_OFF) * 100) + '% 깎인다.',
+      '가문 창과 인물 창 맨 위의 <b>장비 칸</b>을 누르면 가방의 장비가 뜬다. 줄을 한 번 누르면 입고, 「가장 좋은 것」은 가장 나은 것을 입힌다. 강화도 거기서 한다. 위쪽 초상을 한 번 더 누르면 가문 창이 열린다.',
       '장비에는 단이 없다. 위력, 방어 같은 수치는 <b>입은 사람의 레벨</b>을 따라 오르니, 마음에 드는 장비는 끝까지 쓸 수 있다.',
       '등급은 셋이다. <b class="lg lg1">보통</b>, <b class="lg lg4">유니크</b>(옵션 하나나 둘), <b class="lg lg5">전설</b>(이름과 대표 효과가 정해진 물건). 이름과 그림 테두리의 색으로 등급을 표시한다. 사람의 등급도 색 이름표로 보인다. 전설은 지역마다 다르니 여러 곳을 사냥해 본다.',
       '<b>강화</b>는 대장간(「마을 일」에서는 어디서나)에서 골드를 내고 한 단계씩, +' + DS.ENH.max + '까지. +1 성공 ' + DS.ENH.rate[1] + '%, 단계마다 낮아져 +5부터는 ' + DS.ENH.rate[DS.ENH.max] + '%. 실패하면 부서진다. 값은 단계가 오를수록 비싸다.',
