@@ -1,5 +1,6 @@
 // 전민 — 머리 없는 캠페인 봇 (2.2.0 「한 사람 한 사람」 규칙). 진짜 엔진(DS.Sim)과 진짜 규칙 함수로 30번까지 깬다.
 //   node tools/bot.js [cls=inf] [seed=1] [gen2=0]          예: node tools/bot.js mag 3
+//   BOTCHECK=1: 싸움 밖마다 자리 불변식 검사(tools/inv.js) — 어김은 「INV …」 줄, 요약의 inv 칸에 수
 //   BOTSAVE=파일 BOTSAVEAT=15: 그 시나리오를 깬 판을 저장 글(JSON)로 쓰고 끝낸다 (화면 시험용 중반 저장)
 //   끝에 한 줄 요약과 「BOT {json}」 (hours · cleared · wipes · deaths · vacancies · recruits …).
 //
@@ -50,6 +51,12 @@ function oldRecruit() {
     D.pullMerc(s, rnd, 0); st.recruits++; st.recruitGold += pay; D.autoAssign(s);
   }
 }
+const INV = process.env.BOTCHECK && !OLD ? require('./inv.js') : null, invSeen = {};
+let invBad = 0;
+function check(where) {      // BOTCHECK=1: 싸움 밖마다 자리 불변식 (tools/inv.js). 처음 보는 어김만 찍는다
+  if (!INV) return;
+  INV(D, s, true).forEach(b => { invBad++; const k = b.replace(/[0-9]+/g, '#'); if (!invSeen[k]) { invSeen[k] = 1; console.log('INV ' + where + ' @' + Object.keys(s.cleared).length + ': ' + b); } });
+}
 function tidy() {
   if (OLD) return oldTidy();
   if (D.linVacant(s).length && process.env.BOTLOG) { const hs = D.linHeirs(s, s.hero); st.log.push('RITE @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' yr' + D.calNow(s).yr + ' heirs ' + hs.map(h => h.kind + (h.young ? 'Y' : '')).join(',') + ' mercs ' + s.mercs.length + ' party ' + D.partyIds(s).length); }
@@ -91,6 +98,7 @@ function prep() {
   if (OLD) { oldRecruit(); tidy(); } else { recruit(); sendKin(); tidy(); }
   if (s.crest && D.fuseCands(s).length >= D.FUSE_N) { const k = D.fuseAuto(s); st.fuse += k; if (k) st.log.push('fuse ×' + k); }      // 맹세의 깃대가 있으면 7단 Lv10 셋이 모일 때마다 합일 (합일한 이는 70 을 넘어 자란다)
   D.lootAutoEquip(s); heal(); shop();
+  check('prep');
 }
 // 한 싸움: specs 를 starts(또는 x,y 근처)에 세우고 끝날 때까지. 돌려주는 것: 'win' | 'lose' | 'end'
 function run(sim, mode, zid, maxT) {
@@ -147,6 +155,7 @@ function after(scnWin, sc) {
   const ev = D.ageCheck(s, sc ? sc.name : '들판').concat(D.linSettle(s, sc ? sc.name : '들판'));
   ev.forEach(e => { if (e.t === 'birth') st.births++; if (e.t === 'death' && e.nat) st.log.push('천수 ' + (e.k || '') + ' @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' yr' + D.calNow(s).yr); });
   tidy();
+  check(sc ? 'scn' : 'field');
 }
 function farmL() {      // 들판의 기준 레벨: 보통은 부대 평균, 단 문턱(8단·9단) 앞에서는 가장 앞선 사람 쪽으로 (그 사람이 경험치를 제대로 받게)
   const sc = D.nextScn ? D.nextScn(s) : null, L = D.partyL(s);
@@ -227,7 +236,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
 const H = (st.simT + st.over) / 3600;
 const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths,
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
-  births: st.births, fuse: st.fuse, lapse: st.lapse, field: st.field, scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
+  births: st.births, inv: invBad, fuse: st.fuse, lapse: st.lapse, field: st.field, scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
 console.log(`${cls} seed${seed}: ${out.cleared}/30 in ${out.hours}h, wipes ${out.wipes}, deaths ${out.deaths} (hero ${out.heroDeaths}, bearer ${out.bearDeaths}, kin ${out.kinDeaths}), recruits ${out.recruits}, kin sent ${out.kinSent}, vacancies max ${out.vacMax}/avg ${out.vacAvg}`);
 console.log('BOT ' + JSON.stringify(out));
