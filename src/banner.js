@@ -127,7 +127,7 @@ DS.bearerLook = function (who) {
 };
 
 // ───────── 맹주 집 핏줄 아이 (2.2.0: 어른이 되면 맹주 가문의 가문원으로 싸운다 · 빈 가문의 가주로 보낼 수 있다) ─────────
-DS.kidOf = function (s, m) { var P = s && s.lin && s.lin.P, q = m && m.pid && P ? P[m.pid] : null; return q && q.m === m.id && q.hb && !q.ad ? q : null; };
+DS.kidOf = function (s, m) { var P = s && s.lin && s.lin.P, q = m && m.pid && P ? P[m.pid] : null; return q && q.m === m.id && q.hb && !q.ad && !q.hx ? q : null; };      // 2.2.1: 옛 맹주 가문 사람(P.hx)은 지금 맹주의 핏줄이 아니다
 // ───────── 가주 세우기 (2.2.0) ─────────
 // DS.hand(s, chId, mid, opt) — 가문 chId 의 가주를 mid 로 세운다.
 //   mid = 막사의 같은 병과(DS.sbFits): 가주와 자리를 바꾼다 (가주가 있으면 그이는 막사로 — 맹주 집 사람이면 가문원으로 돌아간다).

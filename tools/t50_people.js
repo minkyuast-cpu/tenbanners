@@ -204,7 +204,7 @@ module.exports = async (page, shot, L) => {
   // ⑨-3 화면: 맹주가 쓰러지면 고른다 — 자식 · 막사(같은 병과) · 다른 가문. 고르기 전에 저장·다시 불러와도 그 창이 돌아온다
   await ev(() => {
     var s = DS.G.save, h = s.chars[s.hero], P = s.lin.P, hp = P[h.pid];
-    s.mercs.slice().forEach(function (m) { if (DS.kidOf(s, m)) DS.loseMerc(s, m.id); });
+    s.mercs.slice().forEach(function (m) { if (DS.kidOf(s, m) || (DS.isSb(m) && DS.sbFits(h, m))) DS.loseMerc(s, m.id); });      // 앞서 뽑힌 같은 병과 영웅도 막사에서 뺀다 (모집 병과는 무작위)
     for (var k in P) if (P[k].st === 'young') P[k].st = 'gone';
     DS.linTidy(s); DS.mercTidy(s);
     window.__mkKid = function (L, nm) { var s = DS.G.save, h = s.chars[s.hero], P = s.lin.P, hp = P[h.pid]; var m = DS.addMerc(s, 'm_sword', 3, s.hero); m.kn = 1; m.L = L; m.exp = 0; m.n = nm; var p = DS.linMkP(s, { k: 'm', sn: s.lin.sur, n: nm, sx: 'm', gen: hp.gen + 1, pa: [hp.id].concat(hp.sp ? [hp.sp] : []), type: m.type, g: 3, m: m.id, gv: 1, hb: 1 }); m.pid = p.id; return m; };
@@ -227,7 +227,7 @@ module.exports = async (page, shot, L) => {
   });
   A(/누가 잇는가/.test(c.title) && c.hd.join(',') === '자식,막사,다른 가문', 'heir choice modal: title and three sections (' + c.hd.join(' / ') + ')');
   A(c.n1 === 2 && c.n2 === 2 && c.n3 === c.bear && c.n3 > 0, 'one row per adult blood heir (2), per same-class 막사 person (2, other class excluded), per other house 가주 (' + [c.n1, c.n2, c.n3, c.bear].join('/') + ')');
-  A(!c.bad && c.sw <= 390 && /옛 맹주 가문은 보통 가문이 된다/.test(c.say), 'choice rows fit 390px; option 3 says what happens');
+  A(!c.bad && c.sw <= 390 && /옛 맹주 가문의 가족은 막사로 간다/.test(c.say), 'choice rows fit 390px; option 3 says the old house family goes to the 막사');
   A((await L.badText(page, '.ov')).length === 0, 'heir choice modal has no NaN/undefined');
   // 고르기 전에 다시 불러온다 → 맹주 자리는 빈 채로, 창이 다시 뜬다 (안전망이 먼저 채우지 않는다)
   await page.reload(); await page.waitForSelector('#btnCont', { timeout: 30000 });
@@ -235,7 +235,7 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var s = DS.G.save, h = s.chars[s.hero]; return { vac: !!h.vac, rite: !!document.querySelector('.ov.rite') }; });
   A(c.vac && c.rite, 'pending choice survives a reload: 맹주 seat still empty, the choice comes back');
   await ev(() => { window.__X = window.__X || {}; });
-  const X = await ev(() => { var s = DS.G.save, f = function (n) { var m = s.mercs.filter(function (x) { return x.n === n; })[0]; return m ? m.id : 0; }; return { hid: s.hero, k1: f('큰별'), k2: f('작은별'), sa: f('바위'), sbb: f('자갈') }; });
+  const X = await ev(() => { var s = DS.G.save, f = function (n, kin) { var m = s.mercs.filter(function (x) { return x.n === n && (kin ? !!DS.kidOf(s, x) : DS.isSb(x)); })[0]; return m ? m.id : 0; }; return { hid: s.hero, k1: f('큰별', 1), k2: f('작은별', 1), sa: f('바위'), sbb: f('자갈') };      // 이름이 모집 이름과 겹칠 수 있다 (큰별) });
   async function choose(sel) {
     if (!(await page.$('.ov.rite [data-lgheir]'))) { await page.click('.ov.rite [data-lgstep="pick"]').catch(() => {}); await L.sleep(400); }
     await page.click(sel); await L.sleep(1100); await page.click('#yesHeir'); await L.sleep(500);
@@ -268,6 +268,69 @@ module.exports = async (page, shot, L) => {
   A(/보통 가문이 된다/.test(conf) && /작은별/.test(conf), 'option 3 confirm tells what happens to the old 맹주 house (' + conf.replace(/\s+/g, ' ').slice(0, 90) + ')');
   A(c.moved && c.ps && c.hx && c.w && c.oldHero, 'option 3: s.hero moves to that house; it keeps its gear and 공훈; the old house holds no 맹주 data');
   A(c.oldBear && c.oldL === 15 && c.nc && c.party && c.kinOk && c.units === c.specs && c.sel, 'option 3: old 맹주 house → its adult blood kin is 가주 at own level (L ' + c.oldL + '), takes the house class, both houses fight');
+  // 2.2.1 ③ 옛 맹주의 가족: 어른 핏줄 셋 + 막사에서 온 배우자(가문원) + 미성년 하나 → 다른 가문의 가주를 고르면 새 가주 하나 말고 모두 막사로 (옛 가문의 병과 · 제 레벨)
+  const INV = fs.readFileSync(path.join(__dirname, 'inv.js'), 'utf8');
+  const invIn = () => ev((src) => { var module = {}; (new Function('module', src))(module); return module.exports(DS, DS.G.save, true); }, INV);
+  await L.closeAll(page);
+  const F = await ev(() => {
+    var s = DS.G.save, h = s.chars[s.hero], P = s.lin.P, hp = P[h.pid];
+    var sp = DS.addMerc(s, DS.heroType(DS.charList(s).filter(function (c) { return c.cls !== h.cls && !DS.CLASSES[c.cls].master; })[0].cls), 3, 0); sp.sb = 1; DS.sbNc(s, sp, null); sp.L = 22; sp.n = '이슬'; sp.sx = h.sx === 'm' ? 'f' : 'm'; DS.mercTidy(s);
+    if (hp.sp) { var q = P[hp.sp]; hp.sp = 0; if (q) q.sp = 0; }
+    var w = DS.linWed(s, { c: s.hero }, { m: sp.id }, { anywhere: true }); hp = P[h.pid];
+    function mk(L, nm, g) { var m = DS.addMerc(s, DS.heroType(h.cls), g, s.hero); m.kn = 1; m.L = L; m.exp = 0; m.n = nm; var p = DS.linMkP(s, { k: 'm', sn: s.lin.sur, n: nm, sx: 'm', gen: hp.gen + 1, pa: [hp.id, sp.pid], type: m.type, g: g, m: m.id, gv: 1, hb: 1 }); m.pid = p.id; return m; }
+    var a = mk(31, '해별', 3), b = mk(24, '달별', 4), c = mk(17, '샛별', 2);
+    var y = DS.ageYoung(s, hp, P[sp.pid], DS.heroType(h.cls), 3, Math.random);
+    var yp = DS.linMkP(s, { k: 'm', sn: s.lin.sur, n: '아기별', sx: 'f', gen: hp.gen + 1, pa: [hp.id, sp.pid], type: DS.heroType(h.cls), g: 3, m: 0, gv: 1, hb: 1 }); yp.st = 'young'; y.ya.n = '아기별'; yp.ya = y.ya; yp.by = y.by; yp.ls = 70;
+    DS.mercTidy(s); DS.rebuildParty();
+    var kin = DS.mercsOf(s, s.hero).map(function (m) { return m.id; });
+    var r = { wed: !!w, hid: s.hero, cls: DS.houseCls(h), a: a.id, b: b.id, c: c.id, sp: sp.id, yp: yp.id, kin: kin.length, L: {} };
+    [a, b, c, sp].forEach(function (m) { r.L[m.id] = [DS.pL(m), m.g]; });
+    h.down = true; var evs = DS.linSettle(s, '시험'); DS.ui.persist();
+    DS.openLineageRite(evs, function () {});
+    return r;
+  });
+  A(F.wed && F.kin === 4, 'old-house family set up: 3 adult blood kin + spouse from the 막사 fight as 가문원 (' + F.kin + '), one minor');
+  await L.sleep(500);
+  if (!(await page.$('.ov.rite [data-lgheir]'))) { await page.click('.ov.rite [data-lgstep="pick"]').catch(() => {}); await L.sleep(400); }
+  const t3 = await ev(() => { var rs = Array.from(document.querySelectorAll('.ov.rite .lgcb.k-o3')); return rs.length ? rs[0].dataset.lgheir : ''; });
+  A(!!t3, 'option 3 row offered');
+  await page.click('.ov.rite .lgcb.k-o3[data-lgheir="' + t3 + '"]'); await L.sleep(600);
+  const conf3 = await ev(() => (document.querySelector('.ov.rite .lgafter') || {}).textContent || '');
+  A(/해별/.test(conf3) && /의 남은 가족 3명은 그 가문의 병과로 막사에 간다/.test(conf3) && /아이 1명은 자라면 막사로 간다/.test(conf3), 'option 3 confirm says the family goes to the 막사 (' + conf3.replace(/\s+/g, ' ').slice(0, 140) + ')');
+  await L.sleep(500); await page.click('#yesHeir'); await L.sleep(500);
+  for (let i = 0; i < 30 && (await page.$('.ov.story, .ov.rite')); i++) { await L.skipStory(page, 3); await L.sleep(250); }
+  await L.closeAll(page);
+  const famChk = () => ev((F) => {
+    var s = DS.G.save, P = s.lin.P, old = s.chars[F.hid], nb = DS.bearer(s, old, 1), by = function (id) { return s.mercs.filter(function (m) { return m.id === id; })[0] || null; };
+    var sbOk = [F.b, F.c, F.sp].map(function (id) { var m = by(id), p = m && P[m.pid]; return !!(m && DS.isSb(m) && m.sb && m.nc === F.cls && !m.kn && DS.pL(m) === F.L[id][0] && m.g === F.L[id][1] && p && p.hx === F.hid && !DS.lineOf(s, m)); });
+    var ym = s.mercs.filter(function (m) { return m.pid === F.yp; })[0] || null, yp = P[F.yp];
+    return { moved: s.hero !== F.hid, bear: nb && nb.id === F.a && nb.nc === F.cls, sbOk: sbOk, kin: DS.mercsOf(s, s.hero).length, yHx: yp && yp.hx === F.hid, ySt: yp && yp.st, ym: ym ? { o: ym.o, sb: ym.sb, nc: ym.nc, kn: !!ym.kn } : null,
+      blood: DS.linHeirs(s, s.hero).filter(function (h) { return h.blood; }).length, sbFor: DS.sbOf(s, F.hid).map(function (m) { return m.id; }), units: DS.G.sim.units.filter(function (u) { return u.side === 'ally' && !u.dead; }).length, specs: DS.partySpecs(s).length };
+  }, F);
+  c = await famChk();
+  A(c.moved && c.bear, 'option 3 with family: the best adult blood kin (해별) is the old house 가주 with its class');
+  A(c.sbOk.every(Boolean) && c.kin === 0, 'option 3 with family: the other adults and the spouse are in the 막사 with the old class, own level and grade, marked P.hx (' + c.sbOk.join('/') + ', kin ' + c.kin + ')');
+  A(c.sbFor.length >= 3 && c.blood === 0 && c.yHx && c.ySt === 'young' && c.units === c.specs, 'they wait for that house (same class), are not blood heirs of the new 맹주, the minor is marked (' + c.sbFor.length + ' waiting)');
+  A((await invIn()).length === 0, 'inv.js passes after option 3');
+  // 미성년이 자란다 → 막사로 (가문원이 아니다)
+  c = await ev((F) => { var s = DS.G.save, P = s.lin.P, yp = P[F.yp]; yp.by = (s.cal.t || 0) - 15 * DS.AGE.year - 1; var e = DS.ageCheck(s, '시험').filter(function (x) { return x.t === 'adult'; }); DS.mercTidy(s); DS.rebuildParty(); DS.ui.persist(); return { n: e.length, sb: e.map(function (x) { return x.sb; }), txt: e.map(function (x) { return DS.linEvText(s, x.ev); }).join(' / ') }; }, F);
+  A(c.n === 1 && c.sb[0] === 1 && /막사에 들었다/.test(c.txt), 'the old-house minor comes of age into the 막사 (' + c.txt + ')');
+  c = await famChk();
+  A(c.ym && c.ym.o === 0 && c.ym.sb === 1 && c.ym.nc === F.cls && !c.ym.kn && c.kin === 0 && c.ySt === 'live' && c.yHx, 'grown minor: 막사, old class, not 가문원 (' + JSON.stringify(c.ym) + ')');
+  A((await invIn()).length === 0, 'inv.js passes after the minor comes of age');
+  // 저장하고 다시 불러온다 → 그대로 (부팅 경로 · 클라우드도 같은 문자열을 Save.read 로 읽는다)
+  const rawF = await ev(() => { DS.ui.persist(); return localStorage.getItem(DS.Save.KEY); });
+  c = await ev((a) => { var r = DS.Save.read(a[0]), F = a[1], P = r.lin.P, hx = [F.b, F.c, F.sp].map(function (id) { var m = r.mercs.filter(function (x) { return x.id === id; })[0]; return !!(m && m.sb && !m.o && m.nc === F.cls && P[m.pid] && P[m.pid].hx === F.hid); }); return { hx: hx, y: P[F.yp] && P[F.yp].hx === F.hid, kin: DS.mercsOf(r, r.hero).length }; }, [rawF, F]);
+  A(c.hx.every(Boolean) && c.y && c.kin === 0, 'Save.read of the stored string keeps the marker and 막사 places (cloud path)');
+  await page.reload(); await page.waitForSelector('#btnCont', { timeout: 30000 });
+  await page.click('#btnCont'); await L.sleep(2600); await L.closeAll(page);
+  c = await famChk();
+  A(c.sbOk.every(Boolean) && c.ym && c.ym.sb === 1 && c.ym.nc === F.cls && c.kin === 0 && c.yHx && c.blood === 0, 'after reload: the old-house family is still in the 막사 with the marker');
+  A((await invIn()).length === 0, 'inv.js passes after reload');
+  // 막사 규칙 그대로: 손으로 바꿔 세우면 물러난 가주(해별)는 막사로 (가문원이 아니다) · 방출할 수 있다
+  c = await ev((F) => { var s = DS.G.save, r = DS.hand(s, F.hid, F.b, { where: 'town' }), a = s.mercs.filter(function (m) { return m.id === F.a; })[0]; return { ok: r.ok, to: r.to, a: a && DS.isSb(a) && a.nc === F.cls, kin: DS.mercsOf(s, s.hero).length, fire: DS.isSb(s.mercs.filter(function (m) { return m.id === F.c; })[0]) }; }, F);
+  A(c.ok && c.to === 'sb' && c.a && c.kin === 0 && c.fire, 'manual swap works (same class); the old 가주 goes back to the 막사, not 가문원; they are 막사 people (방출 allowed)');
+  A((await invIn()).length === 0, 'inv.js passes after the swap');
   // ③ 옛 맹주 가문에 어른 핏줄이 없으면 막사의 같은 병과, 그도 없으면 빈 가문 (머리 없이)
   c = await ev(() => {
     function run(withSb) {
@@ -328,7 +391,7 @@ module.exports = async (page, shot, L) => {
   A(!c.one.length, 'every 막사 person has exactly one class (nc) after migration' + (c.one.length ? ': ' + c.one.join(' ') : ''));
   A(/한 사람 한 사람/.test(c.news) && /모두 막사에서 기다린다/.test(c.news), 'migration news line');
   // 판 올림한 저장으로 실제로 이어 하기 (부팅 경로)
-  await page.evaluate((raw) => { DS.G.save = null; DS.G.running = false; localStorage.clear(); localStorage.setItem(DS.Save.KEY, raw); }, raw);      // 지금 판이 떠나며 저장을 덮지 않게
+  await page.evaluate((raw) => { DS.G.save = null; DS.G.running = false; localStorage.clear(); localStorage.setItem(DS.Save.KEY, raw); DS.Save.setMeta({ seenVer: DS.VERSION }); }, raw);      // 공지 창이 「이어하기」를 가리지 않게      // 지금 판이 떠나며 저장을 덮지 않게
   await page.reload(); await page.waitForSelector('#btnCont', { timeout: 30000 });
   await page.click('#btnCont'); await L.sleep(1500); await L.skipStory(page); await L.closeAll(page);
   c = await ev(() => { var s = DS.G.save; return { v: s.v, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length, fight: DS.partySpecs(s).length }; });

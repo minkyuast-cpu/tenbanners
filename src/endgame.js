@@ -239,7 +239,7 @@ DS.egForecast = function (s) {
 // 기수 가문 아이: 가주의 자식(친자 먼저, 나이 순), 없으면 선대 가주의 자식. alsoYoung: 미성년도 (예보용)
 DS.egHouseKids = function (s, alsoYoung) {
   var P = LP(s), hp = heroP(s); if (!hp) return [];
-  function ok(q) { if (q.rv || q.ret || q.hand || q.id === hp.id || !q.hb || q.ad) return false; if (q.st === 'live' && q.m && entP(s, q)) return true; return !!alsoYoung && q.st === 'young'; }      // ⑱ 깃대 넘김은 어른 핏줄에게만 (핏줄이 없으면 넘김 없음)
+  function ok(q) { if (q.rv || q.ret || q.hand || q.id === hp.id || !q.hb || q.ad || q.hx) return false; if (q.st === 'live' && q.m && entP(s, q)) return true; return !!alsoYoung && q.st === 'young'; }      // ⑱ 깃대 넘김은 어른 핏줄에게만 (핏줄이 없으면 넘김 없음)
   function sortK(a) { return a.sort(function (x, y) { return (x.ad ? 1 : 0) - (y.ad ? 1 : 0) || (+x.by || 0) - (+y.by || 0) || x.id - y.id; }); }
   var ks = sortK(kidsOf(s, hp).filter(ok)); if (ks.length) return ks;
   var prev = null; for (var k in P) { var q = P[k]; if (q.id !== hp.id && (q.hand || (q.seat === s.hero && q.st !== 'live')) && (!prev || q.id > prev.id)) prev = q; }
@@ -280,7 +280,8 @@ DS.egYear = function (s) {
   var adults = [], P = LP(s), heroPid = hp ? hp.id : 0;
   evs.forEach(function (ev) {
     if (!ev) return;
-    if (ev.t === 'adult') { adults.push(nm(s, ev.a)); ps.na++; }
+    if (ev.t === 'adult' && ev.sb) { ps.na++; out.push({ k: 'adult', t: lines('pass.line.adultSb', { a: nm(s, ev.a) }) }); }      // 2.2.1: 옛 맹주 가문의 아이는 막사로
+    else if (ev.t === 'adult') { adults.push(nm(s, ev.a)); ps.na++; }
     else if (ev.t === 'birth') { ps.nb2 = (ps.nb2 || 0) + 1; var bn = nm(s, ev.a); out.push({ k: 'birth', t: ['✦ 아이가 태어났다 — ' + bn + '.'] }); }      // ⑲ 스무 해 안에서도 아이가 태어난다
     else if (ev.t === 'adultWait') out.push({ k: 'wait', t: lines('pass.line.wait', { a: nm(s, ev.a) }) });
     else if (ev.t === 'elder' && ev.a) out.push({ k: 'elder', t: lines('pass.line.elder', { a: nm(s, ev.a) }) });

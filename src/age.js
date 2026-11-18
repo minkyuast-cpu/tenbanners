@@ -32,6 +32,7 @@ DS.ageLong = function (e, s) { s = s || (DS.G && DS.G.save); var a = e && s ? DS
 DS.AGE_TXT = {
   deathNat: ['{a}{이가} 천수를 누리고 눈을 감았다.'],
   adult: ['{a}{이가} 성년이 되어 가문원으로 싸움에 나선다.'],      // {a} = 호 + 성이름 (「민규 2세 불꽃 스타크」)
+  adultSb: ['{a}{이가} 성년이 되어 막사에 들었다.'],      // 2.2.1: 옛 맹주 가문의 아이
   elder: ['{a}의 머리에 서리가 내렸다. 노년에 들었다.']
 };
 var NAT = '천수를 누림';
@@ -100,13 +101,18 @@ function grow(s, at, evs) {
   Object.keys(P).map(Number).sort(function (a, b) { return a - b; }).forEach(function (k) {
     var p = P[k]; if (!p || p.st !== 'young' || !p.ya) return;
     if (DS.ageOf(s, p) < DS.AGE.adult) return;
-    var y = p.ya, m = DS.addMerc(s, y.type, y.g, s.hero);
-    m.kn = 1; m.L = DS.kidL ? DS.kidL(s) : 1; m.exp = 0;      // 2.2.0: 아이는 낮은 레벨로 맹주 가문의 가문원이 되어 함께 싸운다 (빈 가문의 가주로 보낼 수 있다)
+    var hc = p.hx && s.chars[p.hx] && DS.CLASSES[s.chars[p.hx].cls] ? s.chars[p.hx] : null, sb = !!p.hx;      // 2.2.1: 옛 맹주 가문의 아이(P.hx)는 새 맹주를 따르지 않고 막사로 (그 가문의 병과)
+    if (sb && DS.barFull && DS.barFull(s)) { var y0 = p.ya; p.m = 0; p.type = y0.type; p.g = y0.g; p.n = y0.n; delete p.ya; delete p.wait; p.st = 'gone'; logE(s, 'gone', p.id); var fn = DS.snName ? DS.snName(p.sn, p.n) : p.n || ''; s.news = (Array.isArray(s.news) ? s.news : []).concat(['막사가 가득 차(' + DS.MERC_MAX + '명) ' + fn + DS.josa1(fn, '이가') + ' 성년이 되었지만 막사에 들지 못하고 떠났다. 가계도에는 남는다.']); return; }      // 막사가 가득: 가계도에만 남는다
+    var y = p.ya, m = DS.addMerc(s, y.type, y.g, sb ? 0 : s.hero);
+    if (sb) { m.sb = 1; m.nc = hc && DS.houseCls ? DS.houseCls(hc) : ''; if (!m.nc) { delete m.nc; if (DS.sbNc) DS.sbNc(s, m, null); } }
+    else m.kn = 1;
+    m.L = DS.kidL ? DS.kidL(s) : 1; m.exp = 0;      // 2.2.0: 아이는 낮은 레벨로 맹주 가문의 가문원이 되어 함께 싸운다 (빈 가문의 가주로 보낼 수 있다)
     m.n = y.n; m.sx = y.sx; m.sn = p.sn; if (p.ttl) m.ttl = p.ttl; m.t = y.t; m.v = y.v; if (y.q) m.q = y.q; else delete m.q;
     m.by = p.by; m.ls = p.ls; m.pid = p.id; if (p.pot != null) m.pot = p.pot;      // ⑭-4 잠재력
     p.st = 'live'; p.m = m.id; p.type = y.type; p.g = y.g; p.n = y.n; delete p.ya; delete p.wait;
-    var ev = logE(s, 'adult', p.id, 0, { full: DS.snName ? DS.snName(p.sn, p.n) : (p.sn || '') + (p.n || '') });      // 호(「민규 2세」)만으로는 형제가 구분되지 않아 성이름을 함께
-    evs.push({ t: 'adult', a: p.id, mid: m.id, ev: ev });
+    var ax = { full: DS.snName ? DS.snName(p.sn, p.n) : (p.sn || '') + (p.n || '') }; if (sb) ax.sb = 1;
+    var ev = logE(s, 'adult', p.id, 0, ax);      // 호(「민규 2세」)만으로는 형제가 구분되지 않아 성이름을 함께
+    evs.push({ t: 'adult', a: p.id, mid: m.id, sb: sb ? 1 : 0, ev: ev });
   });
 }
 function logE(s, t, a, b, x) {

@@ -374,10 +374,13 @@ DS.sbOf = function (save, chId) {
 };
 DS.kinOf = function (save) { return (save.mercs || []).filter(function (m) { return m.o && !m.h && !m.sb; }); };
 DS.mercsOf = function (save, chId) { return (save.mercs || []).filter(function (m) { return m.o === chId && !m.h && !m.sb; }); };
-// 맹주 집 사람인가 (가문원이 될 수 있는 이): 핏줄 아이 · 깃대를 넘긴 선대 · 맹주의 배우자 · 이미 가문원으로 적힌 이(m.kn)
+// 맹주 집 사람인가 (가문원이 될 수 있는 이): 핏줄 아이 · 깃대를 넘긴 선대 · 맹주의 배우자 · 이미 가문원으로 적힌 이(m.kn). 2.2.1: 옛 맹주 가문 사람(P.hx)은 아니다
 DS.lineOf = function (save, m) {
-  if (!m) return false; if (m.kn) return true;
-  var P = save && save.lin && save.lin.P, p = m.pid && P ? P[m.pid] : null; if (!p || p.m !== m.id) return false;
+  if (!m) return false;
+  var P = save && save.lin && save.lin.P, p = m.pid && P ? P[m.pid] : null;
+  if (p && p.m === m.id && p.hx) return false;      // 2.2.1: 옛 맹주 가문 사람 (P.hx = 그 가문 번호) — 맹주 집 사람이 아니다 (막사 · 그 가문의 병과)
+  if (m.kn) return true;
+  if (!p || p.m !== m.id) return false;
   if ((p.hb && !p.ad) || p.hand) return true;
   var h = save.chars && save.chars[save.hero], hp = h && h.pid && P[h.pid];
   return !!(hp && hp.sp && hp.sp === p.id);
