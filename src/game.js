@@ -764,7 +764,8 @@ function chipStep(box) { var c = box.querySelector('.chip'), c2 = c && c.nextEle
 function chipSnapTo(box, left, smooth, rd) {      // 가장 가까운 칩 가장자리 (칩 너비가 모두 같다) · rd: Math.ceil / Math.floor (따라가기 — 칩이 잘리지 않게)
   var st = chipStep(box), mx = box.scrollWidth - box.clientWidth, t = Math.max(0, Math.min(mx, (rd || Math.round)(left / st - (rd ? (rd === Math.ceil ? 0.02 : -0.02) : 0)) * st));
   if (mx - t < st / 2) t = mx;
-  try { box.scrollTo({ left: t, behavior: smooth && !calm() ? 'smooth' : 'auto' }); } catch (x) { box.scrollLeft = t; }
+  var sm = smooth && !calm(); box._tgt = t; box._tgtT = sm ? performance.now() : 0;      // 가는 중인 자리 (부드럽게 미는 동안 따라가기가 그 자리를 기준으로 본다)
+  try { box.scrollTo({ left: t, behavior: sm ? 'smooth' : 'auto' }); } catch (x) { box.scrollLeft = t; }
   return t;
 }
 function chipGlideStop(box) { if (box._gl) { cancelAnimationFrame(box._gl); box._gl = 0; } }
@@ -817,9 +818,10 @@ function chipSwipe(box) {
 function chipFollow(uid, now) {
   var ce = G.chipEls[uid], box = $('#chips'); if (!ce || !box || !box.classList.contains('swipe') || box.classList.contains('drag')) return;
   var cs = getComputedStyle(box), pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
-  var br = box.getBoundingClientRect(), cr = ce.el.getBoundingClientRect(), t = null, rd = null;
-  if (cr.left < br.left + pl - 1) { t = box.scrollLeft + cr.left - (br.left + pl); rd = Math.floor; }
-  else if (cr.right > br.right - pr + 1) { t = box.scrollLeft + cr.right - (br.right - pr); rd = Math.ceil; }
+  var br = box.getBoundingClientRect(), cr = ce.el.getBoundingClientRect(), t = null, rd = null, sl = box.scrollLeft;
+  var base = box._tgtT && performance.now() - box._tgtT < 700 ? box._tgt : sl, l = cr.left + sl - base, r = cr.right + sl - base;      // 부드럽게 미는 중이면 닿을 자리에서 본다
+  if (l < br.left + pl - 1) { t = base + l - (br.left + pl); rd = Math.floor; }
+  else if (r > br.right - pr + 1) { t = base + r - (br.right - pr); rd = Math.ceil; }
   if (t == null) return;
   chipGlideStop(box); chipSnapTo(box, t, !now, rd);
 }

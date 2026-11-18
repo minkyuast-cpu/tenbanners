@@ -149,7 +149,7 @@ module.exports = async (page, shot, L) => {
   await ev(() => DS.openMenu('party')); await L.sleep(500); await shot('party_vacant');
   A((await L.badText(page, '.ov')).length === 0, '부대 tab has no NaN/undefined');
   // ⑦ 빈 가문에 맹주의 어른 아이를 보낸다 (가문 창)
-  c = await ev(() => { var s = DS.G.save, cle = DS.charList(s).filter(ch => ch.cls === 'cle')[0]; DS.ui.closeAll(); DS.openMenu('party'); return cle.id; });
+  c = await ev(() => { var s = DS.G.save, cle = DS.charList(s).filter(ch => ch.cls === 'cle')[0]; DS.ui.closeAll(); if (!DS.G.zone.town) DS.enterZone('haemil'); DS.openMenu('party'); return cle.id; });      // 2.2.2: 들판 무리가 커서 돌아온 들판에서 곧 싸움이 붙으면 단추가 잠긴다 — 마을에서
   await page.click('.hgh[data-ch="' + c + '"]'); await L.sleep(500); await shot('house_vacant');
   A((await L.badText(page, '.ov')).length === 0, 'house sheet (vacant) has no NaN/undefined');
   const kidBtn = await page.$('.ov [data-bn="pick"]');

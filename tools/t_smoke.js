@@ -39,13 +39,71 @@ module.exports = async (page, shot, L) => {
   // 많은 가문으로 시나리오: 칩 고르기 · 필살기 칸 · 모두 출발 칸에 선다
   await L.edit(page, function () { for (var id = 2; id <= 13; id++) DS.applyClear(s, DS.scn(id)); DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 45; b.exp = 0; } }); for (var i = 0; i < 2; i++) { var m = DS.addMerc(s, 'm_sword', 3, s.hero); m.kn = 1; m.L = 40; } DS.mercTidy(s); DS.pSync(s); });
   await ev(() => { DS.G.quiet = true; DS.G.pause = true; DS.startScenario(DS.scn(14)); }); await L.sleep(800);
-  const sc = await ev(() => { var ids = Object.keys(DS.G.chipEls), want = DS.partySpecs(DS.G.save).length; var last = ids[ids.length - 1]; DS.G.chipEls[last].el.click(); return { want: want, have: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length, chips: ids.length, sel: DS.G.sel === last, ult: !!document.querySelector('#acts .act.ult'), lots: document.querySelector('#chips').classList.contains('many'), docW: document.documentElement.scrollWidth }; });
+  const sc = await ev(() => { var ids = Object.keys(DS.G.chipEls), want = DS.partySpecs(DS.G.save).length; var last = ids[ids.length - 1]; DS.G.chipEls[last].el.click(); return { want: want, have: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length, chips: ids.length, sel: DS.G.sel === last, ult: !!document.querySelector('#acts .act.ult'), swipe: document.querySelector('#chips').classList.contains('swipe'), docW: document.documentElement.scrollWidth }; });
   A(sc.have === sc.want && sc.want >= 12, 'scenario with ' + sc.want + ' allies: all placed (' + sc.have + ')');
   A(sc.sel && sc.ult, 'chip selection works and ult slot shown');
-  A(sc.lots && sc.docW <= 390, 'compact chips, no horizontal page scroll (' + sc.docW + ')');
+  A(sc.swipe && sc.docW <= 390, 'swipe chip row, no horizontal page scroll (' + sc.docW + ')');
+  // 2.2.2 칩 줄: 큰 칩(이름 · 단/Lv) 셋이 보이고 옆으로 민다 · 끌기는 고르기가 아니다 · 고른 칩은 보이는 자리로
+  const geo = () => ev(() => { var b = document.querySelector('#chips'), r = b.getBoundingClientRect(), cs = getComputedStyle(b), pl = parseFloat(cs.paddingLeft), pr = parseFloat(cs.paddingRight);
+    var vis = [...b.querySelectorAll('.chip')].filter(c => { var q = c.getBoundingClientRect(); return q.left >= r.left + pl - 1 && q.right <= r.right - pr + 1; });
+    return { sl: b.scrollLeft, sw: b.scrollWidth, cw: b.clientWidth, top: r.top + r.height / 2, left: r.left, right: r.right, vis: vis.length, names: vis.every(c => c.querySelector('.cn b') && getComputedStyle(c.querySelector('.cn')).display !== 'none' && c.querySelector('.cn b').offsetWidth > 0), lvs: vis.every(c => /단/.test(c.querySelector('em.lv').textContent)), sel: DS.G.sel, docW: document.documentElement.scrollWidth, fl: b.classList.contains('fl'), fr: b.classList.contains('fr') }; });
+  await ev(() => { DS.select(Object.keys(DS.G.chipEls)[0]); }); await L.sleep(700);
+  let g0 = await geo();
+  A(g0.sw > g0.cw + 100 && g0.vis === 3 && g0.names && g0.lvs, 'chip row: 3 full chips with name and 단/Lv visible, scrolls horizontally (' + g0.cw + ' of ' + g0.sw + ')');
+  A(g0.sl < 2 && !g0.fl && g0.fr, 'edge fade only on the side with more chips (fl ' + g0.fl + ', fr ' + g0.fr + ', scrollLeft ' + g0.sl + ', sel ' + g0.sel + ')');
+  // 마우스로 끌기: 첫 칩 위에서 눌러 왼쪽으로 끌면 줄이 밀리고, 아무도 고르지 않는다
+  const sel0 = g0.sel, x0 = g0.right - 30;
+  await page.mouse.move(x0, g0.top); await page.mouse.down(); for (let i = 1; i <= 8; i++) { await page.mouse.move(x0 - i * 22, g0.top); await L.sleep(16); } await page.mouse.up(); await L.sleep(900);
+  let g1 = await geo();
+  A(g1.sl > 40 && g1.sel === sel0, 'mouse drag scrolls the row (scrollLeft ' + Math.round(g1.sl) + ') and does not select (' + g1.sel + ')');
+  A(g1.fl, 'left edge fade after scrolling');
+  const snapOk = await ev(() => { var b = document.querySelector('#chips'), c = b.querySelectorAll('.chip'), st = c[1].offsetLeft - c[0].offsetLeft, mx = b.scrollWidth - b.clientWidth; return Math.abs(b.scrollLeft - Math.round(b.scrollLeft / st) * st) < 2 || Math.abs(b.scrollLeft - mx) < 2; });
+  A(snapOk, 'row settles on a chip edge after the drag');
+  // 칩 하나 안에서 짧게(12px) 끌어도 고르기가 아니다
+  const cx = (await ev(() => { var b = document.querySelector('#chips').getBoundingClientRect(); return b.left + b.width / 2; }));
+  await page.mouse.move(cx, g0.top); await page.mouse.down(); await page.mouse.move(cx + 6, g0.top); await page.mouse.move(cx + 12, g0.top); await page.mouse.up(); await L.sleep(500);
+  A((await ev(() => DS.G.sel)) === sel0, 'a 12px drag inside one chip does not select');
+  // 손가락으로 밀기 (CDP 터치): 줄이 밀리고 고르지 않는다
+  const cdp = await page.context().newCDPSession(page), tsl = (await geo()).sl;
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx, y: g0.top }] });
+  for (let i = 1; i <= 8; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cx + i * 20, y: g0.top }] }); await L.sleep(16); }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await L.sleep(900);
+  const g2 = await geo();
+  A(g2.sel === sel0 && Math.abs(g2.sl - tsl) > 30, 'touch swipe scrolls the row (' + Math.round(tsl) + ' → ' + Math.round(g2.sl) + ') and does not select');
+  // 그냥 누르면 고른다
+  await page.mouse.click(cx, g0.top); await L.sleep(300);
+  A((await ev(() => DS.G.sel)) !== sel0, 'a plain tap still selects');
+  // 고른 가문이 바뀌면(지도 · 열쇠 · 저절로) 그 칩이 보이는 자리로
+  await ev(() => { DS.select(Object.keys(DS.G.chipEls)[0]); }); await L.sleep(700);
+  await ev(() => { var ids = Object.keys(DS.G.chipEls); DS.select(ids[ids.length - 1]); }); await L.sleep(800);
+  const inView = await ev(() => { var b = document.querySelector('#chips'), r = b.getBoundingClientRect(), cs = getComputedStyle(b), c = document.querySelector('#chips .chip.sel').getBoundingClientRect(); return { ok: c.left >= r.left + parseFloat(cs.paddingLeft) - 1 && c.right <= r.right - parseFloat(cs.paddingRight) + 1, sl: b.scrollLeft }; });
+  A(inView.ok && inView.sl > 0, 'selected chip scrolls into view (scrollLeft ' + Math.round(inView.sl) + ')');
+  A((await geo()).docW <= 390, 'no horizontal page scroll after swiping');
   await shot('scn_many');
-  await ev(() => { DS.G.sim.win(); }); await L.settle(page, 30000);
+  // 2.2.2 결과 창의 경험치 판: 싸움 중에 얻은 경험치 → 막대가 판 전 자리에서 차올라 끝값에 선다 · 누르면 바로 끝 · NaN 없음
+  await ev(() => { DS.gainExp(DS.G.save, DS.expNeed(46) * 1.4, 45); DS.G.sim.win(); });
+  for (let i = 0; i < 40; i++) { await L.sleep(150); await L.skipStory(page, 1); if (await ev(() => !!document.querySelector('.ov.res26 .xb'))) break; }
+  await L.sleep(500);
+  const xm = await ev(() => { var xb = document.querySelector('.ov.res26 .xb'); return { done: xb.classList.contains('xdone'), n: xb.querySelectorAll('[data-v0]').length, lord: !!xb.querySelector('.hk.lord'), grid: xb.querySelectorAll('.xb9 .hk').length }; });
+  A(xm.n >= 10 && xm.lord && xm.grid >= 8 && !xm.done, 'exp board: lord on top + ' + xm.grid + ' houses below, animating (' + xm.n + ' bars)');
+  await ev(() => DS.xbSkip()); await L.sleep(100);
+  const xe = await ev(() => { var s = DS.G.save, bad = [], up = 0;
+    document.querySelectorAll('.ov.res26 .xb [data-v0]').forEach(el => { var v1 = +el.dataset.v1, f = el.dataset.mx === '1' ? 1 : v1 - Math.floor(v1 + 1e-6), w = parseFloat(el.querySelector('.hkb > u').style.width) / 100, L1 = Math.floor(v1 + 1e-6), t = el.querySelector('.xl').textContent; if (Math.abs(w - f) > 0.01 || t.indexOf('Lv' + DS.lvOfL(L1)) < 0) bad.push([v1, w, t]); if (el.classList.contains('lvd')) up++; });
+    var lw = s.chars[s.hero].ps, lf = DS.pL(lw) >= DS.pCap(lw) ? 1 : lw.exp / DS.expNeed(DS.pL(lw)), lu = parseFloat(document.querySelector('.ov.res26 .xb .hk.lord .hkb > u').style.width) / 100;
+    return { done: document.querySelector('.ov.res26 .xb').classList.contains('xdone'), bad: bad, up: up, lord: Math.abs(lf - lu) < 0.01, txt: document.querySelector('.ov.res26').innerText.match(/NaN|undefined|\[object/g) }; });
+  A(xe.done && !xe.bad.length && xe.lord, 'tap skips to the end: every bar and Lv at its saved value' + (xe.bad.length ? ' ' + JSON.stringify(xe.bad.slice(0, 3)) : ''));
+  A(xe.up >= 8 && !xe.txt, 'level-ups marked (' + xe.up + '), no NaN/undefined');
+  await shot('res_exp');
+  await L.settle(page, 30000);
+  // 2.2.2 들판 무리는 싸우는 유닛 수만큼 불어난다
+  const pk = await ev(() => { var g = { id: 'g', x: 1, y: 1, L: 5, list: ['wolf', 'wolf', 'bat'] }, n = function (k) { return DS.packOf(g, k).list.length; };
+    DS.ui.closeAll(); DS.enterZone('dawn'); var sim = DS.G.sim, z = DS.buildZone('dawn'), u = DS.partySpecs(DS.G.save).length, base = 0, now = 0;
+    z.spawns.forEach(function (sp) { base += sp.list.length; }); sim.units.forEach(function (e) { if (e.side === 'enemy' && e.grp) now++; });
+    return { n3: n(3), n6: n(6), n10: n(10), n16: n(16), ek: DS.packOf(g, 16).ek, u: u, base: base, now: now }; });
+  A(pk.n3 === 3 && pk.n6 > pk.n3 && pk.n10 > pk.n6 && pk.n16 >= pk.n10 && pk.n16 <= 8 && pk.ek < 1, 'field pack size scales with units: 3 mobs → ' + [pk.n3, pk.n6, pk.n10, pk.n16].join(' / ') + ' at 3 / 6 / 10 / 16 units (exp each ×' + pk.ek.toFixed(2) + ')');
+  A(pk.now > pk.base * 1.5, 'dawn field with ' + pk.u + ' units: ' + pk.now + ' mobs (unscaled ' + pk.base + ')');
+  await ev(() => DS.ui.closeAll());
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.2\.1 옛 맹주의 가족 \/ 2\.2\.1 \/ 7\.0\.1$/.test(notes), 'version ' + notes);
+  A(/^2\.2\.2 [^/]+ \/ 2\.2\.2 \/ 7\.0\.2$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };
