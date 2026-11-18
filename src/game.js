@@ -404,6 +404,7 @@ function startScenario(s) {
   syncVitals();
   G.ret = { zone: G.zone.id, pos: me ? { x: me.x, y: me.y } : null };
   if (DS.mercTidy) DS.mercTidy(sv);      // 2.2.0: 출전 목록 = 가주가 선 가문 모두
+  if (DS.ui && DS.ui.takeSnap) DS.ui.takeSnap(s);      // 2.2.2: 결과 창의 경험치 막대는 이 순간(싸움 직전)부터 — 관문 창을 거치지 않고 들어와도
   var b = DS.buildScenario(s, DS.partySpecs ? DS.partySpecs(sv).length : sv.party.length, sv.chars[sv.hero] ? sv.chars[sv.hero].cls : 'inf');
   var sim = new DS.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (Date.now() & 0xffff) + s.id, inv: sv.items, mode: 'scn' });
   G.sim = sim; G.scn = s; G.aim = null; G.bossId = null; G.pendPoi = null; G.ending = false; G.gain = { exp: 0, gold: 0, loot: [] }; G.wasCombat = false; G.lost = [];

@@ -947,6 +947,7 @@ function takeSnap(s) {
   DS.charList(sv).forEach(function (c) { snap.L[c.id] = c.L; });
   snap.pw = DS.partyPower ? DS.partyPower(sv) : 0; snap.cp = {}; sv.party.forEach(function (id) { snap.cp[id] = DS.cardPower(sv, sv.chars[id]); });      // r15: 결과 창의 「이번 판 전투력 변화」
   sv.mercs.forEach(function (m) { snap.mx[m.id] = DS.pL(m); snap.mt[m.id] = DS.mercTitle ? DS.mercTitle(m) || '' : ''; });      // 판 전의 별명 (결과 창이 새로 붙은 별명을 알린다)
+  snap.P = {}; DS.persons(sv).forEach(function (p) { var k = DS.pKey(sv, p.who); if (k) snap.P[k] = { L: DS.pL(p.who), e: +p.who.exp || 0 }; });      // 2.2.2: 사람마다 레벨·경험치 — 결과 창의 경험치 막대가 정확히 그 자리에서 차오른다
 }
 DS.openGate = function (s, lock) {
   var sv = G.save, B = s.boss ? DS.BOSSES[s.boss] : null, pl = DS.partyL(sv), rec = DS.recLOf ? DS.recLOf(s) : s.L, low = DS.recLow ? !!DS.recLow(sv, s) : pl < rec - 2;
@@ -999,6 +1000,77 @@ function nextLine() {      // 결과 창 맨 아래 한 줄: 이제 무엇을 �
   return n.id + '. ' + n.name + ' — ' + DS.ZONES[n.zone].name;
 }
 function vetBar(m) { var L = DS.pL(m); return L >= DS.pCap(m) ? 100 : Math.max(0, Math.min(100, (+m.exp || 0) / DS.expNeed(L) * 100)); }      // r42: 개인 경험치
+// ───────── 2.2.2 결과 창의 경험치 판 ─────────
+// 칸 하나 = 사람 하나: v0·v1 = 판 전·후의 「레벨 + 경험치 몫」(4.25 = Lv4 의 25%), g = 얻은 경험치. 막대는 v0 → v1 로 차오르며 정수를 넘을 때마다 레벨업 (단이 오르면 승급)
+function xpVal(L, e, cap) { return L >= cap ? L : L + Math.max(0, Math.min(0.999, e / DS.expNeed(L))); }
+function xpGain(L0, e0, L1, e1) { var g = e1 - e0; for (var l = L0; l < L1; l++) g += DS.expNeed(l); return Math.max(0, g); }
+function xpCell(sv, sn, who, o) {      // o: { spr, name, house, crest, cls, fc, small }
+  var k = DS.pKey(sv, who), b0 = sn && sn.P && sn.P[k], cap = DS.pCap(who), L1 = DS.pL(who), e1 = +who.exp || 0;
+  var L0 = b0 ? b0.L : L1, e0 = b0 ? b0.e : e1; if (L0 > L1 || (L0 === L1 && e0 > e1)) { L0 = L1; e0 = e1; }
+  var v0 = xpVal(L0, e0, cap), v1 = xpVal(L1, e1, cap), g = xpGain(L0, e0, L1, e1), mx = L1 >= cap ? 1 : 0, f0 = mx && L0 === L1 ? 1 : v0 - Math.floor(v0);
+  var attr = ' data-v0="' + v0.toFixed(4) + '" data-v1="' + v1.toFixed(4) + '" data-g="' + Math.round(g) + '" data-mx="' + mx + '" data-l0="' + L0 + '" data-l1="' + L1 + '"';
+  if (o.small) return { up: L1 > L0, g: g, html: '<div class="xk' + (L1 > L0 ? ' up' : '') + '"' + attr + ' style="--gc:' + gcol(who.g || 3) + '">' + o.spr + '<span class="xkt"><b>' + esc(o.name) + '</b><i class="xl num">' + lvS(L0) + '</i></span>' + xpBar(f0) + '<small class="xg num">+0</small></div>' };
+  var lord = (o.cls || '').indexOf('lord') >= 0;
+  return { up: L1 > L0, g: g, html: '<div class="hk xc' + (o.cls || '') + (L1 > L0 ? ' up' : '') + '"' + attr + ' style="--fc:' + o.fc + '"><span class="hkh">' + o.crest + '<small>' + esc(o.house) + '</small>' + (lord ? '<i class="hkt">맹주</i>' : '') + '</span>' +
+    '<span class="hkf" style="--gc:' + gcol(who.g || 3) + '">' + o.spr + '</span>' + lvPill(L0, 'xl') + '<b class="hkn">' + esc(o.name) + '</b>' + xpBar(f0) + '<small class="xg num">+0 exp</small><i class="xpop" aria-hidden="true"></i><i class="xup num"></i></div>' };
+}
+function xpBoard(sv, sn, out, deadCh) {
+  var lord = '', cells = [], kin = [], up = false, sbN = 0, sbG = 0;
+  sv.party.forEach(function (id) {
+    var ch = sv.chars[id]; if (!ch || (out.joins || []).indexOf(ch) >= 0) return;
+    var hero = id === sv.hero, w = hero ? (ch.vac ? null : ch.ps) : DS.bearer(sv, ch), cls = hero ? ' lord' : '', crest = DS.houseCrestOf ? DS.houseCrestOf(sv, ch, hero ? 16 : 14) : '', fc = DS.FLAG[ch.cls] || '#c9a96a';
+    var c;
+    if (deadCh[id] || !w) c = '<div class="hk xc down' + cls + '" style="--fc:' + fc + '"><span class="hkh">' + crest + '<small>' + esc(hgShort(ch)) + '</small></span><span class="hkf"><i class="hkx">' + (deadCh[id] === 2 ? '천수' : '쓰러짐') + '</i></span><b class="hkn">' + esc(w ? DS.charName(ch) : '빈 가문') + '</b></div>';
+    else { var r = xpCell(sv, sn, w, { spr: charSpr(ch, hero ? 4 : 3), name: hero ? DS.charName(ch) : (w.ttl || w.n || ''), house: hgShort(ch), crest: crest, cls: cls, fc: fc }); up = up || r.up; c = r.html; }
+    if (hero) lord = c; else cells.push(c);
+    DS.mercsOf(sv, id).forEach(function (m) { if (m === w) return; var r = xpCell(sv, sn, m, { spr: mercSpr(m, 1.5), name: m.ttl || m.n || '', small: 1 }); up = up || r.up; kin.push(r.html); });
+  });
+  (DS.barracks ? DS.barracks(sv) : []).forEach(function (m) { var k = DS.pKey(sv, m), b0 = sn && sn.P && sn.P[k]; if (!b0) return; var g = xpGain(b0.L, b0.e, DS.pL(m), +m.exp || 0); if (g >= 1) { sbN++; sbG += g; } });
+  if (!lord && !cells.length) return { html: '', up: false };
+  return { up: up, html: '<div class="xb" data-xb="1">' + (lord ? '<div class="hkl">' + lord + '</div>' : '') + (cells.length ? '<div class="xb9">' + cells.join('') + '</div>' : '') +
+    (kin.length ? '<div class="xbk"><small>가문원</small><div class="xbkl">' + kin.join('') + '</div></div>' : '') + (sbN ? '<p class="xbs">막사 ' + sbN + '명 <b class="num">+' + fmtN(sbG) + '</b> exp <small>같은 병과 가주 몫의 ' + Math.round((DS.BAL.sbShare || 0) * 100) + '%</small></p>' : '') + '</div>' };
+}
+// 막대를 움직인다: 칸마다 조금씩 늦게(최대 0.7초) · 1.3초 동안 · 끝까지 2.4초 남짓. 누르면 바로 끝. 움직임 줄이기면 처음부터 끝값
+function xbRun(o) {
+  var box = o.querySelector('[data-xb]'), res = { ms: 0, skip: function () {} };
+  if (!box) return res;
+  var cells = $$('[data-v0]', box).map(function (el, i) {
+    return { el: el, v0: +el.dataset.v0, v1: +el.dataset.v1, g: +el.dataset.g, mx: el.dataset.mx === '1', L: +el.dataset.l0, d: Math.min(700, i * 70), L0: +el.dataset.l0, u: el.querySelector('.hkb > u'), lv: el.querySelector('.xl'), xg: el.querySelector('.xg'), pop: el.querySelector('.xpop'), small: el.classList.contains('xk') };
+  });
+  var cm = U.calm && U.calm(), t0 = performance.now() + (cm ? 0 : 380), DUR = 1300, sndT = 0, done = false, raf = 0;
+  res.ms = cm ? 0 : 380 + 700 + DUR;
+  function lvTxt(c, L) { if (c.lv) c.lv.innerHTML = c.small ? lvS(L) : DS.tierOfL(L) + '단 <b>Lv' + DS.lvOfL(L) + '</b>'; }
+  function pop(c, L, quiet) {
+    var pro = DS.tierOfL(L) > DS.tierOfL(c.L); c.L = L; lvTxt(c, L);
+    c.el.classList.add('lvd'); if (pro) c.el.classList.add('pro');
+    if (c.pop) c.pop.textContent = c.el.classList.contains('pro') ? '승급 ' + DS.tierOfL(L) + '단' : 'LEVEL UP';
+    var ue = c.el.querySelector('.xup'); if (ue) ue.textContent = (c.el.classList.contains('pro') ? '승급 ' : '') + 'Lv+' + (L - c.L0);
+    if (!cm && !quiet) {
+      c.el.classList.toggle('lvf', false); void c.el.offsetWidth; c.el.classList.toggle('lvf', true);
+      var nw = performance.now(); if (nw - sndT > 140) { sndT = nw; A2(pro ? 'promo' : 'level', 'star'); }
+    }
+  }
+  function draw(c, e, quiet) {
+    var v = c.v0 + (c.v1 - c.v0) * e, L = Math.floor(v + 1e-6), f = v - L;
+    if (e >= 1) { v = c.v1; L = Math.floor(v + 1e-6); f = c.mx ? 1 : v - L; }
+    while (c.L < L) pop(c, c.L + 1, quiet);
+    if (c.u) c.u.style.width = (Math.max(0, Math.min(1, f)) * 100).toFixed(1) + '%';
+    if (c.xg) c.xg.textContent = '+' + fmtN(c.g * e) + (c.small ? '' : ' exp');
+  }
+  function fin() { if (done) return; done = true; if (raf) cancelAnimationFrame(raf); box.classList.add('xdone'); cells.forEach(function (c) { draw(c, 1, true); }); }
+  res.skip = fin;
+  if (cm || !cells.length) { fin(); return res; }
+  cells.forEach(function (c) { draw(c, 0, true); });
+  (function step() {
+    var now = performance.now(), all = true;
+    cells.forEach(function (c) { var p = Math.max(0, Math.min(1, (now - t0 - c.d) / DUR)); if (p < 1) all = false; draw(c, 1 - Math.pow(1 - p, 3)); });
+    if (all) { done = true; box.classList.add('xdone'); return; }
+    raf = requestAnimationFrame(step);
+  })();
+  o.addEventListener('click', function (e) { if (done || e.target.closest('button, a, [data-close]')) return; fin(); });      // 아무 데나 누르면 끝값 (단추는 그대로 일한다)
+  return res;
+}
+DS.xbSkip = function () { var o = document.querySelector('.ov.res26 .xb'); if (o) o.click(); };      // 시험용
 DS.showResult = function (s, out, cb) {
   var sv = G.save, sn = snap && snap.key === (s.pit ? 'p' + s.pit : 's' + s.id) ? snap : null, st = G.stats || null, kills = st && st.kills ? st.kills : null;
   // r8 menus (newbie 1): 지휘관을 잃었으면 제목 바로 아래에 — 금색 「승리」 밑 스크롤 끝에 묻히지 않게
@@ -1032,7 +1104,7 @@ DS.showResult = function (s, out, cb) {
   });
   html += '</div><div class="kv a-recess gfx-in" style="--i:' + (gi++) + '">' + (G.gain.exp ? '<span>전투 경험치</span><b class="num" data-cu="' + G.gain.exp + '">' + fmtN(G.gain.exp) + '</b>' : '') +
     (sn && sn.pw && DS.partyPower ? '<span>부대 전투력</span><b class="num rpw">' + pwDelta(sn.pw, DS.partyPower(sv)) + '</b>' : '') +
-    (killsN ? '<span>쓰러뜨린 적</span><b class="num">' + killsN + '</b>' : '') + (G.sim && G.sim.t ? '<span>걸린 시간</span><b class="num">' + Math.floor(G.sim.t / 60) + '분 ' + Math.floor(G.sim.t % 60) + '초</b>' : '') + '</div><ul class="loot">';
+    (killsN ? '<span>쓰러뜨린 적</span><b class="num">' + killsN + '</b>' : '') + (G.sim && G.sim.t ? '<span>걸린 시간</span><b class="num">' + Math.floor(G.sim.t / 60) + '분 ' + Math.floor(G.sim.t % 60) + '초</b>' : '') + '</div><!--xb--><ul class="loot">';
   var gotR = out.gear && DS.gear(out.gear) ? [DS.gear(out.gear)] : [];      // 2.1.0: 정해진 보상 전설 장비 (옛 유물 자리 — 자세한 줄은 아래 전리품 목록에)
   gotR.forEach(function (g) { html += '<li class="hl lg5"><b><i class="tg">정해진 보상</i> 전설 「' + esc(g.short) + '」</b><br><small>가방에 넣었다</small></li>'; });
   if (out.crest) html += '<li class="hl">맹세의 깃대 <small>합일 조건: 7단 Lv10 가문 셋 (어느 가문이든)</small></li>';
@@ -1051,21 +1123,12 @@ DS.showResult = function (s, out, cb) {
     var nUp = upgradable();      // 가방에 출전 지휘관이 입던 것보다 좋은 장비가 생겼으면 여기서 바로 (가방 → 입히기 → 고르기를 건너뛴다)
     if (nUp) html += '<button class="btn wide upg" data-upg="1">▲ 자동 장착 <small>가문 ' + nUp + '개</small></button>';
   }
-  // 깃발: 레벨 전 → 후와 경험치 막대
-  var crows = '', anyUp = false, lvHint = '';
-  sv.party.forEach(function (id) {
-    var ch = sv.chars[id]; if (!ch || out.joins.indexOf(ch) >= 0) return;
-    var cap = DS.capL(ch), b = sn && sn.L[id] != null ? sn.L[id] : null, up = b != null && ch.L > b, pro = up && DS.tierOfL(ch.L) > DS.tierOfL(b);
-    if (deadCh[id]) { crows += '<li class="gone">' + charSpr(ch, 1.5) + '<span class="nm">' + esc(DS.charName(ch)) + '</span><span class="lvs"><b>' + lvS(b != null ? b : ch.L) + '</b> <em class="lostt">' + (deadCh[id] === 2 ? '천수' : '쓰러짐') + '</em></span></li>'; return; }      // 떠난 이에게 레벨업 줄을 붙이지 않는다
-    if (up) anyUp = true;
-    var cp1 = DS.cardPower(sv, ch), cp0 = sn && sn.cp && sn.cp[id] != null ? sn.cp[id] : cp1, dcp = cp1 - cp0;
-    crows += '<li' + (up ? ' class="up"' : '') + '>' + charSpr(ch, 1.5) + '<span class="nm">' + esc(DS.charName(ch)) + '<small class="num rcp">' + fmtN(cp1) + (dcp ? ' <em class="' + (dcp > 0 ? 'up' : 'dn') + '">' + (dcp > 0 ? '+' : '−') + fmtN(Math.abs(dcp)) + '</em>' : '') + '</small></span><span class="lvs">' + (up ? '<i>' + lvS(b) + '</i> → ' : '') + '<b>' + lvS(ch.L) + '</b>' + (pro ? ' <em>승급</em>' : up ? ' <em>+' + (ch.L - b) + '</em>' : '') + '</span>' +
-      '<i class="bar exp"><u style="width:' + (ch.L >= cap ? 100 : Math.min(100, ch.exp / DS.expNeed(ch.L) * 100)) + '%"></u></i></li>';
-  });
+  // 2.2.2 경험치 판: 맹주 가문의 가주는 위 가운데, 싸운 다른 가주는 아래 3×3, 어른 가문원은 작은 줄 — 막대가 판 전 자리에서 차오르고, 가득 차면 돌아 레벨업 (xbRun)
+  var xb = xpBoard(sv, sn, out, deadCh), anyUp = xb.up, lvHint = '';
   if (anyUp && sv.seen && !sv.seen.lvx) { sv.seen.lvx = 1; lvHint = '<p class="dim lvx">10레벨마다 단 +1 (새 기술)</p>'; }      // 「단」 첫 설명 (한 번)
   var hup = (G.vetUps || []).filter(function (x) { return x && x.ch; });
   if (hup.length) lvHint += '<ul class="rnote hup">' + hup.map(function (x) { return '<li><span>' + esc(DS.flagName(x.ch.cls)) + '</span><small>가문 공훈</small><b>' + esc(DS.hName(x.to)) + '</b></li>'; }).join('') + '</ul>';      // r45 ui: 한 줄 → 가문마다 줄      // r42: 가문 공훈 계급이 올랐다
-  if (crows) html += '<h5>가문</h5><ul class="rc">' + crows + '</ul>' + lvHint;
+  html = html.replace('<!--xb-->', xb.html ? '<h5 class="xbh">경험치 <small>누르면 바로 끝</small></h5>' + xb.html + lvHint : lvHint);
   // 가문원: 이번 싸움의 처치 수, 최다 처치 한 명, 경험치 막대
   var ms = [], topId = null, topK = 0;
   sv.party.forEach(function (id) { if (sv.chars[id]) DS.mercsOf(sv, id).forEach(function (m) { ms.push(m); }); });
@@ -1099,7 +1162,8 @@ DS.showResult = function (s, out, cb) {
   var rareD = (out.drops || []).filter(function (d) { return d && d.kind === 'gear' && (d.grade || 0) >= 4; });      // 2.1.1: 승리 보상의 귀한 장비는 결과 창 위에 크게 (소리도 거기서)
   if (gotR.length && !(rareD.length && DS.lootCall)) A2('rare', 'star');
   var o = overlay(html, 'modal center res26');
-  if (rareD.length && DS.lootCall) DS.lootCall(rareD, { delay: 900 });
+  var xr = xbRun(o);      // 2.2.2: 경험치 막대 (누르면 바로 끝) — 귀한 장비 창은 막대가 다 찬 뒤에
+  if (rareD.length && DS.lootCall) DS.lootCall(rareD, { delay: Math.max(900, xr.ms + 250) });
   snap = null;
   // r26: 별이 하나씩 튀고 · 골드·경험치가 0 부터 차오른다 (움직임 줄이기면 바로 끝값)
   setTimeout(function () { $$('[data-cu]', o).forEach(function (el, i) { setTimeout(function () { U.countUp(el, +el.dataset.cu, 650, el.dataset.pre || ''); }, i * 120); }); }, U.calm && U.calm() ? 0 : 420);
