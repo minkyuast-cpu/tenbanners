@@ -110,7 +110,7 @@ function run(sim, mode, zid, maxT) {
         if (u.side === 'ally' && !e.flee) {
           if (u.role === 'cmd') {
             const ch = s.chars[u.ch]; if (!ch) continue;
-            if (u.ch === s.hero) { ch.down = true; st.heroDeaths++; st.deaths++; }
+            if (u.ch === s.hero) { ch.down = true; st.heroDeaths++; st.deaths++; st.log.push('hero died ' + mode + (zid ? ' ' + zid : '') + ' L' + D.pL(ch.ps) + ' houses ' + D.partyIds(s).length + ' @h' + ((st.simT + st.over) / 3600).toFixed(2)); }
             else { const bm = D.bearer(s, ch); if (bm) { if (bm.it) D.giveMercItem(s, bm.id, null); const lost = D.loseMerc(s, bm.id); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.bearDeaths++; } } }
           } else if (u.role === 'merc' && u.mid) {
             const lost = D.loseMerc(s, u.mid); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.kinDeaths++; st.log.push('kin died ' + mode + ' L' + D.pL(lost) + ' party L' + D.partyL(s) + ' age ' + D.ageOf(s, lost)); }
