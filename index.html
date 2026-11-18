@@ -4451,19 +4451,20 @@ html.calm .lootcall, html.calm .lootcall .lccard, html.calm .lootcall .lcrays, h
 .ov.res26 .slot.gr5 .box { box-shadow: 0 0 0 2px #f0b64a, 0 0 18px rgba(240,182,74,.6); }
 .ov.res26 .slot.gr4 .box { box-shadow: 0 0 0 2px #b181e6, 0 0 14px rgba(177,129,230,.5); }
 
-/* 2.2.0 「한 사람 한 사람」: 가주가 선 가문은 모두 싸운다 — 칩이 넷 이상이면 작은 칩(얼굴 · 단 · 체력 막대, 이름은 뺀다)을 가로로 밀어 본다 (390 폭에 넷쯤 보인다) */
-html body #app#app #s-game #chips.many { display: flex; gap: 3px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 7px; margin-bottom: -5px; }
-html body #app#app #s-game #chips.many::-webkit-scrollbar { display: none; }
-html body #app#app #s-game #chips.many .chip { flex: 0 0 60px; min-width: 0; height: 46px; grid-template-columns: 26px minmax(0, 1fr); column-gap: 2px; padding: 0 3px 0 2px; scroll-snap-align: start; }
-html body #app#app #s-game #chips.many .chip .por { width: 26px; height: 26px; }
-html body #app#app #s-game #chips.many .chip .por canvas { width: 24px !important; height: 24px !important; }
-html body #app#app #s-game #chips.many .chip .cn, html body #app#app #s-game #chips.many .chip .clv, html body #app#app #s-game #chips.many .chip .agc { display: none; }
-html body #app#app #s-game #chips.many .chip .bars { margin: 0; align-self: center; }
-html body #app#app #s-game #chips.many .chip > em.lv { left: 3px; bottom: 1px; margin-left: 0; font-size: 9px; transform: none; }
-html body #app#app #s-game #chips.many .chip .md { left: 30px; bottom: 3px; }
-html body #app#app #s-game #chips.many .chip .ccr { transform: scale(.8); transform-origin: 0 0; }
-html body #app#app #s-game #chips.many .chip .ghost small { display: none; }
-html body #app#app #s-game #chips.many .chip > em.lv i { display: none; }
+/* 2.2.2 칩 줄: 넷 이상이면 2.1.2 의 큰 칩(얼굴 · 이름 · 단/Lv · 막대) 그대로 한 줄 — 390 폭에 셋이 들고 옆으로 민다.
+   칩 가장자리에 붙는다(scroll-snap) · 스크롤 막대는 숨긴다 · 더 있는 쪽 가장자리만 흐리게(fl · fr).
+   위아래 7px · 옆 4px 덧대기: 칩 밖으로 나오는 문장·공훈·필·LV UP·고른 표시(▼)가 스크롤 상자에 잘리지 않게 (같은 만큼 바깥 여백을 당긴다) */
+html body #app#app #s-game #chips.swipe { display: flex; gap: 5px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding: 0 4px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; margin: -7px -4px; padding: 7px 4px; }
+html body #app#app #s-game #chips.swipe::-webkit-scrollbar { display: none; }
+/* 가장자리 흐림: 줄 안에 붙어 서는(sticky) 얇은 그늘 — mask-image 는 막대가 바뀔 때마다 줄 전체를 다시 그려 느린 폰에서 프레임을 먹었다. 자리는 차지하지 않는다(음수 여백 = 너비 + 간격) */
+html body #app#app #s-game #chips.swipe::before, html body #app#app #s-game #chips.swipe::after { content: ""; position: sticky; z-index: 6; flex: 0 0 16px; align-self: stretch; pointer-events: none; opacity: 0; transition: opacity .18s; }
+html body #app#app #s-game #chips.swipe::before { left: 0; margin: -7px -21px -7px 0; background: linear-gradient(90deg, rgba(12, 9, 6, .92), rgba(12, 9, 6, 0)); }
+html body #app#app #s-game #chips.swipe::after { right: 0; margin: -7px 0 -7px -21px; background: linear-gradient(270deg, rgba(12, 9, 6, .92), rgba(12, 9, 6, 0)); }
+html body #app#app #s-game #chips.swipe.fl::before, html body #app#app #s-game #chips.swipe.fr::after { opacity: 1; }
+html body #app#app #s-game #chips.swipe.drag { scroll-snap-type: none; cursor: grabbing; }
+html body #app#app #s-game #chips.swipe.drag .chip { pointer-events: none; }
+html body #app#app #s-game #chips.swipe .chip { flex: 1 0 clamp(76px, calc((100% - 10px) / 3), 150px); max-width: 190px; min-width: 0; scroll-snap-align: start; -webkit-user-drag: none; user-select: none; }
 /* 2.2.0 가문 칸: 대기조(싸우지 않는다)는 흐리게 점선, 빈 가문의 가주 칸은 붉은 점선, 가문원은 그대로 */
 .hch.sb { border-style: dashed; opacity: .78; }
 .hch.sb small { color: var(--dim); }
@@ -4593,6 +4594,110 @@ html body #app#app .row.pr2.brow > .bbt .btn.small { min-height: 34px; min-width
 .gpk-r .tx { display: grid; gap: 3px; min-width: 0; } .gpk-r .df { display: block; min-width: 0; } .gpk-r .df .schips { display: flex; flex-wrap: wrap; gap: 4px; }
 .gpk-r.best { box-shadow: inset 0 0 0 1px rgba(159, 209, 140, .55); } .gpk-r.dim { opacity: .5; cursor: default; }
 .gpk-m { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .gpk-m .gbest { font-style: normal; color: #9fd18c; font-weight: 700; }
+
+/* ═══ 2.2.2 가주 카드 (부대 탭 · 결과 창의 경험치 판) — 가문은 곧 그 가주: 큰 초상(등급 테) · 이름 · 가문(작게) · 단/Lv 알약 · 경험치 막대 · 전투력 ═══ */
+html body #app#app .hk2 { display: grid; gap: 8px; margin: 2px 0 12px; }
+html body #app#app .hkl { display: grid; justify-items: center; gap: 6px; }
+html body #app#app .hk9, html body #app#app .xb9 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+html body #app#app .hk { --fc: #c9a96a; position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; margin: 0; padding: 6px 5px 7px; text-align: center; color: var(--a-bone, #e9dfc8); font: inherit;
+  border: 1px solid transparent; border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 22%, #241c15) 0%, #1d1611 55%, #16110d 100%) padding-box, var(--a-rim-dim, linear-gradient(#5a4630, #2a2118)) border-box;
+  box-shadow: var(--a-bevel, none), var(--a-drop, 0 2px 0 #000); cursor: pointer; }
+html body #app#app .hk:active { filter: brightness(1.12); }
+html body #app#app .hk .hkh { display: flex; align-items: center; justify-content: center; gap: 3px; max-width: 100%; min-width: 0; height: 16px; }
+html body #app#app .hk .hkh svg.crest { flex: none; filter: drop-shadow(0 1px 0 #000) drop-shadow(0 0 4px color-mix(in srgb, var(--fc) 55%, transparent)); }
+html body #app#app .hk .hkh small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 10.5px/14px var(--f-ui); color: var(--a-mute, #b9ab90); }
+html body #app#app .hk .hkt { flex: none; padding: 0 4px; border-radius: 3px; font: 700 9.5px/14px var(--f-head); font-style: normal; color: var(--a-on-gold, #2a1804); background: var(--a-goldfill, #e8c36a); }
+html body #app#app .hk .hkr { position: absolute; top: 4px; right: 4px; line-height: 0; }
+html body #app#app .hk .hkr .vet { display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #3a2c1b, #120c07); border: 1px solid #000; color: #c9ced6; }
+html body #app#app .hk .hkr .vet.v3, html body #app#app .hk .hkr .vet.v4, html body #app#app .hk .hkr .vet.v5 { color: #f3d58a; }
+html body #app#app .hk .hkr .vet svg { width: 10px; height: 10px; }
+html body #app#app .hk .hkr .vet .vst { display: none; }
+/* 초상: 둥근 네모 테(등급 색) · 안은 가문 색이 비치는 어둠 */
+html body #app#app .hkf { --gc: #8a867d; position: relative; display: grid; place-items: center; width: 58px; height: 58px; margin: 3px 0 0; border-radius: 12px; overflow: hidden;
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--fc, #c9a96a) 34%, #2a2118), #0f0b08 80%); box-shadow: inset 0 0 0 2px var(--gc), inset 0 0 0 3px rgba(0, 0, 0, .55), 0 0 9px color-mix(in srgb, var(--gc) 40%, transparent), 0 2px 0 #000; }
+html body #app#app .hkf canvas, html body #app#app .hkf img { display: block; max-width: 52px; max-height: 52px; image-rendering: pixelated; }
+html body #app#app .hkf .hkq { font: 700 22px/1 var(--f-head); font-style: normal; color: rgba(201, 169, 106, .35); }
+html body #app#app .hkf .hkx { position: absolute; left: 0; right: 0; bottom: 6px; padding: 1px 0; font: 700 10px/13px var(--f-head); font-style: normal; color: #fff1ec; background: rgba(150, 32, 24, .88); letter-spacing: .05em; }
+html body #app#app .hkp { position: relative; z-index: 1; margin-top: -9px; padding: 0 6px; border-radius: 8px; font: 600 9.5px/15px var(--f-num); font-style: normal; white-space: nowrap; color: #fff1c6; background: linear-gradient(180deg, #5b4325, #2c1f12); box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255, 230, 170, .3); }
+html body #app#app .hkp b { font-weight: 700; color: #ffe08a; }
+html body #app#app .hk .hkn { max-width: 100%; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 13px/16px var(--f-head); text-shadow: 0 1px 0 #000; }
+html body #app#app .hk .hkn.dim { color: var(--a-dim, #8a7d66); }
+html body #app#app .hkb { position: relative; display: block; width: 100%; height: 4px; margin-top: 3px; border-radius: 3px; overflow: hidden; background: #0a0705; box-shadow: inset 0 1px 2px #000, 0 0 0 1px rgba(0, 0, 0, .8); }
+html body #app#app .hkb > u { position: absolute; inset: 0 auto 0 0; display: block; border-radius: inherit; background: linear-gradient(180deg, #ffe08a, #d39a2c); box-shadow: 0 0 4px rgba(255, 210, 110, .55); text-decoration: none; }
+html body #app#app .hk .hkw { display: block; margin-top: 2px; line-height: 14px; }
+html body #app#app .hk .hkw .pw { font-size: 11.5px; }
+html body #app#app .hk .hkv { display: block; max-width: 100%; margin-top: 3px; font: 500 10px/13px var(--f-ui); color: var(--a-dim, #8a7d66); white-space: normal; word-break: keep-all; }
+/* 맹주 가문: 위 가운데 넓은 카드, 큰 초상 · 금빛 테 */
+html body #app#app .hk.lord { width: min(100%, 236px); padding: 8px 12px 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 30%, #2c2117) 0%, #221a12 60%, #19130d 100%) padding-box, var(--a-rim, linear-gradient(#e8c36a, #7a5a2a)) border-box;
+  box-shadow: var(--a-bevel, none), 0 0 0 1px rgba(255, 222, 150, .3), 0 0 14px rgba(240, 182, 74, .22), var(--a-drop, 0 2px 0 #000); }
+html body #app#app .hk.lord .hkf { width: 78px; height: 78px; border-radius: 14px; }
+html body #app#app .hk.lord .hkf canvas, html body #app#app .hk.lord .hkf img { max-width: 70px; max-height: 70px; }
+html body #app#app .hk.lord .hkp { font-size: 11px; line-height: 17px; padding: 0 8px; }
+html body #app#app .hk.lord .hkn { font-size: 17px; line-height: 21px; }
+html body #app#app .hk.lord .hkb { height: 5px; }
+html body #app#app .hk.lord .hkw .pw { font-size: 14px; }
+/* 빈 가문 · 쓰러짐 · 아직 없음 */
+html body #app#app .hk.vac .hkf canvas, html body #app#app .hk.vac .hkf img { filter: brightness(0); opacity: .45; }
+html body #app#app .hk.vac { background: linear-gradient(180deg, #1c1611, #120e0a) padding-box, linear-gradient(rgba(214, 96, 86, .5), rgba(90, 40, 30, .5)) border-box; box-shadow: none; }
+html body #app#app .hk.vac .hkn { color: #e08a7e; }
+html body #app#app .hk.down .hkf canvas, html body #app#app .hk.down .hkf img { filter: grayscale(1) brightness(.55); }
+html body #app#app .hk.down { background: linear-gradient(180deg, #2a1512, #160d0b) padding-box, linear-gradient(#a8483c, #4a1f19) border-box; }
+html body #app#app .hk.none { opacity: .62; background: repeating-linear-gradient(135deg, #15110c 0 6px, #1a150f 6px 12px) padding-box, linear-gradient(#3a2e1f, #2a2118) border-box; box-shadow: none; }
+html body #app#app .hk.none svg.crest { filter: grayscale(1) brightness(.6); }
+html body #app#app .hk.none .hkn { color: var(--a-dim, #8a7d66); font-size: 12px; }
+/* 맹주 가문의 가문원 줄 */
+html body #app#app .hkk { display: grid; justify-items: center; gap: 3px; width: 100%; }
+html body #app#app .hkk > small { font: 500 10.5px/13px var(--f-ui); color: var(--a-mute, #b9ab90); }
+html body #app#app .hkkl { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 100%; }
+html body #app#app .hkm { --gc: #8a867d; display: grid; justify-items: center; width: 56px; min-width: 0; margin: 0; padding: 3px 2px 2px; font: inherit; color: var(--a-bone, #e9dfc8); border: 1px solid rgba(143, 122, 85, .35); border-bottom: 2px solid var(--gc); border-radius: 6px; background: var(--a-recess, #120e0a); box-shadow: inset 0 2px 3px rgba(0, 0, 0, .6); }
+html body #app#app .hkm canvas, html body #app#app .hkm img { max-height: 26px; width: auto; image-rendering: pixelated; }
+html body #app#app .hkm small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 10px/12px var(--f-ui); }
+html body #app#app .hkm i { font: 400 9px/11px var(--f-num); font-style: normal; color: #f6e6b8; }
+@media (max-width: 360px) { html body #app#app .hkf { width: 50px; height: 50px; } html body #app#app .hkf canvas, html body #app#app .hkf img { max-width: 46px; max-height: 46px; } html body #app#app .hk9 { gap: 4px; } }
+/* 2.2.2 결과 창 경험치 판 — 가주 카드와 같은 꼴(.hk), 막대가 차오르고 가득 차면 돌며 레벨업 */
+html body #app#app .xbh { display: flex; align-items: baseline; justify-content: space-between; }
+html body #app#app .xbh small { font: 500 10.5px/1 var(--f-ui); color: var(--a-dim, #8a7d66); }
+html body #app#app .xb { display: grid; gap: 7px; margin: 4px 0 10px; cursor: pointer; }
+html body #app#app .xb .hk { cursor: inherit; }
+html body #app#app .xb .hk.lord { width: min(100%, 200px); }
+html body #app#app .xb .hk.lord .hkf { width: 70px; height: 70px; }
+html body #app#app .xb .xg { display: block; margin-top: 2px; font: 600 10.5px/13px var(--f-num); color: #9fe08a; text-shadow: 0 1px 0 #000; white-space: nowrap; }
+html body #app#app .xb .hk.lord .xg { font-size: 12px; }
+html body #app#app .xb .hk.down .hkf { background: #120c0a; }
+html body #app#app .xpop { position: absolute; left: 50%; top: 30px; z-index: 3; padding: 1px 6px; border-radius: 4px; font: 700 10.5px/15px var(--f-num); font-style: normal; white-space: nowrap; color: #2a1804; background: var(--a-goldfill, linear-gradient(#ffe08a, #d39a2c)); box-shadow: 0 0 0 1px #000, 0 0 10px rgba(255, 214, 110, .7);
+  transform: translate(-50%, 0) scale(0); opacity: 0; pointer-events: none; }
+html body #app#app .xup { position: absolute; top: 24px; left: calc(50% + 16px); z-index: 2; display: none; padding: 0 3px; border-radius: 3px; font: 700 9px/13px var(--f-num); font-style: normal; white-space: nowrap; color: #2a1804; background: #ffd75e; box-shadow: 0 0 0 1px #000, 0 0 6px rgba(255, 214, 94, .6); }
+html body #app#app .hk.lord .xup { top: 34px; left: calc(50% + 30px); }
+html body #app#app .hk.lvd .xup { display: block; }
+html body #app#app .hk.lvf .xup { animation: xUpIn .25s ease-out .9s both; }
+@keyframes xUpIn { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: none; } }
+html body #app#app .hk.lvd.pro .xup { color: #fff6e6; background: linear-gradient(180deg, #ffd27a, #c0503f); }
+html body #app#app .hk.lvd.pro .xpop { color: #fff6e6; background: linear-gradient(180deg, #ffd27a, #c0503f); font-family: var(--f-head); text-shadow: 0 1px 0 #5a1712; }
+html body #app#app .hk.lvd .hkp { color: #fff; box-shadow: 0 0 0 1px #000, 0 0 8px rgba(255, 220, 120, .8); }
+html body #app#app .hk.lvf .xpop { animation: xPop 1.1s ease-out both; }
+html body #app#app .hk.lvf .hkf { animation: xFlash .6s ease-out; }
+html body #app#app .hk.lvf.pro .hkf { animation: xFlashPro .9s ease-out; }
+html body #app#app .hk.lvf.pro { animation: xShake .4s ease-out; }
+@keyframes xPop { 0% { transform: translate(-50%, 6px) scale(.3); opacity: 0; } 18% { transform: translate(-50%, -4px) scale(1.2); opacity: 1; } 30% { transform: translate(-50%, 0) scale(1); opacity: 1; } 75% { transform: translate(-50%, -2px) scale(1); opacity: 1; } 100% { transform: translate(-50%, -12px) scale(.95); opacity: 0; } }
+@keyframes xFlash { 0% { filter: brightness(2.2) saturate(.4); box-shadow: inset 0 0 0 2px #fff6d0, 0 0 22px rgba(255, 230, 150, .95); } 100% { filter: none; } }
+@keyframes xFlashPro { 0% { filter: brightness(2.6) saturate(.3); box-shadow: inset 0 0 0 3px #fff, 0 0 34px 6px rgba(255, 200, 90, 1); transform: scale(1.12); } 50% { transform: scale(1.04); } 100% { filter: none; transform: none; } }
+@keyframes xShake { 0%, 100% { transform: none; } 25% { transform: translateY(-3px); } 60% { transform: translateY(1px); } }
+html body #app#app .xbk { display: grid; gap: 4px; }
+html body #app#app .xbk > small { justify-self: center; font: 500 10.5px/13px var(--f-ui); color: var(--a-mute, #b9ab90); }
+html body #app#app .xbkl { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 4px; }
+html body #app#app .xk { --gc: #8a867d; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; column-gap: 4px; min-width: 0; padding: 3px 5px; border-radius: 6px; border: 1px solid rgba(143, 122, 85, .3); border-left: 2px solid var(--gc); background: var(--a-recess, #120e0a); }
+html body #app#app .xk > canvas, html body #app#app .xk > img { grid-row: 1 / 3; max-height: 26px; width: auto; image-rendering: pixelated; }
+html body #app#app .xk .xkt { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
+html body #app#app .xk .xkt b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 11px/13px var(--f-ui); }
+html body #app#app .xk .xkt i { font: 400 9.5px/12px var(--f-num); font-style: normal; color: #f6e6b8; white-space: nowrap; }
+html body #app#app .xk .hkb { grid-column: 2 / 4; height: 3px; margin: 2px 0 0; }
+html body #app#app .xk .xg { grid-column: 3; grid-row: 1; margin: 0; font-size: 9.5px; }
+html body #app#app .xk.up .xkt i { color: #ffe08a; }
+html body #app#app .xbs { margin: 0; text-align: center; font: 500 11px/15px var(--f-ui); color: var(--a-mute, #b9ab90); }
+html body #app#app .xbs b { color: #9fe08a; }
+html body #app#app .xbs small { display: block; color: var(--a-dim, #8a7d66); font-size: 10px; }
+html.calm body #app#app .hk.lvf .xpop, html.calm body #app#app .hk.lvf .xup, html.calm body #app#app .hk.lvf .hkf, html.calm body #app#app .hk.lvf.pro { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { html body #app#app .hk.lvf .xpop, html body #app#app .hk.lvf .hkf, html body #app#app .hk.lvf.pro { animation: none !important; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -5344,10 +5449,19 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.2.1';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.0.1';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.2.2';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.0.2';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.2.2', date: '2026-11-21', tag: '변경', title: '넓은 들판',
+    lead: '위의 가문 칩이 예전처럼 크게 돌아왔습니다. 지도는 더 넓게 보이고, 들판의 무리는 부대가 클수록 커집니다.',
+    items: [
+      ['변경', '위의 가문 칩은 예전처럼 얼굴, 이름, 단과 레벨, 막대를 다 보입니다. 한 번에 셋이 보이고, 옆으로 밀어 나머지를 봅니다.'],
+      ['변경', '한 화면에 보이는 땅이 가로세로 1.3배 넓어졌습니다. 설정의 지도 보기에서 가깝게, 보통, 멀리를 고릅니다.'],
+      ['변경', '들판의 무리는 싸우는 사람이 많을수록 커집니다. 열 넘게 싸우면 무리가 두 배 남짓입니다. 하나하나가 주는 경험치와 골드, 장비는 그만큼 조금 줄었습니다. 기습도 조금 더 많이 몰려옵니다.'],
+      ['변경', '부대 탭은 가주가 주인공입니다. 맹주 가문은 위 가운데 크게, 나머지 가문은 아래 셋씩 놓입니다. 카드마다 얼굴, 이름, 단과 레벨, 경험치 막대, 전투력이 보입니다.'],
+      ['새로', '시나리오와 갱도를 이기면 가주마다 경험치 막대가 차오르고, 레벨이 오르면 빛납니다. 누르면 바로 끝납니다.']
+    ] },
   { ver: '2.2.1', date: '2026-11-20', tag: '변경', title: '옛 맹주의 가족',
     lead: '다른 가문의 가주가 맹주를 이으면, 옛 맹주의 가족은 새 맹주를 따르지 않고 막사로 갑니다.',
     items: [
@@ -7236,11 +7350,12 @@ DS.rollDrop = function (save, e, rnd) {
   rnd = rnd || Math.random;
   var T = DS.DROP, out = [];
   if (!save || !e || e.boss) return out;                                       // 보스는 승리 처리(bossLoot·pitLoot)에서 준다
-  if (e.sum || (e.exp != null && e.exp < (6 + 1.6 * e.L) * 0.5)) return out;      // 소환된 적(경험치 25%)은 떨어뜨리지 않는다
+  if (e.sum || (e.exp != null && e.exp / (e.ek || 1) < (6 + 1.6 * e.L) * 0.5)) return out;      // 소환된 적(경험치 25%)은 떨어뜨리지 않는다
   if (DS.bountyHit) DS.bountyHit(save, e, rnd).forEach(function (b) { out.push.apply(out, DS.bountyReward(save, b, rnd)); });      // 현상 수배: 달성하면 알림·보상이 전리품 목록에 섞여 나온다
   if (!(T.mul > 0) || e.L < DS.partyL(save) + T.minL) return out;              // 한참 약한 적
   var R = BIG[e.type] ? T.big : T.mob, zone = e.zone || save.zone, d, bm = DS.bountyMul ? DS.bountyMul(save, zone, 'drop') : 1;
   if (e.elite != null || e.eliteCrew != null) bm *= e.elite != null ? 6 : 2;      // 정예 무리는 더 잘 떨어뜨린다 (우두머리 장비는 현상금 보상으로 따로)
+  var dk = e.dk > 0 ? e.dk : 1; bm *= dk;      // 2.2.2: 큰 부대에 맞춰 불어난 무리는 하나하나가 덜 떨어뜨린다
   DS.gearRefSave(save);
   if (e.scn) { if (rnd() < R.item * T.mul * bm) { d = rollItem(save, zone, rnd, 1); if (d) out.push(d); } return out; }      // 2.1.1: 시나리오 싸움의 처치는 장비를 떨어뜨리지 않는다 — 장비는 승리 보상(bossLoot) 한 번에서만
   if (rnd() < T.zl * T.mul * bm * (BIG[e.type] ? 2 : 1)) {      // 2.1.0: 그 지역의 전설 (가진 것이면 zlOwn 배율로 한 번 더 굴린다)
@@ -10109,6 +10224,18 @@ DS.ZONE_POS = { haemil: [0, 5], dawn: [0, 4], windy: [1, 4], stone: [1, 3], doda
 var OPP = { N: 'S', S: 'N', E: 'W', W: 'E' };
 
 var zcache = {};
+// 2.2.2 들판 무리의 크기: 무리 수는 셋이 싸우던 때에 맞춰져 있다 — 싸우는 유닛(가주 + 가문원) 수에 따라 불린다.
+//   배율 k = 1 + per × (유닛 − base), 1 ~ cap. 무리 목록을 되풀이해 늘린다 (3마리 → 열 유닛 6 · 열여섯 유닛 7).
+//   불어난 만큼 하나하나의 경험치·골드·드랍은 (늘어난 배수)^-0.9 — 무리 전체로는 조금 더 준다 (싸움이 길어진 몫. 봇 12판: 캠페인 6.68 → 6.58시간, 0.8 이면 6.27 · 1.0 이면 6.96)
+DS.PACK = { per: 0.15, base: 3, cap: 2.4, exp: 0.9, gold: 0.9, drop: 0.9 };
+DS.packK = function (n) { var P = DS.PACK; return Math.max(1, Math.min(P.cap, 1 + P.per * ((+n || 0) - P.base))); };
+DS.packOf = function (g, n) {
+  var P = DS.PACK, len = g.list.length, m = len ? Math.max(len, Math.round(len * DS.packK(n))) : 0, list = [];
+  for (var i = 0; i < m; i++) list.push(g.list[i % len]);
+  var o = { id: g.id, x: g.x, y: g.y, L: g.L, list: list };
+  if (m > len) { var f = m / len; o.ek = Math.pow(f, -P.exp); o.gk = Math.pow(f, -P.gold); o.dk = Math.pow(f, -P.drop); }
+  return o;
+};
 DS.buildZone = function (id) {
   if (zcache[id]) return zcache[id];
   var Z = DS.ZONES[id], z = Z.town ? buildTown(id, Z) : buildField(id, Z);
@@ -13060,7 +13187,7 @@ P.spawnGroup = function (g) {
   g.alive = 0; g.deadAt = null;
   for (var i = 0; i < g.list.length; i++) {
     var s = this.mk(g.list[i], { x: g.x, y: g.y, grp: g.id, L: g.L });
-    s.hx = g.x; s.hy = g.y;
+    s.hx = g.x; s.hy = g.y; if (g.ek) { s.ek = g.ek; s.gk = g.gk; s.dk = g.dk; }
     if (this.add(s)) g.alive++;
   }
 };
@@ -13309,7 +13436,7 @@ P.kill = function (v, by) {
     else if (this.leader === v.id) { var c = this.cmds()[0]; if (c) { this.leader = c.id; this.emit({ t: 'leader', id: c.id }); } }
   }
   if (v.side === 'enemy') {
-    if (v.exp || v.gold) { var re = { t: 'reward', exp: v.exp || 0, gold: Math.round((v.gold || 0) * (by && by.side === 'ally' && by.fx && by.fx.goldUp ? 1 + by.fx.goldUp : 1)), L: v.L, x: v.x, y: v.y, boss: v.role === 'boss', type: v.type }; if (v.summoned) re.sum = true; if (v.elite != null) re.elite = v.elite; if (v.eliteCrew != null) re.eliteCrew = v.eliteCrew; if (this.mode === 'scn') re.mode = 'scn'; this.emit(re); }      // elite·eliteCrew: 현상 수배 정예(plan), mode: 시나리오 안의 처치(현상금이 거른다)      // sum: 불려 나온 적 (전리품을 떨어뜨리지 않게 가릴 때)
+    if (v.exp || v.gold) { var re = { t: 'reward', exp: v.ek ? Math.max(1, Math.round((v.exp || 0) * v.ek)) : v.exp || 0, gold: Math.round((v.gold || 0) * (v.gk || 1) * (by && by.side === 'ally' && by.fx && by.fx.goldUp ? 1 + by.fx.goldUp : 1)), L: v.L, x: v.x, y: v.y, boss: v.role === 'boss', type: v.type }; if (v.ek) { re.ek = v.ek; re.dk = v.dk; } if (v.summoned) re.sum = true; if (v.elite != null) re.elite = v.elite; if (v.eliteCrew != null) re.eliteCrew = v.eliteCrew; if (this.mode === 'scn') re.mode = 'scn'; this.emit(re); }      // elite·eliteCrew: 현상 수배 정예(plan), mode: 시나리오 안의 처치(현상금이 거른다)      // sum: 불려 나온 적 (전리품을 떨어뜨리지 않게 가릴 때)      // 2.2.2 ek·gk·dk: 큰 부대에 맞춰 불어난 들판 무리 — 하나하나의 경험치·골드·드랍은 조금 덜 (DS.packOf)
     var g = this.groups.filter(function (g) { return g.id === v.grp; })[0];
     if (g && g.alive > 0 && !v.summoned) { g.alive--; if (!g.alive) g.deadAt = this.t; }
     if (v.obj) {
@@ -14508,7 +14635,7 @@ DS.FIELD = {
     cd: 150,                     // 한 번 끝난 뒤 다음까지 적어도 이 초
     hpMin: 0.5,                  // 부대 평균 체력이 이보다 낮으면 미룬다 (방금 싸운 부대를 덮치지 않는다)
     perAlly: 0.5,                // 첫 물결의 수 = 살아 있는 우리 유닛(가주+가문원) × 이 값 × 세기
-    size: [3, 7], max: 8, grow: 1,     // 물결 하나의 수 (최소·최대), 상한, 다음 물결마다 +grow
+    size: [3, 9], max: 10, grow: 1,    // 물결 하나의 수 (최소·최대), 상한, 다음 물결마다 +grow (2.2.2: 7·8 → 9·10 — 열 넘는 부대에도 사방에서 몰려온다)
     waves3: 6,                   // 우리 유닛이 이만큼 이상이고 레벨이 밀리지 않으면 세 물결 (아니면 둘)
     ring: [6, 9],                // 부대 선두에서 몇 칸 떨어진 곳에서 몰려오는가 (걸어서 닿는 땅)
     gap: 30, rest: 0.25, pre: 0.9,     // 다음 물결: 앞 물결이 rest(25%) 아래로 줄었거나 gap 초가 지나면, pre 초 예고 뒤 (겹쳐 몰려오면 법사가 쓰러졌다)
@@ -19072,7 +19199,9 @@ V.resize = function () {
   this.dpr = Math.min(3, window.devicePixelRatio || 1);
   this.cv.width = Math.round(cw * this.dpr); this.cv.height = Math.round(ch * this.dpr);
   this.W = cw; this.H = ch;
-  this.k0 = Math.min(cw / (Math.min(this.mw || 12, 12.5) * 16), ch / (9.5 * 16)); this.k = this.k0 * (this.zk || 1);      // r16 fx: k0 = 바탕 배율, k = 죽음 연출의 줌을 곱한 배율
+  var kb = Math.min(cw / (Math.min(this.mw || 12, 12.5) * 16), ch / (9.5 * 16));      // 2.2.1 까지의 배율 (폭 12.5칸 · 높이 9.5칸)
+  var zo = DS.zoomOf ? DS.zoomOf() : 1, ins = this.inset || {}, kf = this.mw ? Math.min(cw / (this.mw * 16), Math.max(ch * 0.5, ch - (ins.top || 0) - (ins.bottom || 0)) / (this.mh * 16)) : 0;      // 2.2.2: 지도 보기(설정) — 보통은 가로·세로 1.3배 칸 · 단 지도 전체가 화면(위아래 판 사이)에 들어오는 배율보다 더 멀리 빼지는 않는다
+  this.k0 = Math.max(kb / zo, Math.min(kb, kf)); this.k = this.k0 * (this.zk || 1);      // r16 fx: k0 = 바탕 배율, k = 죽음 연출의 줌을 곱한 배율
   this.snap = true;
 };
 V.sfx = function (name, arg) {
@@ -19085,7 +19214,8 @@ V.onScreen = function (tx, ty) {
 };
 V.tileAt = function (cx, cy) {
   var r = this.cv.getBoundingClientRect();
-  return { x: Math.floor(((cx - r.left) / this.k + this.cam.x) / 16), y: Math.floor(((cy - r.top) / this.k + this.cam.y) / 16) };
+  var fx = ((cx - r.left) / this.k + this.cam.x) / 16, fy = ((cy - r.top) / this.k + this.cam.y) / 16;
+  return { x: Math.floor(fx), y: Math.floor(fy), fx: fx, fy: fy };      // 2.2.2: fx·fy — 칸 안의 자리 (멀리 볼 때 유닛을 조금 빗맞혀도 고른다)
 };
 V.screenOf = function (tx, ty) { return { x: (tx * 16 + 8 - this.cam.x) * this.k, y: (ty * 16 + 8 - this.cam.y) * this.k }; };
 V.casting = function () { return teleHostile(this); };      // r8 gfx: 화면 안에 적 예고가 떠 있다 (game.js mercTalk 가 잡담을 미룰 때 본다)
@@ -19133,6 +19263,10 @@ V.lootFx = function (tx, ty, grade, icon) {
 var CER = { lv: 0.85, promo: 1.6, rank: 0.75, fuse: 1.7 }, CER_RM = { lv: 0.5, promo: 0.9, rank: 0.5, fuse: 0.9 }, CER_SW = 0.8;      // CER_SW: 승급·합일에서 새 모습으로 바뀌는 순간(초)
 function calmFx() { var GO = DS.gfxOpt || {}; if (GO.calm != null) return !!GO.calm; try { return !!(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (x) { return false; } }
 DS.calmFx = calmFx;
+// 2.2.2 지도 보기: 한 화면에 보이는 칸이 2.2.1 의 몇 배인가 (가로·세로 모두). 기본은 보통(1.3배)
+DS.ZOOM = { near: 1, mid: 1.3, far: 1.55 };
+DS.ZOOM_KEYS = [['near', '가깝게'], ['mid', '보통'], ['far', '멀리']];
+DS.zoomOf = function () { var o = DS.G && DS.G.save && DS.G.save.opt, z = o && DS.ZOOM[o.zoom]; return z || DS.ZOOM.mid; };
 V.cere = function (id, kind, o) {
   var v = this.vu[id]; if (!v || v.dying >= 0 || !CER[kind]) return false;
   if (!this.onScreen(v.x, v.y)) return false;      // 화면 밖이면 그리지 않는다 (승급 창도 기다리지 않는다)
@@ -22083,7 +22217,8 @@ function enterZone(id, from, pos) {
   s.zone = id; s.visited[id] = true; if (z.town) s.town = id;
   if (pos && !(pos.x >= 0 && pos.y >= 0 && pos.x < z.w && pos.y < z.h && DS.COST[DS.TILE_CH[z.rows[pos.y][pos.x]] || 'plain'][0] > 0)) pos = null;
   var start = pos || DS.zoneEntry(z, from);
-  var spawns = z.spawns.map(function (g) { return { id: g.id, x: g.x, y: g.y, L: g.L, list: g.list.slice() }; });
+  var nU = DS.partySpecs ? DS.partySpecs(s).length : 3;      // 2.2.2: 무리는 싸우는 유닛 수만큼 불어난다 (DS.packOf)
+  var spawns = z.spawns.map(function (g) { return DS.packOf ? DS.packOf(g, nU) : { id: g.id, x: g.x, y: g.y, L: g.L, list: g.list.slice() }; });
   var block = new Uint8Array(z.w * z.h), decor = [];
   z.pois.forEach(function (p) { if (p.t === 'npc' || p.t === 'arena') { block[p.y * z.w + p.x] = 1; decor.push({ x: p.x, y: p.y, sprite: p.sprite || 'npc_' + (p.look % 4), flip: p.look % 2 === 1 }); } });      // r39: 연무장 교관(arena.js)도 마을 사람처럼 선다
   var sim = new DS.Sim({ map: z.rows, mode: z.town ? 'town' : 'zone', spawns: spawns, seed: (Date.now() & 0xffff) + 1, inv: s.items, block: block,
@@ -22119,6 +22254,7 @@ function startScenario(s) {
   syncVitals();
   G.ret = { zone: G.zone.id, pos: me ? { x: me.x, y: me.y } : null };
   if (DS.mercTidy) DS.mercTidy(sv);      // 2.2.0: 출전 목록 = 가주가 선 가문 모두
+  if (DS.ui && DS.ui.takeSnap) DS.ui.takeSnap(s);      // 2.2.2: 결과 창의 경험치 막대는 이 순간(싸움 직전)부터 — 관문 창을 거치지 않고 들어와도
   var b = DS.buildScenario(s, DS.partySpecs ? DS.partySpecs(sv).length : sv.party.length, sv.chars[sv.hero] ? sv.chars[sv.hero].cls : 'inf');
   var sim = new DS.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (Date.now() & 0xffff) + s.id, inv: sv.items, mode: 'scn' });
   G.sim = sim; G.scn = s; G.aim = null; G.bossId = null; G.pendPoi = null; G.ending = false; G.gain = { exp: 0, gold: 0, loot: [] }; G.wasCombat = false; G.lost = [];
@@ -22229,7 +22365,7 @@ function select(id) {
   G.sel = u.id; sim.leader = u.id; G.view.sel = u.id; G.view.focus = u.id; G.view.pan = { x: 0, y: 0 }; G.view.tgt = u.order && u.order.tid || null;
   cancelAim(); renderActs(); renderSys();
   for (var k in G.chipEls) G.chipEls[k].el.classList.toggle('sel', k === u.id);
-  var ce = G.chipEls[u.id], bx = $('#chips'); if (ce && bx && bx.classList.contains('lots') && ce.el.scrollIntoView) { try { ce.el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (x) {} }      // 2.2.0: 가로로 밀어 보는 칩 줄에서 고른 가문이 보이게
+  chipFollow(u.id);      // 2.2.2: 밀어 보는 칩 줄에서 고른 가문이 보이게 (부드럽게)
 }
 function order(u, o) { softResume(); G.itemsOpen = null; G.sim.setOrder(u.id, o); G.view.pan = { x: 0, y: 0 }; G.view.tgt = o && o.tid && G.sim.byId[o.tid] && G.sim.byId[o.tid].side === 'enemy' ? o.tid : null; }
 function poiAt(t) {
@@ -22323,8 +22459,18 @@ function unitLine(u) {
   if (u.side === 'enemy') return (u.role === 'boss' ? '보스 ' : '') + u.name + ', ' + lvText(u.L) + ', HP ' + Math.ceil(u.hp) + '/' + u.mhp + (fx ? ', ' + fx : u.info ? ' — ' + u.info : '');
   return u.name + ', HP ' + Math.ceil(u.hp) + '/' + u.mhp + (fx ? ', ' + fx : '');
 }
+// 2.2.2: 빈 칸을 눌렀을 때, 눌린 자리에서 화면으로 18px(적어도 0.6칸) 안에 선 유닛 — 지도를 멀리 보면 칸이 작아 손가락이 빗맞는다
+function tapUnit(t) {
+  if (t.fx == null || !G.view) return null;
+  var r = Math.max(0.6, 18 / (16 * (G.view.k || 2))), best = null, bd = r * r;
+  G.sim.units.forEach(function (u) {
+    if (u.dead || u.gone) return; var v = G.view.vu[u.id], ux = (v ? v.x : u.x) + 0.5, uy = (v ? v.y : u.y) + 0.45, dx = t.fx - ux, dy = t.fy - uy, d = dx * dx + dy * dy;
+    if (d < bd) { bd = d; best = u; }
+  });
+  return best;
+}
 function onTap(t) {
-  var sim = G.sim, me = sim.byId[G.sel], u = sim.at(t.x, t.y);
+  var sim = G.sim, me = sim.byId[G.sel], u = sim.at(t.x, t.y) || (poiAt(t) ? null : tapUnit(t));
   DS.Audio.unlock();
   if (!me || me.dead || G.ending) return;
   if (G.aim) return aimTap(t, u);
@@ -22430,7 +22576,7 @@ DS.vetBadge = vetBadge;
 function renderChips() {
   var box = $('#chips'), sv = G.save, sim = G.sim; box.innerHTML = ''; G.chipEls = {};
   var n = sv.party.filter(function (id) { return sv.chars[id]; }).length;
-  box.classList.toggle('many', n > 3); box.classList.toggle('lots', n > 6);      // 2.2.0: 모두 싸운다 — 넷부터는 작은 칩 두 줄, 일곱부터는 가로로 밀어 보는 한 줄 (390 폭)
+  box.classList.toggle('swipe', n > 3); chipSwipe(box);      // 2.2.2: 넷부터는 2.1.2 의 큰 칩 그대로 한 줄 — 390 폭에 셋, 옆으로 밀어 본다 (작은 칩은 뺐다)
   sv.party.forEach(function (id) {
     var ch = sv.chars[id]; if (!ch) return;
     var uid = 'c' + id, u = sim && sim.byId[uid];
@@ -22452,7 +22598,84 @@ function renderChips() {
   });
   if (G.chipEls[G.sel]) G.chipEls[G.sel].el.classList.add('sel');
   G.mdT = 0;
+  chipFollow(G.sel, true); chipEdges(box);
 }
+// ───────── 2.2.2 칩 줄 밀기 ─────────
+//   손가락: 브라우저의 가로 스크롤(관성 · scroll-snap 이 칩 가장자리에 맞춘다). 마우스·펜: 끌면 직접 밀고, 놓으면 관성 뒤 가장 가까운 칩 가장자리로.
+//   8px 넘게 움직였으면 그 누름은 칩 고르기가 아니다 (click 을 잡아먹는다). 세로로 먼저 움직이면 끌기를 시작하지 않는다.
+//   더 있는 쪽 가장자리만 흐리게(fl · fr).
+var CHIP_TH = 8;
+function chipEdges(box) {
+  box = box || $('#chips'); if (!box) return;
+  var sl = box.scrollLeft, mx = box.scrollWidth - box.clientWidth, on = box.classList.contains('swipe');
+  box.classList.toggle('fl', on && sl > 2); box.classList.toggle('fr', on && sl < mx - 2);
+}
+function chipStep(box) { var c = box.querySelector('.chip'), c2 = c && c.nextElementSibling; return c2 ? c2.offsetLeft - c.offsetLeft : c ? c.offsetWidth : 80; }
+function chipSnapTo(box, left, smooth, rd) {      // 가장 가까운 칩 가장자리 (칩 너비가 모두 같다) · rd: Math.ceil / Math.floor (따라가기 — 칩이 잘리지 않게)
+  var st = chipStep(box), mx = box.scrollWidth - box.clientWidth, t = Math.max(0, Math.min(mx, (rd || Math.round)(left / st - (rd ? (rd === Math.ceil ? 0.02 : -0.02) : 0)) * st));
+  if (mx - t < st / 2) t = mx;
+  var sm = smooth && !calm(); box._tgt = t; box._tgtT = sm ? performance.now() : 0;      // 가는 중인 자리 (부드럽게 미는 동안 따라가기가 그 자리를 기준으로 본다)
+  try { box.scrollTo({ left: t, behavior: sm ? 'smooth' : 'auto' }); } catch (x) { box.scrollLeft = t; }
+  return t;
+}
+function chipGlideStop(box) { if (box._gl) { cancelAnimationFrame(box._gl); box._gl = 0; } }
+function chipSwipe(box) {
+  if (!box || box._sw) return; box._sw = 1;
+  var d = null, raf = 0;
+  box.addEventListener('pointerdown', function (e) {
+    if (e.button > 0 || !box.classList.contains('swipe')) { d = null; return; }
+    chipGlideStop(box);
+    d = { id: e.pointerId, x: e.clientX, y: e.clientY, sl: box.scrollLeft, m: e.pointerType !== 'touch', moved: false, drag: false, lx: e.clientX, lt: performance.now(), v: 0 };
+  });
+  box.addEventListener('pointermove', function (e) {
+    if (!d || e.pointerId !== d.id) return;
+    var dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.moved && Math.abs(dx) > CHIP_TH && Math.abs(dx) >= Math.abs(dy)) d.moved = true;
+    if (!d.moved && Math.abs(dy) > CHIP_TH) { d = null; return; }      // 세로 몸짓은 놓아준다
+    if (!d.m || !d.moved) return;
+    if (!d.drag) { d.drag = true; box.classList.add('drag'); try { box.setPointerCapture(e.pointerId); } catch (x) {} }
+    var now = performance.now(), dt = Math.max(1, now - d.lt);
+    d.v = 0.7 * ((e.clientX - d.lx) / dt) + 0.3 * d.v; d.lx = e.clientX; d.lt = now;
+    box.scrollLeft = d.sl - dx; e.preventDefault();
+  });
+  function end(e, cancel) {
+    if (!d || (e && e.pointerId !== d.id)) return;
+    var q = d; d = null;
+    if (cancel && !q.m) q.moved = true;      // 손가락: 브라우저가 가로 스크롤을 넘겨받았다
+    if (q.moved) G.chipDragT = performance.now();
+    if (!q.drag) return;
+    try { box.releasePointerCapture(q.id); } catch (x) {}
+    var v = performance.now() - q.lt > 90 ? 0 : -q.v, last = performance.now();      // px/ms (멈췄다 놓으면 관성 없음)
+    if (calm()) v = 0;
+    (function glide() {
+      var now = performance.now(), dt = Math.min(40, now - last); last = now;
+      if (Math.abs(v) > 0.05) { var before = box.scrollLeft; box.scrollLeft += v * dt; v *= Math.pow(0.94, dt / 16); if (box.scrollLeft !== before) { box._gl = requestAnimationFrame(glide); return; } }
+      box._gl = 0; box.classList.remove('drag'); chipSnapTo(box, box.scrollLeft, true);
+    })();
+  }
+  box.addEventListener('pointerup', function (e) { end(e, false); });
+  box.addEventListener('pointercancel', function (e) { end(e, true); });
+  box.addEventListener('click', function (e) {      // 끌기 끝의 click 은 고르기가 아니다
+    if (performance.now() - (G.chipDragT || 0) < 400) { e.stopPropagation(); e.preventDefault(); G.chipDragT = 0; }
+  }, true);
+  box.addEventListener('scroll', function () {
+    if (d && !d.moved && Math.abs(box.scrollLeft - d.sl) > CHIP_TH) d.moved = true;
+    if (!raf) raf = requestAnimationFrame(function () { raf = 0; chipEdges(box); });
+  }, { passive: true });
+  window.addEventListener('resize', function () { chipEdges(box); });
+}
+// 고른 칩이 줄 밖에 있으면 보이는 자리까지 민다 (now: 바로)
+function chipFollow(uid, now) {
+  var ce = G.chipEls[uid], box = $('#chips'); if (!ce || !box || !box.classList.contains('swipe') || box.classList.contains('drag')) return;
+  var cs = getComputedStyle(box), pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+  var br = box.getBoundingClientRect(), cr = ce.el.getBoundingClientRect(), t = null, rd = null, sl = box.scrollLeft;
+  var base = box._tgtT && performance.now() - box._tgtT < 700 ? box._tgt : sl, l = cr.left + sl - base, r = cr.right + sl - base;      // 부드럽게 미는 중이면 닿을 자리에서 본다
+  if (l < br.left + pl - 1) { t = base + l - (br.left + pl); rd = Math.floor; }
+  else if (r > br.right - pr + 1) { t = base + r - (br.right - pr); rd = Math.ceil; }
+  if (t == null) return;
+  chipGlideStop(box); chipSnapTo(box, t, !now, rd);
+}
+DS.chipFollow = chipFollow;
 // 전투 아이템 버튼에 올릴 소모품. 아이템팀의 DS.itemKeys 가 있으면 그 순서로 "가진 것만", 없으면 지금의 네 가지.
 var ITEM_BASE = ['herb', 'mana', 'endo'];      // r15: 소모품은 회복 셋뿐
 function itemKeys() {
@@ -23743,7 +23966,9 @@ function resumeRite() {
 }
 function layoutInsets() {
   var top = $('#top'), bot = $('#bot'); if (!G.view) return;
+  var t0 = G.view.inset.top, b0 = G.view.inset.bottom;
   G.view.inset.top = top ? top.offsetHeight : 0; G.view.inset.bottom = bot ? bot.offsetHeight : 0;
+  if ((t0 !== G.view.inset.top || b0 !== G.view.inset.bottom) && G.view.sim && G.view.resize) G.view.resize();      // 2.2.2: 지도 보기의 배율은 위아래 판 사이 높이를 본다
   var sg = $('#s-game'); if (sg) { sg.style.setProperty('--top-h', G.view.inset.top + 'px'); sg.style.setProperty('--bot-h', G.view.inset.bottom + 'px'); }
 }
 DS.layoutInsets = layoutInsets;
@@ -24924,6 +25149,7 @@ function takeSnap(s) {
   DS.charList(sv).forEach(function (c) { snap.L[c.id] = c.L; });
   snap.pw = DS.partyPower ? DS.partyPower(sv) : 0; snap.cp = {}; sv.party.forEach(function (id) { snap.cp[id] = DS.cardPower(sv, sv.chars[id]); });      // r15: 결과 창의 「이번 판 전투력 변화」
   sv.mercs.forEach(function (m) { snap.mx[m.id] = DS.pL(m); snap.mt[m.id] = DS.mercTitle ? DS.mercTitle(m) || '' : ''; });      // 판 전의 별명 (결과 창이 새로 붙은 별명을 알린다)
+  snap.P = {}; DS.persons(sv).forEach(function (p) { var k = DS.pKey(sv, p.who); if (k) snap.P[k] = { L: DS.pL(p.who), e: +p.who.exp || 0 }; });      // 2.2.2: 사람마다 레벨·경험치 — 결과 창의 경험치 막대가 정확히 그 자리에서 차오른다
 }
 DS.openGate = function (s, lock) {
   var sv = G.save, B = s.boss ? DS.BOSSES[s.boss] : null, pl = DS.partyL(sv), rec = DS.recLOf ? DS.recLOf(s) : s.L, low = DS.recLow ? !!DS.recLow(sv, s) : pl < rec - 2;
@@ -24976,6 +25202,77 @@ function nextLine() {      // 결과 창 맨 아래 한 줄: 이제 무엇을 �
   return n.id + '. ' + n.name + ' — ' + DS.ZONES[n.zone].name;
 }
 function vetBar(m) { var L = DS.pL(m); return L >= DS.pCap(m) ? 100 : Math.max(0, Math.min(100, (+m.exp || 0) / DS.expNeed(L) * 100)); }      // r42: 개인 경험치
+// ───────── 2.2.2 결과 창의 경험치 판 ─────────
+// 칸 하나 = 사람 하나: v0·v1 = 판 전·후의 「레벨 + 경험치 몫」(4.25 = Lv4 의 25%), g = 얻은 경험치. 막대는 v0 → v1 로 차오르며 정수를 넘을 때마다 레벨업 (단이 오르면 승급)
+function xpVal(L, e, cap) { return L >= cap ? L : L + Math.max(0, Math.min(0.999, e / DS.expNeed(L))); }
+function xpGain(L0, e0, L1, e1) { var g = e1 - e0; for (var l = L0; l < L1; l++) g += DS.expNeed(l); return Math.max(0, g); }
+function xpCell(sv, sn, who, o) {      // o: { spr, name, house, crest, cls, fc, small }
+  var k = DS.pKey(sv, who), b0 = sn && sn.P && sn.P[k], cap = DS.pCap(who), L1 = DS.pL(who), e1 = +who.exp || 0;
+  var L0 = b0 ? b0.L : L1, e0 = b0 ? b0.e : e1; if (L0 > L1 || (L0 === L1 && e0 > e1)) { L0 = L1; e0 = e1; }
+  var v0 = xpVal(L0, e0, cap), v1 = xpVal(L1, e1, cap), g = xpGain(L0, e0, L1, e1), mx = L1 >= cap ? 1 : 0, f0 = mx && L0 === L1 ? 1 : v0 - Math.floor(v0);
+  var attr = ' data-v0="' + v0.toFixed(4) + '" data-v1="' + v1.toFixed(4) + '" data-g="' + Math.round(g) + '" data-mx="' + mx + '" data-l0="' + L0 + '" data-l1="' + L1 + '"';
+  if (o.small) return { up: L1 > L0, g: g, html: '<div class="xk' + (L1 > L0 ? ' up' : '') + '"' + attr + ' style="--gc:' + gcol(who.g || 3) + '">' + o.spr + '<span class="xkt"><b>' + esc(o.name) + '</b><i class="xl num">' + lvS(L0) + '</i></span>' + xpBar(f0) + '<small class="xg num">+0</small></div>' };
+  var lord = (o.cls || '').indexOf('lord') >= 0;
+  return { up: L1 > L0, g: g, html: '<div class="hk xc' + (o.cls || '') + (L1 > L0 ? ' up' : '') + '"' + attr + ' style="--fc:' + o.fc + '"><span class="hkh">' + o.crest + '<small>' + esc(o.house) + '</small>' + (lord ? '<i class="hkt">맹주</i>' : '') + '</span>' +
+    '<span class="hkf" style="--gc:' + gcol(who.g || 3) + '">' + o.spr + '</span>' + lvPill(L0, 'xl') + '<b class="hkn">' + esc(o.name) + '</b>' + xpBar(f0) + '<small class="xg num">+0 exp</small><i class="xpop" aria-hidden="true"></i><i class="xup num"></i></div>' };
+}
+function xpBoard(sv, sn, out, deadCh) {
+  var lord = '', cells = [], kin = [], up = false, sbN = 0, sbG = 0;
+  sv.party.forEach(function (id) {
+    var ch = sv.chars[id]; if (!ch || (out.joins || []).indexOf(ch) >= 0) return;
+    var hero = id === sv.hero, w = hero ? (ch.vac ? null : ch.ps) : DS.bearer(sv, ch), cls = hero ? ' lord' : '', crest = DS.houseCrestOf ? DS.houseCrestOf(sv, ch, hero ? 16 : 14) : '', fc = DS.FLAG[ch.cls] || '#c9a96a';
+    var c;
+    if (deadCh[id] || !w) c = '<div class="hk xc down' + cls + '" style="--fc:' + fc + '"><span class="hkh">' + crest + '<small>' + esc(hgShort(ch)) + '</small></span><span class="hkf"><i class="hkx">' + (deadCh[id] === 2 ? '천수' : '쓰러짐') + '</i></span><b class="hkn">' + esc(w ? DS.charName(ch) : '빈 가문') + '</b></div>';
+    else { var r = xpCell(sv, sn, w, { spr: charSpr(ch, hero ? 4 : 3), name: hero ? DS.charName(ch) : (w.ttl || w.n || ''), house: hgShort(ch), crest: crest, cls: cls, fc: fc }); up = up || r.up; c = r.html; }
+    if (hero) lord = c; else cells.push(c);
+    DS.mercsOf(sv, id).forEach(function (m) { if (m === w) return; var r = xpCell(sv, sn, m, { spr: mercSpr(m, 1.5), name: m.ttl || m.n || '', small: 1 }); up = up || r.up; kin.push(r.html); });
+  });
+  (DS.barracks ? DS.barracks(sv) : []).forEach(function (m) { var k = DS.pKey(sv, m), b0 = sn && sn.P && sn.P[k]; if (!b0) return; var g = xpGain(b0.L, b0.e, DS.pL(m), +m.exp || 0); if (g >= 1) { sbN++; sbG += g; } });
+  if (!lord && !cells.length) return { html: '', up: false };
+  return { up: up, html: '<div class="xb" data-xb="1">' + (lord ? '<div class="hkl">' + lord + '</div>' : '') + (cells.length ? '<div class="xb9">' + cells.join('') + '</div>' : '') +
+    (kin.length ? '<div class="xbk"><small>가문원</small><div class="xbkl">' + kin.join('') + '</div></div>' : '') + (sbN ? '<p class="xbs">막사 ' + sbN + '명 <b class="num">+' + fmtN(sbG) + '</b> exp <small>같은 병과 가주 몫의 ' + Math.round((DS.BAL.sbShare || 0) * 100) + '%</small></p>' : '') + '</div>' };
+}
+// 막대를 움직인다: 칸마다 조금씩 늦게(최대 0.7초) · 1.3초 동안 · 끝까지 2.4초 남짓. 누르면 바로 끝. 움직임 줄이기면 처음부터 끝값
+function xbRun(o) {
+  var box = o.querySelector('[data-xb]'), res = { ms: 0, skip: function () {} };
+  if (!box) return res;
+  var cells = $$('[data-v0]', box).map(function (el, i) {
+    return { el: el, v0: +el.dataset.v0, v1: +el.dataset.v1, g: +el.dataset.g, mx: el.dataset.mx === '1', L: +el.dataset.l0, d: Math.min(700, i * 70), L0: +el.dataset.l0, u: el.querySelector('.hkb > u'), lv: el.querySelector('.xl'), xg: el.querySelector('.xg'), pop: el.querySelector('.xpop'), small: el.classList.contains('xk') };
+  });
+  var cm = U.calm && U.calm(), t0 = performance.now() + (cm ? 0 : 380), DUR = 1300, sndT = 0, done = false, raf = 0;
+  res.ms = cm ? 0 : 380 + 700 + DUR;
+  function lvTxt(c, L) { if (c.lv) c.lv.innerHTML = c.small ? lvS(L) : DS.tierOfL(L) + '단 <b>Lv' + DS.lvOfL(L) + '</b>'; }
+  function pop(c, L, quiet) {
+    var pro = DS.tierOfL(L) > DS.tierOfL(c.L); c.L = L; lvTxt(c, L);
+    c.el.classList.add('lvd'); if (pro) c.el.classList.add('pro');
+    if (c.pop) c.pop.textContent = c.el.classList.contains('pro') ? '승급 ' + DS.tierOfL(L) + '단' : 'LEVEL UP';
+    var ue = c.el.querySelector('.xup'); if (ue) ue.textContent = c.el.classList.contains('pro') ? '승급' : 'Lv+' + (L - c.L0);
+    if (!cm && !quiet) {
+      c.el.classList.toggle('lvf', false); void c.el.offsetWidth; c.el.classList.toggle('lvf', true);
+      var nw = performance.now(); if (nw - sndT > 140) { sndT = nw; A2(pro ? 'promo' : 'level', 'star'); }
+    }
+  }
+  function draw(c, e, quiet) {
+    var v = c.v0 + (c.v1 - c.v0) * e, L = Math.floor(v + 1e-6), f = v - L;
+    if (e >= 1) { v = c.v1; L = Math.floor(v + 1e-6); f = c.mx ? 1 : v - L; }
+    while (c.L < L) pop(c, c.L + 1, quiet);
+    if (c.u) c.u.style.width = (Math.max(0, Math.min(1, f)) * 100).toFixed(1) + '%';
+    if (c.xg) c.xg.textContent = '+' + fmtN(c.g * e) + (c.small ? '' : ' exp');
+  }
+  function fin() { if (done) return; done = true; if (raf) cancelAnimationFrame(raf); box.classList.add('xdone'); cells.forEach(function (c) { draw(c, 1, true); }); }
+  res.skip = fin;
+  if (cm || !cells.length) { fin(); return res; }
+  cells.forEach(function (c) { draw(c, 0, true); });
+  (function step() {
+    var now = performance.now(), all = true;
+    cells.forEach(function (c) { var p = Math.max(0, Math.min(1, (now - t0 - c.d) / DUR)); if (p < 1) all = false; draw(c, 1 - Math.pow(1 - p, 3)); });
+    if (all) { done = true; box.classList.add('xdone'); return; }
+    raf = requestAnimationFrame(step);
+  })();
+  o.addEventListener('click', function (e) { if (done || e.target.closest('button, a, [data-close]')) return; fin(); });      // 아무 데나 누르면 끝값 (단추는 그대로 일한다)
+  return res;
+}
+DS.xbSkip = function () { var o = document.querySelector('.ov.res26 .xb'); if (o) o.click(); };      // 시험용
 DS.showResult = function (s, out, cb) {
   var sv = G.save, sn = snap && snap.key === (s.pit ? 'p' + s.pit : 's' + s.id) ? snap : null, st = G.stats || null, kills = st && st.kills ? st.kills : null;
   // r8 menus (newbie 1): 지휘관을 잃었으면 제목 바로 아래에 — 금색 「승리」 밑 스크롤 끝에 묻히지 않게
@@ -25009,7 +25306,7 @@ DS.showResult = function (s, out, cb) {
   });
   html += '</div><div class="kv a-recess gfx-in" style="--i:' + (gi++) + '">' + (G.gain.exp ? '<span>전투 경험치</span><b class="num" data-cu="' + G.gain.exp + '">' + fmtN(G.gain.exp) + '</b>' : '') +
     (sn && sn.pw && DS.partyPower ? '<span>부대 전투력</span><b class="num rpw">' + pwDelta(sn.pw, DS.partyPower(sv)) + '</b>' : '') +
-    (killsN ? '<span>쓰러뜨린 적</span><b class="num">' + killsN + '</b>' : '') + (G.sim && G.sim.t ? '<span>걸린 시간</span><b class="num">' + Math.floor(G.sim.t / 60) + '분 ' + Math.floor(G.sim.t % 60) + '초</b>' : '') + '</div><ul class="loot">';
+    (killsN ? '<span>쓰러뜨린 적</span><b class="num">' + killsN + '</b>' : '') + (G.sim && G.sim.t ? '<span>걸린 시간</span><b class="num">' + Math.floor(G.sim.t / 60) + '분 ' + Math.floor(G.sim.t % 60) + '초</b>' : '') + '</div><!--xb--><ul class="loot">';
   var gotR = out.gear && DS.gear(out.gear) ? [DS.gear(out.gear)] : [];      // 2.1.0: 정해진 보상 전설 장비 (옛 유물 자리 — 자세한 줄은 아래 전리품 목록에)
   gotR.forEach(function (g) { html += '<li class="hl lg5"><b><i class="tg">정해진 보상</i> 전설 「' + esc(g.short) + '」</b><br><small>가방에 넣었다</small></li>'; });
   if (out.crest) html += '<li class="hl">맹세의 깃대 <small>합일 조건: 7단 Lv10 가문 셋 (어느 가문이든)</small></li>';
@@ -25028,21 +25325,12 @@ DS.showResult = function (s, out, cb) {
     var nUp = upgradable();      // 가방에 출전 지휘관이 입던 것보다 좋은 장비가 생겼으면 여기서 바로 (가방 → 입히기 → 고르기를 건너뛴다)
     if (nUp) html += '<button class="btn wide upg" data-upg="1">▲ 자동 장착 <small>가문 ' + nUp + '개</small></button>';
   }
-  // 깃발: 레벨 전 → 후와 경험치 막대
-  var crows = '', anyUp = false, lvHint = '';
-  sv.party.forEach(function (id) {
-    var ch = sv.chars[id]; if (!ch || out.joins.indexOf(ch) >= 0) return;
-    var cap = DS.capL(ch), b = sn && sn.L[id] != null ? sn.L[id] : null, up = b != null && ch.L > b, pro = up && DS.tierOfL(ch.L) > DS.tierOfL(b);
-    if (deadCh[id]) { crows += '<li class="gone">' + charSpr(ch, 1.5) + '<span class="nm">' + esc(DS.charName(ch)) + '</span><span class="lvs"><b>' + lvS(b != null ? b : ch.L) + '</b> <em class="lostt">' + (deadCh[id] === 2 ? '천수' : '쓰러짐') + '</em></span></li>'; return; }      // 떠난 이에게 레벨업 줄을 붙이지 않는다
-    if (up) anyUp = true;
-    var cp1 = DS.cardPower(sv, ch), cp0 = sn && sn.cp && sn.cp[id] != null ? sn.cp[id] : cp1, dcp = cp1 - cp0;
-    crows += '<li' + (up ? ' class="up"' : '') + '>' + charSpr(ch, 1.5) + '<span class="nm">' + esc(DS.charName(ch)) + '<small class="num rcp">' + fmtN(cp1) + (dcp ? ' <em class="' + (dcp > 0 ? 'up' : 'dn') + '">' + (dcp > 0 ? '+' : '−') + fmtN(Math.abs(dcp)) + '</em>' : '') + '</small></span><span class="lvs">' + (up ? '<i>' + lvS(b) + '</i> → ' : '') + '<b>' + lvS(ch.L) + '</b>' + (pro ? ' <em>승급</em>' : up ? ' <em>+' + (ch.L - b) + '</em>' : '') + '</span>' +
-      '<i class="bar exp"><u style="width:' + (ch.L >= cap ? 100 : Math.min(100, ch.exp / DS.expNeed(ch.L) * 100)) + '%"></u></i></li>';
-  });
+  // 2.2.2 경험치 판: 맹주 가문의 가주는 위 가운데, 싸운 다른 가주는 아래 3×3, 어른 가문원은 작은 줄 — 막대가 판 전 자리에서 차오르고, 가득 차면 돌아 레벨업 (xbRun)
+  var xb = xpBoard(sv, sn, out, deadCh), anyUp = xb.up, lvHint = '';
   if (anyUp && sv.seen && !sv.seen.lvx) { sv.seen.lvx = 1; lvHint = '<p class="dim lvx">10레벨마다 단 +1 (새 기술)</p>'; }      // 「단」 첫 설명 (한 번)
   var hup = (G.vetUps || []).filter(function (x) { return x && x.ch; });
   if (hup.length) lvHint += '<ul class="rnote hup">' + hup.map(function (x) { return '<li><span>' + esc(DS.flagName(x.ch.cls)) + '</span><small>가문 공훈</small><b>' + esc(DS.hName(x.to)) + '</b></li>'; }).join('') + '</ul>';      // r45 ui: 한 줄 → 가문마다 줄      // r42: 가문 공훈 계급이 올랐다
-  if (crows) html += '<h5>가문</h5><ul class="rc">' + crows + '</ul>' + lvHint;
+  html = html.replace('<!--xb-->', xb.html ? '<h5 class="xbh">경험치 <small>누르면 바로 끝</small></h5>' + xb.html + lvHint : lvHint);
   // 가문원: 이번 싸움의 처치 수, 최다 처치 한 명, 경험치 막대
   var ms = [], topId = null, topK = 0;
   sv.party.forEach(function (id) { if (sv.chars[id]) DS.mercsOf(sv, id).forEach(function (m) { ms.push(m); }); });
@@ -25076,7 +25364,8 @@ DS.showResult = function (s, out, cb) {
   var rareD = (out.drops || []).filter(function (d) { return d && d.kind === 'gear' && (d.grade || 0) >= 4; });      // 2.1.1: 승리 보상의 귀한 장비는 결과 창 위에 크게 (소리도 거기서)
   if (gotR.length && !(rareD.length && DS.lootCall)) A2('rare', 'star');
   var o = overlay(html, 'modal center res26');
-  if (rareD.length && DS.lootCall) DS.lootCall(rareD, { delay: 900 });
+  var xr = xbRun(o);      // 2.2.2: 경험치 막대 (누르면 바로 끝) — 귀한 장비 창은 막대가 다 찬 뒤에
+  if (rareD.length && DS.lootCall) DS.lootCall(rareD, { delay: Math.max(900, xr.ms + 250) });
   snap = null;
   // r26: 별이 하나씩 튀고 · 골드·경험치가 0 부터 차오른다 (움직임 줄이기면 바로 끝값)
   setTimeout(function () { $$('[data-cu]', o).forEach(function (el, i) { setTimeout(function () { U.countUp(el, +el.dataset.cu, 650, el.dataset.pre || ''); }, i * 120); }); }, U.calm && U.calm() ? 0 : 420);
@@ -25476,32 +25765,34 @@ function hgMeta(s, ch) {
   var hero = ch.id === s.hero, b = hero ? (ch.vac ? null : ch.ps) : DS.bearer(s, ch), pi = s.party.indexOf(ch.id), n = (b ? 1 : 0) + DS.mercsOf(s, ch.id).length;
   return { hero: hero, b: b, pi: pi, n: n, pw: DS.cardPower(s, ch), bn: hero ? DS.charName(ch) : b ? (b.ttl || b.n || '') : '', sb: DS.sbOf(s, ch.id).length };
 }
-// 부대 탭 한 화면: 가문 칸 안에 가주 · 맹주 가문은 어른 가문원을 작은 얼굴로. 칸 머리를 누르면 가문 창 (2.2.0)
-function hgChip(attrs, spr, name, g, cls, L) { return '<button class="hch' + (cls ? ' ' + cls : '') + '" ' + attrs + ' style="--gc:' + (g ? gcol(g) : 'transparent') + '">' + spr + (L ? '<i class="hcl num">' + DS.tierOfL(L) + '·' + DS.lvOfL(L) + '</i>' : '') + '<small>' + esc(name || '') + '</small></button>'; }      // r42: 사람마다 단·Lv (「4·7」 = 4단 Lv7)
-function hgChips(s, ch, hero) {
-  var b = hero ? null : DS.bearer(s, ch), kin = hero ? DS.mercsOf(s, ch.id) : [], h = '';
-  if (hero) h += hgChip('data-hinfo="1"', charSpr(ch, 1), ch.vac || ch.down ? '없음' : DS.charName(ch), (ch.ps && ch.ps.g) || 3, 'lead' + (ch.vac || ch.down ? ' empty' : ''), ch.vac || !ch.ps ? 0 : DS.pL(ch.ps));
-  else if (b) h += hgChip('data-info="' + b.id + '"', mercSpr(b, 1), b.ttl || b.n || '', b.g, 'lead', DS.pL(b));
-  else h += hgChip('data-ch="' + ch.id + '"', '<i class="add">+</i>', '빈 가문', 0, 'lead empty vac');
-  kin.forEach(function (m) { h += hgChip('data-info="' + m.id + '"', mercSpr(m, 1), m.ttl || m.n || '', m.g, 'kin', DS.pL(m)); });
-  return '<div class="hgm">' + h + '</div>';
-}
+// 2.2.2 가주 카드: 가문은 곧 그 가주 — 큰 초상(등급 테) · 이름 · 가문(작게) · 단/Lv 알약 · 경험치 막대 · 전투력. 공훈 계급은 오른쪽 위 작은 표식만
+function pFrac(w) { var L = DS.pL(w), cap = DS.pCap(w); return L >= cap ? 1 : Math.max(0, Math.min(1, (+w.exp || 0) / DS.expNeed(L))); }
+function lvPill(L, cls) { return '<i class="hkp num' + (cls ? ' ' + cls : '') + '">' + DS.tierOfL(L) + '단 <b>Lv' + DS.lvOfL(L) + '</b></i>'; }
+function xpBar(f, cls) { return '<i class="hkb' + (cls ? ' ' + cls : '') + '"><u style="width:' + Math.round(Math.max(0, Math.min(1, f)) * 1000) / 10 + '%"></u></i>'; }
 function hgCell(s, ch, cls) {
   if (!ch) {      // 아직 없는 가문
     var sc = joinScn(cls);
-    return '<button class="hgc none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '">' + DS.houseCrest(cls, 22) + '<b>' + esc(hgShort(null, cls)) + '</b><small>' + (sc ? '시나리오 ' + sc + '에서 합류' : '아직 없음') + '</small></button>';
+    return '<button class="hk none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">아직 없음</b><small class="hkv">' + (sc ? '시나리오 ' + sc + '에서 합류' : '') + '</small></button>';
   }
-  var m = hgMeta(s, ch);
-  return '<div class="hgc' + (m.hero ? ' mj' : '') + (m.pi >= 0 ? ' in' : '') + (ch.down ? ' down' : '') + (m.b ? '' : ' nob') + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '">' +
-    '<button class="hgh" data-ch="' + ch.id + '">' + DS.houseCrestOf(s, ch, 20) + '<b>' + esc(hgShort(ch)) + (m.hero ? ' <i class="tg">맹주</i>' : '') + '</b>' +
-    '<small class="hgl">' + (m.b ? lv(ch.L) : '<em class="warn">빈 가문</em>') + (ch.down ? ' <em class="warn">쓰러짐</em>' : m.b ? pwNum(m.pw, 'sm') : '') + '</small><span class="hgv">' + DS.vetBadge(DS.hRank(ch)) + '<small>' + esc(DS.hName(DS.hRank(ch))) + '</small></span></button>' + hgChips(s, ch, m.hero) + '</div>';
+  var m = hgMeta(s, ch), b = m.b, L = b ? DS.pL(b) : ch.L, rk = DS.hRank(ch), dn = !!ch.down;
+  var st = (m.hero ? ' lord' : '') + (dn ? ' down' : '') + (b ? '' : ' vac') + (m.pi >= 0 ? ' in' : '');
+  var por = '<span class="hkf" style="--gc:' + (b ? gcol(b.g || 3) : '#4a3f30') + '">' + charSpr(ch, m.hero ? 4 : 3) + (dn ? '<i class="hkx">쓰러짐</i>' : '') + '</span>';
+  var foot = b ? xpBar(dn ? 0 : pFrac(b)) + '<span class="hkw">' + pwNum(m.pw, 'sm') + '</span>' : '<small class="hkv">' + (m.sb ? '막사의 같은 병과 ' + m.sb + '명' : '영웅관에서 모집') + '</small>';
+  return '<button class="hk hgh' + st + '" data-ch="' + ch.id + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '" aria-label="' + esc(hgShort(ch) + ' 가문, ' + (b ? m.bn + ' ' + lv(L) : '빈 가문') + (dn ? ', 쓰러짐' : '')) + '">' +
+    '<span class="hkh">' + DS.houseCrestOf(s, ch, m.hero ? 16 : 14) + '<small>' + esc(hgShort(ch)) + '</small>' + (m.hero ? '<i class="hkt">맹주</i>' : '') + '</span>' +
+    (rk >= 1 ? '<span class="hkr" title="' + esc(DS.hName(rk)) + '">' + DS.vetBadge(rk) + '</span>' : '') + por + (b ? lvPill(L) : '') +
+    '<b class="hkn' + (b ? '' : ' dim') + '">' + esc(b ? m.bn : '빈 가문') + '</b>' + foot + '</button>';
 }
-// 2.1.0: 가문은 모두 한 격자에 공훈 순 (같으면 계급, 그다음 먼저 합류한 가문). 맹주가 선 가문은 왕관과 「맹주」 꼬리표만 다르다. 아직 오지 않은 가문은 맨 뒤 (가문 수를 열로 셈하지 않는다)
+function hgKin(s, ch) {      // 맹주 가문의 어른 가문원: 작은 얼굴 줄 (누르면 사람 창)
+  var kin = DS.mercsOf(s, ch.id); if (!kin.length) return '';
+  return '<div class="hkk"><small>가문원 ' + kin.length + '</small><div class="hkkl">' + kin.map(function (k) { return '<button class="hkm" data-info="' + k.id + '" style="--gc:' + gcol(k.g || 3) + '">' + mercSpr(k, 1.5) + '<small>' + esc(k.ttl || k.n || '') + '</small><i class="num">' + DS.tierOfL(DS.pL(k)) + '단 ' + DS.lvOfL(DS.pL(k)) + '</i></button>'; }).join('') + '</div></div>';
+}
+// 2.2.2: 맹주 가문은 위 가운데 큰 카드(+ 가문원 줄), 나머지 가문은 아래 3×3 (공훈 순 · 아직 오지 않은 가문은 맨 뒤)
 function houseGrid(s) {
-  var all = DS.houseSort ? DS.houseSort(s, DS.charList(s)) : DS.charList(s), cells = [], have = {};
-  all.forEach(function (c) { have[c.cls] = 1; var C = DS.CLASSES[c.cls]; if (C && C.master && DS.FAMILY[C.fam]) DS.FAMILY[C.fam].members.forEach(function (k) { have[k] = 1; }); cells.push(hgCell(s, c)); });
+  var all = DS.houseSort ? DS.houseSort(s, DS.charList(s)) : DS.charList(s), cells = [], have = {}, lord = null;
+  all.forEach(function (c) { have[c.cls] = 1; var C = DS.CLASSES[c.cls]; if (C && C.master && DS.FAMILY[C.fam]) DS.FAMILY[C.fam].members.forEach(function (k) { have[k] = 1; }); if (c.id === s.hero) lord = c; else cells.push(hgCell(s, c)); });
   Object.keys(DS.CLASSES).forEach(function (k) { var C = DS.CLASSES[k]; if (!C.master && !have[k]) cells.push(hgCell(s, null, k)); });
-  return '<div class="hgrid"><p class="hgsort">' + esc(DS.allyFull ? DS.allyFull(s) : '') + ' · 가문은 공훈 순</p><div class="hg9">' + cells.join('') + '</div></div>';
+  return '<div class="hgrid hk2"><p class="hgsort">' + esc(DS.allyFull ? DS.allyFull(s) : '') + ' · 가문은 공훈 순</p>' + (lord ? '<div class="hkl">' + hgCell(s, lord) + hgKin(s, lord) + '</div>' : '') + '<div class="hk9">' + cells.join('') + '</div></div>';
 }
 // 부대 탭 한 줄: 합일까지 (7단 Lv10 가문 수). 5단 넘은 가문이 없으면 빈칸
 function fuNear(s) {
@@ -25547,7 +25838,7 @@ function partyClick(e, o) {
   if (t.closest('[data-gohall]')) { if (DS.townBusy && DS.townBusy()) { A('cancel'); toast(DS.townWorkWhy(), 2600); return true; } A('tap'); mercShop(); return true; }
   if (t.closest('[data-fire]')) return true;      // 방출: 문서 손잡이(askFire)가 받는다
   if ((b = t.closest('[data-barsw]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } if (+b.dataset.barsw) { A('tap'); bnPick(+b.dataset.barsw, o); } return true; }
-  if ((b = t.closest('.hgm [data-info], .bar2 [data-info]'))) { A('tap'); mercInfo(+b.dataset.info, o); return true; }
+  if ((b = t.closest('.hgm [data-info], .hkk [data-info], .bar2 [data-info]'))) { A('tap'); mercInfo(+b.dataset.info, o); return true; }
   if (t.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return true; }
   if ((b = t.closest('[data-hgnone]'))) { var sc = joinScn(b.dataset.hgnone); A('cancel'); toast(DS.flagName(b.dataset.hgnone) + '은 아직 없다.' + (sc ? ' 시나리오 ' + sc + '에서 합류한다.' : ''), 3200); return true; }
   if ((b = t.closest('[data-bnslot]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } A('tap'); bnPick(+b.dataset.bnslot, o); return true; }
@@ -25666,6 +25957,8 @@ function tabOpt() {
     '<div class="row"><div class="tx"><b>죽음 연출</b><small>아군이 영영 쓰러질 때 화면을 확대해 마지막 모습을 보여 준다</small></div><button class="btn small' + (o.dfx !== false ? ' gold' : '') + '" data-opt="dfx">' + (o.dfx !== false ? '켬' : '끔') + '</button></div>' +
     '<div class="row"><div class="tx"><b>전투 대사</b><small>싸우는 동안 가끔 가문마다 제 말버릇을 말풍선으로 한다</small></div><button class="btn small' + (o.bark !== false ? ' gold' : '') + '" data-opt="bark">' + (o.bark !== false ? '켬' : '끔') + '</button></div>' +
     (DS.fieldOptRow ? DS.fieldOptRow(o) : '') +      // r47: 들판 습격 (field.js)
+    '<div class="row"><div class="tx"><b>지도 보기</b><small>한 화면에 보이는 땅. 멀리 볼수록 그림이 작아진다</small></div><div class="seg" role="group" aria-label="지도 보기">' +
+      DS.ZOOM_KEYS.map(function (x) { return '<button data-zoom="' + x[0] + '"' + ((o.zoom || 'mid') === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>' +
     '<div class="row"><div class="tx"><b>가문원 이름표</b><small>필드에서 가문원 발밑에 이름 표시</small></div><div class="seg" role="group" aria-label="가문원 이름표">' +
       [['sel', '선택 가문'], ['all', '모두'], ['off', '끔']].map(function (x) { return '<button data-mtag="' + x[0] + '"' + ((o.mtag || 'sel') === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>' +
     '<div class="row"><div class="tx"><b>공지사항 <i class="own">v' + DS.VERSION + '</i></b><small>버전별 변경 사항과 저장 안내</small></div><button class="btn small" data-opt="notes">보기</button></div>' +
@@ -26085,6 +26378,8 @@ DS.openMenu = function (tab) {
     if (cur === 'people' && peopleClick(e, o)) return;      // r16 person: 인물 탭
     if (e.target.closest('.sfoot [data-loot-sellsel]') && DS.lootUI && DS.lootUI.sellSel) { A('tap'); DS.lootUI.sellSel(function () { if (o.isConnected) o.draw(); }); return; }
     var hj = e.target.closest('[data-hj]'); if (hj) { var hd = $('#hj' + hj.dataset.hj, o), sb = $('.sb', o); if (hd && sb) { var nv = $('.mtabs', o); sb.scrollTop += hd.getBoundingClientRect().top - sb.getBoundingClientRect().top - (nv ? nv.offsetHeight : 0) - 6; } A('tap'); return; }
+    var zb = e.target.closest('[data-zoom]');
+    if (zb) { G.save.opt.zoom = zb.dataset.zoom; if (G.view && G.view.resize) G.view.resize(); A('tap'); U.persist(); o.draw(); return; }      // 2.2.2 지도 보기
     var mt = e.target.closest('[data-mtag]');
     if (mt) { G.save.opt.mtag = mt.dataset.mtag; if (G.view) G.view.mtag = mt.dataset.mtag; A('tap'); U.persist(); o.draw(); return; }
     var us = e.target.closest('[data-use]');
