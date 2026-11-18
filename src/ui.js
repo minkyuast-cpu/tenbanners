@@ -568,7 +568,7 @@ function mercInfo(id, parent) {
     var tags = '<i class="rtag r-' + (pl.k || 'bar') + '">' + esc(roleOf(m) || '자리 없음') + '</i>' + gbadge(m.g) + '<i class="ctag">' + esc(DS.MERCS[m.type].name) + '</i>' + (m.sx ? '<i class="ctag sx-' + esc(m.sx) + '">' + esc(lgSexTxt(m.sx)) + '</i>' : '') + agTag(m) + (tag ? '<i class="ctag">' + esc(tag) + '</i>' : '') + (ttl ? '<i class="ttl">' + esc(ttl) + '</i>' : '');
     var html = sheetHead({ spr: mercSpr(m, 4), g: m.g, name: esc(m.n || ''), sn: m.sn, tags: tags, lv: m, pow: pow, powLab: pl.k === 'sb' ? (ph ? '가주가 되면' : '전투력') : '전투력' });
     html += vitBars(u, m.hp, pl.k === 'bear' && ph ? ph.mp : 1, m);
-    if (pl.k === 'sb') html += '<button class="row place pl2" data-goflag="' + pl.ch + '"' + (pl.ch ? '' : ' disabled') + '>' + (ph ? crestH(ph, 20) : '') + '<span class="tx"><b>막사에서 기다린다</b><small>' + esc((ph ? DS.flagName(ph.cls) + '이 비면 저절로 가주가 된다' : heroFits(s, m) ? '맹주와 같은 병과. 어른 자식이 없으면 맹주를 잇는다' : '같은 병과 가문이 없다') + '. 같은 병과 가주가 얻는 경험치의 ' + pct + '%를 함께 얻는다') + '</small></span>' + (pl.ch ? '<i class="go" aria-hidden="true">›</i>' : '') + '</button>';
+    if (pl.k === 'sb') html += '<button class="row place pl2" data-goflag="' + pl.ch + '"' + (pl.ch ? '' : ' disabled') + '>' + (ph ? crestH(ph, 20) : '') + '<span class="tx"><b>막사에서 기다린다</b><small>' + esc((ph ? DS.flagName(ph.cls) + '이 비면 저절로 가주가 된다' : heroFits(s, m) ? '맹주와 같은 병과. 맹주가 쓰러지면 뒤를 이을 수 있다' : '같은 병과 가문이 없다') + '. 같은 병과 가주가 얻는 경험치의 ' + pct + '%를 함께 얻는다') + '</small></span>' + (pl.ch ? '<i class="go" aria-hidden="true">›</i>' : '') + '</button>';
     else if (ph) html += '<button class="row place pl2" data-goflag="' + ph.id + '">' + crestH(ph, 20) + '<span class="tx"><b>' + esc(pl.t) + '</b><small class="fx2">' + hFx(ph, pl.k === 'fol') + '</small></span><i class="go" aria-hidden="true">›</i></button>';
     html += statHead(key) + statBars(seat, m) + cmpBlock(key, seat, m);
     var bfl = DS.bearsFlag ? DS.bearsFlag(s, m) : null; if (!bfl && pl.k === 'sb' && ph) bfl = ph;      // r27: 태생 병과 (가주·막사면 그 가문과 맞는지)
@@ -1683,7 +1683,7 @@ function tabHelp() {
       '빈 가문을 채우는 길은 둘이다. <b>영웅관</b>에서 모집하거나, 맹주의 <b>어른 아이</b>를 그 가문의 가주로 보낸다. 보낸 아이는 그 가문의 병과를 받는다. 맹주의 자리는 늘 이어지니 싸울 이가 아무도 없어지는 일은 없다.',
       '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람, 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장. 병과는 합류한 가문 가운데 무작위로 정해지고, 그 가문이 비어 있으면 곧바로 가주, 아니면 막사로 간다. 맹주와 같은 병과면 막사에서 맹주의 뒤를 받친다. 막사는 ' + DS.MERC_MAX + '명까지다.',
       '막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 같은 병과 가주와 자리를 바꿀 수 있고, 물러난 가주는 막사로 간다. 막사의 사람은 방출할 수 있다. 가주를 그냥 내리는 길은 없다.',
-      '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. <b>맹주가 쓰러지면 어른 자식이 잇고, 없으면 막사의 같은 병과가 잇는다.</b> 둘 다 없으면 대가 끊기고 스무 해가 흐른다.',
+      '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. <b>맹주가 쓰러지면 누가 이을지 고른다.</b> 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 하나다. 고를 이가 없으면 대가 끊기고 스무 해가 흐른다.',
       '<b>쓰러진 사람은 돌아오지 않는다.</b> 가주도, 가문원도 그렇다. 많이 다치면 스스로 물러난다. 한 사람 한 사람이 귀하다.']],
     ['등급, 단, 가문 공훈', 0, [
       '<b>등급</b>은 타고난 그릇이다. 모집하거나 태어날 때 정해지고 바뀌지 않는다. 등급이 높은 사람이 가주가 되면 가문이 더 강해진다. 맹주 자리는 희귀 밑으로 치지 않는다. 등급이 높을수록 경험치도 빨리 쌓인다.' +      // r45 표 · r44 숫자
@@ -1711,7 +1711,7 @@ function tabHelp() {
       '<b>체력과 마나는 저절로 차지 않는다.</b> 약초, 치유 기술, 교회의 치료로 채운다.',
       '<b>붉게 깜빡이는 칸</b>은 곧 공격이 떨어질 자리다. 틱이 남아 있으면 부대가 알아서 피한다.',
       '상성은 보병 ▶ 창병 ▶ 기병 ▶ 보병. 화살은 나는 적에게, 신성 공격은 망자와 악마에게 1.5배.',
-      '<b>맹주가 쓰러지면</b> 전투가 끝난 뒤에 뒤를 잇는다. 어른 자식이 있으면 고르고, 없으면 막사의 같은 병과가 잇는다. 시나리오 중이면 시나리오가 끝난 뒤에.']],
+      '<b>맹주가 쓰러지면</b> 전투가 끝난 뒤에 누가 이을지 고른다. 시나리오 중이면 시나리오가 끝난 뒤에. 고르기 전에 게임을 꺼도 다시 켜면 그 창이 돌아온다.']],
     ['장비', 0, [
       '장비는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 누구나 어떤 장비든 장착한다. 병과에 맞지 않는 계열은 능력치가 ' + Math.round((1 - DS.GEAR_OFF) * 100) + '% 깎인다.',
       '장비에는 단이 없다. 위력, 방어 같은 수치는 <b>입은 사람의 레벨</b>을 따라 오르니, 마음에 드는 장비는 끝까지 쓸 수 있다.',
@@ -1725,7 +1725,7 @@ function tabHelp() {
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
       '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받는다. 아무도 제 자리를 떠나지 않는다.',
       '8단부터의 모습과 기술은 그 사람이 선 가문의 계열(강철, 바람, 별)을 따른다.',
-      '맹주가 쓰러지면 어른 자식이 잇고, 없으면 막사의 같은 병과 가운데 등급, 레벨이 가장 나은 이가 제 레벨 그대로 잇는다. 어른 자식이 있을 때는 양자나 다른 가문의 가주를 세울 수도 있다. 다른 가문의 가주가 맹주가 되면 바뀌는 것은 맹주가 누구인가뿐이다. 가문 이름과 공훈, 연맹 이름은 그대로이고, 옛 맹주의 가문은 막사의 같은 병과가 잇거나 빈 가문이 된다. 어른 자식도 막사의 같은 병과도 없으면 대가 끊기고 스무 해가 흐른다.']],
+      '맹주가 쓰러지면 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 뒤를 고른다. 막사에서 이은 이는 제 레벨 그대로다. 다른 가문의 가주를 고르면 맹주 자리가 그 가문으로 간다. 그 가문의 장비와 공훈은 그대로다.', '옛 맹주 가문은 보통 가문이 된다. 어른 자식 가운데 레벨이 가장 높은 이가 가주가 되고, 없으면 막사의 같은 병과가, 그도 없으면 빈 가문이 된다. 남은 가문원은 새 맹주를 따른다. 고를 이가 아무도 없으면 대가 끊기고 스무 해가 흐른다.']],
     ['혼인과 아이', '혼인', [
       '혼인은 <b>맹주만</b> 할 수 있다. 성별이 다른 가주나 막사의 사람을 배우자로 맞는다. 막사에 있던 배우자는 맹주 가문의 가문원이 되어 함께 싸운다. 시나리오와 전투 밖이면 어디서나 「마을 일」에서 한다.',
       '<b>인물 탭</b>의 「배우자 후보」 필터에서 혼인할 수 있는 사람과 아이의 예상 등급을 볼 수 있다.',
@@ -2490,9 +2490,8 @@ function lgRite(ev, cb, griefs) {
   if (nat && !ev.natSaid) { ev.natSaid = 1; agNaturalStory(d, function () { lgRite(ev, cb, griefs); }); return; }
   A2('mourn', 'lose');
   var o = overlay('<div class="result lgrite' + (nat ? ' nat' : '') + '"></div>', 'modal center rite');
-  function cands() { var l = DS.linHeirs ? lgTry(function () { return DS.linHeirs(s, chId); }) : null; return l instanceof Array ? l.filter(function (c) { return !c.young; }) : []; }      // 3.3.0: 미성년 친자는 고를 수 없다
+  function cands() { var l = DS.linChoices ? lgTry(function () { return DS.linChoices(s, chId); }) : null; return l instanceof Array ? l : []; }      // 2.2.0: 고를 수 있는 이 — ① 자식 ② 막사의 같은 병과 ③ 다른 가문의 가주 (미성년은 고를 수 없다)
   function cKey(c, i) { return String(c.mid || c.pid || c.kind || '') + ':' + i; }
-  function sbAuto() { return DS.linSbHeir ? lgTry(function () { return DS.linSbHeir(s, chId); }) : null; }      // 2.2.0: 어른 핏줄이 없으면 막사의 같은 병과가 저절로 잇는다
   // r35 가문이 끊겼을 때: 스무 해 안에 자랄 핏줄 아이 · 글 자리표 · 이름 고르기 상태
   function lpYoung() { var l = DS.linHeirs ? lgTry(function () { return DS.linHeirs(s, chId); }) || [] : []; return l.filter(function (c) { return c.young && c.blood && (c.inY == null || c.inY <= DS.LAPSE.years); })[0] || null; }
   function lpV(x) { var o = { b: d.name, house: LS().hn || DS.houseOf(LS().sur || '') || '가문', y1: ((agCal() || {}).yr || 0) + DS.LAPSE.years }; for (var k in x || {}) o[k] = x[k]; return o; }
@@ -2522,7 +2521,7 @@ function lgRite(ev, cb, griefs) {
   }
   function draw() {
     var box = $('.lgrite', o), H = LGU().heir || {}, C = LGU().coffin || {}, html = '', at = (d.died && d.died.at) || (ev.x && ev.x.at) || '';
-    if (step === 'pick' && DS.linEnded && lgTry(function () { return DS.linEnded(s, chId); })) step = 'lapse';      // r35
+    if (step === 'pick' && !cands().length) step = 'lapse';      // r35 · 2.2.0: 고를 이가 아무도 없으면 대가 끊긴다
     if (step === 'mourn') {
       html = '<p class="eyebrow">' + (nat ? esc(AGL().natTitle || '천수') : '추도') + '</p>' + (d.spr ? '<div class="lgdead">' + d.spr + '</div>' : '') + '<h2>' + esc(d.name) + '</h2><p class="rn">' + esc([d.full && d.full.indexOf(d.name) < 0 ? d.full : '', d.role, d.gen ? d.gen + '대' : '', d.ag ? agWord(d.ag) : ''].filter(Boolean).join(', ')) + '</p>' +
         '<p class="ep">' + esc(lgFill(nat ? (LGL().deathNat && LGL().deathNat[0]) || '{a}{이가} 천수를 누리고 잠들었다.' : lgPick(LGL().death) || '{a}, {at}에서 잠들다.', { a: d.name, at: at || '싸움터', house: d.sur })) + '</p>' +
@@ -2532,8 +2531,7 @@ function lgRite(ev, cb, griefs) {
       else if (DS.linEntomb) html += '<h5>' + esc(lgFill(C.ask || '{a:을를} 어떻게 보냅니까?', { a: d.name })) + '</h5><div class="seg2" role="group">' +
         '<button data-lgbody="keep"' + (body === 'keep' ? ' aria-pressed="true"' : '') + (canE && canE.ok ? '' : ' disabled') + '><b>' + esc(C.keep || '관에 모신다') + '</b><small>' + esc(canE && canE.ok ? (C.keepNote || '') + (cf ? ' 빈 관 ' + cf.free + '개.' : '') : (canE && canE.why) || C.empty || '빈 관이 없다.') + '</small></button>' +
         '<button data-lgbody="bury"' + (body === 'bury' ? ' aria-pressed="true"' : '') + '><b>' + esc(C.bury || '묻는다') + '</b><small>' + esc(C.buryNote || '') + '</small></button></div>';
-      var au = sbAuto();
-      html += au ? '<p class="dim">어른 자식이 없다. 막사의 같은 병과 ' + esc(josa(au.name || '', '이가')) + ' 잇는다.</p><button class="btn gold wide" data-lgstep="pick">뒤를 잇게 한다</button>' : '<button class="btn gold wide" data-lgstep="pick">후계를 정한다</button>';
+      html += '<button class="btn gold wide" data-lgstep="pick">후계를 정한다</button>';
     } else if (step === 'lapse') {      // r35 가문이 끊겼다: 스무 해가 흐르고 새 대장이 옛 깃발을 든다
       var LT = DS.LAPSE_TXT, lost = Math.floor((s.gold || 0) * DS.LAPSE.gold / 10) * 10, yk = lpYoung();
       html = '<p class="eyebrow">가문이 끊겼다</p><h2>이을 사람이 없다</h2><p class="rn">' + esc(d.name) + '의 자리, ' + esc(d.role) + '</p>' +
@@ -2548,26 +2546,17 @@ function lgRite(ev, cb, griefs) {
         '<h5>가문 이름</h5><div class="lphouse" role="group"><button data-lphouse="keep"' + (hk === 'keep' ? ' aria-pressed="true"' : '') + '><b>옛 이름을 잇는다</b><small>' + esc(oldN) + '</small></button>' +
         gh.map(function (g) { return '<button data-lphouse="' + esc(g[0]) + '"' + (hk === g[0] ? ' aria-pressed="true"' : '') + '><b>' + esc(DS.houseOf(g[0])) + '</b><small>' + esc(g[1]) + '</small></button>'; }).join('') + '</div>' +
         '<p class="lgwarn">정하면 되돌릴 수 없다.</p><button class="btn gold wide" id="lpYes">깃발을 든다</button>';
-    } else if (step === 'pick') {
-      var list = cands(), g = { kid: [], adkid: [], merc: [], kin: [], cast: [] };
-      list.forEach(function (c, i) { c._k = cKey(c, i); g[c.cast ? 'cast' : lgHeirKind(c)].push(c); });      // r22: 아홉은 따로 (성을 지키고 그 집이 맹주 가문이 된다)
-      html = '<p class="eyebrow">후계</p><h2>' + esc(H.ask || '누가 이 이름을 잇나?') + '</h2><p class="rn">' + esc(d.name) + '의 자리, ' + esc(d.role) + '</p>';
-      if (g.kid.length) html += '<h5>자식</h5>' + g.kid.map(lgCandBtn).join('');
-      if (g.adkid.length) html += '<h5>입양한 자식</h5>' + g.adkid.map(lgCandBtn).join('');
-      if (g.merc.length) {
-        var fam = g.kid.length + g.adkid.length, cap = more ? 99 : fam ? 0 : 6;
-        html += '<h5>' + (fam ? '또는 ' : '') + '양자, 양녀로 삼을 사람 <i>' + g.merc.length + '</i></h5>' + g.merc.slice(0, cap).map(lgCandBtn).join('') +
-          (g.merc.length > cap ? '<button class="btn wide lgmore" data-lgmore="1">' + (cap ? '나머지 ' + (g.merc.length - cap) + '명 보기' : '후보 ' + g.merc.length + '명 가운데 선택') + '</button>' : '');
-      }
-      if (g.cast.length) html += '<h5>아홉 집 사람 <i>' + g.cast.length + '</i></h5><p class="lgnote">성을 바꾸지 않는다. 바뀌는 것은 맹주뿐, 가문은 그대로다.</p>' + g.cast.map(lgCandBtn).join('');
-      if (g.kin.length) html += '<h5>' + esc(H.kinHead || '먼 친척') + '</h5><p class="lgnote">' + esc(H.kinNote || '') + '</p>' + g.kin.map(lgCandBtn).join('');
-      if (!list.length) html += '<p class="lock">' + esc(H.none || '이을 사람이 없다.') + '</p><button class="btn gold wide" data-lgstep="auto">그대로 보낸다</button>';
+    } else if (step === 'pick') {      // 2.2.0: 셋 가운데 고른다 — 자식 · 막사(같은 병과) · 다른 가문(맹주 자리가 그 가문으로)
+      var list = cands(), g3 = { 1: [], 2: [], 3: [] };
+      list.forEach(function (c, i) { c._k = cKey(c, i); (g3[c.opt] || g3[3]).push(c); });
+      html = '<p class="eyebrow">후계</p><h2>맹주가 쓰러졌다. 누가 잇는가</h2><p class="rn">' + esc(d.name) + '의 자리, ' + esc(d.role) + '</p>';
+      [[1, '자식'], [2, '막사'], [3, '다른 가문']].forEach(function (x) { var l = g3[x[0]]; if (l.length) html += '<h5 class="lghd">' + x[1] + ' <i>' + l.length + '</i></h5>' + l.map(heirRow).join(''); });
       html += '<button class="btn wide" data-lgstep="mourn">← 추도로</button>';
     } else if (step === 'confirm') {
       var c = pick, kk = lgHeirKind(c), adopt = kk === 'merc', kin = kk === 'kin', ch = s.chars[chId], mvf = c.move && (c.h || c.hf) ? s.chars[c.h || c.hf] : null, own0 = c.cast && DS.CAST_NAME[c.cast] ? DS.CAST_NAME[c.cast] : c.name || '', cst = !!c.cast;
-      html = '<p class="eyebrow">' + (adopt ? '입양' : kin ? '먼 친척' : '계승') + '</p>' + (c._spr ? '<div class="lgdead heir">' + c._spr + '</div>' : '') + '<h2>' + esc(c.name || (kin ? '먼 친척' : '')) + '</h2>' +
+      html = '<p class="eyebrow">' + (c.opt === 3 ? '다른 가문' : c.opt === 2 ? '막사' : adopt ? '입양' : kin ? '먼 친척' : '계승') + '</p>' + (c._spr ? '<div class="lgdead heir">' + c._spr + '</div>' : '') + '<h2>' + esc(c.name || (kin ? '먼 친척' : '')) + '</h2>' +
         '<p class="ep">' + esc(adopt ? (H.adoptAsk || '이 이름을 잇겠는가.') : lgFill(kin ? (H.kinAsk || '{house}의 먼 친척이 {a}의 자리를 잇는다.') : (H.childAsk || '{b:이가} {a}의 자리를 잇는다.'), { a: d.name, b: c.name, house: d.sur ? d.sur + ' 가문' : '가문' })) + '</p>' +
-        '<ul class="lgafter"><li>' + esc(mvf ? DS.flagName(mvf.cls) + '의 가주가 연맹의 맹주가 된다. 가문 이름, 공훈, 연맹 이름은 그대로다' : (ch ? DS.flagName(ch.cls) : '맹주의 가문') + '을 그대로 잇는다. 장비와 가솔은 가문에 남는다') + '</li>' + (mvf ? '<li>' + esc((ch ? DS.flagName(ch.cls) : '옛 맹주의 가문') + '에는 다음 가주가 저절로 온다') + '</li>' : '') +      // 2.1.0: 문패는 옮겨 가지 않는다
+        '<ul class="lgafter"><li>' + esc(mvf ? '맹주 자리가 ' + DS.flagName(mvf.cls) + '으로 간다. 그 가문의 장비와 공훈은 그대로다' : (ch ? DS.flagName(ch.cls) : '맹주의 가문') + '을 그대로 잇는다. 장비와 공훈은 가문에 남는다') + '</li>' + (mvf ? '<li>' + esc((ch ? DS.flagName(ch.cls) : '옛 맹주의 가문') + '은 보통 가문이 된다. ' + oldFate()) + '</li>' : '') +      // 2.1.0: 문패는 옮겨 가지 않는다
           (c.why && !cst ? '<li>' + esc(c.why) + '</li>' : '') +
           (adopt && !mvf ? '<li>' + esc((d.sur ? d.sur + ' ' : '') + '가문의 성을 받는다') + '</li>' : '') + '</ul>' +
           (mvf ? '<h5>호를 고릅니다</h5><div class="seg2 lgho" role="group">' + [['new', own0 + ' 1세'], ['cont', own0 + ' ' + ((d.gen || 1) + 1) + '세']].map(function (x) { return '<button data-lgho="' + x[0] + '"' + (HO.k === x[0] ? ' aria-pressed="true"' : '') + '><b>' + esc(x[1]) + '</b></button>'; }).join('') +
@@ -2577,6 +2566,25 @@ function lgRite(ev, cb, griefs) {
     }
     box.innerHTML = html; U.hydrate(box); box.scrollTop = 0;
     var yes = $('#yesHeir', box); if (yes) { lock = performance.now(); setTimeout(function () { if (yes.isConnected) yes.disabled = false; }, 900); }      // 연타가 확인으로 넘어가지 않게 잠깐 잠근다
+  }
+  // 2.2.0 후계 한 줄: 얼굴 · 이름 · 등급 · 병과 · 레벨 · 전투력 · 무슨 일이 일어나는지 한 문장
+  function heirRow(c) {
+    var m = c.mid ? mercById(c.mid) : null, ch = s.chars[chId], hf = c.opt === 3 && (c.hf || c.h) ? s.chars[c.hf || c.h] : null;
+    if (!m || !ch) return '';
+    c._spr = mercSpr(m, 2);
+    var cls = hf ? hf.cls : ch.cls, pw = lgTry(function () { return hf ? flagPow(hf, m) : flagPow(ch, m); }) || 0;
+    var say = c.opt === 1 ? '맹주가 된다. 선대와의 레벨 차이 일부를 받는다' : c.opt === 2 ? '막사에서 나와 맹주가 된다. 제 레벨 그대로' : '맹주 자리가 이 가문으로 간다. 옛 맹주 가문은 보통 가문이 된다';
+    var sub = [c.opt === 1 ? (c.sx === 'f' ? '딸' : '아들') : '', DS.CLASSES[cls] ? (hf ? DS.flagName(hf.cls) + ' 가주' : DS.CLASSES[cls].name) : '', lv(DS.pL(m))].filter(Boolean);
+    return '<button class="lgcb lgh k-o' + c.opt + '" data-lgheir="' + esc(c._k) + '">' + c._spr + '<span><span class="lgnm"><b' + (m.g ? ' style="color:' + gcol(m.g) + '"' : '') + '>' + esc(c.name || '') + '</b>' + gbadge(m.g) + '</span><small>' + esc(sub.join(', ')) + '</small><small class="lgsay">' + esc(say) + '</small></span><em class="lgpw">' + pwNum(pw, 'sm') + '<small>전투력</small></em></button>';
+  }
+  // 옛 맹주 가문은 어떻게 되나 (다른 가문의 가주를 고를 때): 어른 핏줄 → 막사의 같은 병과 → 빈 가문
+  function oldFate() {
+    var ch = s.chars[chId]; if (!ch) return '';
+    var k = (s.mercs || []).filter(function (x) { return x.o === ch.id && !x.h && !x.sb && !x.cast && DS.kidOf && DS.kidOf(s, x); }).sort(function (a, b) { return DS.pL(b) - DS.pL(a) || (b.g || 0) - (a.g || 0) || a.id - b.id; })[0];
+    if (k) return josa(k.ttl || k.n || '', '이가') + ' 그 가문의 가주가 된다';
+    var b = DS.barracks(s).filter(function (x) { return DS.sbFits(ch, x); }).sort(function (a, b) { return (b.g || 0) - (a.g || 0) || DS.pL(b) - DS.pL(a) || a.id - b.id; })[0];
+    if (b) return '막사의 ' + josa(b.n || '', '이가') + ' 그 가문의 가주가 된다';
+    return '빈 가문이 되어 레벨과 단을 잃는다';
   }
   function lgCandBtn(c) {
     var kk = lgHeirKind(c), m = c.mid ? mercById(c.mid) : null, all = lgAll(), p = c.pid && all[c.pid];
@@ -2591,7 +2599,7 @@ function lgRite(ev, cb, griefs) {
     var hob = e.target.closest('[data-lgho]'); if (hob) { var hi = $('#lgHoIn', o), hn0 = $('#lgHnIn', o); if (hi) HO.t = hi.value; if (hn0) HO.hn = hn0.value; HO.k = hob.dataset.lgho; A('tap'); draw(); return; }
     if (e.target.closest('[data-lgmore]')) { more = true; A('tap'); draw(); return; }
     var st = e.target.closest('[data-lgstep]');
-    if (st) { var to = st.dataset.lgstep; A('tap'); if (to === 'auto') { finish(null); return; } if (to === 'lpass') { lapsePass(); return; } if (to === 'pick') { var au2 = sbAuto(); if (au2) { finish(au2); return; } } step = to; draw(); return; }
+    if (st) { var to = st.dataset.lgstep; A('tap'); if (to === 'auto') { finish(null); return; } if (to === 'lpass') { lapsePass(); return; } step = to; draw(); return; }
     var hb = e.target.closest('[data-lgheir]');
     if (hb) { var l = cands(); l.forEach(function (c, i) { c._k = cKey(c, i); }); pick = l.filter(function (c) { return c._k === hb.dataset.lgheir; })[0]; if (pick) { lgCandBtn(pick); A('tap'); step = 'confirm'; draw(); } return; }
     if (e.target.closest('#yesHeir')) { if (performance.now() - lock < 900) return; var hin = $('#lgHoIn', o), hnn = $('#lgHnIn', o); if (hin) HO.t = hin.value; if (hnn) HO.hn = hnn.value; if (pick && pick.move && HO.hn != null && !(DS.linHouseOK && DS.linHouseOK(HO.hn))) { A('cancel'); toast('가문 이름은 한글 1~12자입니다'); return; } if (pick && pick.move && HO.k === 'free' && !(DS.linHoOK && DS.linHoOK(HO.t))) { A('cancel'); toast('호는 한글 1~6자, 끝에 「N세」를 붙일 수 있다'); return; } finish(pick); }

@@ -327,7 +327,7 @@ DS.egStop = function (s) {
 // 후보: 화면이 쓰는 꼴. main = 자식·들인 자식·돌아온 자·미성년(흐림), 나머지는 「다른 이 ▸」. soon: 이 창 안에 떠날 이
 DS.egHeirs = function (s, chId, left) {
   var P = LP(s), ch = s.chars[chId], dp = ch && ch.vac ? P[ch.vac.pid] : null, ps = E(s).pass, cord = ps && ps.cord;
-  var list = (DS.linHeirs(s, chId) || []).map(function (h, i) {
+  var list = (DS.linHeirs(s, chId) || []).filter(function (h) { return h.opt || h.young || h.kind === 'pull'; }).map(function (h, i) {      // 2.2.0: 고를 수 있는 이만 (자식 · 막사의 같은 병과 · 다른 가문의 가주) + 미성년(흐림) · 아무도 없으면 값없는 한 사람
     var q = h.pid && P[h.pid], o = { i: i, kind: h.kind, mid: h.mid, pid: h.pid || 0, young: !!h.young, inY: h.inY || 0, age: h.age, left: h.left, L: h.L, loss: h.loss, back: !!h.back, raw: h };
     o.name = h.kind === 'kin' ? '먼 친척' : q ? nm(s, q.id) : h.name;
     o.soon = !h.young && h.left != null && left != null && h.left <= left;
@@ -348,7 +348,7 @@ DS.egSeat = function (s, chId, pick) {
   var raw = pick && pick.raw ? pick.raw : pick, evs;
   if (raw && raw.young) return null;
   if (raw) evs = DS.linSucceed(s, chId, raw, { nat: 1 });
-  else { var left = ps ? Math.max(0, DS.EG.years - ps.y) : 0, hs = DS.egHeirs(s, chId, left), first = hs.filter(function (h) { return !h.young && !h.soon && h.kind !== 'kin' && h.raw.kin <= 2; })[0]; evs = DS.linSucceed(s, chId, first ? first.raw : null, { nat: 1 }); }
+  else { var left = ps ? Math.max(0, DS.EG.years - ps.y) : 0, hs = DS.egHeirs(s, chId, left), first = hs.filter(function (h) { return !h.young && !h.soon && (h.raw.opt === 1 || h.raw.opt === 2); })[0] || hs.filter(function (h) { return h.kind === 'pull'; })[0]; evs = DS.linSucceed(s, chId, first ? first.raw : null, { nat: 1 }); }
   if (!evs) return null;
   if (head && ps) { if (ps.cord && P[ps.cord]) delete P[ps.cord].cord; delete ps.cord; ps.hd = 1; }
   var b = nm(s, ch.pid), t = head ? lines('pass.head.done', { a: a, b: b, age: age, c: DS.heroCall(s) }) : lines('pass.seat.done', { a: a, b: b, age: age, f: f });
@@ -483,7 +483,7 @@ DS.egRunAuto = function (s, pol) {
   pol = pol || {}; var e = E(s), out = { stops: 0, presses: 1, left: 0, called: 0, ok: 0, years: 0, kept: 0, hand: 0, buried: 0 }, guard = 0;
   while (e.pass && e.pass.f === 'years' && guard++ < 400) {
     var r = DS.egYear(s); if (!r) break;
-    if (r.stop) { out.stops++; out.presses++; var st = r.stop, pk = st.heirs.filter(function (h) { return !h.young && !h.soon && h.kind !== 'kin' && h.raw.kin <= 2; })[0] || null; if (!DS.egSeat(s, st.ch, pk)) DS.egSeat(s, st.ch, null); continue; }
+    if (r.stop) { out.stops++; out.presses++; var st = r.stop, pk = st.heirs.filter(function (h) { return !h.young && !h.soon && (h.raw.opt === 1 || h.raw.opt === 2); })[0] || null; if (!DS.egSeat(s, st.ch, pk)) DS.egSeat(s, st.ch, null); continue; }
     if (r.done) break;
   }
   if (!e.pass) return out;

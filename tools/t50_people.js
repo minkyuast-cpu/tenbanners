@@ -173,33 +173,104 @@ module.exports = async (page, shot, L) => {
   await L.sleep(600); await shot('arena');
   A(c.n > 8 && c.duel && c.champ && c.open, 'arena duel + tournament run (roster ' + c.n + ', standby ' + c.sb + ', kin ' + c.kin + ')');
   await ev(() => { DS.arenaClose(); DS.ui.closeAll(); }); await L.sleep(400);
-  // ⑨-2 맹주의 뒤: 어른 핏줄이 없으면 막사의 같은 병과 가운데 가장 나은 이(등급 → 레벨)가 저절로, 제 레벨·등급 그대로 맹주가 된다 (의식 창에서 고르지 않는다)
+  // ⑨-2 맹주의 뒤 (2.2.0): 저절로(봇·화면 없음)는 어른 핏줄 → 막사의 같은 병과(등급 → 레벨, 제 레벨 그대로) → 대가 끊김
   c = await ev(() => {
-    var s = DS.G.save, h = s.chars[s.hero], P = s.lin.P;
-    s.mercs.slice().forEach(function (m) { if (DS.kidOf(s, m)) DS.loseMerc(s, m.id); });      // 어른 핏줄은 모두 떠났다
+    var s = DS.fixSave(JSON.parse(JSON.stringify(DS.G.save))), h = s.chars[s.hero], P = s.lin.P;      // 사본에서 (화면 판은 그대로)
+    s.mercs.slice().forEach(function (m) { if (DS.kidOf(s, m)) DS.loseMerc(s, m.id); });
     for (var k in P) if (P[k].st === 'young') P[k].st = 'gone';
     DS.linTidy(s); DS.mercTidy(s);
     function sbP(type, g, L, nc) { var m = DS.addMerc(s, type, g, 0); m.sb = 1; m.L = L; m.exp = 0; m.nc = nc; return m; }
-    var lo = sbP('m_sword', 2, 40, h.cls), best = sbP('m_sword', 4, 20, h.cls), other = sbP('m_sister', 5, 60, 'cle'); DS.mercTidy(s);
-    var gen0 = (P[h.pid] || {}).gen || 1, hid = s.hero;
-    h.down = true; var evs = DS.linSettle(s, '시험');
-    var pick = DS.linSbHeir(s, hid);
-    window.__sb = { hid: hid, gen0: gen0, best: best.id, lo: lo.id, other: other.id, pick: pick && pick.mid, ended: DS.linEnded(s, hid) };
-    DS.openLineageRite(evs, function () { window.__sbDone = 1; });
-    return window.__sb;
+    var lo = sbP('m_sword', 2, 40, h.cls), best = sbP('m_sword', 4, 20, h.cls); sbP('m_sister', 5, 60, 'cle'); DS.mercTidy(s);
+    var gen0 = P[h.pid].gen, hid = s.hero;
+    h.down = true; DS.linSettle(s, '시험');
+    var pick = DS.linSbHeir(s, hid), ended = DS.linEnded(s, hid), ev = DS.linAutoAll(s), h2 = s.chars[s.hero], p2 = s.lin.P[h2.pid];
+    return { pick: pick && pick.mid === best.id, ended: ended, same: s.hero === hid, L: h2.ps.L, g: h2.ps.g, gen: p2.gen === gen0 + 1, txt: ev.map(function (e) { return e.ev ? DS.linEvText(s, e.ev) : ''; }).join(' / '), gone: !s.mercs.some(function (m) { return m.id === best.id; }) };
   });
-  await L.sleep(600); await shot('rite_sb');
-  A(c.pick === c.best && !c.ended, 'no adult blood heir → the best same-class 막사 person (grade first) is the heir');
-  await page.click('.ov.rite [data-lgstep="pick"]').catch(() => {});
-  for (let i = 0; i < 30 && !(await ev(() => !!window.__sbDone)); i++) { await L.skipStory(page, 3); await L.sleep(300); }
+  A(c.pick && !c.ended && c.same && c.gone && c.L === 20 && c.g === 4 && c.gen && /막사에서 나와/.test(c.txt), 'auto order: no adult blood heir → best same-class 막사 person (grade first) becomes 맹주 at own level/grade, generation +1 (' + c.txt + ')');
+  // ⑨-3 화면: 맹주가 쓰러지면 고른다 — 자식 · 막사(같은 병과) · 다른 가문. 고르기 전에 저장·다시 불러와도 그 창이 돌아온다
+  await ev(() => {
+    var s = DS.G.save, h = s.chars[s.hero], P = s.lin.P, hp = P[h.pid];
+    s.mercs.slice().forEach(function (m) { if (DS.kidOf(s, m)) DS.loseMerc(s, m.id); });
+    for (var k in P) if (P[k].st === 'young') P[k].st = 'gone';
+    DS.linTidy(s); DS.mercTidy(s);
+    window.__mkKid = function (L, nm) { var s = DS.G.save, h = s.chars[s.hero], P = s.lin.P, hp = P[h.pid]; var m = DS.addMerc(s, 'm_sword', 3, s.hero); m.kn = 1; m.L = L; m.exp = 0; m.n = nm; var p = DS.linMkP(s, { k: 'm', sn: s.lin.sur, n: nm, sx: 'm', gen: hp.gen + 1, pa: [hp.id].concat(hp.sp ? [hp.sp] : []), type: m.type, g: 3, m: m.id, gv: 1, hb: 1 }); m.pid = p.id; return m; };
+    var k1 = __mkKid(25, '큰별'), k2 = __mkKid(15, '작은별');
+    function sbP(type, g, L, nc, n) { var m = DS.addMerc(s, type, g, 0); m.sb = 1; m.L = L; m.exp = 0; m.nc = nc; m.n = n; return m; }
+    var sa = sbP('m_sword', 4, 20, h.cls, '바위'), sbb = sbP('m_sword', 2, 33, h.cls, '자갈'); sbP('m_sister', 5, 60, 'cle', '구름');
+    DS.mercTidy(s); DS.rebuildParty();
+    window.__X = { hid: s.hero, k1: k1.id, k2: k2.id, sa: sa.id, sbb: sbb.id };
+    h.down = true; var evs = DS.linSettle(s, '시험'); DS.ui.persist();
+    DS.openLineageRite(evs, function () { window.__riteDone = 1; });
+  });
+  await L.sleep(600);
+  await page.click('.ov.rite [data-lgstep="pick"]'); await L.sleep(500);
+  const RV = '/tmp/claude-0/-home-user-tenbanners/dc85b0d9-560a-55db-8b63-0b47e1ee10f9/scratchpad/review';
+  await shot('heir_pick'); try { fs.mkdirSync(RV, { recursive: true }); await page.screenshot({ path: RV + '/heir_pick_390.png' }); } catch (e) {}
   c = await ev(() => {
-    var s = DS.G.save, X = window.__sb, h = s.chars[s.hero], p = s.lin.P[h.pid], ids = s.mercs.map(function (m) { return m.id; });
-    var lg = s.lin.log.slice(-6).map(function (e) { return DS.linEvText(s, e); }).join(' / ');
-    return { same: s.hero === X.hid, vac: !!h.vac, L: h.ps.L, g: h.ps.g, hL: h.L, gone: ids.indexOf(X.best) < 0, keep: ids.indexOf(X.lo) >= 0 && ids.indexOf(X.other) >= 0, gen: p && p.gen, gen0: X.gen0, live: p && p.st === 'live' && p.c === s.hero, name: h.name, lg: lg, done: !!window.__sbDone, fight: DS.partySpecs(s).length };
+    var box = document.querySelector('.ov.rite .lgrite'), hd = Array.from(box.querySelectorAll('h5.lghd')).map(function (e) { return e.textContent.replace(/\s*\d+$/, ''); });
+    var rows = Array.from(box.querySelectorAll('.lgcb.lgh')), bad = rows.filter(function (r) { var rr = r.getBoundingClientRect(); return Array.from(r.children).some(function (k) { var b = k.getBoundingClientRect(); return b.right > rr.right + 1 || b.left < rr.left - 1; }); }).length;
+    return { title: (box.querySelector('h2') || {}).textContent, hd: hd, n1: box.querySelectorAll('.k-o1').length, n2: box.querySelectorAll('.k-o2').length, n3: box.querySelectorAll('.k-o3').length, bad: bad, sw: document.documentElement.scrollWidth, say: (box.querySelector('.k-o3 .lgsay') || {}).textContent || '', bear: (function (s) { var dp = s.lin.P[s.chars[s.hero].vac.pid], sp = dp.sp || dp.lsp; return DS.charList(s).filter(function (ch) { var b = ch.id !== s.hero && DS.bearer(s, ch, 1); return b && !(sp && b.pid === sp); }).length; })(DS.G.save) };      // 고인의 배우자는 뒤를 잇지 않는다
   });
-  A(c.done && c.same && !c.vac && c.gone && c.keep && c.live, '막사 heir became 맹주 automatically (s.hero kept, lineage live, others stay in the 막사)');
-  A(c.L === 20 && c.hL === 20 && c.g === 4, 'new 맹주 keeps exactly own level and grade (L ' + c.L + ', g ' + c.g + ')');
-  A(c.gen === c.gen0 + 1 && /2세|3세|4세/.test(c.name) && /막사에서 나와/.test(c.lg), 'generation +1, title 「' + c.name + '」, chronicle line');
+  A(/누가 잇는가/.test(c.title) && c.hd.join(',') === '자식,막사,다른 가문', 'heir choice modal: title and three sections (' + c.hd.join(' / ') + ')');
+  A(c.n1 === 2 && c.n2 === 2 && c.n3 === c.bear && c.n3 > 0, 'one row per adult blood heir (2), per same-class 막사 person (2, other class excluded), per other house 가주 (' + [c.n1, c.n2, c.n3, c.bear].join('/') + ')');
+  A(!c.bad && c.sw <= 390 && /옛 맹주 가문은 보통 가문이 된다/.test(c.say), 'choice rows fit 390px; option 3 says what happens');
+  A((await L.badText(page, '.ov')).length === 0, 'heir choice modal has no NaN/undefined');
+  // 고르기 전에 다시 불러온다 → 맹주 자리는 빈 채로, 창이 다시 뜬다 (안전망이 먼저 채우지 않는다)
+  await page.reload(); await page.waitForSelector('#btnCont', { timeout: 30000 });
+  await page.click('#btnCont'); await L.sleep(2600);
+  c = await ev(() => { var s = DS.G.save, h = s.chars[s.hero]; return { vac: !!h.vac, rite: !!document.querySelector('.ov.rite') }; });
+  A(c.vac && c.rite, 'pending choice survives a reload: 맹주 seat still empty, the choice comes back');
+  await ev(() => { window.__X = window.__X || {}; });
+  const X = await ev(() => { var s = DS.G.save, f = function (n) { var m = s.mercs.filter(function (x) { return x.n === n; })[0]; return m ? m.id : 0; }; return { hid: s.hero, k1: f('큰별'), k2: f('작은별'), sa: f('바위'), sbb: f('자갈') }; });
+  async function choose(sel) {
+    if (!(await page.$('.ov.rite [data-lgheir]'))) { await page.click('.ov.rite [data-lgstep="pick"]').catch(() => {}); await L.sleep(400); }
+    await page.click(sel); await L.sleep(1100); await page.click('#yesHeir'); await L.sleep(500);
+    for (let i = 0; i < 30 && (await page.$('.ov.story, .ov.rite')); i++) { await L.skipStory(page, 3); await L.sleep(250); }
+    await L.closeAll(page);
+  }
+  // ① 자식
+  await choose('.ov.rite .lgcb.k-o1[data-lgheir^="' + X.k1 + ':"]');
+  c = await ev((X) => { var s = DS.G.save, h = s.chars[s.hero], p = s.lin.P[h.pid]; return { same: s.hero === X.hid, vac: !!h.vac, kid: p && p.n === '큰별', L: h.ps.L, gone: !s.mercs.some(function (m) { return m.id === X.k1; }) }; }, X);
+  A(c.same && !c.vac && c.kid && c.gone && c.L >= 25, 'option 1: the chosen adult child becomes 맹주 (L ' + c.L + ')');
+  // ② 막사의 같은 병과 (자식이 있어도 고를 수 있다)
+  await ev(() => { var s = DS.G.save; s.chars[s.hero].down = true; var evs = DS.linSettle(s, '시험'); DS.openLineageRite(evs, function () {}); }); await L.sleep(500);
+  await choose('.ov.rite .lgcb.k-o2[data-lgheir^="' + X.sa + ':"]');
+  c = await ev((X) => { var s = DS.G.save, h = s.chars[s.hero]; return { same: s.hero === X.hid, vac: !!h.vac, L: h.ps.L, g: h.ps.g, hL: h.L, gone: !s.mercs.some(function (m) { return m.id === X.sa; }) }; }, X);
+  A(c.same && !c.vac && c.gone && c.L === 20 && c.g === 4 && c.hL === 20, 'option 2: the chosen same-class 막사 person becomes 맹주 at own level and grade (L ' + c.L + ')');
+  // ③ 다른 가문의 가주 — 맹주 자리가 그 가문으로, 옛 맹주 가문은 어른 핏줄(작은별)이 잇는다
+  await ev(() => { var s = DS.G.save; s.chars[s.hero].down = true; var evs = DS.linSettle(s, '시험'); DS.openLineageRite(evs, function () {}); }); await L.sleep(500);
+  if (!(await page.$('.ov.rite [data-lgheir]'))) { await page.click('.ov.rite [data-lgstep="pick"]').catch(() => {}); await L.sleep(400); }
+  const tgt = await ev(() => { var s = DS.G.save, rs = Array.from(document.querySelectorAll('.ov.rite .lgcb.k-o3')), mid = +rs[rs.length - 1].dataset.lgheir.split(':')[0], m = s.mercs.filter(function (x) { return x.id === mid; })[0], ch = s.chars[m.o]; return { id: ch.id, mid: mid, hx: ch.hx || 0, w: ch.w, L: ch.L }; });
+  await page.click('.ov.rite .lgcb.k-o3[data-lgheir^="' + tgt.mid + ':"]'); await L.sleep(600);
+  await shot('heir_confirm_move'); try { await page.screenshot({ path: RV + '/heir_confirm_move_390.png' }); } catch (e) {}
+  const conf = await ev(() => (document.querySelector('.ov.rite .lgafter') || {}).textContent || '');
+  await L.sleep(500); await page.click('#yesHeir'); await L.sleep(500);
+  for (let i = 0; i < 30 && (await page.$('.ov.story, .ov.rite')); i++) { await L.skipStory(page, 3); await L.sleep(250); }
+  await L.closeAll(page);
+  c = await ev((a) => {
+    var X = a[0], T = a[1], s = DS.G.save, old = s.chars[X.hid], nb = DS.bearer(s, old, 1), h = s.chars[s.hero];
+    return { moved: s.hero === T.id, ps: !!(h.ps && !h.vac), hx: (h.hx || 0) === T.hx, w: h.w === T.w, oldBear: nb && nb.id === X.k2, oldL: old.L, nc: nb && nb.nc === DS.houseCls(old), oldHero: !old.ps && !old.vac, party: DS.partyIds(s).indexOf(old.id) >= 0 && DS.partyIds(s).indexOf(s.hero) >= 0, kinOk: DS.mercsOf(s, old.id).length === 0, units: DS.G.sim.units.filter(function (u) { return u.side === 'ally' && !u.dead; }).length, specs: DS.partySpecs(s).length, sel: !!DS.G.sim.byId['c' + s.hero] };
+  }, [X, tgt]);
+  A(/보통 가문이 된다/.test(conf) && /작은별/.test(conf), 'option 3 confirm tells what happens to the old 맹주 house (' + conf.replace(/\s+/g, ' ').slice(0, 90) + ')');
+  A(c.moved && c.ps && c.hx && c.w && c.oldHero, 'option 3: s.hero moves to that house; it keeps its gear and 공훈; the old house holds no 맹주 data');
+  A(c.oldBear && c.oldL === 15 && c.nc && c.party && c.kinOk && c.units === c.specs && c.sel, 'option 3: old 맹주 house → its adult blood kin is 가주 at own level (L ' + c.oldL + '), takes the house class, both houses fight');
+  // ③ 옛 맹주 가문에 어른 핏줄이 없으면 막사의 같은 병과, 그도 없으면 빈 가문 (머리 없이)
+  c = await ev(() => {
+    function run(withSb) {
+      var s = DS.fixSave(JSON.parse(JSON.stringify(DS.G.save))), h = s.chars[s.hero], oldId = s.hero;
+      s.mercs.slice().forEach(function (m) { if (m.o === s.hero && !m.h) DS.loseMerc(s, m.id); if (!m.h && !m.o && DS.sbFits(h, m)) DS.loseMerc(s, m.id); });
+      DS.linTidy(s); DS.mercTidy(s);
+      var sbm = null; if (withSb) { sbm = DS.addMerc(s, DS.heroType(h.cls), 3, 0); sbm.sb = 1; sbm.nc = DS.houseCls(h); sbm.L = 27; DS.mercTidy(s); }
+      h.down = true; DS.linSettle(s, '시험');
+      var o3 = DS.linChoices(s, oldId).filter(function (c) { return c.opt === 3; })[0]; if (!o3) return { no: 1 };
+      DS.linSucceed(s, oldId, o3, {}); DS.sbTick(s); DS.mercTidy(s); DS.pSync(s);
+      var old = s.chars[oldId], b = DS.bearer(s, old, 1);
+      return { moved: s.hero !== oldId, seat: withSb ? b === sbm && old.L === 27 : !b && old.L === 1 && DS.partyIds(s).indexOf(oldId) < 0 };
+    }
+    return { sb: run(true), vac: run(false) };
+  });
+  A(c.sb.moved && c.sb.seat, 'option 3 without blood kin: the same-class 막사 person takes the old 맹주 house at own level');
+  A(c.vac.moved && c.vac.seat, 'option 3 with nobody: the old 맹주 house is vacant (L 1) and does not fight');
   await L.closeAll(page);
   // ⑩ 맹주가 쓰러졌는데 어른 핏줄도 막사의 같은 병과도 없다 (다른 병과만 막사에) · 다른 가문이 모두 비었다 → 대가 끊겨도 맹주 자리는 이어진다 (스무 해)
   c = await ev(() => {
