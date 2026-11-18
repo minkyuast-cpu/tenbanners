@@ -62,8 +62,8 @@ module.exports = async (page, shot, L) => {
     DS.barracks(s).forEach(function (m) { DS.loseMerc(s, m.id); });
     var mk = function (cls, L) { var m = DS.addMerc(s, DS.heroType(cls), 3, 0); m.o = 0; m.sb = 1; m.nc = cls; m.L = L; m.exp = 0; return m; };
     var a1 = mk(X.cls, 10), a2 = mk(X.cls, 12), bz = mk(Z.cls, 11);
-    var zb = DS.bearer(s, Z); DS.loseMerc(s, zb.id);      // Z 가문이 빈다 (막사의 bz 는 아직 자리에 서지 않았다)
-    DS.mercTidy(s); DS.rebuildParty();
+    var zb = DS.bearer(s, Z); DS.loseMerc(s, zb.id);      // Z 가문이 빈다 (막사의 bz 는 아직 자리에 서지 않았다 — 싸움 중처럼 DS.sbTick 을 부르지 않는다)
+    DS.mercTidy(s);
     var xb = DS.bearer(s, X), xe = xb.exp, xL = xb.L;
     DS.gainExp(s, 50, 30);
     var xg = xb.L === xL ? xb.exp - xe : null;
@@ -94,6 +94,15 @@ module.exports = async (page, shot, L) => {
   const ovl = await ev(() => { var bad = 0, n = 0; document.querySelectorAll('.ov .row.pk p.pwl').forEach(function (p) { var d = p.querySelector('.pwd'), b = p.querySelector('.cmpb'); if (!d || !b) return; n++; var dr = d.getBoundingClientRect(), br = b.getBoundingClientRect(), last = d.lastElementChild ? d.lastElementChild.getBoundingClientRect() : dr; if (Math.max(dr.right, last.right) > br.left || d.scrollWidth > d.clientWidth + 1) bad++; }); return { n: n, bad: bad, sw: document.documentElement.scrollWidth }; });
   await shot('swap_pick');
   A(ovl.n > 0 && !ovl.bad && ovl.sw <= 390, 'swap-pick rows: power delta does not overlap the compare button (' + ovl.n + ' rows)');
+  // 마을에서 가주가 떠났다 (천수 같은 싸움 밖의 죽음) → 다음 부대 정리(rebuildParty)에서 곧바로 막사의 같은 병과가 잇는다
+  c = await ev(() => {
+    DS.ui.closeAll(); var s = DS.G.save, H = DS.charList(s).filter(function (ch) { return ch.id !== s.hero && DS.bearer(s, ch, 1) && !DS.CLASSES[ch.cls].master; })[1];
+    var m = DS.addMerc(s, DS.heroType(H.cls), 3, 0); m.sb = 1; m.nc = DS.houseCls(H); m.L = 33; DS.mercTidy(s);
+    var b0 = DS.bearer(s, H, 1); DS.loseMerc(s, b0.id); DS.linMercDied(s, b0, '시험', '천수를 누림');
+    DS.rebuildParty();
+    return { seat: DS.bearer(s, H, 1) === m, L: H.L, chip: !!DS.G.chipEls['c' + H.id] };
+  });
+  A(c.seat && c.L === 33 && c.chip, 'out-of-combat 가주 death in town → same-class 막사 person seated at once (L ' + c.L + ')');
   // ④ 영웅관 창 (한 번 모집) · NaN 없음
   await ev(() => { DS.ui.closeAll(); DS.rebuildParty(); DS.openShop('merc'); }); await L.sleep(500);
   await shot('hall');

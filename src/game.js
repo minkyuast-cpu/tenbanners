@@ -269,6 +269,7 @@ function placeParty(sim, x, y, starts) {
   var s = G.save;
   var egp = !!(DS.egPassOn && DS.egPassOn(s));      // 3.3.0: 스무 해 창이 열려 있으면 빈자리는 그 창의 멈춤이 정한다 (안전망이 먼저 채우지 않는다)
   if (!G.riteBusy && !egp && DS.linVacant && DS.linVacant(s).length) { (DS.linAutoAll(s) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(s, e.ev), 4200); }); }      // 안전망: 의식을 거치지 않은 빈자리는 출전 전에 채운다
+  if (!egp && !G.scn && !sim.combat && DS.sbTick) bnNote(DS.sbTick(s));      // 2.2.0: 싸움 밖이면 빈 가문은 막사의 같은 병과가 곧바로 잇는다 (마을에서 천수로 떠난 가주 · 방출 · 판 올림 뒤)
   if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 · 출전 목록(s.party) = 가주가 선 가문 모두
   if (!egp && !s.party.some(function (id) { return s.chars[id] && !s.chars[id].down; })) reviveAll();
   var specs = DS.partySpecs(s), first = null, keep = G.sel, pos = starts && DS.formation ? DS.formation(specs, starts) : null;      // r44 대열: 튼튼한 이가 앞줄

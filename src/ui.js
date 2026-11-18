@@ -568,7 +568,7 @@ function mercInfo(id, parent) {
     var tags = '<i class="rtag r-' + (pl.k || 'bar') + '">' + esc(roleOf(m) || '자리 없음') + '</i>' + gbadge(m.g) + '<i class="ctag">' + esc(DS.MERCS[m.type].name) + '</i>' + (m.sx ? '<i class="ctag sx-' + esc(m.sx) + '">' + esc(lgSexTxt(m.sx)) + '</i>' : '') + agTag(m) + (tag ? '<i class="ctag">' + esc(tag) + '</i>' : '') + (ttl ? '<i class="ttl">' + esc(ttl) + '</i>' : '');
     var html = sheetHead({ spr: mercSpr(m, 4), g: m.g, name: esc(m.n || ''), sn: m.sn, tags: tags, lv: m, pow: pow, powLab: pl.k === 'sb' ? (ph ? '가주가 되면' : '전투력') : '전투력' });
     html += vitBars(u, m.hp, pl.k === 'bear' && ph ? ph.mp : 1, m);
-    if (pl.k === 'sb') html += '<button class="row place pl2" data-goflag="' + pl.ch + '"' + (pl.ch ? '' : ' disabled') + '>' + (ph ? crestH(ph, 20) : '') + '<span class="tx"><b>막사에서 기다린다</b><small>' + esc((ph ? DS.flagName(ph.cls) + '이 비면 저절로 가주가 된다' : heroFits(s, m) ? '맹주 가문과 같은 병과. 맹주의 후계 후보다' : '같은 병과 가문이 없다') + '. 같은 가문 가주가 얻는 경험치의 ' + pct + '%를 함께 얻는다') + '</small></span>' + (pl.ch ? '<i class="go" aria-hidden="true">›</i>' : '') + '</button>';
+    if (pl.k === 'sb') html += '<button class="row place pl2" data-goflag="' + pl.ch + '"' + (pl.ch ? '' : ' disabled') + '>' + (ph ? crestH(ph, 20) : '') + '<span class="tx"><b>막사에서 기다린다</b><small>' + esc((ph ? DS.flagName(ph.cls) + '이 비면 저절로 가주가 된다' : heroFits(s, m) ? '맹주와 같은 병과. 어른 자식이 없으면 맹주를 잇는다' : '같은 병과 가문이 없다') + '. 같은 병과 가주가 얻는 경험치의 ' + pct + '%를 함께 얻는다') + '</small></span>' + (pl.ch ? '<i class="go" aria-hidden="true">›</i>' : '') + '</button>';
     else if (ph) html += '<button class="row place pl2" data-goflag="' + ph.id + '">' + crestH(ph, 20) + '<span class="tx"><b>' + esc(pl.t) + '</b><small class="fx2">' + hFx(ph, pl.k === 'fol') + '</small></span><i class="go" aria-hidden="true">›</i></button>';
     html += statHead(key) + statBars(seat, m) + cmpBlock(key, seat, m);
     var bfl = DS.bearsFlag ? DS.bearsFlag(s, m) : null; if (!bfl && pl.k === 'sb' && ph) bfl = ph;      // r27: 태생 병과 (가주·막사면 그 가문과 맞는지)
@@ -1509,7 +1509,7 @@ function heroFits(s, m) { var h = s.chars[s.hero]; return !!(h && DS.sbFits && D
 // 막사 목록 (부대 탭): 등급 → 레벨 순. 줄을 누르면 사람 창, 「교체」 = 같은 병과 가문의 가주 고르기, 「방출」
 function barList(s) {
   var list = DS.barracks(s).slice().sort(function (a, b) { return (b.g || 0) - (a.g || 0) || DS.pL(b) - DS.pL(a) || a.id - b.id; }), w = bnWhere();
-  var h = '<h4 class="fam" id="hjbar">막사 <i class="own">' + list.length + ' / ' + DS.MERC_MAX + '명</i></h4><p class="hint sm">' + esc('싸우지 않는다. 같은 가문 가주가 얻는 경험치의 ' + Math.round((DS.BAL.sbShare || 0) * 100) + '%를 함께 얻는다. 같은 병과 가문이 비면 저절로 가주가 된다.') + '</p>';
+  var h = '<h4 class="fam" id="hjbar">막사 <i class="own">' + list.length + ' / ' + DS.MERC_MAX + '명</i></h4><p class="hint sm">' + esc('싸우지 않는다. 같은 병과 가주가 얻는 경험치의 ' + Math.round((DS.BAL.sbShare || 0) * 100) + '%를 함께 얻는다. 같은 병과 가문이 비면 저절로 가주가 된다.') + '</p>';
   if (!list.length) return h + '<p class="hint dimh">비어 있다. 영웅관에서 모집한 사람이 여기서 기다린다</p>';
   return h + '<div class="bar2">' + list.map(function (m) {
     var hm = DS.sbHome ? DS.sbHome(s, m) : null, pw = hm ? DS.flagPower(s, hm, m) : 0, cant = !hm || w === 'battle';
