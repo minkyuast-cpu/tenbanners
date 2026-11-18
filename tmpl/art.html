@@ -1,0 +1,41 @@
+<title>전민 戰民 열 가문의 시대</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- 글꼴: Galmuri (c) 2019-2025 Lee Minseo (quiple), SIL Open Font License 1.1, https://openfontlicense.org
+     원본: https://github.com/quiple/galmuri . 부분 집합으로 고친 판이라 가족 이름을 TB Pixel 로 바꿨다.
+     글꼴: Gowun Batang (고운바탕) Copyright 2021 The Gowun Batang Project Authors (https://github.com/yangheeryu/Gowun-Batang) · Gowun Dodum (고운돋움) Copyright 2021 The Gowun Dodum Project Authors
+     (https://github.com/yangheeryu/Gowun-Dodum) — 둘 다 SIL Open Font License 1.1. 부분 집합으로 고친 판이라 가족 이름을 TB Title · TB Body 로 바꿨다.
+     r15 시안 글꼴(SIL OFL 1.1, 부분 집합·이름 바꿈): Maru Buri (c) NAVER Corp. → TB Title A · Pretendard (c) 2021 Kil Hyung-jin → TB Sans · Pretendard (c) 2021 Kil Hyung-jin → TB Title B / TB Body B (4.0.3 부터)
+     · Black Han Sans (c) 2015 The Black Han Sans Project Authors → TB Title C -->
+<style>@font-face{font-family:"TB Title B";font-weight:600;font-style:normal;font-display:block;src:url(data:font/woff2;base64,@F:TBTitleB-SemiBold@) format("woff2")}
+@font-face{font-family:"TB Body B";font-weight:400;font-style:normal;font-display:block;src:url(data:font/woff2;base64,@F:TBBodyB-Regular@) format("woff2")}
+@font-face{font-family:"TB Body B";font-weight:600;font-style:normal;font-display:block;src:url(data:font/woff2;base64,@F:TBBodyB-SemiBold@) format("woff2")}
+@font-face{font-family:"TB Pixel 11";font-weight:400;font-style:normal;font-display:block;src:url(data:font/woff2;base64,@F:TBPixel11-Regular@) format("woff2")}
+@font-face{font-family:"TB Pixel 11";font-weight:700;font-style:normal;font-display:block;src:url(data:font/woff2;base64,@F:TBPixel11-Bold@) format("woff2")}
+@font-face{font-family:"TB Pixel 9";font-weight:400;font-style:normal;font-display:block;src:url(data:font/woff2;base64,@F:TBPixel9-Regular@) format("woff2")}</style>
+<style>
+@CSS@</style>
+<script>document.documentElement.classList.add('lookB')</script>
+<div id="app">
+  <section id="s-title" class="screen"></section>
+  <section id="s-game" class="screen" hidden>
+    <canvas id="cv" class="px"></canvas>
+    <div id="top">
+      <div class="tbar"><button id="bMenu" class="tb" aria-label="메뉴">☰<span>부대</span></button><div class="zn"><span class="znl"><b id="zName"></b><span id="zCal" class="zcal" hidden><i class="sea" aria-hidden="true"></i><span class="zct"></span></span></span><small id="zSub"></small></div><span class="cur"><i class="coin"></i><b id="gold" class="num">0</b></span><button id="bMap" class="tb">지도</button></div>
+      <div id="chips"></div>
+      <button id="quest"></button>
+      <div id="boss" hidden><b></b><em></em><i class="bbar"><u></u></i></div>
+    </div>
+    <div id="banner"></div>
+    <div id="mourn"></div>
+    <div id="toast" role="status"></div>
+    <div id="bot" class="dock">
+      <div id="info"><span id="selCtx"><span id="selCrest"></span><b id="selName"></b></span><span id="infoText"></span><span class="tick"><i>틱</i><span id="tick"><u></u></span><b id="tickN" class="num">100</b></span></div>
+      <div id="acts"></div>
+      <div id="sys"><button id="bHunt" class="sy"><b>전체 자동</b><small>꺼짐</small></button><button id="bSpeed" class="sy"><b>1×</b><small>속도</small></button><button id="bPause" class="sy"><b>Ⅱ</b><small>멈춤</small></button></div>
+    </div>
+    <div id="selPop" class="spop" hidden role="dialog" aria-label="고른 가문 지휘"><div class="sph"><span id="spCrest"></span><b id="spName"></b><small id="spWho"></small><button id="spX" class="spx" aria-label="닫기">✕</button></div><div id="selSeg" role="group" aria-label="고른 가문"><button id="bAutoU" class="sy"><span class="lb">조작</span><b>자동</b><small>알아서 싸운다</small></button></div><p class="spn">위 초상을 누르면 다른 가문을 고른다</p></div>
+  </section>
+</div>
+<script>@JS@</script>
+
+</body></html>
