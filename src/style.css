@@ -4438,12 +4438,14 @@ html.calm .lootcall, html.calm .lootcall .lccard, html.calm .lootcall .lcrays, h
 /* 2.2.2 칩 줄: 넷 이상이면 2.1.2 의 큰 칩(얼굴 · 이름 · 단/Lv · 막대) 그대로 한 줄 — 390 폭에 셋이 들고 옆으로 민다.
    칩 가장자리에 붙는다(scroll-snap) · 스크롤 막대는 숨긴다 · 더 있는 쪽 가장자리만 흐리게(fl · fr).
    위아래 7px · 옆 4px 덧대기: 칩 밖으로 나오는 문장·공훈·필·LV UP·고른 표시(▼)가 스크롤 상자에 잘리지 않게 (같은 만큼 바깥 여백을 당긴다) */
-html body #app#app #s-game #chips.swipe { --fl: 0px; --fr: 0px; display: flex; gap: 5px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding: 0 4px;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; margin: -7px -4px; padding: 7px 4px;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); }
+html body #app#app #s-game #chips.swipe { display: flex; gap: 5px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding: 0 4px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; margin: -7px -4px; padding: 7px 4px; }
 html body #app#app #s-game #chips.swipe::-webkit-scrollbar { display: none; }
-html body #app#app #s-game #chips.swipe.fl { --fl: 14px; }
-html body #app#app #s-game #chips.swipe.fr { --fr: 14px; }
+/* 가장자리 흐림: 줄 안에 붙어 서는(sticky) 얇은 그늘 — mask-image 는 막대가 바뀔 때마다 줄 전체를 다시 그려 느린 폰에서 프레임을 먹었다. 자리는 차지하지 않는다(음수 여백 = 너비 + 간격) */
+html body #app#app #s-game #chips.swipe::before, html body #app#app #s-game #chips.swipe::after { content: ""; position: sticky; z-index: 6; flex: 0 0 16px; align-self: stretch; pointer-events: none; opacity: 0; transition: opacity .18s; }
+html body #app#app #s-game #chips.swipe::before { left: 0; margin: -7px -21px -7px 0; background: linear-gradient(90deg, rgba(12, 9, 6, .92), rgba(12, 9, 6, 0)); }
+html body #app#app #s-game #chips.swipe::after { right: 0; margin: -7px 0 -7px -21px; background: linear-gradient(270deg, rgba(12, 9, 6, .92), rgba(12, 9, 6, 0)); }
+html body #app#app #s-game #chips.swipe.fl::before, html body #app#app #s-game #chips.swipe.fr::after { opacity: 1; }
 html body #app#app #s-game #chips.swipe.drag { scroll-snap-type: none; cursor: grabbing; }
 html body #app#app #s-game #chips.swipe.drag .chip { pointer-events: none; }
 html body #app#app #s-game #chips.swipe .chip { flex: 1 0 clamp(76px, calc((100% - 10px) / 3), 150px); max-width: 190px; min-width: 0; scroll-snap-align: start; -webkit-user-drag: none; user-select: none; }
