@@ -5,7 +5,7 @@
 // 정책 (사람이 하듯이, 단순하게):
 //   · 다음 시나리오의 권장 레벨(DS.recL)에 부대 평균(DS.partyL)이 닿을 때까지 들판에서 싸운다. 들판 = 부대 평균에 맞는 지역의 무리 하나
 //     (그 무리 레벨이 평균 + 1 이하), 그 지역 지도 위에서 진짜 엔진으로. 걸어 다니는 시간은 싸움마다 FIELD_OVER 초를 더해 셈한다.
-//   · 단 문턱(8단 · 9단): 7단 Lv10 셋이 되면 교회에서 합일(DS.fuseAuto). 그 전까지는 들판.
+//   · 합일: 맹세의 깃대를 얻은 뒤 7단 Lv10 셋이 모일 때마다 교회에서 합일(DS.fuseAuto). 단 문턱(8단 · 9단) 앞에서는 가장 앞선 사람의 레벨 쪽 무리를 잡는다.
 //   · 싸움 앞: 교회 치료(골드), 약초 다섯까지 사기, 가방의 더 좋은 장비 입히기(DS.lootAutoEquip), 맹주가 홀몸이면 혼인(DS.linAutoWed).
 //   · 영웅 모집: 모집권은 자리가 있으면 바로 쓴다. 빈 가문(대기조도 없음)이 있으면 골드로도 부른다 (예비 골드 200 × 단은 남긴다).
 //     빈 가문이 없어도 골드가 값의 세 배를 넘으면 대기조를 채우려 부른다. 병과는 무작위다 (게임 규칙 그대로).
@@ -87,6 +87,7 @@ function prep() {
   tidy();
   if (D.linAutoWed) D.linAutoWed(s);
   if (OLD) { oldRecruit(); tidy(); } else { recruit(); sendKin(); tidy(); }
+  if (s.crest && D.fuseCands(s).length >= D.FUSE_N) { const k = D.fuseAuto(s); st.fuse += k; if (k) st.log.push('fuse ×' + k); }      // 맹세의 깃대가 있으면 7단 Lv10 셋이 모일 때마다 합일 (합일한 이는 70 을 넘어 자란다)
   D.lootAutoEquip(s); heal(); shop();
 }
 // 한 싸움: specs 를 starts(또는 x,y 근처)에 세우고 끝날 때까지. 돌려주는 것: 'win' | 'lose' | 'end'
