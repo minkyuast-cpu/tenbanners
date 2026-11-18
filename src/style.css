@@ -4461,3 +4461,88 @@ html body #app#app #s-game #chips.many .chip > em.lv i { display: none; }
 .hrm.vac { border-color: rgba(214, 96, 86, .6); }
 .pcard2 .pnote { display: block; margin-top: 4px; font-size: var(--fs-s); }
 .pcard2 .pnote small { display: block; color: var(--dim); }
+
+/* ═══ r46 sheet — 사람 창 · 가문 창 (2.2.0): 머리 → 막대 → 할 일 → 능력치 막대 → 칩 → 접힌 자세히. 앞 규칙보다 세게 (html body #app#app .cs2) ═══ */
+html body #app#app .cs2 { display: grid; gap: 0; min-width: 0; }
+html body #app#app .cs2 h4 { margin: 18px 0 6px; }
+html body #app#app .cs2 h4.hbtn .btn.small { margin-left: auto; min-height: 34px; padding: 0 10px; }
+/* 머리: 초상(등급 테) · 이름 · 꼬리표 · 단 알약 · 오른쪽 큰 전투력 */
+html body #app#app .ph2 { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 4px 0 10px; }
+html body #app#app .ph2 .ppor { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 10px; background: var(--a-recess); box-shadow: inset 0 0 0 2px var(--gc), 0 0 12px color-mix(in srgb, var(--gc) 35%, transparent); overflow: hidden; }
+html body #app#app .ph2 .ppor canvas, html body #app#app .ph2 .ppor img { max-width: 64px; max-height: 64px; }
+html body #app#app .ph2.vac .ppor { filter: grayscale(1) brightness(.6); }
+html body #app#app .ph2 .pid { min-width: 0; display: grid; gap: 4px; }
+html body #app#app .ph2 h2 { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font: 700 20px/24px var(--f-head); color: var(--a-bone); margin: 0; word-break: keep-all; }
+html body #app#app .ph2 h2 small { font: 500 12px/16px var(--f-ui); color: var(--a-mute); }
+html body #app#app .ph2 .ptg { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 0; }
+html body #app#app .ph2 .plv { margin: 0; } html body #app#app .ph2 .plv .ptier { margin: 0; }
+html body #app#app .ph2 .ppw { display: grid; justify-items: end; gap: 2px; text-align: right; }
+html body #app#app .ph2 .ppw small { font: 500 10px/12px var(--f-ui); color: var(--a-mute); white-space: nowrap; }
+html body #app#app .ph2 .ppw .pw { font: 700 24px/26px var(--f-num); background: var(--a-goldtext); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html body #app#app :is(.rtag, .ctag) { font-style: normal; display: inline-flex; align-items: center; gap: 3px; height: 18px; padding: 0 6px; border-radius: 3px; font: 600 11px/18px var(--f-ui); white-space: nowrap; color: var(--a-bone); background: rgba(255, 238, 204, .06); box-shadow: inset 0 0 0 1px rgba(220, 180, 106, .22); }
+html body #app#app .rtag { color: var(--a-on-gold); background: var(--a-gold); box-shadow: none; }
+html body #app#app .rtag.r-sb { background: #6d8db0; color: #0e1620; } html body #app#app .rtag.r-fol { background: #8fb07a; color: #13200c; } html body #app#app .rtag.r-hero { background: var(--a-goldfill); }
+html body #app#app .rtag.s-ok { background: #4f8a45; color: #eaffe0; } html body #app#app .rtag.s-dn { background: #8f2738; color: #ffe3e3; } html body #app#app .rtag.s- { background: #4a4466; color: var(--a-bone); }
+html body #app#app .ctag.sx-m { color: #8fc3ff; } html body #app#app .ctag.sx-f { color: #ff9fc1; }
+html body #app#app .ctag.mr .vb, html body #app#app .ctag.mr svg { width: 14px; height: 14px; }
+html body #app#app .ph2 .ptg .agt { font-style: normal; font: 600 11px/18px var(--f-ui); color: var(--a-mute); }
+/* 막대: HP · 마나 · 경험치 · 공훈 */
+html body #app#app .vbs { display: grid; gap: 5px; padding: 8px 10px; margin: 0 0 6px; border-radius: 8px; background: var(--a-recess); box-shadow: inset 0 1px 0 rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(143, 122, 85, .25); }
+html body #app#app .vb2 { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+html body #app#app .vb2 > i { font-style: normal; font: 600 11px/14px var(--f-ui); color: var(--a-mute); }
+html body #app#app .vb2 .vt { display: block; height: 8px; border-radius: 2px; background: #0b0806; box-shadow: inset 0 0 0 1px rgba(255, 238, 204, .08); overflow: hidden; }
+html body #app#app .vb2 .vt u { display: block; height: 100%; background: linear-gradient(180deg, var(--a-gold-hi), var(--a-gold-mid)); }
+html body #app#app .vb2.hp .vt u { background: linear-gradient(180deg, var(--a-hp1), var(--a-hp2)); }
+html body #app#app .vb2.mp .vt u { background: linear-gradient(180deg, var(--a-mp1), var(--a-mp2)); }
+html body #app#app .vb2.mr .vt u { background: linear-gradient(180deg, #b6e39a, #4f8a45); }
+html body #app#app .vb2 > b { font: 700 11px/14px var(--f-num); color: var(--a-bone); min-width: 64px; text-align: right; white-space: nowrap; }
+/* 자리 줄 · 사람 줄 */
+html body #app#app .cs2 .row.place.pl2 { grid-template-columns: auto minmax(0, 1fr) auto; min-height: 48px; }
+html body #app#app .cs2 .row.place.pl2:not(:has(.crest, svg)) { grid-template-columns: minmax(0, 1fr) auto; }
+html body #app#app .cs2 .row.place.pl2 .tx small { white-space: normal; }
+html body #app#app .row.pr2 { grid-template-columns: auto minmax(0, 1fr) auto; min-height: 50px; padding: 6px 10px; gap: 10px; }
+html body #app#app .row.pr2 > .tx { grid-column: auto; }
+html body #app#app .row.pr2 .tx > b { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+html body #app#app .row.pr2 .pra { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+html body #app#app .row.pr2 .pra .go { font-style: normal; color: var(--a-mute); font-size: 15px; }
+html body #app#app .row.pr2 .pra .btn.small { min-height: 36px; padding: 0 10px; }
+/* 빈 가문 */
+html body #app#app .vf2 { margin: 10px 0 2px; padding: 10px 12px; border-radius: 10px; background: linear-gradient(180deg, rgba(143, 39, 56, .22), rgba(143, 39, 56, .08)); box-shadow: inset 0 0 0 1px rgba(214, 69, 90, .45); display: grid; gap: 6px; }
+html body #app#app .vf2 p { margin: 0; font: 500 12px/18px var(--f-ui); color: var(--a-bone); } html body #app#app .vf2 p.hint { color: var(--a-mute); }
+html body #app#app .vf2 .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+/* 능력치 막대 (2열) */
+html body #app#app .sbars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; padding: 8px 10px; border-radius: 8px; background: var(--a-plate); box-shadow: inset 0 0 0 1px rgba(143, 122, 85, .3), var(--a-bevel); }
+html body #app#app .sbr { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 6px; align-items: center; min-width: 0; }
+html body #app#app .sbr > i { font-style: normal; font: 600 11px/14px var(--f-ui); color: var(--a-mute); white-space: nowrap; }
+html body #app#app .sbr .st { display: block; height: 6px; border-radius: 2px; background: #0b0806; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 238, 204, .07); }
+html body #app#app .sbr .st u { display: block; height: 100%; background: linear-gradient(90deg, var(--a-gold-mid), var(--a-gold)); }
+html body #app#app .sbr.hi .st u { background: linear-gradient(90deg, var(--a-gold), var(--a-gold-hi)); box-shadow: 0 0 6px rgba(240, 182, 74, .6); }
+html body #app#app .sbr.lo .st u { background: linear-gradient(90deg, #5a4a35, #7a6648); }
+html body #app#app .sbr > b { font: 700 11px/14px var(--f-num); color: var(--a-bone); min-width: 28px; text-align: right; }
+html body #app#app .sbx { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 5px 2px 0; }
+html body #app#app .sbx i { font-style: normal; font: 600 11px/16px var(--f-ui); color: var(--a-bone); padding: 0 6px; border-radius: 3px; background: rgba(255, 238, 204, .05); }
+html body #app#app .sbx small { margin-left: auto; font: 500 10px/14px var(--f-ui); color: var(--a-dim); }
+/* 특성 칩 */
+html body #app#app .trs2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 12px 0 4px; }
+html body #app#app .tr2c { display: grid; gap: 1px; padding: 6px 9px; border-radius: 8px; background: rgba(255, 238, 204, .035); box-shadow: inset 0 0 0 1px rgba(220, 180, 106, .16); min-width: 0; }
+html body #app#app .tr2c > i { font-style: normal; font: 500 10px/12px var(--f-ui); color: var(--a-dim); }
+html body #app#app .tr2c > b { font: 700 12px/16px var(--f-ui); color: var(--a-bone); }
+html body #app#app .tr2c > small { font: 500 11px/14px var(--f-ui); color: var(--a-mute); }
+html body #app#app .tr2c em { font-style: normal; } html body #app#app .tr2c em.ok { color: var(--a-up); } html body #app#app .tr2c em.no { color: var(--a-dn); }
+html body #app#app .ulc { color: var(--a-gold-hi); } html body #app#app .ulc.lk { color: var(--a-mute); }
+html body #app#app .cs2 .fold-in.pmore { padding: 2px 0 6px; }
+html body #app#app .cs2 .pmx { display: grid; gap: 6px; margin: 10px 0; }
+html body #app#app .cmp2 { margin-top: 8px; display: grid; justify-items: center; gap: 6px; }
+html body #app#app .cmp2 .radar { max-width: 260px; }
+/* 장비 줄 (가문 창): 그림 · 이름 · 칩 · 강화 */
+html body #app#app .row.cgear.cg2 { padding: 8px 10px; }
+html body #app#app .row.cgear.cg2 .schips { margin-top: 3px; }
+/* 막사 목록 (부대 탭) */
+html body #app#app .bar2 { display: grid; gap: 0; }
+html body #app#app .row.pr2.brow { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "s t p" "s b b"; row-gap: 4px; }
+html body #app#app .row.pr2.brow > :first-child { grid-area: s; align-self: start; }
+html body #app#app .row.pr2.brow > .tx { grid-area: t; }
+html body #app#app .row.pr2.brow > .pra { grid-area: p; flex-direction: column; align-items: flex-end; gap: 0; }
+html body #app#app .row.pr2.brow .bhm { display: inline-flex; align-items: center; gap: 3px; font: 500 11px/14px var(--f-ui); color: var(--a-mute); white-space: nowrap; }
+html body #app#app .row.pr2.brow > .bbt { grid-area: b; display: flex; gap: 6px; justify-content: flex-end; }
+html body #app#app .row.pr2.brow > .bbt .btn.small { min-height: 34px; min-width: 64px; padding: 0 10px; }

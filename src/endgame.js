@@ -262,8 +262,9 @@ DS.egYear = function (s) {
   var stop = DS.egStop(s); if (stop) return { y: yr(s), stop: stop, lines: [] };
   if (ps.y >= DS.EG.years) {
     ps.f = 'keep';
-    var end = passLine(ps, yr(s), lines('pass.line.end', { d: ps.nl, k: ps.na }).map(String));
-    return { done: true, y: yr(s), lines: [end] };
+    var end = passLine(ps, yr(s), lines('pass.line.end', { d: ps.nl, k: ps.na }).map(String)), outE = [end];
+    var tk = DS.egDawnTickets(s); if (tk) outE.push(passLine(ps, yr(s), ['빈 가문 ' + tk.vac + '곳. 소문을 듣고 영웅 모집권 ' + tk.n + '장이 왔다.']));
+    return { done: true, y: yr(s), lines: outE, tickets: tk ? tk.n : 0 };
   }
   var Y = (DS.AGE && DS.AGE.year) || 600, hero = s.chars[s.hero], hp = heroP(s), at = townName(s), out = [], y;
   DS.ageAdvance(s, Y); y = yr(s);
@@ -304,6 +305,15 @@ DS.egYear = function (s) {
   var ls = out.map(function (o) { return passLine(ps, y, o.t.map(String)); });
   var st = DS.egStop(s);
   return { y: ps.y, cy: y, lines: ls, stop: st };
+};
+// 2.2.0: 스무 해 창이 끝나는 새벽 — 빈 가문(가주도 막사의 같은 병과도 없다)마다 영웅 모집권 한 장, 많아야 EG.tk 장. 한 장에 한 번만 (ps.tk)
+DS.EG.tk = 3;
+DS.egDawnTickets = function (s) {
+  var ps = E(s).pass; if (!ps || ps.tk != null) return null;
+  var vac = DS.bnEmpty ? DS.bnEmpty(s).length : 0, n = Math.min(DS.EG.tk, vac); ps.tk = n;
+  if (!n) return null;
+  s.tickets = (s.tickets || 0) + n;
+  return { n: n, vac: vac };
 };
 // 멈춤: 비어 있는 자리 하나 (가주 자리 먼저, 그다음 지휘관 칸 번호 순)
 DS.egStop = function (s) {
