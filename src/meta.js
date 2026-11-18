@@ -412,7 +412,8 @@ DS.partyIds = function (save) {
 DS.partySync = function (save) {
   if (!save || !save.chars) return [];
   var ids = DS.partyIds(save); if (!ids.length && save.chars[save.hero]) ids = [+save.hero];      // 맹주 자리가 비었을 때(후계 의식 전)도 목록은 비지 않게
-  save.party = ids; return ids;
+  save.party = ids; if (DS.BN) DS.BN.nK = DS.partyIds(save).length;      // 2.2.0: 소수 정예 배율이 읽는 싸우는 가문 수
+  return ids;
 };
 DS.vacant = function (save, ch) { return !!ch && ch.id !== +save.hero && !(DS.bearer && DS.bearer(save, ch, 1)); };      // 빈 가문: 가주가 없다 (대기조가 있으면 곧 선다)
 // 이름: 지금 명부에 있거나 추모에 남은 이름은 피해서 고른다 (명부 60 + 추모 30 < 이름 수 이므로 늘 남는 이름이 있다)

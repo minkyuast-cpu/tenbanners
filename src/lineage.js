@@ -329,7 +329,7 @@ function birth(s, hp, sp, rnd) {
 }
 // ⑲ 출산: 대장 부부가 함께 살아 있는 동안 혼인한 날부터 게임 1년이 지날 때마다 한 번 — p = p0 × d^(혼인 뒤 해 − 1) × 0.5^(이 대장의 친자식 수). 상한 없음, 막사가 가득해도 태어난다.
 //   결정적 씨앗(저장 씨앗 + 대장 사람 번호 + 혼인 뒤 해) — 불러오기로 다시 굴릴 수 없다. 해 바뀜(age.js ageCheck)과 스무 해 창이 같은 함수를 부른다. 재혼하면 그날부터 다시 센다.
-DS.LIN_BIRTH = { p0: 0.4, d: 0.85, half: 0.5 };
+DS.LIN_BIRTH = { p0: 0.5, d: 0.92, half: 0.75 };      // 2.2.0: 아이가 빈 가문을 채우는 길이라 더 자주 (혼인 한 번에 35해 동안 평균 1.7 → 3.6명). 옛 { p0: 0.4, d: 0.85, half: 0.5 }
 DS.linBirthP = function (yr, kids) { var B = DS.LIN_BIRTH; return B.p0 * Math.pow(B.d, Math.max(0, yr - 1)) * Math.pow(B.half, kids); };
 DS.linBirthYear = function (s, rnd) {
   var Lr = L0(s), evs = [], ch = s.chars[s.hero], hp = ch && !ch.vac && !ch.down && ch.pid ? Lr.P[ch.pid] : null; if (!hp || !hp.sp) return evs;

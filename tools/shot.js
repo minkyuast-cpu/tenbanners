@@ -12,7 +12,7 @@ const lib = require('./lib.js');
   fs.mkdirSync(OUT, { recursive: true });
   const url = 'file://' + path.resolve(process.env.PAGE || '/home/user/dist/test.html');
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, isMobile: false, hasTouch: true });
   const page = await ctx.newPage();
   const errs = [];
   page.on('console', m => { if (m.type() === 'error') { const t = m.text(); if (/Failed to load resource|net::ERR_|favicon/.test(t)) return; errs.push(t); console.log('SCRIPT ERROR ' + t); } });

@@ -14,6 +14,8 @@
 //     나이·출생(DS.ageCheck), 대기조가 빈 가문을 잇기(DS.sbTick). 지면(전멸) 같은 시나리오를 다시 한다 (wipe 하나).
 //   · 필살기는 봇이 누른다 (DS.BAL.ultAuto — 조작하는 맹주 한 사람).
 // 시간: hours = (엔진 시간 + 걷는 몫) / 3600. 게임 달력도 엔진 시간만큼 흐른다 (DS.ageAdvance — 게임과 같다).
+// 옛 규칙 비교: LOAD_SRC=/home/user/src/src node tools/bot.js inf 1 — 2.1.2(저장 v12) 규칙으로 같은 정책을 돌린다 (가솔 자동 채움 · 출전 셋 = 레벨 높은 셋 ·
+//   가솔 빈자리가 있으면 1회 모집 · 자동 후계 DS.succTick). 같은 시간 셈이라 전 → 후 를 견줄 수 있다.
 'use strict';
 const D = require('./load.js')();
 const cls = process.argv[2] || 'inf', seed = +(process.argv[3] || 1), gen2 = +(process.argv[4] || 0);
@@ -24,11 +26,31 @@ D.BAL.ultAuto = true;
 if (process.env.CMDK) D.BN.cmdK = +process.env.CMDK;      // 조율용: 깃발 유닛 배율 덮어쓰기
 if (process.env.KINK) D.BN.kinK = +process.env.KINK;
 const st = { simT: 0, over: 0, field: 0, scn: 0, wipes: 0, deaths: 0, kinDeaths: 0, bearDeaths: 0, heroDeaths: 0, recruits: 0, recruitGold: 0, tickets: 0, kinSent: 0, sbSeat: 0, births: 0, vacMax: 0, vacSum: 0, vacN: 0, fuse: 0, lapse: 0, perScn: [], log: [] };
+const OLD = D.SAVE_V === 12;      // 2.1.2 규칙 (비교용)
 const s = D.newSave('봇', cls);
 D.allySet && D.allySet(s, '펜드래곤');
 const zc = {};
 function zone(id) { return zc[id] || (zc[id] = D.buildZone(id)); }
+function oldTidy() {
+  if (D.linVacant(s).length) { const ev = D.linAutoAll(s) || []; ev.forEach(e => { if (e.t === 'lapse') st.lapse++; }); }
+  if (D.succTick) D.succTick(s);
+  D.autoAssign(s);
+  const ids = D.charList(s).filter(c => !c.down && !c.vac && (c.id === s.hero || D.bearer(s, c))).sort((a, b) => b.L - a.L).slice(0, D.PARTY_MAX).map(c => c.id);
+  if (ids.length) s.party = ids;
+  D.autoAssign(s); D.pSync(s);
+}
+function oldRecruit() {
+  for (let guard = 0; guard < 6; guard++) {
+    let slots = 0; s.party.forEach(id => { if (s.chars[id]) slots += Math.max(0, D.MERC_SLOTS - D.popOf(s, id)); });
+    const empty = D.bnEmpty(s).length, price = D.recruitPrice(s, 0), keep = 200 * D.heroTier(s);
+    if (!slots && !empty) return;
+    let pay = 0;
+    if (s.tickets > 0) s.tickets--; else if (s.gold >= price + keep) { s.gold -= price; D.recruitPaid(s, 1); pay = price; } else return;
+    D.pullMerc(s, rnd, 0); st.recruits++; st.recruitGold += pay; D.autoAssign(s);
+  }
+}
 function tidy() {
+  if (OLD) return oldTidy();
   if (D.linVacant(s).length && process.env.BOTLOG) { const hs = D.linHeirs(s, s.hero); st.log.push('RITE @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' yr' + D.calNow(s).yr + ' heirs ' + hs.map(h => h.kind + (h.young ? 'Y' : '')).join(',') + ' mercs ' + s.mercs.length + ' party ' + D.partyIds(s).length); }
   if (D.linVacant(s).length) { const ev = D.linAutoAll(s) || []; ev.forEach(e => { if (e.t === 'lapse') { st.lapse++; st.log.push('LAPSE @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' houses ' + D.partyIds(s).length + ' kin ' + D.mercsOf(s, s.hero).length); } }); }
   const seat = D.sbTick(s); st.sbSeat += seat.length;
@@ -64,7 +86,7 @@ function sendKin() {
 function prep() {
   tidy();
   if (D.linAutoWed) D.linAutoWed(s);
-  recruit(); sendKin(); tidy();
+  if (OLD) { oldRecruit(); tidy(); } else { recruit(); sendKin(); tidy(); }
   D.lootAutoEquip(s); heal(); shop();
 }
 // 한 싸움: specs 를 starts(또는 x,y 근처)에 세우고 끝날 때까지. 돌려주는 것: 'win' | 'lose' | 'end'
@@ -168,9 +190,10 @@ function scenario(sc) {
 function partyTier() { return D.partyTier(s); }
 const t0 = Date.now();
 let stuck = false;
+function campaign(getSc, done, tag) {
 for (let n = 1; n <= 30 && !stuck; n++) {
-  const sc = D.scn(n); let tries = 0, fields = 0;
-  while (!s.cleared[n]) {
+  const sc = getSc(n); let tries = 0, fields = 0; if (!sc) continue;
+  while (!done(n)) {
     prep();
     if (sc.tier > partyTier()) {
       if (s.crest && D.fuseCands(s).length >= D.FUSE_N) { const k = D.fuseAuto(s, 1); st.fuse += k; if (k) { st.log.push('fuse @' + n); continue; } }
@@ -181,10 +204,24 @@ for (let n = 1; n <= 30 && !stuck; n++) {
     const ok = scenario(sc);
     if (!ok) { st.wipes++; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + D.recL(sc)); if (tries > 12) { stuck = true; break; } }
   }
-  st.perScn.push({ n, h: +((st.simT + st.over) / 3600).toFixed(2), L: D.partyL(s), units: D.partySpecs(s).length, vac: D.bnEmpty(s).length, tries });
+  st.perScn.push({ n: tag + n, h: +((st.simT + st.over) / 3600).toFixed(2), L: D.partyL(s), units: D.partySpecs(s).length, vac: D.bnEmpty(s).length, tries });
+}
+}
+campaign(n => D.scn(n), n => !!s.cleared[n], '');
+const main = { hours: +((st.simT + st.over) / 3600).toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths };
+let g2 = null;
+if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 창을 정책대로 치르고(DS.egRunAuto) 2대째 1~30번
+  tidy();
+  const e0 = D.egStart(s);
+  if (e0) {
+    const r = D.egRunAuto(s, { heir: 'first', keep: 'light', hand: true, call: 'heavy' }); tidy();
+    const w0 = st.wipes, d0 = st.deaths, h0 = (st.simT + st.over) / 3600;
+    campaign(n => D.egScn(n, s.eg.gen, s), n => !!(s.eg && s.eg.c && s.eg.c[n]), 'g2.');
+    g2 = { gen: s.eg.gen, pass: r, cleared: Object.keys((s.eg && s.eg.c) || {}).length, hours: +((st.simT + st.over) / 3600 - h0).toFixed(2), wipes: st.wipes - w0, deaths: st.deaths - d0, units: D.partySpecs(s).length };
+  }
 }
 const H = (st.simT + st.over) / 3600;
-const out = { cls, seed, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths,
+const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths,
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
   births: st.births, fuse: st.fuse, lapse: st.lapse, field: st.field, scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
