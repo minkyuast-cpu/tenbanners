@@ -15,7 +15,7 @@ function pills(list) { list = (list || []).filter(Boolean); return list.length ?
 function foldBtn(key, label, sub) { var on = !!FOLD[key]; return '<button class="pfold' + (on ? ' on' : '') + '" data-pfold="' + key + '" aria-expanded="' + on + '"><b>' + label + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '<i aria-hidden="true">' + (on ? '▾' : '▸') + '</i></button>'; }
 // r8 menus (ux 3): 같은 종류(제목+틀)의 창이 이미 열려 있으면 그 창과 그 위에 쌓인 창들을 닫고 그 자리에 다시 연다 — 지휘관 → 가계도 → 사람 → 지휘관 … 으로 겹이 끝없이 쌓이지 않게.
 // 사이에 확인 창(modal)이나 sheet 가 아닌 창이 끼어 있으면 건드리지 않고 예전처럼 위에 쌓는다.
-var SHEET_STEP = { '가문 사람|sub lgs': ['가문|', '부대원|sub', '대장|sub'] };
+var SHEET_STEP = { '가문 사람|sub lgs': ['가문|', '인물|sub', '대장|sub'] };
 function sheetReuse(kind) {
   var st = Array.prototype.slice.call(document.querySelectorAll('.ov:not(.ghost)')), at = -1, i;
   for (i = 0; i < st.length; i++) if (st[i].shKind === kind) { at = i; break; }
@@ -313,7 +313,7 @@ function forge(parent, sl0) {
       (s.items.prot > 0 && DS.ITEMS.prot ? '<dt>보호 부적</dt><dd>' + DS.chip('가진 것', s.items.prot + '개', 0) + '<small>실패해도 부서지지 않는다</small></dd>' : '') + '</dl><h5 class="sub">단계별 성공 확률</h5>' + rateTable(0) + '</div>' +      // r45 ui: 한 문단 → 규칙 표 · 2.1.0: +20 까지, 보호 부적
       '<p class="hint sm">장비는 적에게서만 얻는다. 장비의 힘은 입은 사람의 레벨을 따르니, 아끼는 장비를 강화해 오래 쓴다.</p>' + protShelf(s);
     html += '<nav class="chips2 lt2 fsl"><button data-fsl="w"' + (sl === 'w' ? ' aria-current="true"' : '') + '>무기</button><button data-fsl="a"' + (sl === 'a' ? ' aria-current="true"' : '') + '>방어구</button></nav>';
-    html += '<h4>쓰고 있는 ' + W + ' <i class="own">출전 순서</i></h4>';
+    html += '<h4>쓰고 있는 ' + W + ' <i class="own">가문 순서</i></h4>';
     var any = false;
     partyFirst().forEach(function (ch) {
       var g = DS.gear(ch[sl]);
@@ -1501,7 +1501,7 @@ function tabBag() {      // r12: 줄 문법 = 그림 · 이름 ×n · 풀이 한
     var it = DS.ITEMS[k], use = it.ctl && (s.items[k] || 0) > 0;
     html += '<div class="row">' + itemIco(k) + '<div class="tx"><b>' + it.name + ' <i class="own">' + itemHave(k) + '</i></b><small>' + it.desc + '</small></div>' + (use ? '<button class="btn small gold" data-use="' + k + '">사용</button>' : '') + '</div>';
   });
-  html += '<div class="row">' + icon('misc', 'ticket') + '<div class="tx"><b>모집권 <i class="own">×' + (s.tickets || 0) + '</i></b><small>모집 1회 (용병소)</small></div></div>';
+  html += '<div class="row">' + icon('misc', 'ticket') + '<div class="tx"><b>영웅 모집권 <i class="own">×' + (s.tickets || 0) + '</i></b><small>영웅 모집 1회 (영웅관)</small></div></div>';
   if (s.crest) html += '<div class="row">' + icon('misc', 'crest') + '<div class="tx"><b>맹세의 깃대</b><small>7단 Lv10 가문 셋을 골라 교회에서 합일한다. 어느 가문이든 된다.</small></div></div>';
   if (DS.lootUI && DS.lootUI.bag) return html + '<div class="lootbag" id="hjb2">' + DS.lootUI.bag(s) + '</div>';      // 정렬·잠금·모두 팔기는 그 안에서 (openMenu 가 손잡이를 단다)
   var gl = Object.keys(s.gear).filter(function (id) { return DS.gear(id); }).sort(function (a, b) { return DS.gearScore(DS.gear(b)) - DS.gearScore(DS.gear(a)); });
@@ -1607,7 +1607,7 @@ function tabOpt() {
     '<div class="row"><div class="tx"><b>죽음 연출</b><small>아군이 영영 쓰러질 때 화면을 확대해 마지막 모습을 보여 준다</small></div><button class="btn small' + (o.dfx !== false ? ' gold' : '') + '" data-opt="dfx">' + (o.dfx !== false ? '켬' : '끔') + '</button></div>' +
     '<div class="row"><div class="tx"><b>전투 대사</b><small>싸우는 동안 가끔 가문마다 제 말버릇을 말풍선으로 한다</small></div><button class="btn small' + (o.bark !== false ? ' gold' : '') + '" data-opt="bark">' + (o.bark !== false ? '켬' : '끔') + '</button></div>' +
     (DS.fieldOptRow ? DS.fieldOptRow(o) : '') +      // r47: 들판 습격 (field.js)
-    '<div class="row"><div class="tx"><b>부대원 이름표</b><small>필드에서 부대원 발밑에 이름 표시</small></div><div class="seg" role="group" aria-label="부대원 이름표">' +
+    '<div class="row"><div class="tx"><b>가문원 이름표</b><small>필드에서 가문원 발밑에 이름 표시</small></div><div class="seg" role="group" aria-label="가문원 이름표">' +
       [['sel', '선택 가문'], ['all', '모두'], ['off', '끔']].map(function (x) { return '<button data-mtag="' + x[0] + '"' + ((o.mtag || 'sel') === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>' +
     '<div class="row"><div class="tx"><b>공지사항 <i class="own">v' + DS.VERSION + '</i></b><small>버전별 변경 사항과 저장 안내</small></div><button class="btn small" data-opt="notes">보기</button></div>' +
     '<div class="row"><div class="tx"><b>기록</b><small>끝낸 시나리오, 쓰러뜨린 적, 깃대에 새긴 이름들</small></div><button class="btn small" data-opt="record">보기</button></div>' +
@@ -1621,24 +1621,24 @@ function tabOpt() {
 function tabHelp() {
   // r12 screen: 4.0 도움말 (부대원과 깃발). 게임 안 글이라 반말, 줄표·괄호 없이 한 줄에 한 가지. lore.js 의 옛 HELP(지휘관·용병 시절)는 읽지 않는다 — 글팀이 4.0 판을 LORE.help40 으로 주면 그것을 쓴다
   var S = [
-    ['부대원과 가문', '가문', [
-      '부대에는 <b>맹주</b> 한 명과 <b>부대원</b>들이 있다. 가문들이 모여 <b>' + esc(DS.allyFull ? DS.allyFull(G.save) : '연맹') + '</b>을 이룬다. 맹주는 자기가 선 가문의 가주다. 연맹의 이름은 대가 바뀌어도 그대로다.',
-      '나머지 가문에는 부대원을 <b>가주로 임명한다</b>. 가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다. 특성도 그대로 적용된다.',
-      '가문마다 <b>가솔</b> 자리가 둘 있다. 큰 부대원은 혼자 두 자리를 차지한다. 병과가 맞으면 능력치가 10% 오른다.',
-      '가주와 가솔 배치는 부대 탭의 가문 카드에서 한다. 마을 밖에서는 서로 교체만 할 수 있다.',
-      '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면, 싸움과 시나리오 밖에서 그 가문의 <b>다음 가주가 저절로 온다</b>. 마을이 아니어도 된다. 다음 가주는 선대와의 레벨 차이 일부를 잇는다.',
-      '가주가 없는 가문은 전투에 나서지 않는다. 직접 비운 자리는 전투가 끝나면 가솔이나 막사에서 자동으로 채운다. 영웅, 전설 등급과 잠근 부대원은 직접 배치해야 한다.',
-      '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. 맹주의 <b>아이</b>는 부모가 이끄는 가문의 가솔로만 설 수 있다. 맹주가 쓰러지면 후계로 고를 수 있다.',
-      '<b>부대원은 쓰러지면 돌아오지 않는다.</b> 많이 다치면 스스로 물러난다.',
-      '가문에 속하지 않은 부대원은 <b>막사</b>에 머문다. 부대 창 아래 금빛 「막사」 단추로 연다 (점이 뜨면 빈 가솔 자리를 채울 사람이 있다). 등급, 레벨, 나이, 병과로 늘어놓고 병과, 등급으로 거른다. 카드를 누르면 사람 창, 「보내기」로 빈 가솔 자리에 세우고, 자물쇠로 잠근다. 「여럿 고르기」로 한꺼번에 방출한다.']],
+    ['사람과 가문', '가문', [
+      '연맹에는 <b>맹주</b> 한 명과 가문들이 있다. 가문들이 모여 <b>' + esc(DS.allyFull ? DS.allyFull(G.save) : '연맹') + '</b>을 이룬다. 맹주는 자기가 선 가문의 가주다. 연맹의 이름은 대가 바뀌어도 그대로다.',
+      '<b>가주가 선 가문은 모두 싸운다.</b> 출전을 고르는 일은 없다. 가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
+      '사람의 자리는 셋이다. <b>가주</b>는 가문을 이끌고 싸운다. <b>대기조</b>는 모집한 영웅이 그 가문에서 기다리는 자리로, 가문마다 ' + DS.SB_MAX + '명까지, 싸우지 않는다. <b>가문원</b>은 맹주 집 사람(아이, 배우자)으로, 어른이면 모두 맹주를 따라 싸운다.',
+      '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면, 싸움 밖에서 그 가문의 <b>대기조</b> 가운데 가장 나은 이가 저절로 가주가 된다. 대기조가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다.',
+      '빈 가문을 채우는 길은 둘이다. <b>영웅관</b>에서 모집하거나, 맹주의 <b>어른 아이</b>를 그 가문의 가주로 보낸다. 보낸 아이는 그 가문의 병과를 받는다. 맹주의 자리는 늘 이어지니 싸울 이가 아무도 없어지는 일은 없다.',
+      '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람, 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장. 병과는 자리가 있는 가문 가운데 무작위로 정해지고, 그 가문이 비어 있으면 곧바로 가주, 아니면 대기조가 된다.',
+      '대기조는 가문 창에서 가주와 자리를 바꿀 수 있다. 물러난 가주는 대기조가 된다. 가주를 그냥 내리는 길은 없다.',
+      '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. 맹주가 쓰러지면 핏줄, 대기조, 다른 가문의 가주 가운데 후계를 고른다.',
+      '<b>쓰러진 사람은 돌아오지 않는다.</b> 가주도, 가문원도 그렇다. 많이 다치면 스스로 물러난다. 한 사람 한 사람이 귀하다.']],
     ['등급, 단, 가문 공훈', 0, [
-      '<b>등급</b>은 타고난 그릇이다. 모집할 때 정해지고 바뀌지 않는다. 등급이 높은 사람이 가주가 되면 가문이 더 강해진다. 맹주 자리는 희귀 밑으로 치지 않는다. 등급이 높을수록 경험치도 빨리 쌓인다.' +      // r45 표 · r44 숫자
-        '<table class="htab"><thead><tr><th>등급</th><th>가솔</th><th>가주일 때</th><th>성장</th></tr></thead><tbody>' + DS.GRADES.slice(1).map(function (q, i) { var pc = DS.potMul ? Math.round((DS.potMul({ pot: i + 1 }) - 1) * 100) : 0; return '<tr><th style="color:' + q.col + '">' + q.name + '</th><td class="num">×' + q.mul.toFixed(2) + '</td><td class="num">×' + DS.BN.gmul[i + 1].toFixed(2) + '</td><td class="num">' + (pc > 0 ? '+' : pc < 0 ? '−' : '±') + Math.abs(pc) + '%</td></tr>'; }).join('') + '</tbody></table>',
+      '<b>등급</b>은 타고난 그릇이다. 모집하거나 태어날 때 정해지고 바뀌지 않는다. 등급이 높은 사람이 가주가 되면 가문이 더 강해진다. 맹주 자리는 희귀 밑으로 치지 않는다. 등급이 높을수록 경험치도 빨리 쌓인다.' +      // r45 표 · r44 숫자
+        '<table class="htab"><thead><tr><th>등급</th><th>가문원</th><th>가주일 때</th><th>성장</th></tr></thead><tbody>' + DS.GRADES.slice(1).map(function (q, i) { var pc = DS.potMul ? Math.round((DS.potMul({ pot: i + 1 }) - 1) * 100) : 0; return '<tr><th style="color:' + q.col + '">' + q.name + '</th><td class="num">×' + q.mul.toFixed(2) + '</td><td class="num">×' + DS.BN.gmul[i + 1].toFixed(2) + '</td><td class="num">' + (pc > 0 ? '+' : pc < 0 ? '−' : '±') + Math.abs(pc) + '%</td></tr>'; }).join('') + '</tbody></table>',
       '<b>단과 레벨</b>은 사람마다 따로다. 싸우면 경험치를 얻어 오르고, 10레벨마다 단이 오른다. 단이 오를 때마다 기질에 맞는 능력치가 하나씩 더 오른다. 합일하지 않은 사람은 7단 Lv10에서 멈춘다.',
-      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주와 가솔이 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 둘 다 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 가문 목록은 공훈 순이다.' +
-        '<table class="htab"><thead><tr><th>계급</th><th>공훈</th><th>가주</th><th>가솔</th></tr></thead><tbody>' + DS.HVET.map(function (q, i) { return '<tr><th>' + DS.hName(i) + '</th><td class="num">' + q.at + '</td><td class="num">+' + q.pct + '%</td><td class="num">×' + q.mul.toFixed(2) + '</td></tr>'; }).join('') + '</tbody></table>',
+      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 가주(맹주 가문은 가문원도)가 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 가문 목록은 공훈 순이다.' +
+        '<table class="htab"><thead><tr><th>계급</th><th>공훈</th><th>가주</th><th>가문원</th></tr></thead><tbody>' + DS.HVET.map(function (q, i) { return '<tr><th>' + DS.hName(i) + '</th><td class="num">' + q.at + '</td><td class="num">+' + q.pct + '%</td><td class="num">×' + q.mul.toFixed(2) + '</td></tr>'; }).join('') + '</tbody></table>',
       '가문에서 태어난 아이는 등급이 높을수록 경험치가 빨리 쌓인다. 희귀가 보통이고 일반은 30% 느리고 전설은 30% 빠르다.',
-      '<b>대물림</b>: 가주가 바뀌면 다음 사람은 선대와의 레벨 차이 가운데 일부를 잇는다. 공훈 계급이 높을수록 많이 잇는다.' + '<table class="htab"><thead><tr><th>누가</th><th>신참</th><th>' + esc(DS.hName(DS.HVET.length - 1)) + '</th></tr></thead><tbody>' + [['다른 가문의 다음 가주', 'house'], ['맹주의 핏줄', 'kid'], ['맹주의 양자', 'adopt']].map(function (r) { var H = DS.HEIR[r[1]]; return '<tr><th>' + r[0] + '</th><td class="num">' + Math.round(H[0] * 100) + '%</td><td class="num">' + Math.round(H[1] * 100) + '%</td></tr>'; }).join('') + '</tbody></table>' + '<small>다른 가문의 가주를 맹주로 세우면 그 사람 가문의 계급으로 양자 몫을 잇는다.</small>',
+      '<b>대물림</b>: 맹주가 바뀌면 다음 맹주는 선대와의 레벨 차이 가운데 일부를 잇는다. 공훈 계급이 높을수록 많이 잇는다.' + '<table class="htab"><thead><tr><th>누가</th><th>신참</th><th>' + esc(DS.hName(DS.HVET.length - 1)) + '</th></tr></thead><tbody>' + [['맹주의 핏줄', 'kid'], ['맹주의 양자', 'adopt']].map(function (r) { var H = DS.HEIR[r[1]]; return '<tr><th>' + r[0] + '</th><td class="num">' + Math.round(H[0] * 100) + '%</td><td class="num">' + Math.round(H[1] * 100) + '%</td></tr>'; }).join('') + '</tbody></table>' + '<small>다른 가문의 가주를 맹주로 세우면 그 사람 가문의 계급으로 양자 몫을 잇는다.</small>',
       '위쪽 초상: 아래 알약은 그 가문 가주의 「단과 레벨」, 오른쪽 위 표식은 <b>가문 공훈</b>이다. 갈매기 하나 숙련, 둘 고참, 셋 정예, 별 용사, 빛나는 별 불멸, 그 위로 명가, 명문, 천하명문.',
       '사람의 등급과 단은 인물 정보의 단계표에서, 가문 공훈은 가문 창 맨 위에서 본다.']],
     ['조작', 0, [
@@ -1648,7 +1648,7 @@ function tabHelp() {
       '위쪽 초상화를 눌러 가문을 고른다. 고른 가문은 아래 정보 줄 왼쪽에 문장과 이름으로 보이고, 맨 아래 줄 <b>조작·태세</b> 칸은 그 가문 하나만 바꾼다.',
       '<b>조작 자동/수동</b>: 자동이면 알아서 싸우고 기술도 쓴다. 필살기만은 직접 눌러야 한다. 수동이면 내가 누른 대로 움직인다.',
       '<b>필살기</b>는 누구나 하나씩 타고나고 개인 5단에 깨어난다. 기술 줄 왼쪽 끝 ✦ 칸은 지금 조작하는 가문의 가주 것이다. 누르면 겨누지 않고 바로 쓴다. 조작하지 않는 사람과 전체 자동은 필살기를 쓰지 않는다. 조작하던 사람이 쓰러지면 맹주의 것으로 바뀐다.',
-      '<b>태세 돌격/호위</b>: 돌격은 가솔이 먼저 달려든다. 호위는 가주 곁의 적만 상대한다.',
+      '<b>태세 돌격/호위</b>: 맹주를 따르는 가문원에게만 있다. 돌격은 먼저 달려들고, 호위는 맹주 곁의 적만 상대한다.',
       '<b>전체 자동</b>을 켜면 모든 가문이 자동이 되어 적을 찾아 싸운다. 오른쪽 끝은 속도와 멈춤.',
       '전투 중에 조이스틱으로 걸으면 자동이든 수동이든 그 걸음이 먼저다. 손을 떼면 잠시 그 자리를 지킨다.',
       '목표 줄을 누르면 <b>길 안내</b>가 시작된다. 지도에서 어느 지역이든 눌러 바로 이동한다. 위험한 곳은 ⚠ 표시가 붙고, 한 번 경고한 뒤 다시 누르면 들어간다.']],
@@ -1666,19 +1666,19 @@ function tabHelp() {
       '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다.',
       '가방 목록도 다중 선택이 기본이다. 고른 뒤 아래 붉은 버튼으로 한꺼번에 판매한다. 잠근 장비는 선택할 수 없다.']],
     ['성장과 합일', 0, [
-      '경험치는 <b>사람마다</b> 받는다. 출전한 가문 셋의 가주, 가솔, 맹주는 모두 받고, 막사와 대기 가문의 사람은 5%만 받는다. 뒤처진 사람은 더 빨리 따라잡는다.',
-      '레벨 10마다 <b>단</b>이 오른다. 맹주는 모습이 바뀌고, 가주와 가솔은 테두리 빛이 바뀐다. 가주의 단만큼 가문의 기술이 열리고, 가솔은 3단, 5단, 7단에 제 기술을 익힌다.',
+      '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받고, 대기조는 ' + Math.round(DS.BAL.sbExp * 100) + '%를 받는다. 뒤처진 사람은 더 빨리 따라잡는다.',
+      '레벨 10마다 <b>단</b>이 오른다. 맹주는 모습이 바뀌고, 가주와 가문원은 테두리 빛이 바뀐다. 가주의 단만큼 가문의 기술이 열리고, 가문원은 3단, 5단, 7단에 제 기술을 익힌다.',
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
-      '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받고, 셋은 그 가문에 선다. 맹주는 맹주 그대로다. 가주가 떠난 가문에는 다음 가주가 온다.',
+      '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받는다. 아무도 제 자리를 떠나지 않는다.',
       '8단부터의 모습과 기술은 그 사람이 선 가문의 계열(강철, 바람, 별)을 따른다.',
-      '맹주가 쓰러지면 핏줄, 양자, 다른 가문의 가주 가운데 후계를 고른다. 다른 가문의 가주가 맹주가 되면 바뀌는 것은 맹주가 누구인가뿐이다. 가문 이름과 공훈, 연맹 이름은 그대로이고, 옛 맹주의 가문에는 다음 가주가 온다.']],
+      '맹주가 쓰러지면 핏줄, 양자, 다른 가문의 가주 가운데 후계를 고른다. 다른 가문의 가주가 맹주가 되면 바뀌는 것은 맹주가 누구인가뿐이다. 가문 이름과 공훈, 연맹 이름은 그대로이고, 옛 맹주의 가문은 대기조가 잇거나 빈 가문이 된다. 이을 어른이 아무도 없으면 대가 끊기고 스무 해가 흐른다.']],
     ['혼인과 아이', '혼인', [
-      '혼인은 <b>맹주만</b> 할 수 있다. 성별이 다른 부대원이면 누구나 배우자로 맞을 수 있다. 시나리오와 전투 밖이면 어디서나 「마을 일」에서 한다.',
+      '혼인은 <b>맹주만</b> 할 수 있다. 성별이 다른 가주나 대기조를 배우자로 맞는다. 대기조였던 배우자는 맹주 가문의 가문원이 되어 함께 싸운다. 시나리오와 전투 밖이면 어디서나 「마을 일」에서 한다.',
       '<b>인물 탭</b>의 「배우자 후보」 필터에서 혼인할 수 있는 사람과 아이의 예상 등급을 볼 수 있다.',
       '혼인하면 <b>해마다 확률로</b> 아이가 태어난다. 첫해가 가장 높고, 해가 갈수록, 아이가 늘수록 드물어진다.',
       '아이의 등급은 <b>배우자의 등급</b>을 닮는다. 운에 따라 한 단계 오르거나 내린다.',
       '대장 인물 정보의 <b>혼인 칸</b>에서 함께한 햇수, 아이 수, 다음 해 출산 확률을 볼 수 있다.',
-      '아이는 가계도에서 자라 15살에 막사로 들어온다.']],
+      '아이는 가계도에서 자라 15살에 <b>가문원</b>이 되어 맹주를 따라 싸운다. 빈 가문이 있으면 그 가문의 가주로 보낼 수 있다.', '<b>아이는 귀하다.</b> 영웅 모집은 비싸고, 가문원은 쓰러지면 돌아오지 않는다.']],
     ['나이', 0, [
       '모두 함께 나이를 먹는다. 1배속으로 10분이 한 해다.',
       '나이는 인물 정보 위쪽에 크게, 목록과 가문 카드에 작게 표시된다.',
@@ -2201,7 +2201,7 @@ function lgCard(id, parent) {
       '<p class="chsub">' + (p.sx ? '<i class="csx sx-' + esc(p.sx) + '">' + esc(lgSexTxt(p.sx)) + '</i>' : '') + (p.role ? '<i class="ccls">' + esc(String(p.role).replace(/,\s*/g, ' ')) + '</i>' : '') + (p.L ? '<i class="ccls">' + lvS(p.L) + '</i>' : '') + (p.gen ? '<i class="ccls">' + p.gen + '대</i>' : '') + agTag(p.ch || p.m || LS().P[p.id]) + ' ' + lgMoodTxt(p.mood) + '</p>' +
       (p.alive ? '' : '<small class="dd">' + esc(p.fused ? (LGU().fuseTag || '함께 오름') + (p.fusedInto && all[p.fusedInto] ? ' → ' + all[p.fusedInto].name : '') : p.coffin ? '관에 모심, ' + lgDiedTxt(p) : lgDiedTxt(p)) + '</small>') + '</div></div>';
     html += '<dl class="facts lgf"><dt>이름, 성</dt><dd>' + esc(p.full || p.name) + (p.osn ? ' <i class="own">옛 성 ' + esc(p.osn) + '</i>' : '') + '</dd>' +
-      (p.ag ? '<dt>나이</dt><dd>' + esc(agWord(p.ag) + (p.ag.old && p.alive ? ', ' + (AGL().elderWord || '노년') : '') + (p.young ? ' — ' + (AGL().youngHint || '15살에 막사로 들어온다.') : '')) + '</dd>' : '') +
+      (p.ag ? '<dt>나이</dt><dd>' + esc(agWord(p.ag) + (p.ag.old && p.alive ? ', ' + (AGL().elderWord || '노년') : '') + (p.young ? ' — ' + (AGL().youngHint || '15살에 가문원이 되어 함께 싸운다.') : '')) + '</dd>' : '') +
       '<dt>부모</dt><dd>' + lgNames(p.pa) + (p.ad ? ' <i class="own">양' + kidW + '</i>' : '') + '</dd>' +
       '<dt>배우자</dt><dd>' + lgNames(p.spouses) + '</dd><dt>자식</dt><dd>' + lgNames(p.kids) + '</dd>' +
       (p.fu ? '<dt>하나가 된 이</dt><dd>' + lgNames(p.fu) + '</dd>' : '') +
@@ -2295,7 +2295,7 @@ function lgSpouseRow(kind, ref) {
   var sub = sp ? (kids.length ? '자식 ' + kids.length + '명: ' + kids.map(function (k) { return (k.full || k.name) + (k.alive ? (k.young && k.ag ? '(' + k.ag.y + '살)' : '') : '(잠듦)'); }).join(', ') : '아직 자식이 없다') + ''      /* r16 person: 4.0 은 해마다 굴린다 — 옛 「정 n/3」 줄은 뺐다 (혼인 칸이 다음 해 가망을 보인다) */
     : p && p.pa.length && !kids.length ? (p.ad ? '양' + (p.sx === 'f' ? '녀' : '자') + ', ' : '') + '부모 ' + p.pa.map(function (x) { return all[x] ? all[x].name + (all[x].alive ? '' : '(잠듦)') : ''; }).filter(Boolean).join(', ') + '. ' + (kind === 'merc' ? '대장과 혼인할 수 있다.' : '혼인할 수 있다.')
     : kids.length ? '자식 ' + kids.length + '명: ' + kids.map(function (k) { return (k.full || k.name) + (k.alive ? (k.young && k.ag ? '(' + k.ag.y + '살)' : '') : '(잠듦)'); }).join(', ')
-    : (kind === 'merc' ? '대장과 혼인할 수 있다. ' : '부대원과 혼인할 수 있다. ') + '성별이 달라야 한다.';
+    : (kind === 'merc' ? '맹주와 혼인할 수 있다. ' : '가주나 대기조와 혼인할 수 있다. ') + '성별이 달라야 한다.';
   var html = '<h4>집안 <i class="own">' + esc(p && p.sur ? p.sur + ' 가문' : '') + (p && p.gen ? ' ' + p.gen + '세' : '') + '</i></h4><div class="row lgrow"><div class="tx"><b>' + (sp ? '배우자 ' + esc(sp.name) : '배우자 없음') + ' <i class="own">' + esc(lgSexTxt(sp ? sp.sx : sx)) + '</i>' + mood + '</b>' +
     '<small>' + esc(sub) + '</small></div><div class="btns">' + (sp ? '<button class="btn small" data-lgpart="' + kind + ':' + ref + '">이별</button>' : '<button class="btn small gold" data-lgwed="' + kind + ':' + ref + '">배우자로 맞기</button>') +
     (p ? '<button class="btn small" data-lgtree="' + esc(p.id) + '">가계도</button>' : '') + '</div></div>';
@@ -2336,7 +2336,7 @@ function lgPickSpouse(kind, ref, parent) {
     if (kind === 'ch') s.mercs.forEach(function (m) { list.push({ kind: 'merc', ref: m.id, name: (DS.fullName ? lgTry(function () { return DS.fullName(m); }) : '') || m.n || '', sx: lgSexOf('merc', m.id), role: DS.mercKind(m) + (m.o && s.chars[m.o] ? ', ' + DS.flagName(s.chars[m.o].cls) + (m.h ? ' 가주' : ' 가솔') : ', 막사'), grade: m.g, ag: agInfo(m), spr: mercSpr(m, 2) }); });
     list.forEach(function (c) { c.why = lgWhyNot(kind, ref, c.kind, c.ref); c.same = mySx && c.sx === mySx; });      // 고르기 전에는 화면에서만 따진다 (linCanWed 는 용병마다 가계도 사람을 만들기 때문에 누를 때만 부른다)
     var ok = list.filter(function (c) { return !c.why; }), no = list.filter(function (c) { return c.why; }), same = no.filter(function (c) { return c.same; }).length;
-    var html = '<p class="hint">' + esc(myName) + '의 짝을 고른다. 성별이 달라야 한다.' + (kind === 'merc' ? ' 부대원은 대장과만 혼인한다.' : '') + '</p>';
+    var html = '<p class="hint">' + esc(myName) + '의 짝을 고른다. 성별이 달라야 한다.' + (kind === 'merc' ? ' 혼인은 맹주와만 한다.' : ' 대기조였던 배우자는 가문원이 되어 함께 싸운다.') + '</p>';
     if (same) html += '<p class="lgsame">같은 성별(' + esc(lgSexTxt(mySx)) + ') ' + same + '명은 선택할 수 없다.</p>';
     if (!ok.length) html += '<p class="lock">지금 맞을 수 있는 사람이 없다.</p>';
     ok.forEach(function (c) { html += lgCandRow(c, '<button class="btn small gold" data-lgto="' + c.kind + ':' + c.ref + '">선택</button>'); });
@@ -2384,11 +2384,11 @@ function lgBirthShow(evs, cb) {
   else kids.forEach(function (k, i) {
     var pa = k.pa.map(function (x) { return all[x] ? all[x].name : ''; }).filter(Boolean).join(', '), house = k.sur ? k.sur + ' 가문' : '';
     html += (i ? '<hr class="lgsep">' : '') + (k.spr ? '<div class="lgbaby">' + k.spr + '</div>' : '') + '<h2>' + esc(josa(k.name, '이가')) + ' 태어났다</h2>' +
-      '<p>' + esc(lgFill(lgPick(LGL().birth) || '{a}. 막사에 아기 울음소리가 울렸다.', { a: k.name, b: pa, house: house, kid: k.full && k.full !== k.name ? k.name + ' ' + k.full : k.name })) + '</p>' +      // 3.2.1: {kid} 가 비어 「— .」 로 끝나던 것
+      '<p>' + esc(lgFill(lgPick(LGL().birth) || '{a}. 집에 아기 울음소리가 울렸다.', { a: k.name, b: pa, house: house, kid: k.full && k.full !== k.name ? k.name + ' ' + k.full : k.name })) + '</p>' +      // 3.2.1: {kid} 가 비어 「— .」 로 끝나던 것
       '<p class="dim">' + esc([k.full && k.full !== k.name ? k.full : '', lgSexTxt(k.sx), k.role, pa ? '부모 ' + pa : ''].filter(Boolean).join(', ')) + '</p>' + tmBirthLine(k.id) + (DS.rnBtn ? DS.rnBtn('p', k.id) : '');
   });
   var anyYoung = kids.some(function (k) { return k.young; });      // r6 나이: 갓난아기는 가계도에서 자라 15살에 막사로
-  html += '<p class="dim">' + esc(anyYoung ? (AGL().birthYoung || '갓난아기다. 가계도에서 자라 15살에 막사로 들어온다.') : (LGU().birthNote || '막사에서 자라 부대원으로 함께 싸운다.')) + '</p><button class="btn gold wide" data-close>확인</button></div>';
+  html += '<p class="dim">' + esc(anyYoung ? (AGL().birthYoung || '갓난아기다. 가계도에서 자라 15살에 가문원이 된다.') : (LGU().birthNote || '가문원으로 함께 싸운다.')) + '</p><button class="btn gold wide" data-close>확인</button></div>';
   var o = overlay(html, 'modal center');
   o.onclose = function () { if (cb) cb(); };
 }
@@ -2500,8 +2500,8 @@ function lgRite(ev, cb, griefs) {
       if (g.adkid.length) html += '<h5>입양한 자식</h5>' + g.adkid.map(lgCandBtn).join('');
       if (g.merc.length) {
         var fam = g.kid.length + g.adkid.length, cap = more ? 99 : fam ? 0 : 6;
-        html += '<h5>' + (fam ? '또는 ' : '') + '양자, 양녀로 삼을 부대원 <i>' + g.merc.length + '</i></h5>' + g.merc.slice(0, cap).map(lgCandBtn).join('') +
-          (g.merc.length > cap ? '<button class="btn wide lgmore" data-lgmore="1">' + (cap ? '나머지 ' + (g.merc.length - cap) + '명 보기' : '부대원 ' + g.merc.length + '명 가운데 선택') + '</button>' : '');
+        html += '<h5>' + (fam ? '또는 ' : '') + '양자, 양녀로 삼을 사람 <i>' + g.merc.length + '</i></h5>' + g.merc.slice(0, cap).map(lgCandBtn).join('') +
+          (g.merc.length > cap ? '<button class="btn wide lgmore" data-lgmore="1">' + (cap ? '나머지 ' + (g.merc.length - cap) + '명 보기' : '후보 ' + g.merc.length + '명 가운데 선택') + '</button>' : '');
       }
       if (g.cast.length) html += '<h5>아홉 집 사람 <i>' + g.cast.length + '</i></h5><p class="lgnote">성을 바꾸지 않는다. 바뀌는 것은 맹주뿐, 가문은 그대로다.</p>' + g.cast.map(lgCandBtn).join('');
       if (g.kin.length) html += '<h5>' + esc(H.kinHead || '먼 친척') + '</h5><p class="lgnote">' + esc(H.kinNote || '') + '</p>' + g.kin.map(lgCandBtn).join('');
@@ -2873,7 +2873,7 @@ function agComingShow(adults, elders, cb, mnats) {
   if (ad.length) {
     html += '<h2>' + esc(ad.length > 1 ? '아이 ' + ad.length + '명이 성년이 되었다' : josa(ad[0].name, '이가') + ' 성년이 되었다') + '</h2><p>' + esc(lgFill(lgPick((L.adult || []).slice(1)) || '', { a: ad[0].name })) + '</p>';
     ad.forEach(function (k) { html += '<div class="lgod">' + (k.spr || '') + '<span><b>' + esc(k.name) + (k.full && k.full !== k.name ? ' <i class="own">' + esc(k.full) + '</i>' : '') + '</b><small>' + esc([lgSexTxt(k.sx), k.role, agTxt(k.ref ? k.m || k : LS().P[k.id])].filter(Boolean).join(', ')) + '</small></span></div>'; });
-    html += '<p class="dim">' + esc(W.adultNote || '막사에 들어왔다. 부대원으로 함께 싸운다.') + '</p>';
+    html += '<p class="dim">' + esc(W.adultNote || '가문원이 되어 맹주를 따라 싸운다.') + '</p>';
   }
   if (el.length) {
     html += (ad.length ? '<hr class="lgsep">' : '') + '<h5>' + esc(W.elderHead || '머리에 서리가 내린 이') + '</h5>';
@@ -2883,7 +2883,7 @@ function agComingShow(adults, elders, cb, mnats) {
   var waits = mnats.filter(function (e) { return e.t === 'adultWait'; }); mnats = mnats.filter(function (e) { return e.t !== 'adultWait'; });
   if (waits.length) html += '<p class="lgwarn">' + esc(waits.map(function (e) { return e.text || ''; }).join(', ')) + '</p>';      // 성년이 되었지만 막사가 가득
   if (mnats.length) {      // 가계도에 오르지 않은 용병의 천수 (age.js 사건 mnat)
-    html += (ad.length || el.length ? '<hr class="lgsep">' : '') + '<h5>' + esc(W.mnatHead || '천수를 누리고 떠난 부대원') + '</h5><ul class="agnat">' + mnats.map(function (e) { return '<li><b>' + esc(e.name || '') + '</b><small>' + esc([e.kind, e.age != null ? '향년 ' + e.age : ''].filter(Boolean).join(', ')) + '</small></li>'; }).join('') + '</ul>' +
+    html += (ad.length || el.length ? '<hr class="lgsep">' : '') + '<h5>' + esc(W.mnatHead || '천수를 누리고 떠난 이') + '</h5><ul class="agnat">' + mnats.map(function (e) { return '<li><b>' + esc(e.name || '') + '</b><small>' + esc([e.kind, e.age != null ? '향년 ' + e.age : ''].filter(Boolean).join(', ')) + '</small></li>'; }).join('') + '</ul>' +
       '<p class="dim">' + esc(W.mnatNote || '이름은 추모 목록에 남았다.') + '</p>';
   }
   var o = overlay(html + '<button class="btn gold wide" data-close>확인</button></div>', 'modal center');
@@ -2955,7 +2955,7 @@ DS.openNewEra = function () {      // r42 (2.0.0): 옛 판 저장(1.x)은 이어
 };
 var newEra0 = function (raw, hasSave) {
   var L = DS.oldPeople(raw), ver = '', pick = -1; try { ver = JSON.parse(raw).ver || ''; } catch (e) {}
-  var SRC = { hero: '옛 대장', cmd: '가주였던 이', merc: '부대원', young: '아이', coffin: '관 속' };
+  var SRC = { hero: '옛 대장', cmd: '가주였던 이', merc: '사람', young: '아이', coffin: '관 속' };
   function face(p) {
     try {
       if (p.cls && DS.CLASSES[p.cls]) return sprTag(DS.lookName(p.cls, DS.CLASSES[p.cls].start || 1), '', 2);
@@ -3073,7 +3073,7 @@ function newGame(hasSave, r) {
     var L0 = LORE(), lore = r && L0.prologueR && L0.prologueR.length ? L0.prologueR : L0.prologue;
     var pro = lore && lore.length ? lore : ['옛날, 열 가문이 세상을 덮치던 「어스름」을 막아 냈다.', '세월이 흘러 가문은 흩어지고, 북쪽 하늘이 다시 어스름하게 물든다.',
       r ? '그대는 해밀 마을의 용병대장. 어쩐지 이 길이 처음이 아닌 것만 같다.' : '그대는 해밀 마을의 풋내기 용병대장. 이름 하나와 300골드가 전부다.',
-      r ? '마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.' : '먼저 용병소에서 부대원을 모집하고, 마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.'];
+      r ? '마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.' : '마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.'];
     story(pro, perk ? function () { showPerk(perk, null); } : null, '전민 열 가문의 시대');
   });
 }

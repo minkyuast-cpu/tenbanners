@@ -925,18 +925,19 @@ function updateActs() {
 }
 function renderSys() {
   var me = G.sim && G.sim.byId[G.sel], sv = G.save; if (!sv) return;
-  // r20 house: 왼쪽 묶음(#selSeg) = 고른 가문 하나(문장 + 조작 자동/수동 + 가솔 돌격/호위), 오른쪽 = 부대 전체(전체 자동 켜짐/꺼짐 · 속도 · 멈춤). 글자는 「지금 상태」를 쓴다
+  // r20 house: 왼쪽 묶음(#selSeg) = 고른 가문 하나(문장 + 조작 자동/수동 + 가문원 돌격/호위), 오른쪽 = 부대 전체(전체 자동 켜짐/꺼짐 · 속도 · 멈춤). 글자는 「지금 상태」를 쓴다
   var sch = me && sv.chars[me.ch], hn = sch ? DS.flagName(sch.cls) : '', seg = $('#selSeg');
   var au = !!(me && me.auto), ba = $('#bAutoU');
   ba.classList.toggle('on', au); $('b', ba).textContent = au ? '자동' : '수동'; $('small', ba).textContent = au ? '알아서 싸운다. 필살기는 직접' : '누른 곳으로 가고, 닿는 적만 친다';
   ba.setAttribute('aria-label', hn + ' 조작: ' + (au ? '자동' : '수동'));
   var bs = $('#bStance'), side = !!(sch && sch.st === 'side');
-  if (bs) { bs.classList.toggle('side', side); $('b', bs).textContent = side ? '호위' : '돌격'; $('small', bs).textContent = side ? '가주 곁만 지킨다. 덜 쓰러진다' : '가솔이 먼저 달려든다'; bs.setAttribute('aria-label', hn + ' 가솔: ' + (side ? '호위' : '돌격')); }
+  var hasF = !!(sch && DS.mercsOf(sv, sch.id).length);      // 2.2.0: 태세는 따르는 이(맹주 가문의 가문원)가 있을 때만
+  if (bs) { bs.hidden = !hasF; bs.classList.toggle('side', side); $('b', bs).textContent = side ? '호위' : '돌격'; $('small', bs).textContent = side ? '맹주 곁만 지킨다. 덜 쓰러진다' : '가문원이 먼저 달려든다'; bs.setAttribute('aria-label', hn + ' 가문원: ' + (side ? '호위' : '돌격')); }
   if (seg) {
     var ck = sch ? sch.cls + (sch.id === sv.hero ? 'L' : '') : '';
     if (seg.dataset.ck !== ck) { seg.dataset.ck = ck; $('#selCrest').innerHTML = sch && DS.houseCrestOf ? DS.houseCrestOf(sv, sch, 20) : ''; var fc = sch ? (DS.FLAG[sch.cls] || '#c9a96a') : '#5a4a36'; seg.style.setProperty('--fc', fc); $('#info').style.setProperty('--fc', fc); }
     seg.classList.toggle('none', !me); $('#selCrest').title = hn;
-    var sn = $('#selName'), sh = me ? '<i class="' + (au ? 'au' : 'mn') + '">' + (au ? '자동' : '수동') + '</i><i class="' + (side ? 'sd' : 'ch') + '">' + (side ? '호위' : '돌격') + '</i>' : '';      // r27 ux: 이름은 위 칩에 있다 — 여기에는 지금 지휘 상태만 (누르면 판)
+    var sn = $('#selName'), sh = me ? '<i class="' + (au ? 'au' : 'mn') + '">' + (au ? '자동' : '수동') + '</i>' + (hasF ? '<i class="' + (side ? 'sd' : 'ch') + '">' + (side ? '호위' : '돌격') + '</i>' : '') : '';      // r27 ux: 이름은 위 칩에 있다 — 여기에는 지금 지휘 상태만 (누르면 판)
     if (sn && sn.innerHTML !== sh) sn.innerHTML = sh;
     var spn = $('#spName'); if (spn) { spn.textContent = hn; $('#spCrest').innerHTML = $('#selCrest').innerHTML; var who = sch ? (sch.id === sv.hero ? DS.charName(sch) : DS.bearerName ? DS.bearerName(sv, sch) : '') : ''; $('#spWho').textContent = who ? '가주 ' + who : ''; $('#selPop').style.setProperty('--fc', sch ? (DS.FLAG[sch.cls] || '#c9a96a') : '#5a4a36'); }
     if (!me && selPopOn()) selPop(false);
@@ -1161,7 +1162,7 @@ function retreatAsk(fell, goneNm, goneM) {
     var nm = goneNm || DS.charName(fell);
     html = '<div class="result fell"><span class="fellpic">' + charSpr(fell, 3, 0, goneM) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
       '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + (goneNm ? '돌아오지 못한다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
-      '<p class="dim">물러나면 남은 사람을 지킨다. 남은 가문 ' + live + '개와 부대원은 살아 돌아가고 얻은 경험치와 골드도 남는다. ' + esc(goneNm ? DS.flagName(fell.cls) + '은 다른 부대원이 이어받는다.' : nm + '의 자리는 후계가 잇는다.') + '</p>' +
+      '<p class="dim">물러나면 남은 사람을 지킨다. 남은 가문 ' + live + '개와 가문원은 살아 돌아가고 얻은 경험치와 골드도 남는다. ' + esc(goneNm ? DS.flagName(fell.cls) + '은 대기조가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : nm + '의 자리는 후계가 잇는다.') + '</p>' +
       '<button class="btn red wide" id="yesRet">퇴각</button><button class="btn wide" data-close>계속 싸우기</button></div>';
   } else {
     html = '<div class="result"><h2>퇴각할까?</h2><p>얻은 경험치와 골드는 남는다.</p>' +
@@ -1197,8 +1198,8 @@ function cmdFell(u, gone) {
   if (hunt) { sim.hunt = false; sv.opt.hunt = false; renderSys(); }
   toastOff();
   overlay('<div class="result fell"><span class="fellpic">' + charSpr(ch, 3, 0, gone || null) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
-    '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + esc(gone ? '돌아오지 못한다. ' + DS.flagName(ch.cls) + '은 아무것도 잃지 않았다. 다른 부대원이 이어받는다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
-    '<p class="dim">' + (hunt ? '자동 사냥을 멈췄다. ' : '') + '부대원은 쓰러지면 돌아오지 않는다. 남은 이들은 적에게서 멀어지면 싸움에서 벗어난다.</p>' +
+    '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + esc(gone ? '돌아오지 못한다. ' + DS.flagName(ch.cls) + '은 대기조가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
+    '<p class="dim">' + (hunt ? '자동 사냥을 멈췄다. ' : '') + '쓰러진 이는 돌아오지 않는다. 남은 이들은 적에게서 멀어지면 싸움에서 벗어난다.</p>' +
     '<button class="btn wide" data-close>확인</button></div>', 'modal center');
 }
 function pulseRetreat() { var q = $('#quest'); if (!q || !q._retreat) return; q.classList.remove('pulse'); void q.offsetWidth; q.classList.add('pulse'); clearTimeout(q._pt); q._pt = setTimeout(function () { q.classList.remove('pulse'); }, 5200); }
@@ -1961,11 +1962,11 @@ DS.startGame = function () {
     // 판에 없는 HUD 칸은 여기서 덧붙인다: 버프·상태 칩, 보스 시전 막대와 한마디, 용병 태세 버튼
     $('#info').insertBefore(h('<span id="infoFx"></span>'), $('#info .tick'));
     $('#boss').insertBefore(h('<i class="bct"></i>'), $('#boss .bbar')); $('#boss').appendChild(h('<i class="cbar"><u></u></i>')); $('#boss').appendChild(h('<p id="bsay"></p>'));
-    var bs = h('<button id="bStance" class="sy"><span class="lb">가솔</span><b>돌격</b><small>먼저 달려든다</small></button>');
+    var bs = h('<button id="bStance" class="sy"><span class="lb">가문원</span><b>돌격</b><small>먼저 달려든다</small></button>');
     $('#selSeg').appendChild(bs);
     hudIcons(); pressFx(); histInit();      // r26
     // r27 ux: 「조작」「태세」는 아래 띠에서 빼고, 고른 가문의 문장(정보 줄 왼쪽)을 누르면 뜨는 작은 판으로 — 아래 띠는 부대 전체(전체 자동·속도·멈춤) + 소모품 + 기술만
-    $('#selCtx').setAttribute('role', 'button'); $('#selCtx').setAttribute('aria-haspopup', 'dialog'); $('#selCtx').setAttribute('aria-label', '고른 가문 지휘: 조작, 가솔');
+    $('#selCtx').setAttribute('role', 'button'); $('#selCtx').setAttribute('aria-haspopup', 'dialog'); $('#selCtx').setAttribute('aria-label', '고른 가문 지휘: 조작, 태세');
     $('#selCtx').insertAdjacentHTML('beforeend', '<i class="car" aria-hidden="true"></i>');
     $('#selCtx').addEventListener('click', function () { var me = G.sim && G.sim.byId[G.sel]; if (!me) return; A('tap'); selPop(!selPopOn()); });
     $('#spX').addEventListener('click', function () { A('close'); selPop(false); });
