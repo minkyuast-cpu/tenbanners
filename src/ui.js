@@ -1397,7 +1397,7 @@ function charSheet(id, parent) {
     html += vitBars(u, hero ? ch.hp : bw && bw.hp, ch.mp, bw, meritBar(ch)) + fuseLine(s, ch);
     // 가주
     var sbs = hero ? [] : DS.sbOf(s, ch.id), nk = kinFree(s).length;
-    if (hero) html += '<h4>가주</h4>' + (bw ? pRow('data-hinfo="1"', charSpr(ch, 2), esc(DS.charName(ch)), bw.g || 3, '<i class="mlv">' + lv(DS.pL(bw)) + '</i><i class="tg">맹주</i>' + agTag(ch), '<i class="go" aria-hidden="true">›</i>') : '<p class="hint">맹주의 자리가 비었다. 교회에서 뒤를 이을 사람을 정한다</p>');
+    if (hero) html += '<h4>가주</h4>' + (bw ? pRow('data-hinfo="1"', charSpr(ch, 2), esc(DS.charName(ch)), bw.g || 3, '<i class="mlv">' + lv(DS.pL(bw)) + '</i><i class="tg">맹주</i>' + agTag(ch), '<i class="go" aria-hidden="true">›</i>') : '<p class="hint">맹주의 자리가 비었다. 누가 이을지 고른다</p>');
     else if (bw) {
       var own = bw.cast && DS.castFlag(s, bw.cast) === ch;
       html += '<h4>가주</h4>' + pRow('data-info="' + bw.id + '"', mercSpr(bw, 2), esc(bw.ttl || bw.n || '') + (bw.cast && !own ? ' <i class="own">' + esc(DS.castHouse(bw.cast)) + '</i>' : ''), bw.g, '<i class="mlv">' + lv(DS.pL(bw)) + '</i>' + (bw.t && DS.TRAITS[bw.t] ? '<i class="mtr">' + esc(DS.TRAITS[bw.t].name) + '</i>' : '') + agTag(bw), sbs.length ? '<button class="btn small" data-bn="pick"' + (w === 'battle' ? ' disabled' : '') + '>교체</button>' : '<i class="go" aria-hidden="true">›</i>');

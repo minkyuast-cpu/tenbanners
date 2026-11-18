@@ -726,7 +726,7 @@ function renderChips() {
     el.addEventListener('click', function () {
       DS.Audio.unlock();
       var cu = G.sim.byId[uid], S = G.aim && aimDef(G.aim.id), me = G.sim.byId[G.sel];
-      if (!cu) { toast(id === sv.hero ? '숨을 거둔 맹주다. 싸움이 끝나면 후계를 정한다.' : '쓰러진 가주다. 싸움이 끝나면 막사의 같은 병과가 잇는다.'); return; }
+      if (!cu) { toast(id === sv.hero ? '숨을 거둔 맹주다. 싸움이 끝나면 누가 이을지 고른다.' : '쓰러진 가주다. 싸움이 끝나면 막사의 같은 병과가 잇는다.'); return; }
       if (S && S.tg === 'ally' && me && !cu.dead) { aimAt(me, G.aim.id, S, cu); return; }      // 아군 대상 기술·아이템은 초상을 눌러 건넨다
       if (G.sel === uid && !G.sim.combat && DS.charSheetOpen) { A('tap'); DS.charSheetOpen(id); return; }      // 2.2.0: 고른 가문을 한 번 더 누르면 가문 창 (장비는 머리에)
       A('tap'); select(uid);
@@ -2018,7 +2018,7 @@ function pressFx() {
 }
 // 이어하기 직후의 후계 의식: 떠 있는 창(새 소식 등)이 닫히고 싸움이 아닐 때 한 번. 그새 다른 길(안전망·싸움 뒤 의식)로 자리가 찼으면 그만둔다.
 function resumeRite() {
-  if (DS.linVacant(G.save).length) toast('전투 중에 끊긴 게임이다. 쓰러진 대장의 후계를 교회에서 정한다', 5200);
+  if (DS.linVacant(G.save).length) toast('맹주가 쓰러진 채 멈춘 게임이다. 누가 이을지 고른다', 5200);
   setTimeout(function go() {
     if (!G.save || !DS.linVacant(G.save).length) { G.riteBusy = false; return; }
     if (G.hold > 0 || G.scn || (G.sim && G.sim.combat)) { setTimeout(go, 500); return; }
