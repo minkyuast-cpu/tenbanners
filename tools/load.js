@@ -4,11 +4,11 @@
 // 화면이 없는 자리를 메우는 것: window = globalThis, localStorage (메모리), DS.lvText, performance.now
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
-const SRC = path.join(__dirname, '..', 'src');
+const SRC = process.env.LOAD_SRC || path.join(__dirname, '..', 'src');      // LOAD_SRC: 다른 판의 src (옛 저장 만들기 — tools/mkv12.js)
 const SKIP = { game: 1, joystick: 1, ui: 1 };
 let DS0 = null;
 function order() {
-  const b = fs.readFileSync(path.join(__dirname, '..', 'build.js'), 'utf8'), m = /const ORDER = (\[[^\]]+\])/.exec(b);
+  const b = fs.readFileSync(path.join(SRC, '..', 'build.js'), 'utf8'), m = /const ORDER = (\[[^\]]+\])/.exec(b);
   const list = JSON.parse(m[1].replace(/'/g, '"'));
   return list.concat(['online', 'migrate']).filter(f => !SKIP[f] && fs.existsSync(path.join(SRC, f + '.js')));
 }

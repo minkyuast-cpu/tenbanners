@@ -119,7 +119,7 @@ var MIGRATE = {
   }
 };
 // 2.2.0 판 올림: 가주는 그대로 · 맹주 집 사람(핏줄 아이·배우자·물러난 선대)은 맹주 가문의 가문원 · 가솔은 그 가문의 대기조(등급 → 레벨 순으로 둘, 아홉 집 사람과 합일한 이 먼저)
-//   · 남는 가솔과 막사의 사람은 떠나며 골드를 남긴다 (사람마다 기본 모집값 × 등급 몫 × ½) · 2.1 에서 「곧 온다」던 다음 가주는 빈 가문이면 그대로 선다 (DS.migSucc). 결과는 DS.lastMig13
+//   · 남는 가솔과 막사의 사람은 떠나며 골드를 남긴다 (사람마다 옛 기본 모집값(지금 단) × 등급 몫(일반 ½ … 전설 2½) × ½) · 2.1 에서 「곧 온다」던 다음 가주는 빈 가문이면 그대로 선다 (DS.migSucc). 결과는 DS.lastMig13
 DS.MIG13 = { gk: [0, 0.5, 0.75, 1, 1.6, 2.5], k: 0.5 };
 DS.mig13 = function (s) {
   var R = { sb: 0, kin: 0, left: 0, gold: 0, succ: 0, seat: 0 }; DS.lastMig13 = R;
@@ -144,9 +144,9 @@ DS.mig13 = function (s) {
     by[o].sort(function (a, b) { return (b.cast ? 1 : 0) - (a.cast ? 1 : 0) || (b.fz ? 1 : 0) - (a.fz ? 1 : 0) || (+b.g || 1) - (+a.g || 1) || (+b.L || 1) - (+a.L || 1) || a.id - b.id; });
     by[o].forEach(function (m, i) { if (i < (DS.SB_MAX || 2)) { m.sb = 1; R.sb++; } else leave.push(m); });
   });
-  var M = DS.MIG13, gone = {};
+  var M = DS.MIG13, gone = {}, t0 = DS.heroTier ? DS.heroTier(s) : 1;
   leave.forEach(function (m) {
-    var g = Math.max(1, Math.min(5, Math.round(+m.g || 1))), t = DS.tierOfL(Math.max(1, Math.min(100, Math.round(+m.L || 1))));
+    var g = Math.max(1, Math.min(5, Math.round(+m.g || 1))), t = Math.max(t0, DS.tierOfL(Math.max(1, Math.min(100, Math.round(+m.L || 1)))));      // 지금 모집값 기준 (그 사람의 단이 더 높으면 그 단)
     R.gold += Math.round(DS.mercCost(t) * M.gk[g] * M.k / 10) * 10; R.left++;
     if (m.it && s.items && typeof s.items === 'object') s.items[m.it] = (s.items[m.it] || 0) + 1;
     gone[m.id] = 1;
