@@ -29,6 +29,7 @@ D.allySet && D.allySet(s, '펜드래곤');
 const zc = {};
 function zone(id) { return zc[id] || (zc[id] = D.buildZone(id)); }
 function tidy() {
+  if (D.linVacant(s).length && process.env.BOTLOG) { const hs = D.linHeirs(s, s.hero); st.log.push('RITE @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' yr' + D.calNow(s).yr + ' heirs ' + hs.map(h => h.kind + (h.young ? 'Y' : '')).join(',') + ' mercs ' + s.mercs.length + ' party ' + D.partyIds(s).length); }
   if (D.linVacant(s).length) { const ev = D.linAutoAll(s) || []; ev.forEach(e => { if (e.t === 'lapse') { st.lapse++; st.log.push('LAPSE @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' houses ' + D.partyIds(s).length + ' kin ' + D.mercsOf(s, s.hero).length); } }); }
   const seat = D.sbTick(s); st.sbSeat += seat.length;
   D.mercTidy(s); D.pSync(s);
@@ -43,8 +44,9 @@ function recruit() {
     const room = D.heroRoom(s); if (!room.length) return;
     const vac = D.bnEmpty(s).length, price = D.recruitPrice(s, 0), keep = 200 * D.heroTier(s);
     let pay = 0;
+    const old = D.charList(s).some(ch => { const b = ch.id === s.hero ? null : D.bearer(s, ch, 1); return b && b.eld && !D.sbOf(s, ch.id).length; });      // 노년 가주가 있는데 대기조가 없다 (사람이 「노년」 꼬리표를 보고 준비하듯)
     if (s.tickets > 0) { s.tickets--; st.tickets++; }
-    else if ((vac && s.gold >= price + keep) || s.gold >= price * 3 + keep) { s.gold -= price; D.recruitPaid(s, 1); pay = price; }
+    else if (((vac || old) && s.gold >= price + keep) || s.gold >= price * 3 + keep) { s.gold -= price; D.recruitPaid(s, 1); pay = price; }
     else return;
     const r = D.recruitHero(s, rnd); if (!r) { s.gold += pay; return; }
     st.recruits++; st.recruitGold += pay;
@@ -121,13 +123,20 @@ function after(scnWin, sc) {
   ev.forEach(e => { if (e.t === 'birth') st.births++; if (e.t === 'death' && e.nat) st.log.push('천수 ' + (e.k || '') + ' @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' yr' + D.calNow(s).yr); });
   tidy();
 }
+function farmL() {      // 들판의 기준 레벨: 보통은 부대 평균, 단 문턱(8단·9단) 앞에서는 가장 앞선 사람 쪽으로 (그 사람이 경험치를 제대로 받게)
+  const sc = D.nextScn ? D.nextScn(s) : null, L = D.partyL(s);
+  if (!sc || !(sc.tier > D.partyTier(s))) return L;
+  let top = 0; D.persons(s).forEach(p => { if (p.dep && (p.who.fz || DS_pL(p.who) < 70)) top = Math.max(top, DS_pL(p.who)); });
+  return Math.max(L, Math.min(top, L + 8));
+}
+function DS_pL(w) { return D.pL(w); }
 function farmZone() {
-  const L = D.partyL(s); let best = null;
+  const L = farmL(); let best = null;
   Object.keys(D.ZONES).forEach(k => { const Z = D.ZONES[k]; if (Z.town || !Z.L) return; if (Z.L[0] <= L + 2 && (!best || Z.L[0] > D.ZONES[best].L[0])) best = k; });
   return best || 'dawn';
 }
 function fieldFight() {
-  const zid = farmZone(), z = zone(zid), L = D.partyL(s);
+  const zid = farmZone(), z = zone(zid), L = farmL();
   let gs = z.spawns.filter(g => g.L <= L + 1); if (!gs.length) gs = z.spawns.slice().sort((a, b) => a.L - b.L).slice(0, 2);
   const g = gs[Math.floor(rnd() * gs.length)];
   const sim = new D.Sim({ map: z.rows, mode: 'zone', spawns: [{ id: g.id, x: g.x, y: g.y, L: g.L, list: g.list.slice() }], seed: (rnd() * 1e6 | 0) + 1, inv: s.items,
