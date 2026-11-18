@@ -373,7 +373,7 @@ function enterZone(id, from, pos) {
     mk: function (type, o) { return DS.enemySpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, diff: 0.72, zone: id, save: s }); } });      // zone: 기획팀 정예 무리가 어느 지역인지 안다
   G.sim = sim; G.lost = [];
   var sbS = [];
-  if (!(DS.egPassOn && DS.egPassOn(s))) { if (DS.sbTick) sbS = DS.sbTick(s); if (DS.mercTidy) DS.mercTidy(s); }      // 2.2.0: 가주가 떠난 가문은 대기조가 잇는다 · 3.3.0: 스무 해 창 동안은 편성을 건드리지 않는다
+  if (!(DS.egPassOn && DS.egPassOn(s))) { if (DS.sbTick) sbS = DS.sbTick(s); if (DS.mercTidy) DS.mercTidy(s); }      // 2.2.0: 가주가 떠난 가문은 막사의 같은 병과가 잇는다 · 3.3.0: 스무 해 창 동안은 편성을 건드리지 않는다
   placeParty(sim, start.x, start.y);
   sim.hunt = false;
   if (DS.fieldEnter) DS.fieldEnter(sim, z, s);      // r47: 들판의 기습·필드 보스 (field.js)
@@ -500,7 +500,7 @@ function onLose() {
     toastOff();
     var o = overlay('<div class="result lose r26">' + (DS.sceneArt ? DS.sceneArt('lose') || '' : '') + '<div class="rhead"><span class="rskull">' + icon('skull', 34) + '</span><h2><span class="gtext">전멸</span></h2></div><p class="gfx-in" style="--i:0">가주 ' + n + '명이 쓰러져 돌아오지 못한다. 가문과 남은 이들이 ' + esc(DS.ZONES[sv.town].name) + ' 교회로 돌아왔다.</p>' +
       (why.length ? '<ul class="why">' + why.map(function (t, i) { return '<li class="gfx-in" style="--i:' + (i + 1) + '">' + esc(t) + '</li>'; }).join('') + '</ul>' : '') +
-      '<p class="dim">' + (hd ? '교회에서 맹주의 뒤를 이을 사람을 정한다. ' : '') + '가주를 잃은 가문은 대기조가 잇는다. 대기조가 없으면 빈 가문으로 남는다.</p><button class="btn gold wide" data-close>교회로</button></div>', 'modal center');
+      '<p class="dim">' + (hd ? '교회에서 맹주의 뒤를 이을 사람을 정한다. ' : '') + '가주를 잃은 가문은 막사의 같은 병과가 잇는다. 없으면 빈 가문으로 남는다.</p><button class="btn gold wide" data-close>교회로</button></div>', 'modal center');
     o.onclose = function () { lineageFlush(function () { backToField(true); }); };
   }, 1400);
 }
@@ -725,7 +725,7 @@ function renderChips() {
     el.addEventListener('click', function () {
       DS.Audio.unlock();
       var cu = G.sim.byId[uid], S = G.aim && aimDef(G.aim.id), me = G.sim.byId[G.sel];
-      if (!cu) { toast(id === sv.hero ? '숨을 거둔 맹주다. 싸움이 끝나면 후계를 정한다.' : '쓰러진 가주다. 싸움이 끝나면 대기조가 잇는다.'); return; }
+      if (!cu) { toast(id === sv.hero ? '숨을 거둔 맹주다. 싸움이 끝나면 후계를 정한다.' : '쓰러진 가주다. 싸움이 끝나면 막사의 같은 병과가 잇는다.'); return; }
       if (S && S.tg === 'ally' && me && !cu.dead) { aimAt(me, G.aim.id, S, cu); return; }      // 아군 대상 기술·아이템은 초상을 눌러 건넨다
       A('tap'); select(uid);
     });
@@ -1118,7 +1118,7 @@ function fusePlan(sv) {
   var P = DS.fuseProg(sv); if (!P.can) return null;
   return { name: '합일', st: { ok: P.ok, miss: [] }, total: P.of, done: P.n, low: P.low.slice(0, Math.max(0, P.of - P.ready.length)), crest: P.crest };
 }
-function emptyHouses(sv) { return DS.bnEmpty ? DS.bnEmpty(sv).length : 0; }      // 2.2.0: 가주도 대기조도 없는 가문
+function emptyHouses(sv) { return DS.bnEmpty ? DS.bnEmpty(sv).length : 0; }      // 2.2.0: 가주가 없고 막사에 같은 병과도 없는 가문
 var pitZ;
 function pitZone() { if (pitZ === undefined) { pitZ = null; for (var id in DS.ZONES) if ((DS.ZONES[id].gates || []).some(function (g) { return g.dungeon; })) pitZ = id; } return pitZ; }
 // 지금 지역에서 목적지(다른 지역의 장소)로 가는 길잡이: 같은 지역이면 그 장소, 아니면 그쪽 출구
@@ -1162,7 +1162,7 @@ function retreatAsk(fell, goneNm, goneM) {
     var nm = goneNm || DS.charName(fell);
     html = '<div class="result fell"><span class="fellpic">' + charSpr(fell, 3, 0, goneM) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
       '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + (goneNm ? '돌아오지 못한다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
-      '<p class="dim">물러나면 남은 사람을 지킨다. 남은 가문 ' + live + '개와 가문원은 살아 돌아가고 얻은 경험치와 골드도 남는다. ' + esc(goneNm ? DS.flagName(fell.cls) + '은 대기조가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : nm + '의 자리는 후계가 잇는다.') + '</p>' +
+      '<p class="dim">물러나면 남은 사람을 지킨다. 남은 가문 ' + live + '개와 가문원은 살아 돌아가고 얻은 경험치와 골드도 남는다. ' + esc(goneNm ? DS.flagName(fell.cls) + '은 막사에 같은 병과가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : nm + '의 자리는 후계가 잇는다.') + '</p>' +
       '<button class="btn red wide" id="yesRet">퇴각</button><button class="btn wide" data-close>계속 싸우기</button></div>';
   } else {
     html = '<div class="result"><h2>퇴각할까?</h2><p>얻은 경험치와 골드는 남는다.</p>' +
@@ -1198,7 +1198,7 @@ function cmdFell(u, gone) {
   if (hunt) { sim.hunt = false; sv.opt.hunt = false; renderSys(); }
   toastOff();
   overlay('<div class="result fell"><span class="fellpic">' + charSpr(ch, 3, 0, gone || null) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
-    '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + esc(gone ? '돌아오지 못한다. ' + DS.flagName(ch.cls) + '은 대기조가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
+    '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + esc(gone ? '돌아오지 못한다. ' + DS.flagName(ch.cls) + '은 막사에 같은 병과가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
     '<p class="dim">' + (hunt ? '자동 사냥을 멈췄다. ' : '') + '쓰러진 이는 돌아오지 않는다. 남은 이들은 적에게서 멀어지면 싸움에서 벗어난다.</p>' +
     '<button class="btn wide" data-close>확인</button></div>', 'modal center');
 }
@@ -1836,7 +1836,7 @@ function meritAll(pts) {
   DS.hUps = [];
   return ups;
 }
-// 전투가 끝나면: 대기조가 빈 가문을 잇고(DS.sbTick), 가주가 선 가문의 깃발 유닛과 흩어졌던 가문원이 이끄는 이 곁으로 돌아온다 (쓰러진 이는 돌아오지 않는다)
+// 전투가 끝나면: 막사의 같은 병과가 빈 가문을 잇고(DS.sbTick), 가주가 선 가문의 깃발 유닛과 흩어졌던 가문원이 이끄는 이 곁으로 돌아온다 (쓰러진 이는 돌아오지 않는다)
 function refillMercs() {
   var sim = G.sim, s = G.save, seat = DS.sbTick && !G.scn ? DS.sbTick(s) : [];
   if (DS.mercTidy) DS.mercTidy(s);
@@ -1862,7 +1862,7 @@ function refillMercs() {
   sim.ev = sim.ev.filter(function (e) { return e.t !== 'spawn'; });
   if (seat.length) renderChips();
 }
-// 2.2.0: 대기조가 빈 가문을 이었다 — 「센주 가문의 가주를 대기조 난새가 잇는다」. 대기조도 없으면 그 가문은 빈 채로 (부대 탭에 「빈 가문」)
+// 2.2.0: 막사의 사람이 빈 가문을 이었다 — 「센주 가문의 가주를 막사의 난새가 잇는다」. 같은 병과가 없으면 그 가문은 빈 채로 (부대 탭에 「빈 가문」)
 function bnNote(list) { (list || []).forEach(function (e) { if (e && e.text) later(e.text, 4200); }); }
 DS.bnNote = bnNote;
 function checkExit() {

@@ -118,9 +118,8 @@ var MIGRATE = {
     s.v = 13;
   }
 };
-// 2.2.0 판 올림: 가주는 그대로 · 맹주 집 사람(핏줄 아이·배우자·물러난 선대)은 맹주 가문의 가문원 · 가솔은 그 가문의 대기조(등급 → 레벨 순으로 둘, 아홉 집 사람과 합일한 이 먼저)
-//   · 남는 가솔과 막사의 사람은 떠나며 골드를 남긴다 (사람마다 옛 기본 모집값(지금 단) × 등급 몫(일반 ½ … 전설 2½) × ½) · 2.1 에서 「곧 온다」던 다음 가주는 빈 가문이면 그대로 선다 (DS.migSucc). 결과는 DS.lastMig13
-DS.MIG13 = { gk: [0, 0.5, 0.75, 1, 1.6, 2.5], k: 0.5 };
+// 2.2.0 판 올림: 가주는 그대로 · 맹주 집 사람(핏줄 아이·배우자·물러난 선대)은 맹주 가문의 가문원 · 옛 가솔과 막사의 사람은 모두 막사로 (떠나는 이도 돌려받는 골드도 없다)
+//   · 2.1 에서 「곧 온다」던 다음 가주는 빈 가문이면 그대로 선다 (DS.migSucc) · 그 뒤 빈 가문은 막사의 같은 병과가 잇는다 (DS.sbTick). 결과는 DS.lastMig13
 DS.mig13 = function (s) {
   var R = { sb: 0, kin: 0, left: 0, gold: 0, succ: 0, seat: 0 }; DS.lastMig13 = R;
   if (!s || !s.chars) return R;
@@ -132,36 +131,21 @@ DS.mig13 = function (s) {
   s.mercs.forEach(function (m) { if (m.h && (!valid(+m.o) || +m.o === hid)) delete m.h; });
   var seen = {}; s.mercs.forEach(function (m) { if (!m.h) return; if (seen[m.o]) delete m.h; else seen[m.o] = 1; });
   try { R.succ = DS.migSucc ? DS.migSucc(s) : 0; } catch (e) { R.succ = 0; }
-  var by = {}, leave = [];
   s.mercs.forEach(function (m) {
     delete m.sb;
     if (m.h) return;
     if (line(m)) { m.kn = 1; m.o = hid; R.kin++; return; }
-    var home = m.cast && DS.castFlag ? DS.castFlag(s, m.cast) : null, o = home ? home.id : +m.o;
-    if (valid(o)) { m.o = o; (by[o] = by[o] || []).push(m); } else leave.push(m);
+    m.o = 0; m.sb = 1; R.sb++;      // 옛 가솔 · 옛 막사 → 막사
   });
-  Object.keys(by).forEach(function (o) {
-    by[o].sort(function (a, b) { return (b.cast ? 1 : 0) - (a.cast ? 1 : 0) || (b.fz ? 1 : 0) - (a.fz ? 1 : 0) || (+b.g || 1) - (+a.g || 1) || (+b.L || 1) - (+a.L || 1) || a.id - b.id; });
-    by[o].forEach(function (m, i) { if (i < (DS.SB_MAX || 2)) { m.sb = 1; R.sb++; } else leave.push(m); });
-  });
-  var M = DS.MIG13, gone = {}, t0 = DS.heroTier ? DS.heroTier(s) : 1;
-  leave.forEach(function (m) {
-    var g = Math.max(1, Math.min(5, Math.round(+m.g || 1))), t = Math.max(t0, DS.tierOfL(Math.max(1, Math.min(100, Math.round(+m.L || 1)))));      // 지금 모집값 기준 (그 사람의 단이 더 높으면 그 단)
-    R.gold += Math.round(DS.mercCost(t) * M.gk[g] * M.k / 10) * 10; R.left++;
-    if (m.it && s.items && typeof s.items === 'object') s.items[m.it] = (s.items[m.it] || 0) + 1;
-    gone[m.id] = 1;
-  });
-  s.mercs = s.mercs.filter(function (m) { return !gone[m.id]; });
-  s.gold = Math.max(0, Math.round(+s.gold || 0)) + R.gold;
   if (s.opt && typeof s.opt === 'object') delete s.opt.refill;
   for (var id in s.chars) if (s.chars[id] && typeof s.chars[id] === 'object') { delete s.chars[id].gm; delete s.chars[id].manual0; }
   if (s.chars[hid] && s.chars[hid].st == null) s.chars[hid].st = 'side';      // 맹주를 따르는 가문원은 「호위」로 (예전 가솔의 「앞장」 기본값 대신)
   try { if (DS.sbTick) R.seat = DS.sbTick(s).length; } catch (e) { R.seat = 0; }
-  var news = '2.2.0 「한 사람 한 사람」: 가솔과 막사가 없어졌다. 가주가 선 가문은 모두 싸운다.';
-  if (R.sb) news += ' 가솔 ' + R.sb + '명은 그 가문의 대기조가 되었다.';
+  var news = '2.2.0 「한 사람 한 사람」: 가솔이 없어졌다. 가주가 선 가문은 모두 싸운다.';
+  if (R.sb) news += ' 가솔과 막사의 사람 ' + R.sb + '명은 모두 막사에서 기다린다. 빈 가문이 생기면 같은 병과가 가주가 된다.';
   if (R.kin) news += ' 맹주 집 사람 ' + R.kin + '명은 가문원으로 함께 싸운다.';
-  if (R.left) news += ' ' + R.left + '명은 떠나며 ' + R.gold.toLocaleString() + ' 골드를 남겼다.';
   if (R.succ) news += ' 오기로 한 가주 ' + R.succ + '명이 자리에 섰다.';
+  if (R.seat) news += ' 막사에서 ' + R.seat + '명이 빈 가문의 가주가 되었다.';
   s.news = (Array.isArray(s.news) ? s.news : []).concat([news, '영웅 모집은 이제 비싸고 병과는 무작위다. 빈 가문은 모집이나 맹주의 아이로 채운다.']);
   return R;
 };
@@ -258,7 +242,7 @@ DS.fixSave = function (s) {
     if (m.bk != null) m.bk = Math.max(0, Math.round(+m.bk || 0)); if (m.sv != null) m.sv = Math.max(0, Math.round(+m.sv || 0));
     if (m.h != null) { if (m.h && m.o) m.h = 1; else delete m.h; }      // 4.0: 깃발을 든다 (인구를 차지하지 않는다)
     if (m.cast != null && !(DS.CAST_NAME && own(DS.CAST_NAME, m.cast))) delete m.cast;
-    if (m.sb != null) { if (m.sb && m.o && !m.h) m.sb = 1; else delete m.sb; }      // 2.2.0: 대기조
+    if (m.sb != null) { if (m.sb && !m.h) { m.sb = 1; m.o = 0; } else delete m.sb; }      // 2.2.0: 막사 (가문에 매이지 않는다)
     if (m.kn != null) { if (m.kn) m.kn = 1; else delete m.kn; }      // 2.2.0: 맹주 집 사람 (가문원)
     if (m.nc != null && !(own(DS.CLASSES, m.nc) && !DS.CLASSES[m.nc].master)) delete m.nc;      // 2.2.0: 받은 가문 병과
     delete m.gm;
@@ -268,7 +252,7 @@ DS.fixSave = function (s) {
   // 깨진 저장의 거대한 배열만 막는다 (300). 4.0 (②-2-4): 가계·깃발에 걸린 줄(든 사람 h · 열쇠 cast · 가계도 pid · 잠금 lk · 깃발 밑 o)은 앞으로 모으고, 자를 때는 막사 일반 줄만 자른다
   if (DS.bnCap) DS.bnCap(s, 300); else s.mercs = s.mercs.slice(0, 300);
   if (s.lock != null && (typeof s.lock !== 'object' || Array.isArray(s.lock))) s.lock = {};      // 장비 잠금: 배열이면 JSON 에 남지 않아 잠금이 사라진다
-  if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 (가주 하나 · 가문원은 맹주 가문 · 그 밖은 대기조)
+  if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 (가주 하나 · 가문원은 맹주 가문 · 그 밖은 막사)
   if (!Array.isArray(s.fallen)) s.fallen = [];
   s.fallen = DS.fallenTrim(s.fallen.filter(function (f) { return f && typeof f === 'object'; }));
   s.fallen.forEach(function (f) { f.g = Math.max(1, Math.min(5, Math.round(+f.g || 1))); if (typeof f.n !== 'string') f.n = ''; if (f.nk != null && typeof f.nk !== 'string') delete f.nk; if (f.lw != null) { if (typeof f.lw !== 'string') delete f.lw; else f.lw = Array.from(f.lw).slice(0, 24).join(''); } });      // r32: 마지막 한마디 (24자)      // 막사의 추모 목록이 GRADES[f.g] 를 읽는다

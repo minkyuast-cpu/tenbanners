@@ -511,8 +511,7 @@ DS.ORDER = { inf: 'cmd_inf', cav: 'cmd_cav', fly: 'cmd_fly', mar: 'cmd_mar', pik
 // 지휘관의 깃발 색
 DS.FLAG = { inf: '#5b8fd6', cav: '#e8bb45', fly: '#62b0ee', mar: '#2f86a6', pike: '#4c9a8a', arc: '#5fae5a', cle: '#f4efe2', mon: '#f09a4a', mag: '#8d6be0', sha: '#9a6ad0', bm: '#e0525e', tm: '#3fa88a', mm: '#f6cf57' };
 DS.MERC_SLOTS = 2;      // (2.2.0: 가솔이 없어졌다 — 옛 저장을 옮길 때만 읽는다)
-DS.SB_MAX = 2;          // 2.2.0: 가문마다 대기조 (모집한 영웅이 기다리는 자리) 최대
-DS.MERC_MAX = 50;       // (2.2.0: 막사가 없어졌다 — 옛 화면 코드가 읽어도 넘어지지 않게 남긴다)
+DS.MERC_MAX = 50;       // 2.2.0: 막사 정원 (넉넉히 — 모집값이 오르는 것이 진짜 한계다)
 DS.PITY = 20;           // r35: 이 횟수 안에 전설이 한 번은 나온다 (예전: 40회 안에 영웅 이상)
 DS.PITY_G = 5;
 DS.PULL5_G = 3;         // r35: 5회 모집은 희귀 이상 한 명 (예전: 고급 이상)

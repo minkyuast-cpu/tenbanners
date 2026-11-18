@@ -1,5 +1,6 @@
 // 전민 — 머리 없는 캠페인 봇 (2.2.0 「한 사람 한 사람」 규칙). 진짜 엔진(DS.Sim)과 진짜 규칙 함수로 30번까지 깬다.
 //   node tools/bot.js [cls=inf] [seed=1] [gen2=0]          예: node tools/bot.js mag 3
+//   BOTSAVE=파일 BOTSAVEAT=15: 그 시나리오를 깬 판을 저장 글(JSON)로 쓰고 끝낸다 (화면 시험용 중반 저장)
 //   끝에 한 줄 요약과 「BOT {json}」 (hours · cleared · wipes · deaths · vacancies · recruits …).
 //
 // 정책 (사람이 하듯이, 단순하게):
@@ -7,11 +8,11 @@
 //     (그 무리 레벨이 평균 + 1 이하), 그 지역 지도 위에서 진짜 엔진으로. 걸어 다니는 시간은 싸움마다 FIELD_OVER 초를 더해 셈한다.
 //   · 합일: 맹세의 깃대를 얻은 뒤 7단 Lv10 셋이 모일 때마다 교회에서 합일(DS.fuseAuto). 단 문턱(8단 · 9단) 앞에서는 가장 앞선 사람의 레벨 쪽 무리를 잡는다.
 //   · 싸움 앞: 교회 치료(골드), 약초 다섯까지 사기, 가방의 더 좋은 장비 입히기(DS.lootAutoEquip), 맹주가 홀몸이면 혼인(DS.linAutoWed).
-//   · 영웅 모집: 모집권은 자리가 있으면 바로 쓴다. 빈 가문(대기조도 없음)이 있으면 골드로도 부른다 (예비 골드 200 × 단은 남긴다).
-//     빈 가문이 없어도 골드가 값의 세 배를 넘으면 대기조를 채우려 부른다. 병과는 무작위다 (게임 규칙 그대로).
+//   · 영웅 모집: 모집권은 바로 쓴다. 빈 가문(막사도 비었음)이 있으면 골드로도 부른다 (예비 골드 200 × 단은 남긴다).
+//     빈 가문이 없어도 골드가 값의 세 배를 넘고 막사가 싸우는 가문 수의 절반보다 적으면 부른다. 병과는 무작위다 (게임 규칙 그대로).
 //   · 맹주의 어른 아이(가문원)는 빈 가문이 생기면 레벨이 가장 높은 이를 그 가문의 가주로 보낸다 (DS.hand).
 //   · 싸움 뒤: 진짜 규칙 그대로 — 쓰러진 가주·가문원은 영영 잃는다(DS.loseMerc · DS.linMercDied), 맹주는 미뤄진 죽음 → 자동 후계(DS.linAutoAll),
-//     나이·출생(DS.ageCheck), 대기조가 빈 가문을 잇기(DS.sbTick). 지면(전멸) 같은 시나리오를 다시 한다 (wipe 하나).
+//     나이·출생(DS.ageCheck), 막사의 사람이 빈 가문을 잇기(DS.sbTick). 지면(전멸) 같은 시나리오를 다시 한다 (wipe 하나).
 //   · 필살기는 봇이 누른다 (DS.BAL.ultAuto — 조작하는 맹주 한 사람).
 // 시간: hours = (엔진 시간 + 걷는 몫) / 3600. 게임 달력도 엔진 시간만큼 흐른다 (DS.ageAdvance — 게임과 같다).
 // 옛 규칙 비교: LOAD_SRC=/home/user/src/src node tools/bot.js inf 1 — 2.1.2(저장 v12) 규칙으로 같은 정책을 돌린다 (가솔 자동 채움 · 출전 셋 = 레벨 높은 셋 ·
@@ -66,9 +67,10 @@ function recruit() {
     const room = D.heroRoom(s); if (!room.length) return;
     const vac = D.bnEmpty(s).length, price = D.recruitPrice(s, 0), keep = 200 * D.heroTier(s);
     let pay = 0;
-    const old = D.charList(s).some(ch => { const b = ch.id === s.hero ? null : D.bearer(s, ch, 1); return b && b.eld && !D.sbOf(s, ch.id).length; });      // 노년 가주가 있는데 대기조가 없다 (사람이 「노년」 꼬리표를 보고 준비하듯)
+    const bar = D.barracks(s).length, old = !bar && D.charList(s).some(ch => { const b = ch.id === s.hero ? null : D.bearer(s, ch, 1); return b && b.eld; });      // 노년 가주가 있는데 막사가 비었다 (사람이 「노년」 꼬리표를 보고 준비하듯)
+    const spare = bar < Math.ceil(D.partyIds(s).length / 2);      // 넉넉하면 막사에 몇 사람 (싸우는 가문 수의 절반까지)
     if (s.tickets > 0) { s.tickets--; st.tickets++; }
-    else if (((vac || old) && s.gold >= price + keep) || s.gold >= price * 3 + keep) { s.gold -= price; D.recruitPaid(s, 1); pay = price; }
+    else if (((vac || old) && s.gold >= price + keep) || (spare && s.gold >= price * 3 + keep)) { s.gold -= price; D.recruitPaid(s, 1); pay = price; }
     else return;
     const r = D.recruitHero(s, rnd); if (!r) { s.gold += pay; return; }
     st.recruits++; st.recruitGold += pay;
@@ -205,6 +207,7 @@ for (let n = 1; n <= 30 && !stuck; n++) {
     const ok = scenario(sc);
     if (!ok) { st.wipes++; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + D.recL(sc)); if (tries > 12) { stuck = true; break; } }
   }
+  if (process.env.BOTSAVE && !tag && n === +(process.env.BOTSAVEAT || 15)) { require('fs').writeFileSync(process.env.BOTSAVE, JSON.stringify(s)); console.log('saved', process.env.BOTSAVE); process.exit(0); }      // 화면 시험용: N번을 깬 판을 저장 글로
   st.perScn.push({ n: tag + n, h: +((st.simT + st.over) / 3600).toFixed(2), L: D.partyL(s), units: D.partySpecs(s).length, vac: D.bnEmpty(s).length, tries });
 }
 }

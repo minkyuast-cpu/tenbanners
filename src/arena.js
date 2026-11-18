@@ -54,7 +54,8 @@ function num(v, lo, hi, d) { v = +v; return isFinite(v) ? Math.max(lo, Math.min(
 function heroOf(s) { return s && s.chars ? s.chars[s.hero] || null : null; }
 function seatOf(s, m) {
   var bf = DS.bearsFlag ? DS.bearsFlag(s, m) : null; if (bf) return { k: 'bear', ch: bf };
-  var o = m.o && s.chars[m.o] ? s.chars[m.o] : null; if (o && m.sb) return { k: 'bear', ch: o, sb: 1 };      // 2.2.0: 대기조는 그 가문의 가주라고 치고 잰다
+  if (DS.isSb && DS.isSb(m)) { var hm = DS.sbHome ? DS.sbHome(s, m) : null; return hm ? { k: 'bear', ch: hm, sb: 1 } : { k: 'bar', ch: heroOf(s), sb: 1 }; }      // 2.2.0: 막사의 사람은 같은 병과 가문의 가주라고 치고 잰다
+  var o = m.o && s.chars[m.o] ? s.chars[m.o] : null;
   if (o) return { k: 'fol', ch: o };
   return { k: 'bar', ch: heroOf(s) };
 }
@@ -78,7 +79,7 @@ function placeText(s, key) {
   if (key === 'h') return '맹주';
   var m = mercOf(s, +key.slice(1)); if (!m) return '';
   var st = seatOf(s, m), fn = function (ch) { try { return DS.flagName(ch.cls); } catch (x) { return ''; } };
-  return st.sb ? fn(st.ch) + ' 대기조' : st.k === 'bear' ? fn(st.ch) + ' 가주' : st.k === 'fol' ? fn(st.ch) + ' 가문원' : '자리 없음';
+  return st.sb ? '막사' : st.k === 'bear' ? fn(st.ch) + ' 가주' : st.k === 'fol' ? fn(st.ch) + ' 가문원' : '자리 없음';
 }
 function young(s, e) { try { return !!(DS.ageStage && DS.ageStage(s, e) === 'young'); } catch (x) { return false; } }
 DS.arenaRoster = function (s) {

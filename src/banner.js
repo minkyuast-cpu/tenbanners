@@ -1,8 +1,8 @@
 // 열 개의 깃발 — 부대원과 깃발 (4.0 「부대원 + 깃발」 통합, 설계서 r9/unify/SPEC.md ①~⑥ · ⑫ · ⑬)
 // 부대에는 사람과 깃발 둘뿐이다. 레벨·단·기술·장비는 깃발(save.chars)의 것이고, 사람은 대장 한 명(대장 깃발 줄 + ch.ps)과 부대원(save.mercs)이다.
 // 깃발을 「든 사람」은 부대원 한 줄의 m.o = 깃발 번호 + m.h = 1 (대장 깃발은 대장 자신 — 그 줄의 ps). 고리는 사람 쪽 한 방향이라 한 사람이 두 깃발을 들 수 없다.
-// 이 파일: 든 사람 찾기(bearer)·가주 세우기(hand)·대기조가 빈 가문을 잇기(sbTick)·전투 사양 겹(cmdSpec 바깥)·옛 저장 변환(bnFix).
-// 2.2.0 「한 사람 한 사람」: 가솔·막사·맹주 밖 가문의 자동 후계는 없다. 가주가 떠난 가문은 대기조가 있으면 그이가, 없으면 빈 채로 남는다 (모집 · 맹주의 아이를 보내 채운다).
+// 이 파일: 든 사람 찾기(bearer)·가주 세우기(hand)·막사의 같은 병과가 빈 가문을 잇기(sbTick)·전투 사양 겹(cmdSpec 바깥)·옛 저장 변환(bnFix).
+// 2.2.0 「한 사람 한 사람」: 가솔·막사·맹주 밖 가문의 자동 후계는 없다. 가주가 떠난 가문은 막사에 같은 병과가 있으면 그이가, 없으면 빈 채로 남는다 (모집 · 맹주의 아이를 보내 채운다).
 // 순수 규칙만 둔다 (화면은 ui.js). build.js · tools/load.js 에서 age 뒤 · save 앞.
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
@@ -12,7 +12,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 // r44: 든 사람(가주·맹주)의 등급은 배율이다 — gmul (일반 0.85 · 고급 0.95 · 희귀 1.05 · 영웅 1.20 · 전설 1.42, 전설/일반 1.67배).
 //   희귀(아홉 집 본인 · 1세 맹주의 고정 등급)는 예전 +2% → +5% 로 거의 그대로, 자동으로 서는 가주(일반~희귀)의 평균도 예전과 몇 % 안쪽이다.
 //   (예전: 더하기 몫 일반 0 · 고급 1 · 희귀 2 · 영웅 4 · 전설 6 % — 사용자 「전설과 일반 사이에 스탯 총합이 유의미하게 차이나게」. grade 칸은 옛 값 그대로 둔다 — 읽는 곳 없음)
-DS.BN = { slope: 1, cap: 20, grade: [0, 0, 1, 2, 4, 6], gmul: [1, 0.85, 0.95, 1.05, 1.2, 1.42], bench: 2, retro: 10, retroCap: 300, cmdK: 1, kinK: 1, solo: 0.3, soloN: 6, nK: 0, meritK: 2 };      // 2.2.0: cmdK = 깃발 유닛(가주·맹주)의 본디 힘 배율 · kinK = 가문원 배율 · solo/soloN = 「소수 정예」: 싸우는 가문이 soloN 보다 적으면 가주가 그만큼 단단하다 (가솔이 맡던 몫 — 한 가문이면 +solo, soloN 이상이면 0) · nK = 지금 싸우는 가문 수 (DS.partySync 가 적는다) · meritK = 시나리오 승리 공훈에서 가주 몫 (가솔이 나눠 받던 몫까지 — 들판 기습·현상금도 가문마다 두 몫)
+DS.BN = { slope: 1, cap: 20, grade: [0, 0, 1, 2, 4, 6], gmul: [1, 0.85, 0.95, 1.05, 1.2, 1.42], bench: 2, retro: 10, retroCap: 300, cmdK: 1, kinK: 1, meritK: 2 };      // 2.2.0: cmdK = 깃발 유닛(가주·맹주)의 본디 힘 배율 · kinK = 가문원 배율 (2.2.0 「소수 정예」는 없앴다 — 싸우는 가문 수와 힘은 상관없다)다 (가솔이 맡던 몫 — 한 가문이면 +solo, soloN 이상이면 0) · nK = 지금 싸우는 가문 수 (DS.partySync 가 적는다) · meritK = 시나리오 승리 공훈에서 가주 몫 (가솔이 나눠 받던 몫까지 — 들판 기습·현상금도 가문마다 두 몫)
 // 아홉(과 1세 대장)의 사람 종류 — 「깃발을 내려놓으면」 (⑥-1 표. 마스터는 돌아온 이 표 RET_KIND 와 같다)
 DS.CAST_KIND = { inf: 'm_sword', cav: 'm_lancer', fly: 'm_lancer', mar: 'm_pike', pike: 'm_pike', arc: 'm_archer', cle: 'm_sister', mon: 'm_templar', mag: 'm_sister', sha: 'm_templar', bm: 'm_sword', tm: 'm_pike', mm: 'm_templar' };
 // 아홉의 고정 특성 (1세 대장도 제 병과 줄에서 특성만 받는다). 마스터는 그 묶음의 주인공 병과 줄
@@ -36,7 +36,7 @@ DS.bearer = function (s, ch, noSync) {      // r42: 찾을 때마다 가문 줄�
   var b = null;
   if (ch.id === heroId(s)) { if (!ch.vac && ch.ps && !ch.ps.ul && DS.heroUlt) DS.heroUlt(s); b = ch.vac ? null : (ch.ps || null); }      // r38: 깨어난 맹주의 타고난 필살기를 사람 줄에 적어 둔다 (싸움 사양이 ps.ul 을 읽는다)
   else { var ms = s.mercs || []; for (var i = 0; i < ms.length; i++) if (ms[i].h && ms[i].o === ch.id) { b = ms[i]; break; } }
-  if (!noSync && s.chars[ch.id] === ch && DS.pSyncRow) DS.pSyncRow(ch, b);
+  if (!noSync && s.chars[ch.id] === ch && DS.pSyncRow) DS.pSyncRow(ch, b, !b && ch.id !== heroId(s));      // 2.2.0: 빈 가문은 레벨·단을 잃는다
   return b;
 };
 DS.bearerOf = function (s, chId) { return DS.bearer(s, s.chars[chId]); };
@@ -57,7 +57,6 @@ DS.bnGrade = function (who) { return who ? Math.round((DS.bnGMul(who) - 1) * 100
 DS.bnHeroGMul = function (who) { return Math.max(DS.bnGMul(who), DS.BN.gmul[DS.CAST_G || 3] || 1); };      // r44: 맹주 자리는 희귀(1세 맹주의 고정 등급)보다 낮게 치지 않는다 — 낮은 등급의 후계가 앉아도 맹주 가문이 무너지지 않게. 더 높으면 그대로
 DS.bnK = function (who, ch, hero) { return who ? (1 + DS.bnMerit(who, ch) / 100) * (hero ? DS.bnHeroGMul(who) : DS.bnGMul(who)) : 1; };      // 얹힘 배율 = (1 + 공훈 %) × 등급 배율
 DS.bnPct = function (who, ch) { return who ? Math.round((DS.bnK(who, ch) - 1) * 100) : 0; };
-DS.soloK = function (n) { var B = DS.BN; n = n == null ? B.nK : n; if (!(n >= 1)) return 1; return 1 + (B.solo || 0) * Math.max(0, (B.soloN || 6) - n) / Math.max(1, (B.soloN || 6) - 1); };      // 2.2.0 소수 정예 배율
 DS.pctTxt = function (n) { n = Math.round(+n || 0); return (n < 0 ? '−' : '+') + Math.abs(n) + '%'; };
 
 // ───────── 전투 사양: cmdSpec 바깥 겹 (engine.js 는 고치지 않는다) ─────────
@@ -68,7 +67,7 @@ DS.cmdSpec = function (ch, hero, who) {
   var u = cs0(who && who.L != null && DS.pL(who) !== ch.L ? withL(ch, DS.pL(who)) : ch, hero, who);      // r42: 깃발 유닛은 든 사람의 개인 레벨로
   if (!who) return u;
   var k = DS.bnK(who, ch, hero), T = (who.t && DS.TRAITS[who.t]) || {}, k0 = k;
-  k *= (DS.BN.cmdK || 1) * DS.soloK();      // 2.2.0: 가주 본디 힘 × 소수 정예 (화면의 얹힘 % 는 k0 — 공훈·등급 몫만)
+  k *= DS.BN.cmdK || 1;      // 2.2.0: 가주 본디 힘 (화면의 얹힘 % 는 k0 — 공훈·등급 몫만)
   var hp = Math.max(1, Math.round(u.mhp * k * (T.hp || 1)));
   u.hp = u.mhp = hp;
   u.atk = Math.round(u.atk * k * (T.at || 1)); u.mag = Math.round(u.mag * k * (T.at || 1));
@@ -131,7 +130,7 @@ DS.bearerLook = function (who) {
 DS.kidOf = function (s, m) { var P = s && s.lin && s.lin.P, q = m && m.pid && P ? P[m.pid] : null; return q && q.m === m.id && q.hb && !q.ad ? q : null; };
 // ───────── 가주 세우기 (2.2.0) ─────────
 // DS.hand(s, chId, mid, opt) — 가문 chId 의 가주를 mid 로 세운다.
-//   mid = 그 가문의 대기조: 가주와 자리를 바꾼다 (가주가 있으면 그이는 대기조로 — 맹주 집 사람이면 가문원으로 돌아간다).
+//   mid = 막사의 같은 병과(DS.sbFits): 가주와 자리를 바꾼다 (가주가 있으면 그이는 막사로 — 맹주 집 사람이면 가문원으로 돌아간다).
 //   mid = 맹주 가문의 어른 가문원: 빈 가문의 가주로 보낸다. 그 사람은 그 가문의 병과를 받는다 (m.nc). 가주가 선 가문에는 보내지 않는다.
 //   가주를 그냥 내리는 길은 없다. opt.where = 'town'(기본) | 'field'(싸움 밖, 마을 밖) | 'battle'(싸우는 중 — 못 한다)
 //   마을 밖에서 자리를 바꾸면 새로 서는 사람의 체력 비율이 물러나는 이보다 높지 않게 맞춘다 (옛 규칙 그대로).
@@ -145,7 +144,7 @@ DS.handWhy = function (s, chId, m, opt) {
   if (+chId === heroId(s)) return '맹주 가문의 가주는 맹주다';
   if (!m) return '찾을 수 없다';
   if (m.h) return m.o === ch.id ? '이미 가주다' : '다른 가문의 가주다';
-  if (m.sb) return m.o === ch.id ? '' : '다른 가문의 대기조다';
+  if (DS.isSb(m)) return DS.sbFits(ch, m) ? '' : '병과가 다르다';
   if (m.o === heroId(s)) return DS.bearer(s, ch, 1) ? '가주가 있는 가문에는 보내지 않는다' : '';
   return '보낼 수 없는 사람이다';
 };
@@ -153,17 +152,17 @@ DS.hand = function (s, chId, mid, opt) {
   opt = opt || {};
   var where = opt.where || 'town', ch = s && s.chars && s.chars[chId], no = function (w) { return { ok: false, why: w, out: 0, to: '' }; };
   if (!ch) return no('가문이 없다');
-  if (!mid) return no('가주를 내리는 길은 없다. 대기조와 자리를 바꾼다');
+  if (!mid) return no('가주를 내리는 길은 없다. 막사의 사람과 자리를 바꾼다');
   var m = mercOf(s, +mid), why = DS.handWhy(s, chId, m, opt); if (why) return no(why);
   var cur = DS.bearer(s, ch, 1), field = where !== 'town', to = '';
   var hpM = m.hp == null ? 1 : m.hp, hpC = cur ? (cur.hp == null ? 1 : cur.hp) : 1;
   if (field && cur && hpM > hpC) m.hp = hpC;
-  var kin = !m.sb;
-  delete m.sb; m.o = ch.id; m.h = 1;
-  if (kin) { m.kn = 1; m.nc = DS.CLASSES[ch.cls].master && DS.FAMILY[DS.CLASSES[ch.cls].fam] ? DS.FAMILY[DS.CLASSES[ch.cls].fam].members[0] : ch.cls; }      // 맹주 집 아이가 가문을 맡는다: 그 가문의 병과를 받는다
+  var kin = !DS.isSb(m);
+  delete m.sb; m.o = ch.id; m.h = 1; ch.Ls = ch.L;      // 새 가주는 제 레벨 그대로 (따라잡기 없음)
+  if (kin) { m.kn = 1; m.nc = DS.houseCls(ch); }      // 맹주 집 아이가 가문을 맡는다: 그 가문의 병과를 받는다
   if (cur) {
     delete cur.h;
-    if (DS.lineOf && DS.lineOf(s, cur)) { cur.o = heroId(s); delete cur.sb; to = 'kin'; } else { cur.sb = 1; to = 'sb'; }
+    if (DS.lineOf && DS.lineOf(s, cur)) { cur.o = heroId(s); delete cur.sb; to = 'kin'; } else { cur.o = 0; cur.sb = 1; to = 'sb'; }
     if (field && hpC > hpM) cur.hp = hpM;
   }
   if (DS.mercTidy) DS.mercTidy(s);
@@ -172,24 +171,40 @@ DS.hand = function (s, chId, mid, opt) {
   if (kin && s.lin && DS.linLogE) { var p = DS.linOf ? DS.linOf(s, m) : null; if (p) DS.linLogE(s, 'succ', p.id, 0, { ch: ch.id, house: DS.flagName(ch.cls, s), kin: 1 }); }
   return { ok: true, why: '', out: cur ? cur.id : 0, to: to, nf: nf };
 };
-// ───────── 대기조가 빈 가문을 잇는다 (2.2.0) ─────────
-// 싸움·시나리오 밖에서 부른다 (game.js 의 고리 · 싸움이 끝난 뒤 · 봇). 가주가 없는 가문(맹주 가문 밖)에 대기조가 있으면 가장 나은 한 사람(등급 → 레벨)이 가주가 된다.
+// ───────── 막사의 같은 병과가 빈 가문을 잇는다 (2.2.0) ─────────
+// 그 가문이 주는 병과 (합일한 가문이면 그 묶음의 첫 병과)
+DS.houseCls = function (ch) { var C = DS.CLASSES[ch.cls], F = C && C.master && DS.FAMILY[C.fam]; return F ? F.members[0] : ch.cls; };
+// 막사의 사람은 가문에 매이지 않는다. 병과가 맞는가: 받은 병과(nc · 아홉 집은 cast)가 있으면 그 병과(합일한 가문이면 그 묶음), 없으면 태생(DS.bnNative)
+DS.sbFits = function (ch, m) {
+  if (!ch || !m || !DS.CLASSES[ch.cls]) return false;
+  var wc = m.cast || m.nc, C = DS.CLASSES[ch.cls], F = C.fam && DS.FAMILY[C.fam];
+  if (wc) return wc === ch.cls || !!(C.master && F && F.members.indexOf(wc) >= 0);
+  return DS.bnNative(ch.cls, m);
+};
+// 막사의 사람이 가주로 설 수 있는 가문 (빈 가문 먼저, 맹주 가문은 빼고). 없으면 null — 화면이 「그 가문의 가주라면」으로 잰다
+DS.sbHome = function (s, m) {
+  if (!s || !s.chars || !m) return null; var hid = heroId(s), best = null;
+  DS.charList(s).forEach(function (ch) { if (ch.id === hid || !DS.sbFits(ch, m)) return; if (!best || (DS.vacant(s, ch) && !DS.vacant(s, best))) best = ch; });
+  return best;
+};
+// 싸움·시나리오 밖에서 부른다 (game.js 의 고리 · 싸움이 끝난 뒤 · 봇). 가주가 없는 가문(맹주 가문 밖)마다, 가문 차례대로, 막사의 같은 병과 가운데 가장 나은 이(등급 → 레벨)가 저절로 가주가 된다.
+//   같은 병과가 없으면 빈 가문으로 남는다 (병과를 바꿔 서는 길은 맹주의 아이를 보낼 때뿐 — DS.hand).
 //   돌려주는 것: [{ t: 'sbSeat', ch, mid, text }]
-DS.sbBest = function (s, chId) { return DS.sbOf(s, chId).sort(function (a, b) { return (b.g || 0) - (a.g || 0) || DS.pL(b) - DS.pL(a) || a.id - b.id; })[0] || null; };
+DS.sbBest = function (s, chId) { return DS.sbOf(s, chId)[0] || null; };
 DS.sbTick = function (s) {
   var out = []; if (!s || !s.chars) return out;
   DS.charList(s).forEach(function (ch) {
     if (!DS.vacant(s, ch)) return;
     var m = DS.sbBest(s, ch.id); if (!m) return;
-    delete m.sb; m.h = 1; DS.nfGive(m);
+    delete m.sb; m.o = ch.id; m.h = 1; ch.Ls = ch.L; DS.nfGive(m);
     var nm = m.ttl || m.n || '', house = DS.flagName(ch.cls, s);
     if (s.lin && DS.linOf && DS.linLogE) { var p = DS.linOf(s, m) || (DS.linMkP ? (function () { var q = DS.linMkP(s, { k: 'm', sn: m.sn, n: m.n, sx: m.sx, type: m.type, g: m.g, m: m.id, gv: 1 }); if (m.by != null) { q.by = m.by; q.ls = m.ls; } m.pid = q.id; return q; })() : null); if (p) DS.linLogE(s, 'succ', p.id, 0, { ch: ch.id, house: house, sb: 1 }); }
-    out.push({ t: 'sbSeat', ch: ch.id, mid: m.id, text: house + '의 가주를 대기조 ' + nm + DS.josa1(nm, '이가') + ' 잇는다.' });
+    out.push({ t: 'sbSeat', ch: ch.id, mid: m.id, text: nm + DS.josa1(nm, '이가') + ' 막사에서 나와 ' + house + '을 맡았다.' });
   });
   if (out.length) { if (DS.mercTidy) DS.mercTidy(s); if (DS.pSync) DS.pSync(s); }
   return out;
 };
-// 빈 가문 (가주도 대기조도 없다 — 싸우지 않는다)
+// 빈 가문 (가주가 없고 막사에 같은 병과도 없다 — 싸우지 않는다)
 DS.bnEmpty = function (s) { return DS.charList(s).filter(function (ch) { return DS.vacant(s, ch) && !DS.sbOf(s, ch.id).length; }).map(function (ch) { return ch.id; }); };
 
 // ───────── 추모 기록에 들던 깃발 번호 (f) ─────────
@@ -197,7 +212,7 @@ var fr0 = DS.fallenRecord;
 if (fr0) DS.fallenRecord = function (m, at) { var f = fr0(m, at); if (m && m.h && m.o) f.f = m.o; if (m && m.cast) f.cast = m.cast; return f; };
 
 // ───────── 아홉 집 (이야기 열쇠 cast) ─────────
-// 2.2.0: 아홉 가운데 누가 잠들어도 그 집의 다음 사람이 저절로 오지 않는다 — 그 가문은 다른 가문처럼 대기조가 잇거나 빈 채로 남는다 (이야기는 「떠났다」 줄을 읽는다)
+// 2.2.0: 아홉 가운데 누가 잠들어도 그 집의 다음 사람이 저절로 오지 않는다 — 그 가문은 다른 가문처럼 막사의 같은 병과가 잇거나 빈 채로 남는다 (이야기는 「떠났다」 줄을 읽는다)
 DS.castFlag = function (s, key) {
   var C = DS.CLASSES[key], F = C && DS.FAMILY[C.fam], hit = null, mst = null;
   DS.charList(s).forEach(function (c) { if (c.cls === key) hit = c; else if (F && c.cls === F.master) mst = c; });
@@ -425,7 +440,7 @@ DS.bnFix = function (s, wasBn) {
         if (b2.cast && (s.mercs.some(function (x) { return x.cast === b2.cast; }) || front.some(function (x) { return x.cast === b2.cast; }))) delete b2.cast;
         var r = personMerc(s, q, b2, null), pp = DS.MERCS[r.type] && DS.MERCS[r.type].pop || 1, home = flagFree(q.cls);
         if (home) { r.o = home.id; r.h = 1; }      // ⑮ 각자 원래 깃발의 든 사람으로
-        else { r.o = ch.id; r.sb = 1; }      // 2.2.0: 그 가문의 대기조로 (DS.mercTidy 가 자리를 맞춘다)
+        else { r.o = 0; r.sb = 1; }      // 2.2.0: 막사로 (DS.mercTidy 가 자리를 맞춘다)
         front.push(r); R.back++;
       });
     }

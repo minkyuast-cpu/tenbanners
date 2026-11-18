@@ -262,7 +262,7 @@ DS.linWed = function (s, a, b, opt) {
   if (A.k !== 'c') { var t = A; A = B; B = t; }      // 집의 주인은 지휘관 (지휘관끼리면 a)
   A.p.sp = B.p.id; B.p.sp = A.p.id;
   L0(s).bd[bkey(A.p.id, B.p.id)] = { b: 0, h: A.p.id, w: Math.round((s.cal && s.cal.t) || 0), y: 0 };      // ⑲ w = 혼인한 때(달력), y = 굴린 해
-  if (B.k === 'm' && B.ent) { B.ent.lk = 1; if (B.ent.sb) { delete B.ent.sb; B.ent.o = s.hero; B.ent.kn = 1; if (DS.mercTidy) DS.mercTidy(s); } else if (!B.ent.h) B.ent.kn = 1; }      // 4.0: 대장의 배우자는 잠겨 온다 · 2.2.0: 대기조였으면 맹주 가문의 가문원이 되어 함께 싸운다 (가주는 제 가문에 남는다)
+  if (B.k === 'm' && B.ent) { B.ent.lk = 1; if (B.ent.sb) { delete B.ent.sb; B.ent.o = s.hero; B.ent.kn = 1; if (DS.mercTidy) DS.mercTidy(s); } else if (!B.ent.h) B.ent.kn = 1; }      // 4.0: 대장의 배우자는 잠겨 온다 · 2.2.0: 막사의 사람이었으면 맹주 가문의 가문원이 되어 함께 싸운다 (가주는 제 가문에 남는다)
   return logE(s, 'wed', A.p.id, B.p.id);
 };
 function part(s, p, why) {
@@ -444,7 +444,7 @@ DS.houseDefault = function (s, p, bf) { return (p && (p.osn || p.sn) ? DS.houseO
 DS.NAME_BAN = ['운영', '관리자', 'GM', 'gm', 'admin', '개발자', '시발', '씨발', '병신', '좆', '존나', '새끼', 'fuck', 'shit'];
 DS.nameOK = function (t) { t = String(t || '').trim(); var bare = t.replace(/ /g, ''); if (bare.length < 1 || bare.length > 8 || !/^[가-힣A-Za-z ]+$/.test(t)) return false; var low = t.toLowerCase(); return !DS.NAME_BAN.some(function (w) { return low.indexOf(w.toLowerCase()) >= 0; }); };
 DS.linHouseOK = function (t) { return DS.nameOK(t); };
-// 돌려주는 줄: { kind:'kid'|'adopt'|'pull', blood, kin(0 핏줄 · 2 가문 밖 · 3 대기조·가문원 · 4 다른 가문의 가주 · 5 모집), mid, pid, name, full, sx, g, type, x, o, h(든 깃발 번호), L, loss:0, why, move, house }
+// 돌려주는 줄: { kind:'kid'|'adopt'|'pull', blood, kin(0 핏줄 · 2 가문 밖 · 3 막사·가문원 · 4 다른 가문의 가주 · 5 모집), mid, pid, name, full, sx, g, type, x, o, h(든 깃발 번호), L, loss:0, why, move, house }
 DS.LIN_WHY = { kid: '핏줄. 선대와의 레벨 차이 일부를 잇는다', adopt: '양자. 선대와의 레벨 차이 일부를 잇는다', pull: '이을 사람이 없다. 영웅관이 한 사람을 보낸다.', move: '다른 가문의 가주. 맹주만 바뀌고 가문은 그대로다' };
 // 2.1.0 대물림: 선대와의 레벨 차이 가운데 잇는 몫 — 그 가문의 공훈 계급이 높을수록 크다 (계급 0 → 맨 위). 대가 내려가며 약해져도 된다 (따라잡기 보정 없음)
 //   house: 맹주 밖 가문의 자동 후계 · kid: 맹주의 핏줄 · adopt: 맹주의 양자, 맹주로 세운 다른 가문의 가주 (그 사람 가문의 계급으로)
@@ -473,7 +473,7 @@ DS.linHeirs = function (s, chId) {
     if (p && (p.id === spouse || p.hand || p.rv || p.ret || anc[p.id])) return;
     if (m.cast) { var cr = castRow(s, m, p, ch, L); if (cr) cast.push(cr); return; }      // r22: 아홉(과 그 집 2대)은 성을 바꾸지 않는다 — 대신 그 집이 맹주 가문이 된다
     var bf = DS.bearsFlag ? DS.bearsFlag(s, m) : null, isB = !!(p && p.hb && !p.ad);
-    var row = { kind: isB ? 'kid' : 'adopt', blood: isB, kin: isB ? 0 : bf ? 4 : m.o ? 3 : 2, mid: m.id, pid: p ? p.id : 0, name: DS.mercCall(m) || m.n, full: DS.fullName(m), sx: m.sx || (mercFix(m), m.sx), g: m.g, type: m.type, x: DS.pL(m), pL: DS.pL(m), o: m.o || 0, h: bf ? bf.id : 0, L: L, loss: 0 };
+    var row = { kind: isB ? 'kid' : 'adopt', blood: isB, kin: isB ? 0 : bf ? 4 : m.o || m.sb ? 3 : 2, mid: m.id, pid: p ? p.id : 0, name: DS.mercCall(m) || m.n, full: DS.fullName(m), sx: m.sx || (mercFix(m), m.sx), g: m.g, type: m.type, x: DS.pL(m), pL: DS.pL(m), o: m.o || 0, h: bf ? bf.id : 0, L: L, loss: 0 };
     var hf = !isB ? heirHouse(s, m, ch) : null;      // r42: 다른 가문의 가주·가솔이면 맹주 가문이 그 가문으로 옮겨 간다
     row.move = !!hf; if (hf) row.hf = hf.id; row.nL = heirL(s, m, ch, isB ? 'kid' : 'adopt'); if (m.pot) row.pot = m.pot;
     row.house = row.move ? hf.cls : '';
@@ -501,7 +501,7 @@ function castRow(s, m, p, ch, L) {
   if (m.pot) row.pot = m.pot;
   return row;
 }
-// 자동(봇·화면 없음·저장 읽기): 핏줄(레벨 순) → 대기조(레벨 순, 아홉 제외) → 다른 가문의 가주 → 영웅관이 보낸 한 사람
+// 자동(봇·화면 없음·저장 읽기): 핏줄(레벨 순) → 막사·가문원(레벨 순, 아홉 제외) → 다른 가문의 가주 → 영웅관이 보낸 한 사람
 DS.linAutoPick = function (s, chId, opt) { var skip = opt && opt.skip; return DS.linHeirs(s, chId).filter(function (h) { return !h.young && !h.cast && !(skip && skip(h)); }).sort(function (a, b) { return a.kin - b.kin; })[0] || null; };
 // opt.ho: 가문이 옮겨 갈 때의 호 — { k: 'new' (기본 — 「{이름} 1세」) | 'cont' (대수를 이어 「{이름} N세」) | 'free', t: 직접 입력 (한글 1~6자 + 선택적 「N세」) }
 DS.linHoOK = function (t) { var m = /^(.+?)( ?[0-9]{1,3}세)?$/.exec(String(t || '').trim()); return !!m && DS.nameOK(m[1]); };
@@ -553,7 +553,7 @@ DS.linSucceed = function (s, chId, pick, opt) {
   DS.loseMerc(s, m.id); p.m = 0;
   if (move) {
     var cb = DS.bearer ? DS.bearer(s, bf, 1) : null;
-    if (cb && cb !== m) { delete cb.h; cb.o = bf.id; cb.sb = 1; }      // 2.2.0: 그 가문의 가주였던 이는 그 가문의 대기조로
+    if (cb && cb !== m) { delete cb.h; cb.o = 0; cb.sb = 1; }      // 2.2.0: 그 가문의 가주였던 이는 막사로
     seatMove(s, ch, bf);
   }
   delete seat.vac; delete seat.cu;
@@ -570,7 +570,7 @@ DS.linSucceed = function (s, chId, pick, opt) {
   var e = logE(s, 'heir', p.id, dp ? dp.id : 0, { kind: kind, L: ps.L, from: DS.pL(m), cls: seat.cls });
   evs.push({ t: 'heir', a: p.id, b: dp ? dp.id : 0, ch: seat.id, kind: kind, L: ps.L, from: DS.pL(m), pre: dps.L != null ? DS.pL(dps) : ps.L, move: move, ev: e });
   if (DS.ghTouch) DS.ghTouch(s);      // 장비 내력: 대장 깃발을 새 손이 든다
-      // 2.2.0: 옛 맹주의 가문은 대기조가 있으면 그이가 잇고(DS.sbTick), 없으면 빈 가문으로 남는다
+      // 2.2.0: 옛 맹주의 가문은 막사에 같은 병과가 있으면 그이가 잇고(DS.sbTick), 없으면 빈 가문으로 남는다
   if (DS.mercTidy) DS.mercTidy(s);
   if (DS.pSync) DS.pSync(s);
   return evs;
@@ -825,14 +825,14 @@ DS.egOldSkill = function (cls, tier, seed) {
   return L.length ? L[Math.floor(hsh(seed, 79, 11) * L.length) % L.length] : null;
 };
 
-// ── 봇·자동: 짝 없는 맹주에게 성별이 다른 가장 귀한 사람(대기조 · 다른 가문의 가주)을 짝지어 준다 ──
+// ── 봇·자동: 짝 없는 맹주에게 성별이 다른 가장 귀한 사람(막사 · 다른 가문의 가주)을 짝지어 준다 ──
 DS.linAutoWed = function (s) {
   var n = 0;
   [s.hero].forEach(function (id) {      // 4.0: 혼인은 대장만
     var ch = s.chars[id]; if (!ch || ch.vac || ch.down) return; var cp = charP(s, ch); if (cp.sp) return;
     var best = null;
     s.mercs.forEach(function (m) { mercFix(m); if (m.sx === ch.sx) return; var p = mercP(s, m, false); if (p && p.sp) return; if (!DS.linCanWed(s, { c: id }, { m: m.id }, { anywhere: true }).ok) return;
-      var sc = m.g * 100 + (m.o ? 50 : 0) + Math.min(49, DS.pL(m) / 2); if (!best || sc > best.sc) best = { m: m, sc: sc }; });
+      var sc = m.g * 100 + (m.o || m.sb ? 50 : 0) + Math.min(49, DS.pL(m) / 2); if (!best || sc > best.sc) best = { m: m, sc: sc }; });
     if (best && DS.linWed(s, { c: id }, { m: best.m.id }, { anywhere: true })) n++;
   });
   return n;

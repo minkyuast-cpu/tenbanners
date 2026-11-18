@@ -294,7 +294,7 @@ DS.egYear = function (s) {
     } else if (ev.t === 'mnat') { ps.nl++; out.push({ k: 'die', t: lines('pass.line.die', { a: ev.name || '누군가' }, h2(ev.mid || 0, 3, 17) * 4) }); }
   });
   if (adults.length) out.unshift({ k: 'adult', t: lines(adults.length > 1 ? 'pass.line.adultN' : 'pass.line.adult', { a: adults.join(', ') }) });
-  if (DS.sbTick) DS.sbTick(s).forEach(function (r) {      // 2.2.0: 가주를 잃은 가문은 그해에 대기조가 잇는다 — 「센주 가문, 난새가 가주가 되었다」 (대기조가 없으면 빈 가문으로 남는다)
+  if (DS.sbTick) DS.sbTick(s).forEach(function (r) {      // 2.2.0: 가주를 잃은 가문은 그해에 막사의 같은 병과가 잇는다 — 「센주 가문, 난새가 가주가 되었다」 (없으면 빈 가문으로 남는다)
     var ch = s.chars[r.ch], m = r.mid ? mercOf(s, r.mid) : null; if (!ch) return; ps.nb = (ps.nb || 0) + 1;
     var f = DS.flagName(ch.cls), a = m ? (m.ttl || m.n || '') : '';
     out.push({ k: 'refill', t: [f + ', ' + a + jo(a, '이가') + ' 가주가 되었다.'] });
@@ -434,7 +434,7 @@ function doCall(s, i, ok) {
   var cp = P[pid] ? caller(s, P[pid]) : heroP(s); res.caller = cp ? nm(s, cp.id) : s.name;
   if (ok) {
     var R = DS.egReturn(s, i); if (!R) return { ok: false, why: '부활시킬 수 없다' };
-    if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 돌아온 이는 맹주 집 사람이면 가문원, 아니면 자리가 남은 가문의 대기조로
+    if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 돌아온 이는 맹주 집 사람이면 가문원, 아니면 막사로
     var q = P[pid] || LP(s)[R.a]; res.mid = R.mid; res.skill = R.skill ? (DS.SKILLS[R.skill] || {}).name || '' : ''; res.nick = R.nick || ''; res.age = R.age; res.kind = kindName(R.type, R.g);
     res.rel = relOf(s, q, cp && cp.id !== q.id ? cp : null); res.re = R.re ? nm(s, R.re) : '';
   } else rec.tr = 1;
