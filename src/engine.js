@@ -114,7 +114,7 @@ P.spawnGroup = function (g) {
   g.alive = 0; g.deadAt = null;
   for (var i = 0; i < g.list.length; i++) {
     var s = this.mk(g.list[i], { x: g.x, y: g.y, grp: g.id, L: g.L });
-    s.hx = g.x; s.hy = g.y;
+    s.hx = g.x; s.hy = g.y; if (g.ek) { s.ek = g.ek; s.gk = g.gk; s.dk = g.dk; }
     if (this.add(s)) g.alive++;
   }
 };
@@ -363,7 +363,7 @@ P.kill = function (v, by) {
     else if (this.leader === v.id) { var c = this.cmds()[0]; if (c) { this.leader = c.id; this.emit({ t: 'leader', id: c.id }); } }
   }
   if (v.side === 'enemy') {
-    if (v.exp || v.gold) { var re = { t: 'reward', exp: v.exp || 0, gold: Math.round((v.gold || 0) * (by && by.side === 'ally' && by.fx && by.fx.goldUp ? 1 + by.fx.goldUp : 1)), L: v.L, x: v.x, y: v.y, boss: v.role === 'boss', type: v.type }; if (v.summoned) re.sum = true; if (v.elite != null) re.elite = v.elite; if (v.eliteCrew != null) re.eliteCrew = v.eliteCrew; if (this.mode === 'scn') re.mode = 'scn'; this.emit(re); }      // elite·eliteCrew: 현상 수배 정예(plan), mode: 시나리오 안의 처치(현상금이 거른다)      // sum: 불려 나온 적 (전리품을 떨어뜨리지 않게 가릴 때)
+    if (v.exp || v.gold) { var re = { t: 'reward', exp: v.ek ? Math.max(1, Math.round((v.exp || 0) * v.ek)) : v.exp || 0, gold: Math.round((v.gold || 0) * (v.gk || 1) * (by && by.side === 'ally' && by.fx && by.fx.goldUp ? 1 + by.fx.goldUp : 1)), L: v.L, x: v.x, y: v.y, boss: v.role === 'boss', type: v.type }; if (v.ek) { re.ek = v.ek; re.dk = v.dk; } if (v.summoned) re.sum = true; if (v.elite != null) re.elite = v.elite; if (v.eliteCrew != null) re.eliteCrew = v.eliteCrew; if (this.mode === 'scn') re.mode = 'scn'; this.emit(re); }      // elite·eliteCrew: 현상 수배 정예(plan), mode: 시나리오 안의 처치(현상금이 거른다)      // sum: 불려 나온 적 (전리품을 떨어뜨리지 않게 가릴 때)      // 2.2.2 ek·gk·dk: 큰 부대에 맞춰 불어난 들판 무리 — 하나하나의 경험치·골드·드랍은 조금 덜 (DS.packOf)
     var g = this.groups.filter(function (g) { return g.id === v.grp; })[0];
     if (g && g.alive > 0 && !v.summoned) { g.alive--; if (!g.alive) g.deadAt = this.t; }
     if (v.obj) {

@@ -713,11 +713,12 @@ DS.rollDrop = function (save, e, rnd) {
   rnd = rnd || Math.random;
   var T = DS.DROP, out = [];
   if (!save || !e || e.boss) return out;                                       // 보스는 승리 처리(bossLoot·pitLoot)에서 준다
-  if (e.sum || (e.exp != null && e.exp < (6 + 1.6 * e.L) * 0.5)) return out;      // 소환된 적(경험치 25%)은 떨어뜨리지 않는다
+  if (e.sum || (e.exp != null && e.exp / (e.ek || 1) < (6 + 1.6 * e.L) * 0.5)) return out;      // 소환된 적(경험치 25%)은 떨어뜨리지 않는다
   if (DS.bountyHit) DS.bountyHit(save, e, rnd).forEach(function (b) { out.push.apply(out, DS.bountyReward(save, b, rnd)); });      // 현상 수배: 달성하면 알림·보상이 전리품 목록에 섞여 나온다
   if (!(T.mul > 0) || e.L < DS.partyL(save) + T.minL) return out;              // 한참 약한 적
   var R = BIG[e.type] ? T.big : T.mob, zone = e.zone || save.zone, d, bm = DS.bountyMul ? DS.bountyMul(save, zone, 'drop') : 1;
   if (e.elite != null || e.eliteCrew != null) bm *= e.elite != null ? 6 : 2;      // 정예 무리는 더 잘 떨어뜨린다 (우두머리 장비는 현상금 보상으로 따로)
+  var dk = e.dk > 0 ? e.dk : 1; bm *= dk;      // 2.2.2: 큰 부대에 맞춰 불어난 무리는 하나하나가 덜 떨어뜨린다
   DS.gearRefSave(save);
   if (e.scn) { if (rnd() < R.item * T.mul * bm) { d = rollItem(save, zone, rnd, 1); if (d) out.push(d); } return out; }      // 2.1.1: 시나리오 싸움의 처치는 장비를 떨어뜨리지 않는다 — 장비는 승리 보상(bossLoot) 한 번에서만
   if (rnd() < T.zl * T.mul * bm * (BIG[e.type] ? 2 : 1)) {      // 2.1.0: 그 지역의 전설 (가진 것이면 zlOwn 배율로 한 번 더 굴린다)

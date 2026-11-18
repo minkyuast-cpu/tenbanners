@@ -181,7 +181,7 @@ function fieldFight() {
   const zid = farmZone(), z = zone(zid), L = farmL();
   let gs = z.spawns.filter(g => g.L <= L + 1); if (!gs.length) gs = z.spawns.slice().sort((a, b) => a.L - b.L).slice(0, 2);
   const g = gs[Math.floor(rnd() * gs.length)];
-  const sim = new D.Sim({ map: z.rows, mode: 'zone', spawns: [{ id: g.id, x: g.x, y: g.y, L: g.L, list: g.list.slice() }], seed: (rnd() * 1e6 | 0) + 1, inv: s.items,
+  const sim = new D.Sim({ map: z.rows, mode: 'zone', spawns: [D.packOf ? D.packOf(g, D.partySpecs(s).length) : { id: g.id, x: g.x, y: g.y, L: g.L, list: g.list.slice() }],      // 2.2.2: 무리는 유닛 수만큼 불어난다 (게임과 같다) seed: (rnd() * 1e6 | 0) + 1, inv: s.items,
     mk: (type, o) => D.enemySpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, diff: 0.72, zone: zid, save: s }) });
   const p = sim.freeNear(g.x, Math.min(z.h - 2, g.y + 5), 'foot', 8) || sim.freeNear(g.x, g.y, 'foot', 10) || { x: g.x, y: g.y };
   place(sim, D.partySpecs(s), null, p.x, p.y);

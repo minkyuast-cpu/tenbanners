@@ -1689,6 +1689,8 @@ function tabOpt() {
     '<div class="row"><div class="tx"><b>죽음 연출</b><small>아군이 영영 쓰러질 때 화면을 확대해 마지막 모습을 보여 준다</small></div><button class="btn small' + (o.dfx !== false ? ' gold' : '') + '" data-opt="dfx">' + (o.dfx !== false ? '켬' : '끔') + '</button></div>' +
     '<div class="row"><div class="tx"><b>전투 대사</b><small>싸우는 동안 가끔 가문마다 제 말버릇을 말풍선으로 한다</small></div><button class="btn small' + (o.bark !== false ? ' gold' : '') + '" data-opt="bark">' + (o.bark !== false ? '켬' : '끔') + '</button></div>' +
     (DS.fieldOptRow ? DS.fieldOptRow(o) : '') +      // r47: 들판 습격 (field.js)
+    '<div class="row"><div class="tx"><b>지도 보기</b><small>한 화면에 보이는 땅. 멀리 볼수록 그림이 작아진다</small></div><div class="seg" role="group" aria-label="지도 보기">' +
+      DS.ZOOM_KEYS.map(function (x) { return '<button data-zoom="' + x[0] + '"' + ((o.zoom || 'mid') === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>' +
     '<div class="row"><div class="tx"><b>가문원 이름표</b><small>필드에서 가문원 발밑에 이름 표시</small></div><div class="seg" role="group" aria-label="가문원 이름표">' +
       [['sel', '선택 가문'], ['all', '모두'], ['off', '끔']].map(function (x) { return '<button data-mtag="' + x[0] + '"' + ((o.mtag || 'sel') === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>' +
     '<div class="row"><div class="tx"><b>공지사항 <i class="own">v' + DS.VERSION + '</i></b><small>버전별 변경 사항과 저장 안내</small></div><button class="btn small" data-opt="notes">보기</button></div>' +
@@ -2108,6 +2110,8 @@ DS.openMenu = function (tab) {
     if (cur === 'people' && peopleClick(e, o)) return;      // r16 person: 인물 탭
     if (e.target.closest('.sfoot [data-loot-sellsel]') && DS.lootUI && DS.lootUI.sellSel) { A('tap'); DS.lootUI.sellSel(function () { if (o.isConnected) o.draw(); }); return; }
     var hj = e.target.closest('[data-hj]'); if (hj) { var hd = $('#hj' + hj.dataset.hj, o), sb = $('.sb', o); if (hd && sb) { var nv = $('.mtabs', o); sb.scrollTop += hd.getBoundingClientRect().top - sb.getBoundingClientRect().top - (nv ? nv.offsetHeight : 0) - 6; } A('tap'); return; }
+    var zb = e.target.closest('[data-zoom]');
+    if (zb) { G.save.opt.zoom = zb.dataset.zoom; if (G.view && G.view.resize) G.view.resize(); A('tap'); U.persist(); o.draw(); return; }      // 2.2.2 지도 보기
     var mt = e.target.closest('[data-mtag]');
     if (mt) { G.save.opt.mtag = mt.dataset.mtag; if (G.view) G.view.mtag = mt.dataset.mtag; A('tap'); U.persist(); o.draw(); return; }
     var us = e.target.closest('[data-use]');

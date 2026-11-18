@@ -367,7 +367,8 @@ function enterZone(id, from, pos) {
   s.zone = id; s.visited[id] = true; if (z.town) s.town = id;
   if (pos && !(pos.x >= 0 && pos.y >= 0 && pos.x < z.w && pos.y < z.h && DS.COST[DS.TILE_CH[z.rows[pos.y][pos.x]] || 'plain'][0] > 0)) pos = null;
   var start = pos || DS.zoneEntry(z, from);
-  var spawns = z.spawns.map(function (g) { return { id: g.id, x: g.x, y: g.y, L: g.L, list: g.list.slice() }; });
+  var nU = DS.partySpecs ? DS.partySpecs(s).length : 3;      // 2.2.2: 무리는 싸우는 유닛 수만큼 불어난다 (DS.packOf)
+  var spawns = z.spawns.map(function (g) { return DS.packOf ? DS.packOf(g, nU) : { id: g.id, x: g.x, y: g.y, L: g.L, list: g.list.slice() }; });
   var block = new Uint8Array(z.w * z.h), decor = [];
   z.pois.forEach(function (p) { if (p.t === 'npc' || p.t === 'arena') { block[p.y * z.w + p.x] = 1; decor.push({ x: p.x, y: p.y, sprite: p.sprite || 'npc_' + (p.look % 4), flip: p.look % 2 === 1 }); } });      // r39: 연무장 교관(arena.js)도 마을 사람처럼 선다
   var sim = new DS.Sim({ map: z.rows, mode: z.town ? 'town' : 'zone', spawns: spawns, seed: (Date.now() & 0xffff) + 1, inv: s.items, block: block,
@@ -513,7 +514,7 @@ function select(id) {
   G.sel = u.id; sim.leader = u.id; G.view.sel = u.id; G.view.focus = u.id; G.view.pan = { x: 0, y: 0 }; G.view.tgt = u.order && u.order.tid || null;
   cancelAim(); renderActs(); renderSys();
   for (var k in G.chipEls) G.chipEls[k].el.classList.toggle('sel', k === u.id);
-  var ce = G.chipEls[u.id], bx = $('#chips'); if (ce && bx && bx.classList.contains('lots') && ce.el.scrollIntoView) { try { ce.el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (x) {} }      // 2.2.0: 가로로 밀어 보는 칩 줄에서 고른 가문이 보이게
+  chipFollow(u.id);      // 2.2.2: 밀어 보는 칩 줄에서 고른 가문이 보이게 (부드럽게)
 }
 function order(u, o) { softResume(); G.itemsOpen = null; G.sim.setOrder(u.id, o); G.view.pan = { x: 0, y: 0 }; G.view.tgt = o && o.tid && G.sim.byId[o.tid] && G.sim.byId[o.tid].side === 'enemy' ? o.tid : null; }
 function poiAt(t) {
@@ -607,8 +608,18 @@ function unitLine(u) {
   if (u.side === 'enemy') return (u.role === 'boss' ? '보스 ' : '') + u.name + ', ' + lvText(u.L) + ', HP ' + Math.ceil(u.hp) + '/' + u.mhp + (fx ? ', ' + fx : u.info ? ' — ' + u.info : '');
   return u.name + ', HP ' + Math.ceil(u.hp) + '/' + u.mhp + (fx ? ', ' + fx : '');
 }
+// 2.2.2: 빈 칸을 눌렀을 때, 눌린 자리에서 화면으로 18px(적어도 0.6칸) 안에 선 유닛 — 지도를 멀리 보면 칸이 작아 손가락이 빗맞는다
+function tapUnit(t) {
+  if (t.fx == null || !G.view) return null;
+  var r = Math.max(0.6, 18 / (16 * (G.view.k || 2))), best = null, bd = r * r;
+  G.sim.units.forEach(function (u) {
+    if (u.dead || u.gone) return; var v = G.view.vu[u.id], ux = (v ? v.x : u.x) + 0.5, uy = (v ? v.y : u.y) + 0.45, dx = t.fx - ux, dy = t.fy - uy, d = dx * dx + dy * dy;
+    if (d < bd) { bd = d; best = u; }
+  });
+  return best;
+}
 function onTap(t) {
-  var sim = G.sim, me = sim.byId[G.sel], u = sim.at(t.x, t.y);
+  var sim = G.sim, me = sim.byId[G.sel], u = sim.at(t.x, t.y) || (poiAt(t) ? null : tapUnit(t));
   DS.Audio.unlock();
   if (!me || me.dead || G.ending) return;
   if (G.aim) return aimTap(t, u);
@@ -714,7 +725,7 @@ DS.vetBadge = vetBadge;
 function renderChips() {
   var box = $('#chips'), sv = G.save, sim = G.sim; box.innerHTML = ''; G.chipEls = {};
   var n = sv.party.filter(function (id) { return sv.chars[id]; }).length;
-  box.classList.toggle('many', n > 3); box.classList.toggle('lots', n > 6);      // 2.2.0: 모두 싸운다 — 넷부터는 작은 칩 두 줄, 일곱부터는 가로로 밀어 보는 한 줄 (390 폭)
+  box.classList.toggle('swipe', n > 3); chipSwipe(box);      // 2.2.2: 넷부터는 2.1.2 의 큰 칩 그대로 한 줄 — 390 폭에 셋, 옆으로 밀어 본다 (작은 칩은 뺐다)
   sv.party.forEach(function (id) {
     var ch = sv.chars[id]; if (!ch) return;
     var uid = 'c' + id, u = sim && sim.byId[uid];
@@ -736,7 +747,82 @@ function renderChips() {
   });
   if (G.chipEls[G.sel]) G.chipEls[G.sel].el.classList.add('sel');
   G.mdT = 0;
+  chipFollow(G.sel, true); chipEdges(box);
 }
+// ───────── 2.2.2 칩 줄 밀기 ─────────
+//   손가락: 브라우저의 가로 스크롤(관성 · scroll-snap 이 칩 가장자리에 맞춘다). 마우스·펜: 끌면 직접 밀고, 놓으면 관성 뒤 가장 가까운 칩 가장자리로.
+//   8px 넘게 움직였으면 그 누름은 칩 고르기가 아니다 (click 을 잡아먹는다). 세로로 먼저 움직이면 끌기를 시작하지 않는다.
+//   더 있는 쪽 가장자리만 흐리게(fl · fr).
+var CHIP_TH = 8;
+function chipEdges(box) {
+  box = box || $('#chips'); if (!box) return;
+  var sl = box.scrollLeft, mx = box.scrollWidth - box.clientWidth, on = box.classList.contains('swipe');
+  box.classList.toggle('fl', on && sl > 2); box.classList.toggle('fr', on && sl < mx - 2);
+}
+function chipStep(box) { var c = box.querySelector('.chip'), c2 = c && c.nextElementSibling; return c2 ? c2.offsetLeft - c.offsetLeft : c ? c.offsetWidth : 80; }
+function chipSnapTo(box, left, smooth, rd) {      // 가장 가까운 칩 가장자리 (칩 너비가 모두 같다) · rd: Math.ceil / Math.floor (따라가기 — 칩이 잘리지 않게)
+  var st = chipStep(box), mx = box.scrollWidth - box.clientWidth, t = Math.max(0, Math.min(mx, (rd || Math.round)(left / st - (rd ? (rd === Math.ceil ? 0.02 : -0.02) : 0)) * st));
+  if (mx - t < st / 2) t = mx;
+  try { box.scrollTo({ left: t, behavior: smooth && !calm() ? 'smooth' : 'auto' }); } catch (x) { box.scrollLeft = t; }
+  return t;
+}
+function chipGlideStop(box) { if (box._gl) { cancelAnimationFrame(box._gl); box._gl = 0; } }
+function chipSwipe(box) {
+  if (!box || box._sw) return; box._sw = 1;
+  var d = null, raf = 0;
+  box.addEventListener('pointerdown', function (e) {
+    if (e.button > 0 || !box.classList.contains('swipe')) { d = null; return; }
+    chipGlideStop(box);
+    d = { id: e.pointerId, x: e.clientX, y: e.clientY, sl: box.scrollLeft, m: e.pointerType !== 'touch', moved: false, drag: false, lx: e.clientX, lt: performance.now(), v: 0 };
+  });
+  box.addEventListener('pointermove', function (e) {
+    if (!d || e.pointerId !== d.id) return;
+    var dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.moved && Math.abs(dx) > CHIP_TH && Math.abs(dx) >= Math.abs(dy)) d.moved = true;
+    if (!d.moved && Math.abs(dy) > CHIP_TH) { d = null; return; }      // 세로 몸짓은 놓아준다
+    if (!d.m || !d.moved) return;
+    if (!d.drag) { d.drag = true; box.classList.add('drag'); try { box.setPointerCapture(e.pointerId); } catch (x) {} }
+    var now = performance.now(), dt = Math.max(1, now - d.lt);
+    d.v = 0.7 * ((e.clientX - d.lx) / dt) + 0.3 * d.v; d.lx = e.clientX; d.lt = now;
+    box.scrollLeft = d.sl - dx; e.preventDefault();
+  });
+  function end(e, cancel) {
+    if (!d || (e && e.pointerId !== d.id)) return;
+    var q = d; d = null;
+    if (cancel && !q.m) q.moved = true;      // 손가락: 브라우저가 가로 스크롤을 넘겨받았다
+    if (q.moved) G.chipDragT = performance.now();
+    if (!q.drag) return;
+    try { box.releasePointerCapture(q.id); } catch (x) {}
+    var v = performance.now() - q.lt > 90 ? 0 : -q.v, last = performance.now();      // px/ms (멈췄다 놓으면 관성 없음)
+    if (calm()) v = 0;
+    (function glide() {
+      var now = performance.now(), dt = Math.min(40, now - last); last = now;
+      if (Math.abs(v) > 0.05) { var before = box.scrollLeft; box.scrollLeft += v * dt; v *= Math.pow(0.94, dt / 16); if (box.scrollLeft !== before) { box._gl = requestAnimationFrame(glide); return; } }
+      box._gl = 0; box.classList.remove('drag'); chipSnapTo(box, box.scrollLeft, true);
+    })();
+  }
+  box.addEventListener('pointerup', function (e) { end(e, false); });
+  box.addEventListener('pointercancel', function (e) { end(e, true); });
+  box.addEventListener('click', function (e) {      // 끌기 끝의 click 은 고르기가 아니다
+    if (performance.now() - (G.chipDragT || 0) < 400) { e.stopPropagation(); e.preventDefault(); G.chipDragT = 0; }
+  }, true);
+  box.addEventListener('scroll', function () {
+    if (d && !d.moved && Math.abs(box.scrollLeft - d.sl) > CHIP_TH) d.moved = true;
+    if (!raf) raf = requestAnimationFrame(function () { raf = 0; chipEdges(box); });
+  }, { passive: true });
+  window.addEventListener('resize', function () { chipEdges(box); });
+}
+// 고른 칩이 줄 밖에 있으면 보이는 자리까지 민다 (now: 바로)
+function chipFollow(uid, now) {
+  var ce = G.chipEls[uid], box = $('#chips'); if (!ce || !box || !box.classList.contains('swipe') || box.classList.contains('drag')) return;
+  var cs = getComputedStyle(box), pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+  var br = box.getBoundingClientRect(), cr = ce.el.getBoundingClientRect(), t = null, rd = null;
+  if (cr.left < br.left + pl - 1) { t = box.scrollLeft + cr.left - (br.left + pl); rd = Math.floor; }
+  else if (cr.right > br.right - pr + 1) { t = box.scrollLeft + cr.right - (br.right - pr); rd = Math.ceil; }
+  if (t == null) return;
+  chipGlideStop(box); chipSnapTo(box, t, !now, rd);
+}
+DS.chipFollow = chipFollow;
 // 전투 아이템 버튼에 올릴 소모품. 아이템팀의 DS.itemKeys 가 있으면 그 순서로 "가진 것만", 없으면 지금의 네 가지.
 var ITEM_BASE = ['herb', 'mana', 'endo'];      // r15: 소모품은 회복 셋뿐
 function itemKeys() {
@@ -2027,7 +2113,9 @@ function resumeRite() {
 }
 function layoutInsets() {
   var top = $('#top'), bot = $('#bot'); if (!G.view) return;
+  var t0 = G.view.inset.top, b0 = G.view.inset.bottom;
   G.view.inset.top = top ? top.offsetHeight : 0; G.view.inset.bottom = bot ? bot.offsetHeight : 0;
+  if ((t0 !== G.view.inset.top || b0 !== G.view.inset.bottom) && G.view.sim && G.view.resize) G.view.resize();      // 2.2.2: 지도 보기의 배율은 위아래 판 사이 높이를 본다
   var sg = $('#s-game'); if (sg) { sg.style.setProperty('--top-h', G.view.inset.top + 'px'); sg.style.setProperty('--bot-h', G.view.inset.bottom + 'px'); }
 }
 DS.layoutInsets = layoutInsets;

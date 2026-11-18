@@ -71,6 +71,18 @@ DS.ZONE_POS = { haemil: [0, 5], dawn: [0, 4], windy: [1, 4], stone: [1, 3], doda
 var OPP = { N: 'S', S: 'N', E: 'W', W: 'E' };
 
 var zcache = {};
+// 2.2.2 들판 무리의 크기: 무리 수는 셋이 싸우던 때에 맞춰져 있다 — 싸우는 유닛(가주 + 가문원) 수에 따라 불린다.
+//   배율 k = 1 + per × (유닛 − base), 1 ~ cap. 무리 목록을 되풀이해 늘린다 (3마리 → 열 유닛 6 · 열여섯 유닛 7).
+//   불어난 만큼 하나하나의 경험치·골드·드랍은 (늘어난 배수)^-0.9 — 무리 전체로는 조금 더 준다 (싸움이 길어진 몫. 봇 12판: 캠페인 6.68 → 6.58시간, 0.8 이면 6.27 · 1.0 이면 6.96)
+DS.PACK = { per: 0.15, base: 3, cap: 2.4, exp: 0.9, gold: 0.9, drop: 0.9 };
+DS.packK = function (n) { var P = DS.PACK; return Math.max(1, Math.min(P.cap, 1 + P.per * ((+n || 0) - P.base))); };
+DS.packOf = function (g, n) {
+  var P = DS.PACK, len = g.list.length, m = len ? Math.max(len, Math.round(len * DS.packK(n))) : 0, list = [];
+  for (var i = 0; i < m; i++) list.push(g.list[i % len]);
+  var o = { id: g.id, x: g.x, y: g.y, L: g.L, list: list };
+  if (m > len) { var f = m / len; o.ek = Math.pow(f, -P.exp); o.gk = Math.pow(f, -P.gold); o.dk = Math.pow(f, -P.drop); }
+  return o;
+};
 DS.buildZone = function (id) {
   if (zcache[id]) return zcache[id];
   var Z = DS.ZONES[id], z = Z.town ? buildTown(id, Z) : buildField(id, Z);

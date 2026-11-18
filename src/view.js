@@ -165,7 +165,9 @@ V.resize = function () {
   this.dpr = Math.min(3, window.devicePixelRatio || 1);
   this.cv.width = Math.round(cw * this.dpr); this.cv.height = Math.round(ch * this.dpr);
   this.W = cw; this.H = ch;
-  this.k0 = Math.min(cw / (Math.min(this.mw || 12, 12.5) * 16), ch / (9.5 * 16)); this.k = this.k0 * (this.zk || 1);      // r16 fx: k0 = 바탕 배율, k = 죽음 연출의 줌을 곱한 배율
+  var kb = Math.min(cw / (Math.min(this.mw || 12, 12.5) * 16), ch / (9.5 * 16));      // 2.2.1 까지의 배율 (폭 12.5칸 · 높이 9.5칸)
+  var zo = DS.zoomOf ? DS.zoomOf() : 1, ins = this.inset || {}, kf = this.mw ? Math.min(cw / (this.mw * 16), Math.max(ch * 0.5, ch - (ins.top || 0) - (ins.bottom || 0)) / (this.mh * 16)) : 0;      // 2.2.2: 지도 보기(설정) — 보통은 가로·세로 1.3배 칸 · 단 지도 전체가 화면(위아래 판 사이)에 들어오는 배율보다 더 멀리 빼지는 않는다
+  this.k0 = Math.max(kb / zo, Math.min(kb, kf)); this.k = this.k0 * (this.zk || 1);      // r16 fx: k0 = 바탕 배율, k = 죽음 연출의 줌을 곱한 배율
   this.snap = true;
 };
 V.sfx = function (name, arg) {
@@ -178,7 +180,8 @@ V.onScreen = function (tx, ty) {
 };
 V.tileAt = function (cx, cy) {
   var r = this.cv.getBoundingClientRect();
-  return { x: Math.floor(((cx - r.left) / this.k + this.cam.x) / 16), y: Math.floor(((cy - r.top) / this.k + this.cam.y) / 16) };
+  var fx = ((cx - r.left) / this.k + this.cam.x) / 16, fy = ((cy - r.top) / this.k + this.cam.y) / 16;
+  return { x: Math.floor(fx), y: Math.floor(fy), fx: fx, fy: fy };      // 2.2.2: fx·fy — 칸 안의 자리 (멀리 볼 때 유닛을 조금 빗맞혀도 고른다)
 };
 V.screenOf = function (tx, ty) { return { x: (tx * 16 + 8 - this.cam.x) * this.k, y: (ty * 16 + 8 - this.cam.y) * this.k }; };
 V.casting = function () { return teleHostile(this); };      // r8 gfx: 화면 안에 적 예고가 떠 있다 (game.js mercTalk 가 잡담을 미룰 때 본다)
@@ -226,6 +229,10 @@ V.lootFx = function (tx, ty, grade, icon) {
 var CER = { lv: 0.85, promo: 1.6, rank: 0.75, fuse: 1.7 }, CER_RM = { lv: 0.5, promo: 0.9, rank: 0.5, fuse: 0.9 }, CER_SW = 0.8;      // CER_SW: 승급·합일에서 새 모습으로 바뀌는 순간(초)
 function calmFx() { var GO = DS.gfxOpt || {}; if (GO.calm != null) return !!GO.calm; try { return !!(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (x) { return false; } }
 DS.calmFx = calmFx;
+// 2.2.2 지도 보기: 한 화면에 보이는 칸이 2.2.1 의 몇 배인가 (가로·세로 모두). 기본은 보통(1.3배)
+DS.ZOOM = { near: 1, mid: 1.3, far: 1.55 };
+DS.ZOOM_KEYS = [['near', '가깝게'], ['mid', '보통'], ['far', '멀리']];
+DS.zoomOf = function () { var o = DS.G && DS.G.save && DS.G.save.opt, z = o && DS.ZOOM[o.zoom]; return z || DS.ZOOM.mid; };
 V.cere = function (id, kind, o) {
   var v = this.vu[id]; if (!v || v.dying >= 0 || !CER[kind]) return false;
   if (!this.onScreen(v.x, v.y)) return false;      // 화면 밖이면 그리지 않는다 (승급 창도 기다리지 않는다)

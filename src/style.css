@@ -4435,19 +4435,18 @@ html.calm .lootcall, html.calm .lootcall .lccard, html.calm .lootcall .lcrays, h
 .ov.res26 .slot.gr5 .box { box-shadow: 0 0 0 2px #f0b64a, 0 0 18px rgba(240,182,74,.6); }
 .ov.res26 .slot.gr4 .box { box-shadow: 0 0 0 2px #b181e6, 0 0 14px rgba(177,129,230,.5); }
 
-/* 2.2.0 「한 사람 한 사람」: 가주가 선 가문은 모두 싸운다 — 칩이 넷 이상이면 작은 칩(얼굴 · 단 · 체력 막대, 이름은 뺀다)을 가로로 밀어 본다 (390 폭에 넷쯤 보인다) */
-html body #app#app #s-game #chips.many { display: flex; gap: 3px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 7px; margin-bottom: -5px; }
-html body #app#app #s-game #chips.many::-webkit-scrollbar { display: none; }
-html body #app#app #s-game #chips.many .chip { flex: 0 0 60px; min-width: 0; height: 46px; grid-template-columns: 26px minmax(0, 1fr); column-gap: 2px; padding: 0 3px 0 2px; scroll-snap-align: start; }
-html body #app#app #s-game #chips.many .chip .por { width: 26px; height: 26px; }
-html body #app#app #s-game #chips.many .chip .por canvas { width: 24px !important; height: 24px !important; }
-html body #app#app #s-game #chips.many .chip .cn, html body #app#app #s-game #chips.many .chip .clv, html body #app#app #s-game #chips.many .chip .agc { display: none; }
-html body #app#app #s-game #chips.many .chip .bars { margin: 0; align-self: center; }
-html body #app#app #s-game #chips.many .chip > em.lv { left: 3px; bottom: 1px; margin-left: 0; font-size: 9px; transform: none; }
-html body #app#app #s-game #chips.many .chip .md { left: 30px; bottom: 3px; }
-html body #app#app #s-game #chips.many .chip .ccr { transform: scale(.8); transform-origin: 0 0; }
-html body #app#app #s-game #chips.many .chip .ghost small { display: none; }
-html body #app#app #s-game #chips.many .chip > em.lv i { display: none; }
+/* 2.2.2 칩 줄: 넷 이상이면 2.1.2 의 큰 칩(얼굴 · 이름 · 단/Lv · 막대) 그대로 한 줄 — 390 폭에 셋이 들고 옆으로 민다.
+   칩 가장자리에 붙는다(scroll-snap) · 스크롤 막대는 숨긴다 · 더 있는 쪽 가장자리만 흐리게(fl · fr).
+   위아래 7px · 옆 4px 덧대기: 칩 밖으로 나오는 문장·공훈·필·LV UP·고른 표시(▼)가 스크롤 상자에 잘리지 않게 (같은 만큼 바깥 여백을 당긴다) */
+html body #app#app #s-game #chips.swipe { --fl: 0px; --fr: 0px; display: flex; gap: 5px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding: 0 4px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; margin: -7px -4px; padding: 7px 4px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); }
+html body #app#app #s-game #chips.swipe::-webkit-scrollbar { display: none; }
+html body #app#app #s-game #chips.swipe.fl { --fl: 14px; }
+html body #app#app #s-game #chips.swipe.fr { --fr: 14px; }
+html body #app#app #s-game #chips.swipe.drag { scroll-snap-type: none; cursor: grabbing; }
+html body #app#app #s-game #chips.swipe.drag .chip { pointer-events: none; }
+html body #app#app #s-game #chips.swipe .chip { flex: 1 0 clamp(76px, calc((100% - 10px) / 3), 150px); max-width: 190px; min-width: 0; scroll-snap-align: start; -webkit-user-drag: none; user-select: none; }
 /* 2.2.0 가문 칸: 대기조(싸우지 않는다)는 흐리게 점선, 빈 가문의 가주 칸은 붉은 점선, 가문원은 그대로 */
 .hch.sb { border-style: dashed; opacity: .78; }
 .hch.sb small { color: var(--dim); }
