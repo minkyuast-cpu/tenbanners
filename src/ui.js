@@ -1779,7 +1779,7 @@ function pplOne(m) {
   return { key: 'm' + m.id, kind: 'merc', ref: m.id, ent: m, who: m, name: m.n || '', house: m.sn || '', g: m.g, xp: DS.pL(m), sx: m.sx || '', ag: agInfo(m),
     seat: st, place: st.k === 'bar' ? '자리 없음' : (st.sb ? '막사' : DS.flagName(st.ch.cls) + (st.k === 'bear' ? ' 가주' : ' 가문원')), spr: mercSpr(m, 2), out: inP, sb: !!st.sb, wait: false, bar: st.k === 'bar' };
 }
-// 배우자감: 맹주와 성별이 다른 어른 가운데 지금 맺을 수 있는 사람 (마을 밖이라는 까닭은 빼고 본다) — 2.2.0: 대기조는 혼인하면 가문원이 되어 함께 싸운다
+// 배우자감: 맹주와 성별이 다른 어른 가운데 지금 맺을 수 있는 사람 (마을 밖이라는 까닭은 빼고 본다) — 2.2.0: 막사의 사람는 혼인하면 가문원이 되어 함께 싸운다
 function wedWhy(m) {
   var s = G.save, hero = heroCh(); if (!hero || !lgOn() || !DS.linWed) return '혼인 없음';
   var a = agInfo(m); if (a && a.young) return '아직 어리다';
@@ -2390,7 +2390,7 @@ function lgPickSpouse(kind, ref, parent) {
     if (kind === 'ch') s.mercs.forEach(function (m) { list.push({ kind: 'merc', ref: m.id, name: (DS.fullName ? lgTry(function () { return DS.fullName(m); }) : '') || m.n || '', sx: lgSexOf('merc', m.id), role: DS.mercKind(m) + (m.o && s.chars[m.o] ? ', ' + DS.flagName(s.chars[m.o].cls) + (m.h ? ' 가주' : ' 가솔') : ', 막사'), grade: m.g, ag: agInfo(m), spr: mercSpr(m, 2) }); });
     list.forEach(function (c) { c.why = lgWhyNot(kind, ref, c.kind, c.ref); c.same = mySx && c.sx === mySx; });      // 고르기 전에는 화면에서만 따진다 (linCanWed 는 용병마다 가계도 사람을 만들기 때문에 누를 때만 부른다)
     var ok = list.filter(function (c) { return !c.why; }), no = list.filter(function (c) { return c.why; }), same = no.filter(function (c) { return c.same; }).length;
-    var html = '<p class="hint">' + esc(myName) + '의 짝을 고른다. 성별이 달라야 한다.' + (kind === 'merc' ? ' 혼인은 맹주와만 한다.' : ' 대기조였던 배우자는 가문원이 되어 함께 싸운다.') + '</p>';
+    var html = '<p class="hint">' + esc(myName) + '의 짝을 고른다. 성별이 달라야 한다.' + (kind === 'merc' ? ' 혼인은 맹주와만 한다.' : ' 막사에 있던 배우자는 가문원이 되어 함께 싸운다.') + '</p>';
     if (same) html += '<p class="lgsame">같은 성별(' + esc(lgSexTxt(mySx)) + ') ' + same + '명은 선택할 수 없다.</p>';
     if (!ok.length) html += '<p class="lock">지금 맞을 수 있는 사람이 없다.</p>';
     ok.forEach(function (c) { html += lgCandRow(c, '<button class="btn small gold" data-lgto="' + c.kind + ':' + c.ref + '">선택</button>'); });
