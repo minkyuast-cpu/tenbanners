@@ -294,11 +294,13 @@ DS.egYear = function (s) {
     } else if (ev.t === 'mnat') { ps.nl++; out.push({ k: 'die', t: lines('pass.line.die', { a: ev.name || '누군가' }, h2(ev.mid || 0, 3, 17) * 4) }); }
   });
   if (adults.length) out.unshift({ k: 'adult', t: lines(adults.length > 1 ? 'pass.line.adultN' : 'pass.line.adult', { a: adults.join(', ') }) });
-  if (DS.bnAuto && s.opt && s.opt.refill !== false) DS.bnAuto(s).forEach(function (r) {      // 4.0 (⑤-4): 든 사람을 잃은 깃발은 그해에 자동 채움 — 줄마다 「승려 깃발 — 가람이 받아 들었다」
+  if (DS.sbTick) DS.sbTick(s).forEach(function (r) {      // 2.2.0: 가주를 잃은 가문은 그해에 대기조가 잇는다 — 「센주 가문, 난새가 가주가 되었다」 (대기조가 없으면 빈 가문으로 남는다)
     var ch = s.chars[r.ch], m = r.mid ? mercOf(s, r.mid) : null; if (!ch) return; ps.nb = (ps.nb || 0) + 1;
     var f = DS.flagName(ch.cls), a = m ? (m.ttl || m.n || '') : '';
-    out.push({ k: 'refill', t: [m ? f + ', ' + a + jo(a, '이가') + ' 가주가 되었다.' : f + '의 가주가 없다.'] });
+    out.push({ k: 'refill', t: [f + ', ' + a + jo(a, '이가') + ' 가주가 되었다.'] });
   });
+  if (!ps.vw) ps.vw = {};
+  DS.charList(s).forEach(function (ch) { if (DS.vacant && DS.vacant(s, ch) && !ps.vw[ch.id]) { ps.vw[ch.id] = 1; out.push({ k: 'refill', t: [DS.flagName(ch.cls) + '의 가주가 없다. 빈 가문으로 남는다.'] }); } });
   var ls = out.map(function (o) { return passLine(ps, y, o.t.map(String)); });
   var st = DS.egStop(s);
   return { y: ps.y, cy: y, lines: ls, stop: st };
@@ -432,6 +434,7 @@ function doCall(s, i, ok) {
   var cp = P[pid] ? caller(s, P[pid]) : heroP(s); res.caller = cp ? nm(s, cp.id) : s.name;
   if (ok) {
     var R = DS.egReturn(s, i); if (!R) return { ok: false, why: '부활시킬 수 없다' };
+    if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 돌아온 이는 맹주 집 사람이면 가문원, 아니면 자리가 남은 가문의 대기조로
     var q = P[pid] || LP(s)[R.a]; res.mid = R.mid; res.skill = R.skill ? (DS.SKILLS[R.skill] || {}).name || '' : ''; res.nick = R.nick || ''; res.age = R.age; res.kind = kindName(R.type, R.g);
     res.rel = relOf(s, q, cp && cp.id !== q.id ? cp : null); res.re = R.re ? nm(s, R.re) : '';
   } else rec.tr = 1;
@@ -441,7 +444,6 @@ function doCall(s, i, ok) {
 DS.egCall = function (s, i) {
   if (!DS.egCallOpen(s)) return { ok: false, why: '이번 새벽은 지났다' };
   var rec = s.coffins && s.coffins.list[i]; if (!rec) return { ok: false, why: '관이 비었다' };
-  if (DS.reserve(s).length >= DS.MERC_MAX) return { ok: false, why: '막사에 빈자리가 없다.' };
   var ok = DS.egCallRoll(s) * 100 < DS.egCallP(s, rec);
   return doCall(s, i, ok);
 };
@@ -451,7 +453,6 @@ DS.egCallForce = function (s, pid, ok) {
   var list = (s.coffins && s.coffins.list) || [], i = -1;
   for (var k = 0; k < list.length; k++) if (list[k].pid === pid) i = k;
   if (i < 0) return null;
-  if (ok && DS.reserve(s).length >= DS.MERC_MAX) return null;
   return doCall(s, i, !!ok);
 };
 DS.egSkip = function (s) { var e = E(s); if (e.call && e.call.g === e.gen && e.call.used === 0) e.call.used = 2; return true; };
@@ -498,7 +499,7 @@ DS.egRunAuto = function (s, pol) {
   }
   if (e.pass && e.pass.f === 'call') {
     var L = DS.egCallList(s), pick = null;
-    if (L.length && pol.call && pol.call !== 'none' && DS.reserve(s).length < DS.MERC_MAX) {
+    if (L.length && pol.call && pol.call !== 'none' ) {
       var by = pol.call === 'light' ? function (a, b) { return b.p - a.p || a.i - b.i; } : pol.call === 'gold' ? function (a, b) { return (b.tr ? 1 : 0) - (a.tr ? 1 : 0) || b.rg - a.rg || a.i - b.i; } : function (a, b) { return b.rg - a.rg || b.p - a.p || a.i - b.i; };
       pick = L.slice().sort(by)[0];
     }

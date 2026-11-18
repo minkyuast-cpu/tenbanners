@@ -89,7 +89,7 @@ function sameSum(a, b) { if (!a || !b) return false; return Math.abs((a.time || 
 function box(t, sm, foot) {
   if (!sm) return '<div class="ocol"><b>' + t + '</b><small>저장 없음</small></div>';
   return '<div class="ocol"><b>' + t + '</b><span>' + esc(sm.name) + '</span><small>' + esc(clsName(sm.cls, sm.tier)) + ' · ' + sm.tier + '단</small>' +
-    '<small>시나리오 ' + sm.cleared + ' · 합일 ' + (sm.merged || 0) + '</small><small>대장 1, 부대원 ' + sm.mercs + ', 가문 ' + sm.chars + '</small><small>플레이 ' + hm(sm.time) + '</small>' + (foot ? '<small>' + foot + '</small>' : '') + '</div>';
+    '<small>시나리오 ' + sm.cleared + ' · 합일 ' + (sm.merged || 0) + '</small><small>맹주 1, 사람 ' + sm.mercs + ', 가문 ' + sm.chars + '</small><small>플레이 ' + hm(sm.time) + '</small>' + (foot ? '<small>' + foot + '</small>' : '') + '</div>';
 }
 function curLocal() { flush(); var raw = lsCur(), s = raw && DS.Save ? DS.Save.peek(raw) : null; return { raw: raw, s: s, sum: sumOf(s) }; }
 
@@ -264,7 +264,7 @@ function doImport(r) {
 function welcome(s, src, pubOff) {
   var sm = sumOf(s), o = onl(), can = !!(o && o.canWrite && o.canWrite()), fbOn = !!(o && o.st === 'ready'), BE = DS.OnlineBE, acct = '';
   if (!can && fbOn && BE && BE.acctRow) { try { acct = BE.acctRow(o); } catch (e) { acct = ''; } }
-  var html = '<h2>' + (src === 'web' ? '공식 주소에' : '새 집에') + ' 옮겨 왔습니다</h2><p>「' + esc(sm.name) + '」 대장의 진행입니다.</p><p class="dim">대장 1, 부대원 ' + sm.mercs + ', 가문 ' + sm.chars + ', 시나리오 ' + sm.cleared + ', 장비 ' + sm.gear + '</p>' +
+  var html = '<h2>' + (src === 'web' ? '공식 주소에' : '새 집에') + ' 옮겨 왔습니다</h2><p>「' + esc(sm.name) + '」 대장의 진행입니다.</p><p class="dim">맹주 1, 사람 ' + sm.mercs + ', 가문 ' + sm.chars + ', 시나리오 ' + sm.cleared + ', 장비 ' + sm.gear + '</p>' +
     (can ? '<p>브라우저에만 있는 저장은 지워질 수 있습니다. 클라우드에 올려 두면 다른 기기에서도 이어 합니다.</p><button class="btn gold wide" id="mvUp">클라우드에 올리기</button><button class="btn wide" data-close id="mvLater">나중에</button>'
       : (fbOn ? '<p>브라우저에만 있는 저장은 지워질 수 있습니다. 로그인해 클라우드에 올려 두세요.</p>' + (acct ? '<div class="mvacct">' + acct + '</div>' : '') : '') + '<button class="btn ' + (acct ? '' : 'gold ') + 'wide" data-close id="mvLater">' + (acct ? '나중에' : '이어 하기') + '</button>');
   var q = ov(html, 'mvok'); if (!q) { if (DS.showNews) DS.showNews(); return; }

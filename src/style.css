@@ -4432,3 +4432,16 @@ html.calm .lootcall, html.calm .lootcall .lccard, html.calm .lootcall .lcrays, h
 .ov.res26 .slot.gr4 .box, .ov.res26 .slot.gr5 .box { animation: lcGlow 1.2s ease-in-out infinite alternate; }
 .ov.res26 .slot.gr5 .box { box-shadow: 0 0 0 2px #f0b64a, 0 0 18px rgba(240,182,74,.6); }
 .ov.res26 .slot.gr4 .box { box-shadow: 0 0 0 2px #b181e6, 0 0 14px rgba(177,129,230,.5); }
+
+/* 2.2.0 「한 사람 한 사람」: 가주가 선 가문은 모두 싸운다 — 칩이 넷 이상이면 작은 칩(넷씩), 일곱 이상이면 가로로 밀어 보는 한 줄 (390 폭) */
+html body #app#app #s-game #chips.many { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+html body #app#app #s-game #chips.many .chip { height: 46px; grid-template-columns: 28px minmax(0, 1fr); column-gap: 3px; padding: 0 3px 0 2px; }
+html body #app#app #s-game #chips.many .chip .por { width: 28px; height: 28px; }
+html body #app#app #s-game #chips.many .chip .por canvas { width: 26px !important; height: 26px !important; }
+html body #app#app #s-game #chips.many .chip .cn b { font-size: var(--fs-s); font-family: var(--f-9); }
+html body #app#app #s-game #chips.many .chip .cn .tr, html body #app#app #s-game #chips.many .chip .clv { display: none; }
+html body #app#app #s-game #chips.many .chip > em.lv { left: 14px; font-size: 9px; }
+html body #app#app #s-game #chips.many .chip .md { left: 33px; }
+html body #app#app #s-game #chips.lots { display: flex; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding-bottom: 8px; margin-bottom: -4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+html body #app#app #s-game #chips.lots::-webkit-scrollbar { display: none; }
+html body #app#app #s-game #chips.lots .chip { flex: 0 0 86px; min-width: 0; scroll-snap-align: start; }

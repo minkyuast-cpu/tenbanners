@@ -28,8 +28,8 @@ DS.LG = {
 // 가호: v = 한 번 고를 때의 몫. d 의 {v} 는 그 몫, 「가문의 유산」 창은 쌓인 합을 쓴다
 DS.LG_BOON = {
   hp:     { n: '굳센 핏줄', d: '모든 가주의 체력 +{v}%', v: 3, u: '%', line: '윗대의 뼈가 아랫대에 남는다.' },
-  atk:    { n: '날 선 가솔', d: '가솔의 공격과 마공 +{v}%', v: 3, u: '%', line: '따르는 이들의 칼도 집의 이름을 안다.' },
-  spd:    { n: '빠른 손', d: '가주와 가솔의 행동 회복 +{v}%', v: 2, u: '%', line: '한 박자 먼저 움직인다.' },
+  atk:    { n: '날 선 가문원', d: '가문원의 공격과 마공 +{v}%', v: 3, u: '%', line: '맹주를 따르는 이들의 칼도 집의 이름을 안다.' },
+  spd:    { n: '빠른 손', d: '가주와 가문원의 행동 회복 +{v}%', v: 2, u: '%', line: '한 박자 먼저 움직인다.' },
   grade:  { n: '이름이 부르는 사람', d: '모집에서 고급 이상이 나올 확률 +{v}%p', v: 2, u: '%p', line: '좋은 사람은 이름난 집을 찾아온다.' },
   coffin: { n: '넉넉한 관', d: '빈 관 하나를 바로 들인다', v: 1, u: '개', line: '모실 자리가 하나 더 생긴다.' },
   birth:  { n: '번성', d: '아이가 태어날 확률 +{v}%', v: 5, u: '%', line: '집에 아이 울음이 끊이지 않는다.' },
@@ -311,6 +311,12 @@ if (pm0) DS.pullMerc = function (save, rnd, minG) {
   if (v && m && m.g === 1 && DS.GRADES[1] && DS.GRADES[1].p > 0 && (rnd || Math.random)() * DS.GRADES[1].p < v) m.g = 2;
   return m;
 };
+var rh0 = DS.recruitHero;      // 2.2.0: 영웅 모집에도 같은 가호
+if (rh0) DS.recruitHero = function (save, rnd) {
+  var r = rh0.apply(this, arguments), v = DS.lgVal(save, 'grade');
+  if (v && r && r.m && r.m.g === 1 && DS.GRADES[1] && DS.GRADES[1].p > 0 && (rnd || Math.random)() * DS.GRADES[1].p < v) { r.m.g = 2; r.g = 2; }
+  return r;
+};
 // 출산
 var lby0 = DS.linBirthYear, lbp0 = DS.linBirthP, bornS = null;
 if (lby0) DS.linBirthYear = function (s, rnd) { bornS = s; try { return lby0.apply(this, arguments); } finally { bornS = null; } };
@@ -341,8 +347,8 @@ if (ge0) DS.gainExp = function (save, amount, eL) {
   if (L && DS.capL && DS.egOn && DS.egOn(save)) {
     var add = 0;
     (DS.persons ? DS.persons(save) : []).forEach(function (q) {      // r42: 레벨 100 에 닿은 사람마다
-      if (DS.pL(q.who) < 100 || q.role === 'bench' || q.role === 'follow' && !q.dep) return;
-      add += amount * (q.dep ? 1 : DS.BAL.bench) * DS.BAL.exp / 3;      // 가솔까지 세므로 셋으로 나눈다 (옛 가문 하나의 몫)
+      if (DS.pL(q.who) < 100 || q.role === 'bench' || q.role === 'sb' || !q.dep) return;
+      add += amount * DS.BAL.exp / (q.role === 'kin' ? 3 : 1);      // 2.2.0: 가주·맹주는 가문 하나의 몫, 가문원은 셋에 하나 (옛: 가솔까지 셋으로 나눴다)
     });
     if (add > 0) {
       var need = DS.expNeed(100) * DS.LG.brkNeed; L.ovx += add;

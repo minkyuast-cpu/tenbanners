@@ -57,7 +57,7 @@ DS.rnTarget = function (s, ref) {
     return { kind: 'hero', ch: ch, p: p, name: DS.charName(ch), sur: '', given: DS.charName(ch) };
   }
   if (k === 'm') {
-    m = merc(s, id); if (!m) return { why: '떠난 부대원이다' };
+    m = merc(s, id); if (!m) return { why: '떠난 사람이다' };
     if (m.cast) return { why: '자기 가문의 이름을 잇는 사람이다. 바꿀 수 없다' };      // ⑱ 아홉 집 사람(2대 포함)은 이야기 이름 표에 묶인다
     p = m.pid && P(s)[m.pid] && P(s)[m.pid].m === m.id ? P(s)[m.pid] : null;
     return { kind: 'merc', m: m, p: p, name: p && DS.linName ? DS.linName(s, p.id) : (m.n || ''), sur: m.sn || '', given: m.n || '' };

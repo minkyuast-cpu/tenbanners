@@ -17,7 +17,7 @@ DS.FIELD = {
     grace: 30,                   // 지역에 들어선 뒤 이 초(게임 시간)는 조용하다
     cd: 150,                     // 한 번 끝난 뒤 다음까지 적어도 이 초
     hpMin: 0.5,                  // 부대 평균 체력이 이보다 낮으면 미룬다 (방금 싸운 부대를 덮치지 않는다)
-    perAlly: 0.5,                // 첫 물결의 수 = 살아 있는 우리 유닛(가주+가솔) × 이 값 × 세기
+    perAlly: 0.5,                // 첫 물결의 수 = 살아 있는 우리 유닛(가주+가문원) × 이 값 × 세기
     size: [3, 7], max: 8, grow: 1,     // 물결 하나의 수 (최소·최대), 상한, 다음 물결마다 +grow
     waves3: 6,                   // 우리 유닛이 이만큼 이상이고 레벨이 밀리지 않으면 세 물결 (아니면 둘)
     ring: [6, 9],                // 부대 선두에서 몇 칸 떨어진 곳에서 몰려오는가 (걸어서 닿는 땅)
@@ -27,7 +27,7 @@ DS.FIELD = {
     mobExp: 1,                   // 기습한 적 하나의 경험치 배율 (1 = 보통 들판 적과 같다)
     gold: 0.5, exp: 0.4,         // 다 물리치면: 그 무리가 준 골드·경험치에 이 배율만큼 더 (보너스)
     drop: 1.5, bonusDrop: 3,     // 기습한 적의 드랍 배율 · 마지막 보너스 한 번의 드랍 배율
-    merit: 3,                    // 출전 가문마다 가문 공훈 (× 가솔 수)
+    merit: 3,                    // 싸우는 가문마다 가문 공훈 (× 2 — 2.2.0: 가솔이 없어 두 몫)
     fade: 4, life: 150,          // 남은 적이 모두 진정한 채 fade 초 → 흩어진다 · 기습 전체 상한
     slow: 0.35, slowMs: 800      // 경보 때 세상이 slow 배로 slowMs(실제 시간) 동안 느려진다 (움직임 줄이기면 없음)
   },
@@ -42,7 +42,7 @@ DS.FIELD = {
     dist: [9, 11],               // 선두에서 몇 칸 떨어져 나타나는가 (보스는 12칸 넘게 떨어지면 진정한다)
     expMul: 1.5, goldMul: 2,     // 쓰러뜨렸을 때 경험치·골드 (보스 기본 ×8·×6 위에)
     grade: 4, drops: 1,          // 높은 굴림 유니크 하나 보장 (2.1.1: 둘째 유니크는 뺐다 — 귀하게)
-    merit: 20,                   // 출전 가문마다 가문 공훈 (× 가솔 수) — 정예 현상금과 같은 무게
+    merit: 20,                   // 싸우는 가문마다 가문 공훈 (× 2) — 정예 현상금과 같은 무게
     idle: 40, life: 300,         // 맞선 뒤 이 초 동안 아무도 때리지 않으면 / 나타난 지 이 초가 넘고 진정해 있으면 물러간다
     cd: 240,                     // 한 번 끝난 뒤 다음까지
     fleeGold: 0.03, fleeCap: 60, // 물러날 때 잃는 골드: 가진 것의 3%, 단마다 60 까지
@@ -305,7 +305,7 @@ function giveGear(sv, id, at) {      // loot.js 의 putGear 와 같게: 가방�
 function houseMerit(F, per) {
   var sv = F.save, n = 0;
   if (!DS.hAdd || !per) return 0;
-  sv.party.forEach(function (id) { var hc = sv.chars[id]; if (!hc || hc.down || hc.vac) return; var p = per * Math.max(1, DS.mercsOf(sv, id).length); DS.hAdd(sv, hc, p); n += p; });
+  sv.party.forEach(function (id) { var hc = sv.chars[id]; if (!hc || hc.down || hc.vac) return; var p = per * 2; DS.hAdd(sv, hc, p); n += p; });
   return n;
 }
 function bossDown(sim, F, v) {
@@ -476,7 +476,7 @@ function bossCard(sim, e) {
   var c = document.createElement('div'); c.id = 'fbcard'; c.setAttribute('role', 'alertdialog'); c.setAttribute('aria-label', '필드 보스 ' + D.name);
   c.innerHTML = '<small class="fbk">' + (gap >= 6 ? '매우 위험' : '위험') + ' · 필드 보스</small><em class="fbt">' + esc(D.title) + '</em><b class="fbn">' + esc(D.name) + '</b>' +
     '<p class="fbs"><span>적 <b>' + esc(lvT(B.L)) + '</b></span><span>우리 평균 ' + esc(lvT(pl)) + '</span>' + (B.esc.length ? '<span>호위 ' + B.esc.length + '</span>' : '') + '</p>' +
-    '<p class="fbw">쓰러진 가주와 부대원은 돌아오지 못한다.</p>' +
+    '<p class="fbw">쓰러진 가주와 가문원은 돌아오지 못한다.</p>' +
     '<div class="fbb"><button class="btn red" id="fbGo" type="button">맞선다</button><button class="btn" id="fbRun" type="button">물러난다</button></div>' +
     '<p class="fbf">물러나면 들머리로 돌아가고 골드를 ' + (lost > 0 ? lost.toLocaleString() : 0) + ' 잃는다' + (hunt ? '. 전체 자동은 멈춰 기다린다' : '') + '</p>';
   host().appendChild(c); UI.card = c; G.hold = (G.hold || 0) + 1;
@@ -512,7 +512,7 @@ function onEv(sim, e) {
     else if (e.k === 'wave') { if (e.w > 1 && v && !calm()) v.shake = Math.max(v.shake || 0, 0.3); }
     else if (e.k === 'end') {
       setTimeout(function () { fban('win', '기습을 물리쳤다', '처치 ' + e.kills + ' · 보너스 G+' + e.gold.toLocaleString() + ' · EXP+' + e.exp.toLocaleString(), 1900); A('slam'); if (DS.Audio && DS.Audio.duck) DS.Audio.duck(5, 1200); }, 350);
-      if (e.merit && DS.ui) setTimeout(function () { if (!UI.card) DS.ui.toast('기습을 버텨 냈다. 출전 가문 공훈 +' + e.merit, 3000); }, 2300);
+      if (e.merit && DS.ui) setTimeout(function () { if (!UI.card) DS.ui.toast('기습을 버텨 냈다. 싸운 가문 공훈 +' + e.merit, 3000); }, 2300);
       shout('ambWin', 'any', 900);
     } else if (e.k === 'fade') { if (DS.ui) DS.ui.toast('기습한 무리가 흩어졌다', 2400); }
   } else if (e.t === 'fBoss') {
@@ -536,7 +536,7 @@ function onEv(sim, e) {
       });
       var bm = $('#bMenu'); if (bm && e.drops && e.drops.length) bm.classList.add('newdot');
       if (DS.lootCall && e.drops && e.drops.length) DS.lootCall(e.drops, { delay: 2300 });      // 2.1.1: 필드 보스의 유니크를 가운데에 크게
-      if (DS.ui) setTimeout(function () { DS.ui.toast(e.name + ' 격파. 전리품 ' + (e.drops || []).map(function (d) { return d.name; }).join(', ') + (e.merit ? ' · 출전 가문 공훈 +' + e.merit : ''), 4200); }, 2800);
+      if (DS.ui) setTimeout(function () { DS.ui.toast(e.name + ' 격파. 전리품 ' + (e.drops || []).map(function (d) { return d.name; }).join(', ') + (e.merit ? ' · 싸운 가문 공훈 +' + e.merit : ''), 4200); }, 2800);
       shout('bossWin', 'any', 1500);
     } else if (e.k === 'leave') { bossHud(null, false); if (DS.ui) DS.ui.toast(josa(e.name, '이가') + ' 들판 저편으로 물러갔다', 3000); }
   }
