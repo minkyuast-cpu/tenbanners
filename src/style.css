@@ -4576,3 +4576,63 @@ html body #app#app .row.pr2.brow > .bbt .btn.small { min-height: 34px; min-width
 .gpk-r .tx { display: grid; gap: 3px; min-width: 0; } .gpk-r .df { display: block; min-width: 0; } .gpk-r .df .schips { display: flex; flex-wrap: wrap; gap: 4px; }
 .gpk-r.best { box-shadow: inset 0 0 0 1px rgba(159, 209, 140, .55); } .gpk-r.dim { opacity: .5; cursor: default; }
 .gpk-m { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .gpk-m .gbest { font-style: normal; color: #9fd18c; font-weight: 700; }
+
+/* ═══ 2.2.2 가주 카드 (부대 탭 · 결과 창의 경험치 판) — 가문은 곧 그 가주: 큰 초상(등급 테) · 이름 · 가문(작게) · 단/Lv 알약 · 경험치 막대 · 전투력 ═══ */
+html body #app#app .hk2 { display: grid; gap: 8px; margin: 2px 0 12px; }
+html body #app#app .hkl { display: grid; justify-items: center; gap: 6px; }
+html body #app#app .hk9, html body #app#app .xb9 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+html body #app#app .hk { --fc: #c9a96a; position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; margin: 0; padding: 6px 5px 7px; text-align: center; color: var(--a-bone, #e9dfc8); font: inherit;
+  border: 1px solid transparent; border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 22%, #241c15) 0%, #1d1611 55%, #16110d 100%) padding-box, var(--a-rim-dim, linear-gradient(#5a4630, #2a2118)) border-box;
+  box-shadow: var(--a-bevel, none), var(--a-drop, 0 2px 0 #000); cursor: pointer; }
+html body #app#app .hk:active { filter: brightness(1.12); }
+html body #app#app .hk .hkh { display: flex; align-items: center; justify-content: center; gap: 3px; max-width: 100%; min-width: 0; height: 16px; }
+html body #app#app .hk .hkh svg.crest { flex: none; filter: drop-shadow(0 1px 0 #000) drop-shadow(0 0 4px color-mix(in srgb, var(--fc) 55%, transparent)); }
+html body #app#app .hk .hkh small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 10.5px/14px var(--f-ui); color: var(--a-mute, #b9ab90); }
+html body #app#app .hk .hkt { flex: none; padding: 0 4px; border-radius: 3px; font: 700 9.5px/14px var(--f-head); font-style: normal; color: var(--a-on-gold, #2a1804); background: var(--a-goldfill, #e8c36a); }
+html body #app#app .hk .hkr { position: absolute; top: 4px; right: 4px; line-height: 0; }
+html body #app#app .hk .hkr .vet { display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #3a2c1b, #120c07); border: 1px solid #000; color: #c9ced6; }
+html body #app#app .hk .hkr .vet.v3, html body #app#app .hk .hkr .vet.v4, html body #app#app .hk .hkr .vet.v5 { color: #f3d58a; }
+html body #app#app .hk .hkr .vet svg { width: 10px; height: 10px; }
+html body #app#app .hk .hkr .vet .vst { display: none; }
+/* 초상: 둥근 네모 테(등급 색) · 안은 가문 색이 비치는 어둠 */
+html body #app#app .hkf { --gc: #8a867d; position: relative; display: grid; place-items: center; width: 58px; height: 58px; margin: 3px 0 0; border-radius: 12px; overflow: hidden;
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--fc, #c9a96a) 34%, #2a2118), #0f0b08 80%); box-shadow: inset 0 0 0 2px var(--gc), inset 0 0 0 3px rgba(0, 0, 0, .55), 0 0 9px color-mix(in srgb, var(--gc) 40%, transparent), 0 2px 0 #000; }
+html body #app#app .hkf canvas, html body #app#app .hkf img { display: block; max-width: 52px; max-height: 52px; image-rendering: pixelated; }
+html body #app#app .hkf .hkq { font: 700 22px/1 var(--f-head); font-style: normal; color: rgba(201, 169, 106, .35); }
+html body #app#app .hkf .hkx { position: absolute; left: 0; right: 0; bottom: 6px; padding: 1px 0; font: 700 10px/13px var(--f-head); font-style: normal; color: #fff1ec; background: rgba(150, 32, 24, .88); letter-spacing: .05em; }
+html body #app#app .hkp { position: relative; z-index: 1; margin-top: -9px; padding: 0 6px; border-radius: 8px; font: 600 9.5px/15px var(--f-num); font-style: normal; white-space: nowrap; color: #fff1c6; background: linear-gradient(180deg, #5b4325, #2c1f12); box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255, 230, 170, .3); }
+html body #app#app .hkp b { font-weight: 700; color: #ffe08a; }
+html body #app#app .hk .hkn { max-width: 100%; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 13px/16px var(--f-head); text-shadow: 0 1px 0 #000; }
+html body #app#app .hk .hkn.dim { color: var(--a-dim, #8a7d66); }
+html body #app#app .hkb { position: relative; display: block; width: 100%; height: 4px; margin-top: 3px; border-radius: 3px; overflow: hidden; background: #0a0705; box-shadow: inset 0 1px 2px #000, 0 0 0 1px rgba(0, 0, 0, .8); }
+html body #app#app .hkb > u { position: absolute; inset: 0 auto 0 0; display: block; border-radius: inherit; background: linear-gradient(180deg, #ffe08a, #d39a2c); box-shadow: 0 0 4px rgba(255, 210, 110, .55); text-decoration: none; }
+html body #app#app .hk .hkw { display: block; margin-top: 2px; line-height: 14px; }
+html body #app#app .hk .hkw .pw { font-size: 11.5px; }
+html body #app#app .hk .hkv { display: block; max-width: 100%; margin-top: 3px; font: 500 10px/13px var(--f-ui); color: var(--a-dim, #8a7d66); white-space: normal; word-break: keep-all; }
+/* 맹주 가문: 위 가운데 넓은 카드, 큰 초상 · 금빛 테 */
+html body #app#app .hk.lord { width: min(100%, 236px); padding: 8px 12px 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 30%, #2c2117) 0%, #221a12 60%, #19130d 100%) padding-box, var(--a-rim, linear-gradient(#e8c36a, #7a5a2a)) border-box;
+  box-shadow: var(--a-bevel, none), 0 0 0 1px rgba(255, 222, 150, .3), 0 0 14px rgba(240, 182, 74, .22), var(--a-drop, 0 2px 0 #000); }
+html body #app#app .hk.lord .hkf { width: 78px; height: 78px; border-radius: 14px; }
+html body #app#app .hk.lord .hkf canvas, html body #app#app .hk.lord .hkf img { max-width: 70px; max-height: 70px; }
+html body #app#app .hk.lord .hkp { font-size: 11px; line-height: 17px; padding: 0 8px; }
+html body #app#app .hk.lord .hkn { font-size: 17px; line-height: 21px; }
+html body #app#app .hk.lord .hkb { height: 5px; }
+html body #app#app .hk.lord .hkw .pw { font-size: 14px; }
+/* 빈 가문 · 쓰러짐 · 아직 없음 */
+html body #app#app .hk.vac .hkf canvas, html body #app#app .hk.vac .hkf img { filter: brightness(0); opacity: .45; }
+html body #app#app .hk.vac { background: linear-gradient(180deg, #1c1611, #120e0a) padding-box, linear-gradient(rgba(214, 96, 86, .5), rgba(90, 40, 30, .5)) border-box; box-shadow: none; }
+html body #app#app .hk.vac .hkn { color: #e08a7e; }
+html body #app#app .hk.down .hkf canvas, html body #app#app .hk.down .hkf img { filter: grayscale(1) brightness(.55); }
+html body #app#app .hk.down { background: linear-gradient(180deg, #2a1512, #160d0b) padding-box, linear-gradient(#a8483c, #4a1f19) border-box; }
+html body #app#app .hk.none { opacity: .62; background: repeating-linear-gradient(135deg, #15110c 0 6px, #1a150f 6px 12px) padding-box, linear-gradient(#3a2e1f, #2a2118) border-box; box-shadow: none; }
+html body #app#app .hk.none svg.crest { filter: grayscale(1) brightness(.6); }
+html body #app#app .hk.none .hkn { color: var(--a-dim, #8a7d66); font-size: 12px; }
+/* 맹주 가문의 가문원 줄 */
+html body #app#app .hkk { display: grid; justify-items: center; gap: 3px; width: 100%; }
+html body #app#app .hkk > small { font: 500 10.5px/13px var(--f-ui); color: var(--a-mute, #b9ab90); }
+html body #app#app .hkkl { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 100%; }
+html body #app#app .hkm { --gc: #8a867d; display: grid; justify-items: center; width: 56px; min-width: 0; margin: 0; padding: 3px 2px 2px; font: inherit; color: var(--a-bone, #e9dfc8); border: 1px solid rgba(143, 122, 85, .35); border-bottom: 2px solid var(--gc); border-radius: 6px; background: var(--a-recess, #120e0a); box-shadow: inset 0 2px 3px rgba(0, 0, 0, .6); }
+html body #app#app .hkm canvas, html body #app#app .hkm img { max-height: 26px; width: auto; image-rendering: pixelated; }
+html body #app#app .hkm small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 10px/12px var(--f-ui); }
+html body #app#app .hkm i { font: 400 9px/11px var(--f-num); font-style: normal; color: #f6e6b8; }
+@media (max-width: 360px) { html body #app#app .hkf { width: 50px; height: 50px; } html body #app#app .hkf canvas, html body #app#app .hkf img { max-width: 46px; max-height: 46px; } html body #app#app .hk9 { gap: 4px; } }

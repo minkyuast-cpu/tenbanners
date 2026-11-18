@@ -1499,32 +1499,34 @@ function hgMeta(s, ch) {
   var hero = ch.id === s.hero, b = hero ? (ch.vac ? null : ch.ps) : DS.bearer(s, ch), pi = s.party.indexOf(ch.id), n = (b ? 1 : 0) + DS.mercsOf(s, ch.id).length;
   return { hero: hero, b: b, pi: pi, n: n, pw: DS.cardPower(s, ch), bn: hero ? DS.charName(ch) : b ? (b.ttl || b.n || '') : '', sb: DS.sbOf(s, ch.id).length };
 }
-// 부대 탭 한 화면: 가문 칸 안에 가주 · 맹주 가문은 어른 가문원을 작은 얼굴로. 칸 머리를 누르면 가문 창 (2.2.0)
-function hgChip(attrs, spr, name, g, cls, L) { return '<button class="hch' + (cls ? ' ' + cls : '') + '" ' + attrs + ' style="--gc:' + (g ? gcol(g) : 'transparent') + '">' + spr + (L ? '<i class="hcl num">' + DS.tierOfL(L) + '·' + DS.lvOfL(L) + '</i>' : '') + '<small>' + esc(name || '') + '</small></button>'; }      // r42: 사람마다 단·Lv (「4·7」 = 4단 Lv7)
-function hgChips(s, ch, hero) {
-  var b = hero ? null : DS.bearer(s, ch), kin = hero ? DS.mercsOf(s, ch.id) : [], h = '';
-  if (hero) h += hgChip('data-hinfo="1"', charSpr(ch, 1), ch.vac || ch.down ? '없음' : DS.charName(ch), (ch.ps && ch.ps.g) || 3, 'lead' + (ch.vac || ch.down ? ' empty' : ''), ch.vac || !ch.ps ? 0 : DS.pL(ch.ps));
-  else if (b) h += hgChip('data-info="' + b.id + '"', mercSpr(b, 1), b.ttl || b.n || '', b.g, 'lead', DS.pL(b));
-  else h += hgChip('data-ch="' + ch.id + '"', '<i class="add">+</i>', '빈 가문', 0, 'lead empty vac');
-  kin.forEach(function (m) { h += hgChip('data-info="' + m.id + '"', mercSpr(m, 1), m.ttl || m.n || '', m.g, 'kin', DS.pL(m)); });
-  return '<div class="hgm">' + h + '</div>';
-}
+// 2.2.2 가주 카드: 가문은 곧 그 가주 — 큰 초상(등급 테) · 이름 · 가문(작게) · 단/Lv 알약 · 경험치 막대 · 전투력. 공훈 계급은 오른쪽 위 작은 표식만
+function pFrac(w) { var L = DS.pL(w), cap = DS.pCap(w); return L >= cap ? 1 : Math.max(0, Math.min(1, (+w.exp || 0) / DS.expNeed(L))); }
+function lvPill(L, cls) { return '<i class="hkp num' + (cls ? ' ' + cls : '') + '">' + DS.tierOfL(L) + '단 <b>Lv' + DS.lvOfL(L) + '</b></i>'; }
+function xpBar(f, cls) { return '<i class="hkb' + (cls ? ' ' + cls : '') + '"><u style="width:' + Math.round(Math.max(0, Math.min(1, f)) * 1000) / 10 + '%"></u></i>'; }
 function hgCell(s, ch, cls) {
   if (!ch) {      // 아직 없는 가문
     var sc = joinScn(cls);
-    return '<button class="hgc none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '">' + DS.houseCrest(cls, 22) + '<b>' + esc(hgShort(null, cls)) + '</b><small>' + (sc ? '시나리오 ' + sc + '에서 합류' : '아직 없음') + '</small></button>';
+    return '<button class="hk none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">아직 없음</b><small class="hkv">' + (sc ? '시나리오 ' + sc + '에서 합류' : '') + '</small></button>';
   }
-  var m = hgMeta(s, ch);
-  return '<div class="hgc' + (m.hero ? ' mj' : '') + (m.pi >= 0 ? ' in' : '') + (ch.down ? ' down' : '') + (m.b ? '' : ' nob') + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '">' +
-    '<button class="hgh" data-ch="' + ch.id + '">' + DS.houseCrestOf(s, ch, 20) + '<b>' + esc(hgShort(ch)) + (m.hero ? ' <i class="tg">맹주</i>' : '') + '</b>' +
-    '<small class="hgl">' + (m.b ? lv(ch.L) : '<em class="warn">빈 가문</em>') + (ch.down ? ' <em class="warn">쓰러짐</em>' : m.b ? pwNum(m.pw, 'sm') : '') + '</small><span class="hgv">' + DS.vetBadge(DS.hRank(ch)) + '<small>' + esc(DS.hName(DS.hRank(ch))) + '</small></span></button>' + hgChips(s, ch, m.hero) + '</div>';
+  var m = hgMeta(s, ch), b = m.b, L = b ? DS.pL(b) : ch.L, rk = DS.hRank(ch), dn = !!ch.down;
+  var st = (m.hero ? ' lord' : '') + (dn ? ' down' : '') + (b ? '' : ' vac') + (m.pi >= 0 ? ' in' : '');
+  var por = '<span class="hkf" style="--gc:' + (b ? gcol(b.g || 3) : '#4a3f30') + '">' + charSpr(ch, m.hero ? 4 : 3) + (dn ? '<i class="hkx">쓰러짐</i>' : '') + '</span>';
+  var foot = b ? xpBar(dn ? 0 : pFrac(b)) + '<span class="hkw">' + pwNum(m.pw, 'sm') + '</span>' : '<small class="hkv">' + (m.sb ? '막사의 같은 병과 ' + m.sb + '명' : '영웅관에서 모집') + '</small>';
+  return '<button class="hk hgh' + st + '" data-ch="' + ch.id + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '" aria-label="' + esc(hgShort(ch) + ' 가문, ' + (b ? m.bn + ' ' + lv(L) : '빈 가문') + (dn ? ', 쓰러짐' : '')) + '">' +
+    '<span class="hkh">' + DS.houseCrestOf(s, ch, m.hero ? 16 : 14) + '<small>' + esc(hgShort(ch)) + '</small>' + (m.hero ? '<i class="hkt">맹주</i>' : '') + '</span>' +
+    (rk >= 1 ? '<span class="hkr" title="' + esc(DS.hName(rk)) + '">' + DS.vetBadge(rk) + '</span>' : '') + por + (b ? lvPill(L) : '') +
+    '<b class="hkn' + (b ? '' : ' dim') + '">' + esc(b ? m.bn : '빈 가문') + '</b>' + foot + '</button>';
 }
-// 2.1.0: 가문은 모두 한 격자에 공훈 순 (같으면 계급, 그다음 먼저 합류한 가문). 맹주가 선 가문은 왕관과 「맹주」 꼬리표만 다르다. 아직 오지 않은 가문은 맨 뒤 (가문 수를 열로 셈하지 않는다)
+function hgKin(s, ch) {      // 맹주 가문의 어른 가문원: 작은 얼굴 줄 (누르면 사람 창)
+  var kin = DS.mercsOf(s, ch.id); if (!kin.length) return '';
+  return '<div class="hkk"><small>가문원 ' + kin.length + '</small><div class="hkkl">' + kin.map(function (k) { return '<button class="hkm" data-info="' + k.id + '" style="--gc:' + gcol(k.g || 3) + '">' + mercSpr(k, 1.5) + '<small>' + esc(k.ttl || k.n || '') + '</small><i class="num">' + DS.tierOfL(DS.pL(k)) + '단 ' + DS.lvOfL(DS.pL(k)) + '</i></button>'; }).join('') + '</div></div>';
+}
+// 2.2.2: 맹주 가문은 위 가운데 큰 카드(+ 가문원 줄), 나머지 가문은 아래 3×3 (공훈 순 · 아직 오지 않은 가문은 맨 뒤)
 function houseGrid(s) {
-  var all = DS.houseSort ? DS.houseSort(s, DS.charList(s)) : DS.charList(s), cells = [], have = {};
-  all.forEach(function (c) { have[c.cls] = 1; var C = DS.CLASSES[c.cls]; if (C && C.master && DS.FAMILY[C.fam]) DS.FAMILY[C.fam].members.forEach(function (k) { have[k] = 1; }); cells.push(hgCell(s, c)); });
+  var all = DS.houseSort ? DS.houseSort(s, DS.charList(s)) : DS.charList(s), cells = [], have = {}, lord = null;
+  all.forEach(function (c) { have[c.cls] = 1; var C = DS.CLASSES[c.cls]; if (C && C.master && DS.FAMILY[C.fam]) DS.FAMILY[C.fam].members.forEach(function (k) { have[k] = 1; }); if (c.id === s.hero) lord = c; else cells.push(hgCell(s, c)); });
   Object.keys(DS.CLASSES).forEach(function (k) { var C = DS.CLASSES[k]; if (!C.master && !have[k]) cells.push(hgCell(s, null, k)); });
-  return '<div class="hgrid"><p class="hgsort">' + esc(DS.allyFull ? DS.allyFull(s) : '') + ' · 가문은 공훈 순</p><div class="hg9">' + cells.join('') + '</div></div>';
+  return '<div class="hgrid hk2"><p class="hgsort">' + esc(DS.allyFull ? DS.allyFull(s) : '') + ' · 가문은 공훈 순</p>' + (lord ? '<div class="hkl">' + hgCell(s, lord) + hgKin(s, lord) + '</div>' : '') + '<div class="hk9">' + cells.join('') + '</div></div>';
 }
 // 부대 탭 한 줄: 합일까지 (7단 Lv10 가문 수). 5단 넘은 가문이 없으면 빈칸
 function fuNear(s) {
@@ -1570,7 +1572,7 @@ function partyClick(e, o) {
   if (t.closest('[data-gohall]')) { if (DS.townBusy && DS.townBusy()) { A('cancel'); toast(DS.townWorkWhy(), 2600); return true; } A('tap'); mercShop(); return true; }
   if (t.closest('[data-fire]')) return true;      // 방출: 문서 손잡이(askFire)가 받는다
   if ((b = t.closest('[data-barsw]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } if (+b.dataset.barsw) { A('tap'); bnPick(+b.dataset.barsw, o); } return true; }
-  if ((b = t.closest('.hgm [data-info], .bar2 [data-info]'))) { A('tap'); mercInfo(+b.dataset.info, o); return true; }
+  if ((b = t.closest('.hgm [data-info], .hkk [data-info], .bar2 [data-info]'))) { A('tap'); mercInfo(+b.dataset.info, o); return true; }
   if (t.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return true; }
   if ((b = t.closest('[data-hgnone]'))) { var sc = joinScn(b.dataset.hgnone); A('cancel'); toast(DS.flagName(b.dataset.hgnone) + '은 아직 없다.' + (sc ? ' 시나리오 ' + sc + '에서 합류한다.' : ''), 3200); return true; }
   if ((b = t.closest('[data-bnslot]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } A('tap'); bnPick(+b.dataset.bnslot, o); return true; }
