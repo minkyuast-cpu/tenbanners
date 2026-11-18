@@ -94,6 +94,20 @@ module.exports = async (page, shot, L) => {
   const ovl = await ev(() => { var bad = 0, n = 0; document.querySelectorAll('.ov .row.pk p.pwl').forEach(function (p) { var d = p.querySelector('.pwd'), b = p.querySelector('.cmpb'); if (!d || !b) return; n++; var dr = d.getBoundingClientRect(), br = b.getBoundingClientRect(), last = d.lastElementChild ? d.lastElementChild.getBoundingClientRect() : dr; if (Math.max(dr.right, last.right) > br.left || d.scrollWidth > d.clientWidth + 1) bad++; }); return { n: n, bad: bad, sw: document.documentElement.scrollWidth }; });
   await shot('swap_pick');
   A(ovl.n > 0 && !ovl.bad && ovl.sw <= 390, 'swap-pick rows: power delta does not overlap the compare button (' + ovl.n + ' rows)');
+  // 가문 창: 장비는 머리에 (스크롤 없이 보인다) → 칸을 누르면 고르기 창 → 줄 한 번에 입는다 · 고른 가문 초상을 한 번 더 누르면 같은 창
+  await ev((id) => { DS.ui.closeAll(); var s = DS.G.save; s.gear['sword.B'] = (s.gear['sword.B'] || 0) + 1; DS.charSheetOpen(id); }, c.X); await L.sleep(500);
+  const gs = await ev(() => { var t = Array.from(document.querySelectorAll('.ov .gsl2 .gt2')); return { n: t.length, vis: t.every(function (b) { var r = b.getBoundingClientRect(); return r.bottom <= innerHeight && r.top >= 0; }), old: !!document.querySelector('.ov .cgear') }; });
+  await shot('house_gear');
+  await page.click('.ov .gt2[data-gslot="w"]'); await L.sleep(400);
+  const gp = await ev(() => { var r = document.querySelector('.ov .gpk-r[data-on]'); return { rows: document.querySelectorAll('.ov .gpk-r').length, id: r && r.dataset.on, best: !!document.querySelector('.ov [data-gbest]') }; });
+  if (gp.id) { await page.click('.ov .gpk-r[data-on="' + gp.id + '"]'); await L.sleep(400); }
+  const gw = await ev((a) => { var s = DS.G.save; return { w: s.chars[a.X].w, sheet: !!document.querySelector('.ov .gsl2'), picker: !!document.querySelector('.ov .gpk-r') }; }, { X: c.X });
+  A(gs.n >= 2 && gs.vis && !gs.old && gp.rows > 0 && gp.best && gw.w === gp.id && gw.sheet && !gw.picker, 'house sheet: gear slots in the header (visible at 390×844), picker equips in one tap (' + gp.id + ')');
+  await ev(() => DS.ui.closeAll());
+  await page.click('#chips .chip[data-u="c' + c.X + '"]').catch(() => {}); await L.sleep(300);
+  if (!(await ev(() => !!document.querySelector('.ov .gsl2')))) { await page.click('#chips .chip[data-u="c' + c.X + '"]').catch(() => {}); await L.sleep(400); }
+  A(await ev(() => !!document.querySelector('.ov .gsl2')), 'tapping the selected top chip again opens the same house sheet');
+  await ev(() => DS.ui.closeAll());
   // 마을에서 가주가 떠났다 (천수 같은 싸움 밖의 죽음) → 다음 부대 정리(rebuildParty)에서 곧바로 막사의 같은 병과가 잇는다
   c = await ev(() => {
     DS.ui.closeAll(); var s = DS.G.save, H = DS.charList(s).filter(function (ch) { return ch.id !== s.hero && DS.bearer(s, ch, 1) && !DS.CLASSES[ch.cls].master; })[1];

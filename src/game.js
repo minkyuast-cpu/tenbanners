@@ -728,6 +728,7 @@ function renderChips() {
       var cu = G.sim.byId[uid], S = G.aim && aimDef(G.aim.id), me = G.sim.byId[G.sel];
       if (!cu) { toast(id === sv.hero ? '숨을 거둔 맹주다. 싸움이 끝나면 후계를 정한다.' : '쓰러진 가주다. 싸움이 끝나면 막사의 같은 병과가 잇는다.'); return; }
       if (S && S.tg === 'ally' && me && !cu.dead) { aimAt(me, G.aim.id, S, cu); return; }      // 아군 대상 기술·아이템은 초상을 눌러 건넨다
+      if (G.sel === uid && !G.sim.combat && DS.charSheetOpen) { A('tap'); DS.charSheetOpen(id); return; }      // 2.2.0: 고른 가문을 한 번 더 누르면 가문 창 (장비는 머리에)
       A('tap'); select(uid);
     });
     box.appendChild(el);

@@ -4557,3 +4557,23 @@ html body #app#app .row.pr2.brow > .bbt .btn.small { min-height: 34px; min-width
 .lgcb.lgh small.lgsay { color: var(--bone, #ece2cc); font-size: var(--fs-s); line-height: 1.35; white-space: normal; }
 .lgcb.lgh .lgpw { display: grid; justify-items: end; font-style: normal; } .lgcb.lgh .lgpw small { font-size: 10px; color: var(--mute); }
 .lgcb.k-o1 { border-color: var(--ember2); } .lgcb.k-o3 { border-color: rgba(143, 184, 216, .45); }
+/* 2.2.0 머리의 장비 칸 (가문 창 · 사람 창): 무기 · 방어구 · 든 물건 타일 — 누르면 고르기 창 */
+.gsl2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0 10px; }
+.gsl2.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .gsl2.n1 { grid-template-columns: minmax(0, 1fr); max-width: 60%; }
+.gt2 { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; min-height: 54px; padding: 6px 8px; border: 2px solid var(--gc, rgba(220, 180, 106, .3)); border-radius: 8px; background: rgba(0, 0, 0, .32); text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.gt2 .ico { flex: none; }
+.gt2 .gtx { display: grid; min-width: 0; line-height: 1.25; } .gt2 .gtx b { font-size: var(--fs-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--gc, var(--bone, #ece2cc)); } .gt2 .gtx small { font-size: 10px; color: var(--mute, #c4b89e); }
+.gt2 .gen { position: absolute; left: 5px; bottom: 3px; font: 700 11px/1 var(--f-num, monospace); font-style: normal; text-shadow: 0 1px 0 #000, 0 0 2px #000; }
+.gt2 .gup { position: absolute; right: 5px; top: 3px; font-style: normal; font-size: 11px; line-height: 1; color: #9fd18c; }
+.gt2.empty { border-style: dashed; border-color: rgba(220, 180, 106, .28); background: rgba(0, 0, 0, .18); }
+.gt2.empty .gtx b { color: var(--mute, #c4b89e); }
+.gt2 .gph, .gpk-cur .gph { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 6px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); color: var(--mute, #c4b89e); font-size: 10px; opacity: .8; }
+.gsl2.n3 .gt2 { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 3px; padding: 6px 4px; }
+.gsl2.n3 .gt2 .gtx { justify-items: center; width: 100%; }
+/* 장비 고르기 창 */
+.gpk-cur { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px; border: 1px solid rgba(220, 180, 106, .25); border-radius: 8px; background: rgba(0, 0, 0, .25); margin-bottom: 8px; }
+.gpk-cur .tx { min-width: 0; } .gpk-cur .gpk-b { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.gpk-r { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 10px; margin: 0 0 6px; border: 1px solid rgba(220, 180, 106, .2); border-left: 3px solid var(--gc, #8a867d); border-radius: 6px; background: rgba(0, 0, 0, .28); text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.gpk-r .tx { display: grid; gap: 3px; min-width: 0; } .gpk-r .df { display: block; min-width: 0; } .gpk-r .df .schips { display: flex; flex-wrap: wrap; gap: 4px; }
+.gpk-r.best { box-shadow: inset 0 0 0 1px rgba(159, 209, 140, .55); } .gpk-r.dim { opacity: .5; cursor: default; }
+.gpk-m { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .gpk-m .gbest { font-style: normal; color: #9fd18c; font-weight: 700; }

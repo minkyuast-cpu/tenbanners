@@ -374,27 +374,65 @@ function cmdGearClick(e, chId, o) {
   }
   return false;
 }
-// 지휘관 창에서 장비 바꾸기
+// 2.2.0 머리의 장비 칸 (가문 창 · 가주와 맹주의 사람 창): 무기 · 방어구 타일 (그림 · 등급 테 · +강화). 사람이 든 물건(가주 · 가문원 · 막사)은 셋째 타일 — 있을 때만
+//   누르면 고르기 창(pickGear · 물건은 loot.js 의 mercItem). ch = 가문(장비의 주인) 또는 null, who = 물건을 드는 사람 또는 null
+function hasMItems(s) { return !!(DS.lootUI && DS.lootUI.mercItem && Object.keys(DS.MGEAR || {}).some(function (k) { return (s.items[k] || 0) > 0; })); }
+function gTile(sl, lab, g, bb) {
+  if (!g) return '<button class="gt2 empty sl-' + sl + '" data-gslot="' + sl + '" aria-label="' + lab + ' 비어 있음"><span class="gph" aria-hidden="true">' + lab + '</span><span class="gtx"><b>' + lab + '</b><small>비어 있다</small></span>' + (bb ? '<i class="gup" title="가방에 맞는 것이 있다">▲</i>' : '') + '</button>';
+  var gr = Math.max(1, Math.min(5, +g.grade || 1));
+  return '<button class="gt2 sl-' + sl + ' lr' + gr + '" data-gslot="' + sl + '" aria-label="' + lab + ': ' + esc(g.name) + (g.enh ? ' +' + g.enh : '') + '" style="--gc:' + gcolOf(gr) + '">' + (DS.iconHtml ? DS.iconHtml('gear', g.id, { size: 36 }) : '') + (g.enh ? '<i class="gen ' + enhCls(g.enh) + '">+' + g.enh + '</i>' : '') +
+    '<span class="gtx"><b>' + esc(g.name) + '</b><small>' + lab + '</small></span>' + (bb ? '<i class="gup" title="가방에 더 좋은 것이 있다">▲</i>' : '') + '</button>';
+}
+function gearSlots(ch, who) {
+  var s = G.save, h = '';
+  if (ch) [['w', '무기'], ['a', '방어구']].forEach(function (sl) { h += gTile(sl[0], sl[1], DS.gear(ch[sl[0]]), bestInBag(ch, sl[0])); });
+  if (who && (who.it || hasMItems(s))) {
+    var I = who.it && DS.ITEMS[who.it];
+    h += I ? '<button class="gt2 sl-it lr2" data-gslot="it" aria-label="든 물건: ' + esc(I.name) + '">' + (DS.iconHtml ? DS.iconHtml('item', who.it, { size: 36 }) : '') + '<span class="gtx"><b>' + esc(I.name) + '</b><small>물건</small></span></button>'
+      : '<button class="gt2 empty sl-it" data-gslot="it" aria-label="물건 비어 있음"><span class="gph" aria-hidden="true">물건</span><span class="gtx"><b>물건</b><small>비어 있다</small></span></button>';
+  }
+  return h ? '<div class="gsl2 n' + ((ch ? 2 : 0) + (h.indexOf('data-gslot="it"') >= 0 ? 1 : 0)) + '">' + h + '</div>' : '';
+}
+// 장비 칸을 눌렀다: 처리했으면 true. chId = 장비의 주인 가문, mid = 물건을 드는 사람
+function gearSlotClick(e, chId, mid, o) {
+  var b = e.target.closest('[data-gslot]'); if (!b) return false;
+  var sl = b.dataset.gslot; A('tap');
+  if (sl === 'it') { if (mid && DS.lootUI && DS.lootUI.mercItem) DS.lootUI.mercItem(G.save, mid, function () { if (o.isConnected) o.draw(); }); return true; }
+  if (chId) pickGear(chId, sl, o);
+  return true;
+}
+// 장비 고르기 (머리의 칸을 누르면): 지금 것(강화 · 해제) · 「가장 좋은 것」 · 가방의 맞는 것 — 줄을 한 번 누르면 바로 입는다
 function pickGear(chId, slot, parent) {
-  var o = sheet(slot === 'w' ? '무기 바꾸기' : '방어구 바꾸기', function () {
-    var s = G.save, ch = s.chars[chId], cur = DS.gear(ch[slot]), html = '';
-    html += '<div class="row"><div class="tx">' + (cur ? gearLine(cur, ch) + '<small>지금 쓰는 것</small>' : '<b>맨몸</b>') + '</div>' + (cur ? '<button class="btn small" data-off="1">해제</button>' : '') + '</div>';
+  var W = slot === 'w' ? '무기' : '방어구';
+  var o = sheet(W, function () {
+    var s = G.save, ch = s.chars[chId], cur = DS.gear(ch[slot]), html = '', bb = bestInBag(ch, slot);
+    html += '<div class="gpk-cur">' + (cur ? (DS.iconHtml ? DS.iconHtml('gear', cur.id, { size: 40 }) : '') + '<div class="tx">' + gearLine(cur, ch) + offTag(ch, cur) + '</div><div class="gpk-b">' + (DS.enhRate(cur) ? enhBtn(cur, 'data-enh-' + slot + '="' + ch.id + '"') : '<span class="why">최고 단계</span>') + '<button class="btn small" data-off="1">해제</button></div>'
+      : '<span class="gph" aria-hidden="true">' + W + '</span><div class="tx"><b>' + (slot === 'a' ? '맨몸' : '맨손') + '</b><small>' + esc(DS.flagName(ch.cls)) + '</small></div>') + '</div>';
+    html += '<button class="btn wide' + (bb ? ' gold' : '') + '" data-gbest="1"' + (bb ? '' : ' disabled') + '>' + (bb ? '가장 좋은 것 <small>' + esc(DS.gear(bb).name) + '</small>' : '지금 것이 가장 좋다') + '</button>';
     var list = Object.keys(s.gear).filter(function (id) { var g = DS.gear(id); return g && g.slot === slot && s.gear[id] > 0; }).sort(function (a, b) { return DS.gearScore(DS.gear(b), ch) - DS.gearScore(DS.gear(a), ch); });      // 2.1.0: 누구나 입는다 (맞지 않는 병과는 −10%)
-    if (!list.length) html += '<p class="hint">가방에 장비 없음. 적에게서 얻는다</p>';
+    html += '<h4>가방 <i class="own">' + list.length + '종</i></h4>';
+    if (!list.length) html += '<p class="hint">가방에 ' + W + '가 없다. 적에게서 얻는다</p>';
     list.forEach(function (id) {
-      var g = DS.gear(id), ok = DS.canEquip(ch, id);
-      html += '<div class="row' + (ok ? '' : ' dim') + '"><div class="tx">' + gearLine(g, ch) + '<small>' + s.gear[id] + '개 보유</small>' + (ok ? '<small class="df">' + diffHtml(gearDiff(ch, id), 4) + '</small>' : '') + '</div>' +
-        (ok ? '<button class="btn small gold" data-on="' + id + '">장착</button>' : '<span class="why">입을 수 없음</span>') + '</div>';
+      var g = DS.gear(id), ok = DS.canEquip(ch, id), gr = Math.max(1, Math.min(5, +g.grade || 1));
+      html += '<button class="gpk-r' + (ok ? '' : ' dim') + (id === bb ? ' best' : '') + '"' + (ok ? ' data-on="' + esc(id) + '"' : ' disabled') + ' style="--gc:' + gcolOf(gr) + '">' + (DS.iconHtml ? DS.iconHtml('gear', id) : '') +
+        '<span class="tx">' + gearRowName(g) + '<small class="gpk-m"><i class="lcnt">×' + s.gear[id] + '</i>' + offTag(ch, g) + (id === bb ? '<i class="gbest">가장 좋음</i>' : '') + '</small>' + (ok ? '<span class="df">' + diffHtml(gearDiff(ch, id), 4) + '</span>' : '<small class="why">입을 수 없다</small>') + '</span></button>';
     });
+    html += '<p class="hint sm">줄을 누르면 바로 입는다. 벗은 것은 가방으로 간다.</p>';
     return html;
   }, 'sub');
   o.addEventListener('click', function (e) {
-    var s = G.save, ch = s.chars[chId], on = e.target.closest('[data-on]'), off = e.target.closest('[data-off]');
-    if (on && DS.equip(s, ch, on.dataset.on)) { A('ok'); DS.refreshUnits(); U.persist(); o.close(); }
-    else if (off) { DS.unequip(s, ch, slot); A('cancel'); DS.refreshUnits(); U.persist(); o.close(); }
+    var s = G.save, ch = s.chars[chId], on = e.target.closest('[data-on]'), off = e.target.closest('[data-off]'), best = e.target.closest('[data-gbest]');
+    if (cmdGearClick(e, chId, o)) return;      // 강화 (대장간 창)
+    var done = function (txt) { A('ok'); DS.refreshUnits(); U.persist(); if (txt) toast(txt, 1800); o.close(); };
+    if (best) { var bid = bestInBag(ch, slot); if (bid && DS.equip(s, ch, bid)) done(DS.gear(bid).name + ' 장착'); return; }
+    if (on) { if (DS.equip(s, ch, on.dataset.on)) done(DS.gear(on.dataset.on).name + ' 장착'); return; }
+    if (off) { DS.unequip(s, ch, slot); A('cancel'); DS.refreshUnits(); U.persist(); o.close(); }
   });
   o.onclose = function () { if (parent && parent.isConnected && parent.draw) parent.draw(); };
+  return o;
 }
+DS.gearPickOpen = pickGear;
+DS.charSheetOpen = function (id) { return charSheet(id); };      // 2.2.0: 위 초상을 한 번 더 누르면 (game.js)
 
 // ───────── 사람 한 줄 · 사람 창 · 영웅관(모집) ─────────
 function gcol(g) { return DS.GRADES[g].col; }
@@ -567,14 +605,14 @@ function mercInfo(id, parent) {
     var pow = pl.k === 'bear' && ph ? DS.flagPower(s, ph, m) : pl.k === 'fol' && ph ? DS.power(DS.mercSpec(ph, m)) : seatPow(seat, m);
     var tags = '<i class="rtag r-' + (pl.k || 'bar') + '">' + esc(roleOf(m) || '자리 없음') + '</i>' + gbadge(m.g) + '<i class="ctag">' + esc(DS.MERCS[m.type].name) + '</i>' + (m.sx ? '<i class="ctag sx-' + esc(m.sx) + '">' + esc(lgSexTxt(m.sx)) + '</i>' : '') + agTag(m) + (tag ? '<i class="ctag">' + esc(tag) + '</i>' : '') + (ttl ? '<i class="ttl">' + esc(ttl) + '</i>' : '');
     var html = sheetHead({ spr: mercSpr(m, 4), g: m.g, name: esc(m.n || ''), sn: m.sn, tags: tags, lv: m, pow: pow, powLab: pl.k === 'sb' ? (ph ? '가주가 되면' : '전투력') : '전투력' });
+    html += gearSlots(pl.k === 'bear' && ph ? ph : null, m);      // 2.2.0: 가주면 가문의 장비 + 든 물건, 가문원·막사는 든 물건 (있을 때만)
     html += vitBars(u, m.hp, pl.k === 'bear' && ph ? ph.mp : 1, m);
     if (pl.k === 'sb') html += '<button class="row place pl2" data-goflag="' + pl.ch + '"' + (pl.ch ? '' : ' disabled') + '>' + (ph ? crestH(ph, 20) : '') + '<span class="tx"><b>막사에서 기다린다</b><small>' + esc((ph ? DS.flagName(ph.cls) + '이 비면 저절로 가주가 된다' : heroFits(s, m) ? '맹주와 같은 병과. 맹주가 쓰러지면 뒤를 이을 수 있다' : '같은 병과 가문이 없다') + '. 같은 병과 가주가 얻는 경험치의 ' + pct + '%를 함께 얻는다') + '</small></span>' + (pl.ch ? '<i class="go" aria-hidden="true">›</i>' : '') + '</button>';
     else if (ph) html += '<button class="row place pl2" data-goflag="' + ph.id + '">' + crestH(ph, 20) + '<span class="tx"><b>' + esc(pl.t) + '</b><small class="fx2">' + hFx(ph, pl.k === 'fol') + '</small></span><i class="go" aria-hidden="true">›</i></button>';
     html += statHead(key) + statBars(seat, m) + cmpBlock(key, seat, m);
     var bfl = DS.bearsFlag ? DS.bearsFlag(s, m) : null; if (!bfl && pl.k === 'sb' && ph) bfl = ph;      // r27: 태생 병과 (가주·막사면 그 가문과 맞는지)
     html += trChips(m, bfl) + ultChip(m, key);
-    var hasMI = DS.lootUI && DS.lootUI.mercItem && (m.it || Object.keys(DS.MGEAR || {}).some(function (k) { return (s.items[k] || 0) > 0; }));
-    if (hasMI || m.it) html += '<div class="row mit2"><div class="tx"><b>장착 물건</b><small>' + (m.it && DS.ITEMS[m.it] ? esc(DS.ITEMS[m.it].name) : '없음') + '</small></div>' + (hasMI ? '<button class="btn small' + (m.it ? '' : ' gold') + '" data-act="mitem">' + (m.it ? '교체' : '장착') + '</button>' : '') + '</div>';
+    // 2.2.0: 든 물건은 머리의 장비 칸으로 옮겼다 (gearSlots)
     html += lgSpouseRow('merc', m.id);      // r4 가문
     var rec = '<dl class="kv tr2"><dt>함께한 전투</dt><dd class="num">' + (m.b || 0) + '</dd><dt>처치</dt><dd class="num">' + (m.k || 0) + '</dd>' + natureRow(m) + (og && og.name ? '<dt>출신</dt><dd><b>' + esc(og.name) + '</b>' + (og.desc ? ' <small class="dim">' + esc(og.desc) + '</small>' : '') + '</dd>' : '') + '</dl>' + agRow(m);
     var parts = pl.k === 'bear' && ph ? DS.powerParts(s, ph, m) : pl.k === 'fol' && ph ? DS.mercParts(s, ph, m) : null;
@@ -589,6 +627,7 @@ function mercInfo(id, parent) {
     if (lgRowClick(e, o)) return;      // r4 가문
     var mm0 = mercById(id); if (mm0 && cmpClick(e, o, 'm' + id, pplSeat(mm0))) return;      // r16 person: 비교
     var gf = e.target.closest('[data-goflag]'); if (gf && +gf.dataset.goflag) { A('tap'); charSheet(+gf.dataset.goflag, o); return; }
+    var gm0 = mercById(id), gch = gm0 && gm0.h && gm0.o && G.save.chars[gm0.o] ? gm0.o : 0; if (gearSlotClick(e, gch, id, o)) return;      // 2.2.0: 머리의 장비 칸
     if (e.target.closest('[data-act="mitem"]')) { var mm = mercById(id); if (mm && DS.lootUI && DS.lootUI.mercItem) { A('tap'); DS.lootUI.mercItem(G.save, mm.id, function () { if (o.isConnected) o.draw(); }); } return; }
     if (e.target.closest('[data-act="lock"]')) { var ml = mercById(id); if (!ml) return; if (ml.lk) delete ml.lk; else ml.lk = 1; A('tap'); U.persist(); o.draw(); return; }
     if (!e.target.closest('[data-act="fire"]')) return;
@@ -603,6 +642,7 @@ function heroInfo(parent) {
     var p = ch.ps || {}, seat = { k: 'hero', ch: ch }, u = null; try { u = seatSpec(seat, p); } catch (x) { u = null; }
     var tags = '<i class="rtag r-hero">맹주</i>' + gbadge(p.g || 3) + '<i class="ctag">' + (p.type && DS.MERCS[p.type] ? DS.MERCS[p.type].name : '사람') + '</i>' + (ch.sx ? '<i class="ctag sx-' + esc(ch.sx) + '">' + esc(lgSexTxt(ch.sx)) + '</i>' : '') + agTag(ch);
     var html = sheetHead({ spr: charSpr(ch, 4), g: p.g || 3, name: esc(DS.heroCall ? DS.heroCall(s) : DS.charName(ch)), tags: tags, lv: p, pow: DS.flagPower(s, ch, p) });
+    html += gearSlots(ch, null);      // 2.2.0: 맹주 가문의 장비
     html += vitBars(u, ch.hp, ch.mp, p);
     html += '<button class="row place pl2" data-goflag="' + ch.id + '">' + crestH(ch, 20) + '<span class="tx"><b>' + esc(DS.flagName(ch.cls)) + ' 가주</b><small class="fx2">' + hFx(ch, false) + '</small></span><i class="go" aria-hidden="true">›</i></button>';
     html += statHead('h') + statBars(seat, p) + cmpBlock('h', seat, p);
@@ -615,6 +655,7 @@ function heroInfo(parent) {
   o.addEventListener('click', function (e) {
     if (lgRowClick(e, o)) return;
     var hc = G.save.chars[G.save.hero]; if (hc && cmpClick(e, o, 'h', { k: 'hero', ch: hc })) return;      // r16 person: 비교
+    if (hc && gearSlotClick(e, hc.id, 0, o)) return;      // 2.2.0: 머리의 장비 칸
     if (e.target.closest('[data-gowed]')) { A('tap'); DS.openPeople('wed'); return; }
     var gf = e.target.closest('[data-goflag]'); if (gf) { A('tap'); charSheet(+gf.dataset.goflag, o); }
   });
@@ -1360,6 +1401,7 @@ function charSheet(id, parent) {
     var r = DS.hRank(ch), st = ch.down ? ['dn', '쓰러짐'] : vacH ? ['dn', '빈 가문'] : inP ? ['ok', '싸운다'] : ['', '쉰다'];
     var tags = '<i class="rtag s-' + st[0] + '">' + st[1] + '</i><i class="ctag">' + esc(c.name) + '</i><i class="ctag mr">' + (DS.vetBadge ? DS.vetBadge(r) : '') + esc(DS.hName(r)) + '</i>' + (hero ? '<i class="tg">맹주</i>' : '') + fuTag(s, ch);
     var html = sheetHead({ spr: bw && !hero ? mercSpr(bw, 4) : charSpr(ch, 4), fc: DS.FLAG[ch.cls] || '#f6cf57', name: crestH(ch, 22) + esc(DS.flagName(ch.cls)), tags: tags, lv: bw, pow: bw ? DS.cardPower(s, ch) : null, powLab: '가문 전투력', cls: 'hs2' + (vacH ? ' vac' : '') });
+    html += gearSlots(ch, hero ? null : bw);      // 2.2.0: 장비는 머리에 (누르면 고르기)
     html += vitBars(u, hero ? ch.hp : bw && bw.hp, ch.mp, bw, meritBar(ch)) + fuseLine(s, ch);
     // 가주
     var sbs = hero ? [] : DS.sbOf(s, ch.id), nk = kinFree(s).length;
@@ -1384,8 +1426,6 @@ function charSheet(id, parent) {
       html += sbs.length ? '<p class="hint sm">가주가 떠나면 가장 나은 이가 저절로 잇는다</p>' : '<p class="hint dimh">없다. 가주가 떠나면 빈 가문이 된다 <button class="lnk" data-gohall="1">영웅관</button></p>';
     }
     if (bw) html += '<h4>능력치</h4>' + statBars(seat, bw);
-    html += '<h4 class="hbtn">장비<button class="btn small" data-gear="best">자동 장착</button></h4>';
-    [['w', '무기'], ['a', '방어구']].forEach(function (sl) { html += cmdGearRow(ch, sl); });
     var t = DS.tierOfL(ch.L), nHas = c.skills.filter(function (sk) { return t >= sk[1]; }).length;
     html += foldBtn('csk', '기술 ' + nHas + (c.skills.length > nHas ? ' <i class="own">/ ' + c.skills.length + '</i>' : ''), pills(c.skills.filter(function (sk) { return t >= sk[1]; }).map(function (sk) { return DS.SKILLS[sk[0]].name; })) || '없음');
     if (FOLD.csk) {
@@ -1412,6 +1452,7 @@ function charSheet(id, parent) {
     var sbu = e.target.closest('[data-sbup]'); if (sbu) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } var r = DS.hand(s, id, +sbu.dataset.sbup, { where: bnWhere() }); if (!r.ok) { A('cancel'); toast(r.why); return; } A('ok'); DS.rebuildParty(); DS.updateQuest(); U.persist(); o.draw(); if (r.nf && DS.nfAsk) { var nid = +sbu.dataset.sbup; setTimeout(function () { DS.nfAsk({ k: 'm', id: nid }, null, '새 가주, 처음 이름 정하기 (무료)'); }, 250); } return; }
     var ks = e.target.closest('[data-kinsend]'); if (ks) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } A('tap'); kinSend(+ks.dataset.kinsend, o); return; }
     if (e.target.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return; }
+    if (gearSlotClick(e, id, ch && id !== s.hero ? (DS.bearer(s, ch, 1) || {}).id : 0, o)) return;      // 2.2.0: 머리의 장비 칸
     if (cmdGearClick(e, id, o)) return;      // r4 forge (강화·바로 장착) — data-info 보다 먼저
     if (ge) {
       if (ge.dataset.gear === 'best') { var ok = DS.autoEquip(s, ch); A(ok ? 'ok' : 'cancel'); toast(ok ? '가방의 더 좋은 장비로 바꿨다.' : '가방에 더 좋은 장비가 없다.'); DS.refreshUnits(); U.persist(); o.draw(); }
