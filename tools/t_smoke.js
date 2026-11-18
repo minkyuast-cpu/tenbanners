@@ -46,6 +46,6 @@ module.exports = async (page, shot, L) => {
   await shot('scn_many');
   await ev(() => { DS.G.sim.win(); }); await L.settle(page, 30000);
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.2\.0 한 사람 한 사람 \/ 2\.2\.0 \/ 7\.0\.0$/.test(notes), 'version ' + notes);
+  A(/^2\.2\.1 옛 맹주의 가족 \/ 2\.2\.1 \/ 7\.0\.1$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };

@@ -235,7 +235,7 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var s = DS.G.save, h = s.chars[s.hero]; return { vac: !!h.vac, rite: !!document.querySelector('.ov.rite') }; });
   A(c.vac && c.rite, 'pending choice survives a reload: 맹주 seat still empty, the choice comes back');
   await ev(() => { window.__X = window.__X || {}; });
-  const X = await ev(() => { var s = DS.G.save, f = function (n, kin) { var m = s.mercs.filter(function (x) { return x.n === n && (kin ? !!DS.kidOf(s, x) : DS.isSb(x)); })[0]; return m ? m.id : 0; }; return { hid: s.hero, k1: f('큰별', 1), k2: f('작은별', 1), sa: f('바위'), sbb: f('자갈') };      // 이름이 모집 이름과 겹칠 수 있다 (큰별) });
+  const X = await ev(() => { var s = DS.G.save, f = function (n, kin) { var m = s.mercs.filter(function (x) { return x.n === n && (kin ? !!DS.kidOf(s, x) : DS.isSb(x)); })[0]; return m ? m.id : 0; }; return { hid: s.hero, k1: f('큰별', 1), k2: f('작은별', 1), sa: f('바위'), sbb: f('자갈') }; });
   async function choose(sel) {
     if (!(await page.$('.ov.rite [data-lgheir]'))) { await page.click('.ov.rite [data-lgstep="pick"]').catch(() => {}); await L.sleep(400); }
     await page.click(sel); await L.sleep(1100); await page.click('#yesHeir'); await L.sleep(500);
