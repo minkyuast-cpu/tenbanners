@@ -1044,7 +1044,7 @@ function xbRun(o) {
     var pro = DS.tierOfL(L) > DS.tierOfL(c.L); c.L = L; lvTxt(c, L);
     c.el.classList.add('lvd'); if (pro) c.el.classList.add('pro');
     if (c.pop) c.pop.textContent = c.el.classList.contains('pro') ? '승급 ' + DS.tierOfL(L) + '단' : 'LEVEL UP';
-    var ue = c.el.querySelector('.xup'); if (ue) ue.textContent = (c.el.classList.contains('pro') ? '승급 ' : '') + 'Lv+' + (L - c.L0);
+    var ue = c.el.querySelector('.xup'); if (ue) ue.textContent = c.el.classList.contains('pro') ? '승급' : 'Lv+' + (L - c.L0);
     if (!cm && !quiet) {
       c.el.classList.toggle('lvf', false); void c.el.offsetWidth; c.el.classList.toggle('lvf', true);
       var nw = performance.now(); if (nw - sndT > 140) { sndT = nw; A2(pro ? 'promo' : 'level', 'star'); }

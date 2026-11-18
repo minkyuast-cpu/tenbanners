@@ -4653,6 +4653,8 @@ html body #app#app .xpop { position: absolute; left: 50%; top: 30px; z-index: 3;
 html body #app#app .xup { position: absolute; top: 24px; left: calc(50% + 16px); z-index: 2; display: none; padding: 0 3px; border-radius: 3px; font: 700 9px/13px var(--f-num); font-style: normal; white-space: nowrap; color: #2a1804; background: #ffd75e; box-shadow: 0 0 0 1px #000, 0 0 6px rgba(255, 214, 94, .6); }
 html body #app#app .hk.lord .xup { top: 34px; left: calc(50% + 30px); }
 html body #app#app .hk.lvd .xup { display: block; }
+html body #app#app .hk.lvf .xup { animation: xUpIn .25s ease-out .9s both; }
+@keyframes xUpIn { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: none; } }
 html body #app#app .hk.lvd.pro .xup { color: #fff6e6; background: linear-gradient(180deg, #ffd27a, #c0503f); }
 html body #app#app .hk.lvd.pro .xpop { color: #fff6e6; background: linear-gradient(180deg, #ffd27a, #c0503f); font-family: var(--f-head); text-shadow: 0 1px 0 #5a1712; }
 html body #app#app .hk.lvd .hkp { color: #fff; box-shadow: 0 0 0 1px #000, 0 0 8px rgba(255, 220, 120, .8); }
@@ -4678,5 +4680,5 @@ html body #app#app .xk.up .xkt i { color: #ffe08a; }
 html body #app#app .xbs { margin: 0; text-align: center; font: 500 11px/15px var(--f-ui); color: var(--a-mute, #b9ab90); }
 html body #app#app .xbs b { color: #9fe08a; }
 html body #app#app .xbs small { display: block; color: var(--a-dim, #8a7d66); font-size: 10px; }
-html.calm body #app#app .hk.lvf .xpop, html.calm body #app#app .hk.lvf .hkf, html.calm body #app#app .hk.lvf.pro { animation: none !important; }
+html.calm body #app#app .hk.lvf .xpop, html.calm body #app#app .hk.lvf .xup, html.calm body #app#app .hk.lvf .hkf, html.calm body #app#app .hk.lvf.pro { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { html body #app#app .hk.lvf .xpop, html body #app#app .hk.lvf .hkf, html body #app#app .hk.lvf.pro { animation: none !important; } }
