@@ -1681,9 +1681,9 @@ function tabHelp() {
       '사람의 자리는 셋이다. <b>가주</b>는 가문을 이끌고 싸운다. <b>막사</b>는 모집한 영웅이 기다리는 곳 하나로, 가문에 매이지 않고 싸우지 않는다. <b>가문원</b>은 맹주 집 사람(아이, 배우자)으로, 어른이면 모두 맹주를 따라 싸운다.',
       '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 장비와 공훈은 가문에 남는다.',
       '빈 가문을 채우는 길은 둘이다. <b>영웅관</b>에서 모집하거나, 맹주의 <b>어른 아이</b>를 그 가문의 가주로 보낸다. 보낸 아이는 그 가문의 병과를 받는다. 맹주의 자리는 늘 이어지니 싸울 이가 아무도 없어지는 일은 없다.',
-      '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람, 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장. 병과는 합류한 가문 가운데 무작위로 정해지고, 그 가문이 비어 있으면 곧바로 가주, 아니면 막사로 간다. 막사는 ' + DS.MERC_MAX + '명까지다.',
-      '막사의 사람은 같은 가문 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 같은 병과 가주와 자리를 바꿀 수 있고, 물러난 가주는 막사로 간다. 막사의 사람은 방출할 수 있다. 가주를 그냥 내리는 길은 없다.',
-      '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. 맹주가 쓰러지면 핏줄, 막사의 사람, 다른 가문의 가주 가운데 후계를 고른다.',
+      '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람, 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장. 병과는 합류한 가문 가운데 무작위로 정해지고, 그 가문이 비어 있으면 곧바로 가주, 아니면 막사로 간다. 맹주와 같은 병과면 막사에서 맹주의 뒤를 받친다. 막사는 ' + DS.MERC_MAX + '명까지다.',
+      '막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 같은 병과 가주와 자리를 바꿀 수 있고, 물러난 가주는 막사로 간다. 막사의 사람은 방출할 수 있다. 가주를 그냥 내리는 길은 없다.',
+      '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. <b>맹주가 쓰러지면 어른 자식이 잇고, 없으면 막사의 같은 병과가 잇는다.</b> 둘 다 없으면 대가 끊기고 스무 해가 흐른다.',
       '<b>쓰러진 사람은 돌아오지 않는다.</b> 가주도, 가문원도 그렇다. 많이 다치면 스스로 물러난다. 한 사람 한 사람이 귀하다.']],
     ['등급, 단, 가문 공훈', 0, [
       '<b>등급</b>은 타고난 그릇이다. 모집하거나 태어날 때 정해지고 바뀌지 않는다. 등급이 높은 사람이 가주가 되면 가문이 더 강해진다. 맹주 자리는 희귀 밑으로 치지 않는다. 등급이 높을수록 경험치도 빨리 쌓인다.' +      // r45 표 · r44 숫자
@@ -1692,7 +1692,7 @@ function tabHelp() {
       '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 가주(맹주 가문은 가문원도)가 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 가문 목록은 공훈 순이다.' +
         '<table class="htab"><thead><tr><th>계급</th><th>공훈</th><th>가주</th><th>가문원</th></tr></thead><tbody>' + DS.HVET.map(function (q, i) { return '<tr><th>' + DS.hName(i) + '</th><td class="num">' + q.at + '</td><td class="num">+' + q.pct + '%</td><td class="num">×' + q.mul.toFixed(2) + '</td></tr>'; }).join('') + '</tbody></table>',
       '가문에서 태어난 아이는 등급이 높을수록 경험치가 빨리 쌓인다. 희귀가 보통이고 일반은 30% 느리고 전설은 30% 빠르다.',
-      '<b>대물림</b>: 맹주가 바뀌면 다음 맹주는 선대와의 레벨 차이 가운데 일부를 잇는다. 공훈 계급이 높을수록 많이 잇는다.' + '<table class="htab"><thead><tr><th>누가</th><th>신참</th><th>' + esc(DS.hName(DS.HVET.length - 1)) + '</th></tr></thead><tbody>' + [['맹주의 핏줄', 'kid'], ['맹주의 양자', 'adopt']].map(function (r) { var H = DS.HEIR[r[1]]; return '<tr><th>' + r[0] + '</th><td class="num">' + Math.round(H[0] * 100) + '%</td><td class="num">' + Math.round(H[1] * 100) + '%</td></tr>'; }).join('') + '</tbody></table>' + '<small>다른 가문의 가주를 맹주로 세우면 그 사람 가문의 계급으로 양자 몫을 잇는다.</small>',
+      '<b>대물림</b>: 맹주가 바뀌면 다음 맹주는 선대와의 레벨 차이 가운데 일부를 잇는다. 공훈 계급이 높을수록 많이 잇는다.' + '<table class="htab"><thead><tr><th>누가</th><th>신참</th><th>' + esc(DS.hName(DS.HVET.length - 1)) + '</th></tr></thead><tbody>' + [['맹주의 핏줄', 'kid'], ['맹주의 양자', 'adopt']].map(function (r) { var H = DS.HEIR[r[1]]; return '<tr><th>' + r[0] + '</th><td class="num">' + Math.round(H[0] * 100) + '%</td><td class="num">' + Math.round(H[1] * 100) + '%</td></tr>'; }).join('') + '</tbody></table>' + '<small>다른 가문의 가주를 맹주로 세우면 그 사람 가문의 계급으로 양자 몫을 잇는다. 막사에서 저절로 이은 이는 제 레벨 그대로다.</small>',
       '위쪽 초상: 아래 알약은 그 가문 가주의 「단과 레벨」, 오른쪽 위 표식은 <b>가문 공훈</b>이다. 갈매기 하나 숙련, 둘 고참, 셋 정예, 별 용사, 빛나는 별 불멸, 그 위로 명가, 명문, 천하명문.',
       '사람의 등급과 단은 인물 정보의 단계표에서, 가문 공훈은 가문 창 맨 위에서 본다.']],
     ['조작', 0, [
@@ -1711,7 +1711,7 @@ function tabHelp() {
       '<b>체력과 마나는 저절로 차지 않는다.</b> 약초, 치유 기술, 교회의 치료로 채운다.',
       '<b>붉게 깜빡이는 칸</b>은 곧 공격이 떨어질 자리다. 틱이 남아 있으면 부대가 알아서 피한다.',
       '상성은 보병 ▶ 창병 ▶ 기병 ▶ 보병. 화살은 나는 적에게, 신성 공격은 망자와 악마에게 1.5배.',
-      '<b>맹주가 쓰러지면</b> 전투가 끝난 뒤 후계자를 고른다. 시나리오 중이면 시나리오가 끝난 뒤에 정한다.']],
+      '<b>맹주가 쓰러지면</b> 전투가 끝난 뒤에 뒤를 잇는다. 어른 자식이 있으면 고르고, 없으면 막사의 같은 병과가 잇는다. 시나리오 중이면 시나리오가 끝난 뒤에.']],
     ['장비', 0, [
       '장비는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 누구나 어떤 장비든 장착한다. 병과에 맞지 않는 계열은 능력치가 ' + Math.round((1 - DS.GEAR_OFF) * 100) + '% 깎인다.',
       '장비에는 단이 없다. 위력, 방어 같은 수치는 <b>입은 사람의 레벨</b>을 따라 오르니, 마음에 드는 장비는 끝까지 쓸 수 있다.',
@@ -1720,12 +1720,12 @@ function tabHelp() {
       '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다.',
       '가방 목록도 다중 선택이 기본이다. 고른 뒤 아래 붉은 버튼으로 한꺼번에 판매한다. 잠근 장비는 선택할 수 없다.']],
     ['성장과 합일', 0, [
-      '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 막사의 사람은 같은 가문 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
+      '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
       '레벨 10마다 <b>단</b>이 오른다. 맹주는 모습이 바뀌고, 가주와 가문원은 테두리 빛이 바뀐다. 가주의 단만큼 가문의 기술이 열리고, 가문원은 3단, 5단, 7단에 제 기술을 익힌다.',
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
       '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받는다. 아무도 제 자리를 떠나지 않는다.',
       '8단부터의 모습과 기술은 그 사람이 선 가문의 계열(강철, 바람, 별)을 따른다.',
-      '맹주가 쓰러지면 핏줄, 양자, 다른 가문의 가주 가운데 후계를 고른다. 다른 가문의 가주가 맹주가 되면 바뀌는 것은 맹주가 누구인가뿐이다. 가문 이름과 공훈, 연맹 이름은 그대로이고, 옛 맹주의 가문은 막사의 같은 병과가 잇거나 빈 가문이 된다. 이을 어른이 아무도 없으면 대가 끊기고 스무 해가 흐른다.']],
+      '맹주가 쓰러지면 어른 자식이 잇고, 없으면 막사의 같은 병과 가운데 등급, 레벨이 가장 나은 이가 제 레벨 그대로 잇는다. 어른 자식이 있을 때는 양자나 다른 가문의 가주를 세울 수도 있다. 다른 가문의 가주가 맹주가 되면 바뀌는 것은 맹주가 누구인가뿐이다. 가문 이름과 공훈, 연맹 이름은 그대로이고, 옛 맹주의 가문은 막사의 같은 병과가 잇거나 빈 가문이 된다. 어른 자식도 막사의 같은 병과도 없으면 대가 끊기고 스무 해가 흐른다.']],
     ['혼인과 아이', '혼인', [
       '혼인은 <b>맹주만</b> 할 수 있다. 성별이 다른 가주나 막사의 사람을 배우자로 맞는다. 막사에 있던 배우자는 맹주 가문의 가문원이 되어 함께 싸운다. 시나리오와 전투 밖이면 어디서나 「마을 일」에서 한다.',
       '<b>인물 탭</b>의 「배우자 후보」 필터에서 혼인할 수 있는 사람과 아이의 예상 등급을 볼 수 있다.',
@@ -2492,6 +2492,7 @@ function lgRite(ev, cb, griefs) {
   var o = overlay('<div class="result lgrite' + (nat ? ' nat' : '') + '"></div>', 'modal center rite');
   function cands() { var l = DS.linHeirs ? lgTry(function () { return DS.linHeirs(s, chId); }) : null; return l instanceof Array ? l.filter(function (c) { return !c.young; }) : []; }      // 3.3.0: 미성년 친자는 고를 수 없다
   function cKey(c, i) { return String(c.mid || c.pid || c.kind || '') + ':' + i; }
+  function sbAuto() { return DS.linSbHeir ? lgTry(function () { return DS.linSbHeir(s, chId); }) : null; }      // 2.2.0: 어른 핏줄이 없으면 막사의 같은 병과가 저절로 잇는다
   // r35 가문이 끊겼을 때: 스무 해 안에 자랄 핏줄 아이 · 글 자리표 · 이름 고르기 상태
   function lpYoung() { var l = DS.linHeirs ? lgTry(function () { return DS.linHeirs(s, chId); }) || [] : []; return l.filter(function (c) { return c.young && c.blood && (c.inY == null || c.inY <= DS.LAPSE.years); })[0] || null; }
   function lpV(x) { var o = { b: d.name, house: LS().hn || DS.houseOf(LS().sur || '') || '가문', y1: ((agCal() || {}).yr || 0) + DS.LAPSE.years }; for (var k in x || {}) o[k] = x[k]; return o; }
@@ -2531,7 +2532,8 @@ function lgRite(ev, cb, griefs) {
       else if (DS.linEntomb) html += '<h5>' + esc(lgFill(C.ask || '{a:을를} 어떻게 보냅니까?', { a: d.name })) + '</h5><div class="seg2" role="group">' +
         '<button data-lgbody="keep"' + (body === 'keep' ? ' aria-pressed="true"' : '') + (canE && canE.ok ? '' : ' disabled') + '><b>' + esc(C.keep || '관에 모신다') + '</b><small>' + esc(canE && canE.ok ? (C.keepNote || '') + (cf ? ' 빈 관 ' + cf.free + '개.' : '') : (canE && canE.why) || C.empty || '빈 관이 없다.') + '</small></button>' +
         '<button data-lgbody="bury"' + (body === 'bury' ? ' aria-pressed="true"' : '') + '><b>' + esc(C.bury || '묻는다') + '</b><small>' + esc(C.buryNote || '') + '</small></button></div>';
-      html += '<button class="btn gold wide" data-lgstep="pick">후계를 정한다</button>';
+      var au = sbAuto();
+      html += au ? '<p class="dim">어른 자식이 없다. 막사의 같은 병과 ' + esc(josa(au.name || '', '이가')) + ' 잇는다.</p><button class="btn gold wide" data-lgstep="pick">뒤를 잇게 한다</button>' : '<button class="btn gold wide" data-lgstep="pick">후계를 정한다</button>';
     } else if (step === 'lapse') {      // r35 가문이 끊겼다: 스무 해가 흐르고 새 대장이 옛 깃발을 든다
       var LT = DS.LAPSE_TXT, lost = Math.floor((s.gold || 0) * DS.LAPSE.gold / 10) * 10, yk = lpYoung();
       html = '<p class="eyebrow">가문이 끊겼다</p><h2>이을 사람이 없다</h2><p class="rn">' + esc(d.name) + '의 자리, ' + esc(d.role) + '</p>' +
@@ -2589,7 +2591,7 @@ function lgRite(ev, cb, griefs) {
     var hob = e.target.closest('[data-lgho]'); if (hob) { var hi = $('#lgHoIn', o), hn0 = $('#lgHnIn', o); if (hi) HO.t = hi.value; if (hn0) HO.hn = hn0.value; HO.k = hob.dataset.lgho; A('tap'); draw(); return; }
     if (e.target.closest('[data-lgmore]')) { more = true; A('tap'); draw(); return; }
     var st = e.target.closest('[data-lgstep]');
-    if (st) { var to = st.dataset.lgstep; A('tap'); if (to === 'auto') { finish(null); return; } if (to === 'lpass') { lapsePass(); return; } step = to; draw(); return; }
+    if (st) { var to = st.dataset.lgstep; A('tap'); if (to === 'auto') { finish(null); return; } if (to === 'lpass') { lapsePass(); return; } if (to === 'pick') { var au2 = sbAuto(); if (au2) { finish(au2); return; } } step = to; draw(); return; }
     var hb = e.target.closest('[data-lgheir]');
     if (hb) { var l = cands(); l.forEach(function (c, i) { c._k = cKey(c, i); }); pick = l.filter(function (c) { return c._k === hb.dataset.lgheir; })[0]; if (pick) { lgCandBtn(pick); A('tap'); step = 'confirm'; draw(); } return; }
     if (e.target.closest('#yesHeir')) { if (performance.now() - lock < 900) return; var hin = $('#lgHoIn', o), hnn = $('#lgHnIn', o); if (hin) HO.t = hin.value; if (hnn) HO.hn = hnn.value; if (pick && pick.move && HO.hn != null && !(DS.linHouseOK && DS.linHouseOK(HO.hn))) { A('cancel'); toast('가문 이름은 한글 1~12자입니다'); return; } if (pick && pick.move && HO.k === 'free' && !(DS.linHoOK && DS.linHoOK(HO.t))) { A('cancel'); toast('호는 한글 1~6자, 끝에 「N세」를 붙일 수 있다'); return; } finish(pick); }
@@ -2610,7 +2612,8 @@ function lgRite(ev, cb, griefs) {
     var v = { a: hn, b: d.name, heir: heir, house: d.sur ? d.sur + ' 가문' : '가문', at: (d.died && d.died.at) || '' }, vd = { a: d.name, house: v.house, at: v.at }, C = LGU().coffin || {};
     var lines = [];
     if (DS.linEntomb) lines.push(lgFill(lgPick(kept ? (LGL().coffin || C.keepLine) : C.buryLine) || '', vd));
-    lines.push(lgFill(lgPick(kk === 'merc' ? H.adopt : kk === 'kin' ? H.kin : H.heir) || '{a}, {b}의 뒤를 잇다.', v));
+    var sbE = c && c.sb && res instanceof Array ? res.filter(function (e) { return e.t === 'heir' && e.sb && e.ev; })[0] : null;
+    lines.push(sbE ? DS.linEvText(s, sbE.ev) : lgFill(lgPick(kk === 'merc' ? H.adopt : kk === 'kin' ? H.kin : H.heir) || '{a}, {b}의 뒤를 잇다.', v));      // 2.2.0: 막사의 같은 병과가 이었다
     if (heir && c && c.name && heir !== c.name) lines.push(lgFill(LGU().heirName || '이제 {b:은는} {heir:으로} 불린다.', { b: c.name, heir: heir }));
     lines.push(lgFill(lgPick(H.will) || '', v));
     A(kk === 'merc' ? 'holy' : 'level');

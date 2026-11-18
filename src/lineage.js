@@ -59,6 +59,7 @@ DS.LIN_TXT = {
   birth: ['{house}에 {kid}{이가} 태어났다.'],
   death: ['{a}{이가} {at}에서 숨을 거두었다.'],
   heir: ['{a}{이가} {b}의 뒤를 이어 가주가 되었다.'],
+  heirSb: ['{a}{이가} 막사에서 나와 {b}의 뒤를 이어 맹주가 되었다.'],      // 2.2.0: 어른 핏줄이 없어 막사의 같은 병과가 이었다
   adopt: ['{a}{이가} {b}의 집안에 들어 성을 바꾸었다.'],
   kin: ['먼 친척 {a}{이가} 찾아와 {b}의 자리를 이었다.'],
   fuse: ['{a}{이가} 합일했다.'],
@@ -186,6 +187,7 @@ DS.linEvText = function (s, e) {
   if (k === 'part' && x.why === '떠남') k = 'gone';
   if (k === 'death' && x.why === '천수를 누림') k = 'deathNat';      // 나이(age.js): 자연사
   if (k === 'part' && x.why === '합일') k = 'fusepart';
+  if (k === 'heir' && x.sb) k = 'heirSb';
   var map = { a: nm(e.a), b: nm(e.b), kid: nm(e.a), house: x.house || nm((x.pa || [])[0]) + '의 집', at: x.at || '전장', full: x.full && x.full !== nm(e.a) ? x.full : '' };
   if (e.t === 'adult' && map.full) { map.a = map.a + ' ' + map.full; map.full = ''; }      // 나이(age.js): 성년 글은 호에 성이름을 붙여 형제를 가른다
   if (e.t === 'birth') map.house = nm((x.pa || [])[0]) + '의 집';
@@ -445,7 +447,7 @@ DS.NAME_BAN = ['운영', '관리자', 'GM', 'gm', 'admin', '개발자', '시발'
 DS.nameOK = function (t) { t = String(t || '').trim(); var bare = t.replace(/ /g, ''); if (bare.length < 1 || bare.length > 8 || !/^[가-힣A-Za-z ]+$/.test(t)) return false; var low = t.toLowerCase(); return !DS.NAME_BAN.some(function (w) { return low.indexOf(w.toLowerCase()) >= 0; }); };
 DS.linHouseOK = function (t) { return DS.nameOK(t); };
 // 돌려주는 줄: { kind:'kid'|'adopt'|'pull', blood, kin(0 핏줄 · 2 가문 밖 · 3 막사·가문원 · 4 다른 가문의 가주 · 5 모집), mid, pid, name, full, sx, g, type, x, o, h(든 깃발 번호), L, loss:0, why, move, house }
-DS.LIN_WHY = { kid: '핏줄. 선대와의 레벨 차이 일부를 잇는다', adopt: '양자. 선대와의 레벨 차이 일부를 잇는다', pull: '이을 사람이 없다. 영웅관이 한 사람을 보낸다.', move: '다른 가문의 가주. 맹주만 바뀌고 가문은 그대로다' };
+DS.LIN_WHY = { kid: '핏줄. 선대와의 레벨 차이 일부를 잇는다', adopt: '양자. 선대와의 레벨 차이 일부를 잇는다', sb: '막사의 같은 병과. 제 레벨 그대로 잇는다', pull: '이을 사람이 없다. 영웅관이 한 사람을 보낸다.', move: '다른 가문의 가주. 맹주만 바뀌고 가문은 그대로다' };
 // 2.1.0 대물림: 선대와의 레벨 차이 가운데 잇는 몫 — 그 가문의 공훈 계급이 높을수록 크다 (계급 0 → 맨 위). 대가 내려가며 약해져도 된다 (따라잡기 보정 없음)
 //   house: 맹주 밖 가문의 자동 후계 · kid: 맹주의 핏줄 · adopt: 맹주의 양자, 맹주로 세운 다른 가문의 가주 (그 사람 가문의 계급으로)
 DS.HEIR = { house: [0.35, 0.55], kid: [0.5, 0.7], adopt: [0.25, 0.4] };
@@ -464,6 +466,13 @@ function heirL(s, m, seat, kind) {
   return DS.heirLOf(own, pre, k, DS.pCap ? DS.pCap(m) : 70);
 }
 DS.linHeirL = heirL;
+// 2.2.0 맹주가 쓰러지면: ① 어른 핏줄(옛 규칙 그대로) ② 없으면 막사의 같은 병과 가운데 가장 나은 이(등급 → 레벨)가 저절로 맹주가 된다 (제 레벨·등급 그대로) ③ 둘 다 없으면 대가 끊긴다 (DS.linLapse)
+function sbHeirOk(s, m, seat) { return !!(m && seat && !m.cast && DS.isSb && DS.isSb(m) && DS.sbFits && DS.sbFits(seat, m)); }
+// 저절로 잇는 막사의 사람 (어른 핏줄이 없을 때만). 돌려주는 것: linHeirs 의 한 줄 또는 null
+DS.linSbHeir = function (s, chId) {
+  var l = DS.linHeirs(s, chId); if (l.some(function (h) { return !h.young && h.blood; })) return null;
+  return l.filter(function (h) { return h.sb && !h.young; })[0] || null;
+};
 DS.linHeirs = function (s, chId) {
   var ch = s.chars[chId]; if (!ch || +chId !== +s.hero) return [];
   var P = L0(s).P, dp = ch.vac ? P[ch.vac.pid] : charP(s, ch), L = ch.L, out = [], blood = [], cast = [], hid = s.hero;
@@ -472,15 +481,16 @@ DS.linHeirs = function (s, chId) {
     var p = m.pid && P[m.pid] && P[m.pid].m === m.id ? P[m.pid] : null;
     if (p && (p.id === spouse || p.hand || p.rv || p.ret || anc[p.id])) return;
     if (m.cast) { var cr = castRow(s, m, p, ch, L); if (cr) cast.push(cr); return; }      // r22: 아홉(과 그 집 2대)은 성을 바꾸지 않는다 — 대신 그 집이 맹주 가문이 된다
-    var bf = DS.bearsFlag ? DS.bearsFlag(s, m) : null, isB = !!(p && p.hb && !p.ad);
-    var row = { kind: isB ? 'kid' : 'adopt', blood: isB, kin: isB ? 0 : bf ? 4 : m.o || m.sb ? 3 : 2, mid: m.id, pid: p ? p.id : 0, name: DS.mercCall(m) || m.n, full: DS.fullName(m), sx: m.sx || (mercFix(m), m.sx), g: m.g, type: m.type, x: DS.pL(m), pL: DS.pL(m), o: m.o || 0, h: bf ? bf.id : 0, L: L, loss: 0 };
+    var bf = DS.bearsFlag ? DS.bearsFlag(s, m) : null, isB = !!(p && p.hb && !p.ad), sbH = !isB && sbHeirOk(s, m, ch);      // 2.2.0: 막사의 같은 병과 = 핏줄 다음 차례 (제 레벨 그대로)
+    var row = { kind: isB ? 'kid' : 'adopt', blood: isB, kin: isB ? 0 : sbH ? 1.5 : bf ? 4 : m.o || m.sb ? 3 : 2, mid: m.id, pid: p ? p.id : 0, name: DS.mercCall(m) || m.n, full: DS.fullName(m), sx: m.sx || (mercFix(m), m.sx), g: m.g, type: m.type, x: DS.pL(m), pL: DS.pL(m), o: m.o || 0, h: bf ? bf.id : 0, L: L, loss: 0 };
     var hf = !isB ? heirHouse(s, m, ch) : null;      // r42: 다른 가문의 가주·가솔이면 맹주 가문이 그 가문으로 옮겨 간다
     row.move = !!hf; if (hf) row.hf = hf.id; row.nL = heirL(s, m, ch, isB ? 'kid' : 'adopt'); if (m.pot) row.pot = m.pot;
     row.house = row.move ? hf.cls : '';
-    row.why = DS.LIN_WHY[row.move ? 'move' : row.kind];
+    if (sbH) { row.sb = 1; row.nL = DS.pL(m); }
+    row.why = DS.LIN_WHY[row.move ? 'move' : sbH ? 'sb' : row.kind];
     (isB ? blood : out).push(row);
   });
-  var by = function (a, b) { return a.kin - b.kin || (b.pL || 0) - (a.pL || 0) || b.g - a.g || a.mid - b.mid; };      // r42: 개인 레벨 순
+  var by = function (a, b) { return a.kin - b.kin || (a.sb && b.sb ? b.g - a.g || (b.pL || 0) - (a.pL || 0) : (b.pL || 0) - (a.pL || 0) || b.g - a.g) || a.mid - b.mid; };      // r42: 개인 레벨 순 · 2.2.0: 막사의 같은 병과는 등급 → 레벨 (가주를 잇는 차례와 같다)
   var list = blood.sort(by).concat(out.sort(by));      // ⑭-1: 대장이 쓰러질 때마다 핏줄과 양자 후보를 함께 띄운다 (자동은 핏줄 우선 — 줄 차례)
   Object.keys(P).map(Number).sort(function (a, b) { return a - b; }).forEach(function (k) {      // 미성년 핏줄: 흐린 줄
     var q = P[k]; if (q.st !== 'young' || q.ad || !q.hb || anc[q.id]) return;
@@ -524,7 +534,8 @@ DS.linSucceed = function (s, chId, pick, opt) {
   if (p.hand || p.rv || p.ret) { if (!fresh) return null; }
   if (dp && ancOf(s, dp)[p.id]) return null;      // 조상 가드 (부모 고리)
   var isB = !!(p.hb && !p.ad) && !ck, bf = ck ? cf : !isB ? heirHouse(s, m, ch) : null, move = !isB && !!bf && bf.id !== ch.id && bf.cls !== ch.cls, oldHs = Lr.hs || ch.cls, kind = isB ? 'kid' : 'adopt';      // r42: 다른 가문의 가주·가솔이던 양자, 아홉 → 맹주 가문이 그 가문으로 옮겨 간다
-  var dps = ch.ps || {}, x0 = m.x || 0, nL = fresh ? DS.pL(m) : heirL(s, m, ch, kind);
+  var sbH = !isB && !ck && sbHeirOk(s, m, ch);      // 2.2.0: 막사의 같은 병과 — 따라잡기 없이 제 레벨 그대로
+  var dps = ch.ps || {}, x0 = m.x || 0, nL = fresh || sbH ? DS.pL(m) : heirL(s, m, ch, kind);
   if (!isB) {
     if (dp && (p.pa || []).indexOf(dp.id) < 0) p.pa = (p.pa || []).concat([dp.id]); p.ad = 1; p.osn = p.sn; p.gen = dgen + 1;
     if (move) { Lr.osur = Lr.sur; Lr.sur = p.sn || Lr.sur; }      // 2.1.0: 다른 가문의 가주가 맹주가 되면 맹주의 핏줄 성이 그 사람의 성이 된다 (가문 이름·연맹 이름은 그대로)
@@ -553,7 +564,7 @@ DS.linSucceed = function (s, chId, pick, opt) {
   DS.loseMerc(s, m.id); p.m = 0;
   if (move) {
     var cb = DS.bearer ? DS.bearer(s, bf, 1) : null;
-    if (cb && cb !== m) { delete cb.h; cb.o = 0; cb.sb = 1; }      // 2.2.0: 그 가문의 가주였던 이는 막사로
+    if (cb && cb !== m) { if (DS.sbNc) DS.sbNc(s, cb, bf); delete cb.h; cb.o = 0; cb.sb = 1; }      // 2.2.0: 그 가문의 가주였던 이는 막사로
     seatMove(s, ch, bf);
   }
   delete seat.vac; delete seat.cu;
@@ -567,8 +578,9 @@ DS.linSucceed = function (s, chId, pick, opt) {
   delete seat.gr; if (mgr) seat.gr = mgr;
   mood(seat, 'will');
   seat.L = ps.L; seat.exp = ps.exp; seat.Ls = seat.L;      // r42: 맹주 가문 줄은 새 맹주의 개인 레벨을 비춘다
-  var e = logE(s, 'heir', p.id, dp ? dp.id : 0, { kind: kind, L: ps.L, from: DS.pL(m), cls: seat.cls });
-  evs.push({ t: 'heir', a: p.id, b: dp ? dp.id : 0, ch: seat.id, kind: kind, L: ps.L, from: DS.pL(m), pre: dps.L != null ? DS.pL(dps) : ps.L, move: move, ev: e });
+  var hx0 = { kind: kind, L: ps.L, from: DS.pL(m), cls: seat.cls }; if (sbH) hx0.sb = 1;
+  var e = logE(s, 'heir', p.id, dp ? dp.id : 0, hx0);
+  evs.push({ t: 'heir', a: p.id, b: dp ? dp.id : 0, ch: seat.id, kind: kind, sb: sbH ? 1 : 0, L: ps.L, from: DS.pL(m), pre: dps.L != null ? DS.pL(dps) : ps.L, move: move, ev: e });
   if (DS.ghTouch) DS.ghTouch(s);      // 장비 내력: 대장 깃발을 새 손이 든다
       // 2.2.0: 옛 맹주의 가문은 막사에 같은 병과가 있으면 그이가 잇고(DS.sbTick), 없으면 빈 가문으로 남는다
   if (DS.mercTidy) DS.mercTidy(s);
@@ -594,7 +606,7 @@ DS.LAPSE = { years: 20, gold: 0.5, minG: 3, tickets: 2 };      // tickets: 옛 �
 DS.linEnded = function (s, chId) {
   var ch = s && s.chars && s.chars[chId]; if (!ch || !ch.vac || +chId !== +s.hero) return false;
   if (DS.egPassOn && DS.egPassOn(s)) return false;      // 스무 해 창(다음 세대의 장) 안에서는 그 창이 다룬다
-  return !DS.linHeirs(s, chId).some(function (h) { return !h.young && h.kind !== 'pull'; });
+  return !DS.linHeirs(s, chId).some(function (h) { return !h.young && (h.blood || h.sb); });      // 2.2.0: 어른 핏줄도 막사의 같은 병과도 없으면 끊긴다
 };
 // opt: { name: 새 대장 이름, house: 'keep' | 여덟 큰 가문 이름, rnd, at }. 돌려주는 값: { evs, y0, y1, lost, kid, name, house, old, gone } 또는 null
 DS.linLapse = function (s, chId, opt) {
