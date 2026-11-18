@@ -162,7 +162,7 @@ DS.hand = function (s, chId, mid, opt) {
   if (kin) { m.kn = 1; m.nc = DS.houseCls(ch); }      // 맹주 집 아이가 가문을 맡는다: 그 가문의 병과를 받는다
   if (cur) {
     delete cur.h;
-    if (DS.lineOf && DS.lineOf(s, cur)) { cur.o = heroId(s); delete cur.sb; to = 'kin'; } else { cur.o = 0; cur.sb = 1; to = 'sb'; }
+    if (DS.lineOf && DS.lineOf(s, cur)) { cur.o = heroId(s); delete cur.sb; to = 'kin'; } else { DS.sbNc(s, cur, ch); cur.o = 0; cur.sb = 1; to = 'sb'; }      // 물러난 가주는 그 가문의 병과로 막사에
     if (field && hpC > hpM) cur.hp = hpM;
   }
   if (DS.mercTidy) DS.mercTidy(s);
@@ -180,6 +180,18 @@ DS.sbFits = function (ch, m) {
   var wc = m.cast || m.nc, C = DS.CLASSES[ch.cls], F = C.fam && DS.FAMILY[C.fam];
   if (wc) return wc === ch.cls || !!(C.master && F && F.members.indexOf(wc) >= 0);
   return DS.bnNative(ch.cls, m);
+};
+// 2.2.0: 막사의 사람은 병과가 꼭 하나다 (m.nc). 받은 병과가 없으면 정해 준다 (결정적): 떠나온 가문 ch 가 있고 종류가 그 가문(합일한 가문이면 그 묶음의 한 병과)에 맞으면 그 병과,
+//   아니면 종류의 태생 병과(DS.pNative — 종류를 거느리는 첫 병과). 큰 용병(오우거 · 발리스타 · 대수녀)처럼 여러 병과에 맞는 종류도 한 병과에만 맞게 된다. 아홉 집(cast)은 제 집 그대로
+DS.sbNc = function (s, m, ch) {
+  if (!m || m.cast) return m && m.cast || '';
+  if (m.nc && DS.CLASSES[m.nc] && !DS.CLASSES[m.nc].master) return m.nc;
+  var C = ch && DS.CLASSES[ch.cls], F = C && C.master && DS.FAMILY[C.fam], list = ch ? (F ? F.members : [ch.cls]) : [], nc = '';
+  list.forEach(function (k) { if (!nc && (DS.mercTypes(k).indexOf(m.type) >= 0 || DS.heroType(k) === m.type)) nc = k; });      // 그 병과의 영웅 종류(비병 → 랜서 …)도 맞는 것으로
+  if (!nc) nc = DS.pNative(s, m);
+  if (!DS.CLASSES[nc] || DS.CLASSES[nc].master) nc = (DS.FAMILY[(DS.CLASSES[nc] || {}).fam] || { members: ['inf'] }).members[0];
+  m.nc = nc;
+  return nc;
 };
 // 막사의 사람이 가주로 설 수 있는 가문 (빈 가문 먼저, 맹주 가문은 빼고). 없으면 null — 화면이 「그 가문의 가주라면」으로 잰다
 DS.sbHome = function (s, m) {

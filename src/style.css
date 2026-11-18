@@ -4087,6 +4087,8 @@ html body #app#app .row.merc .mn small:has(.msub) { display: block; -webkit-line
 html body #app#app .row.merc p.ms { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; flex-basis: 100%; margin-top: 8px; }
 html body #app#app .row.merc p.ms > i { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px 3px; border-radius: 4px; background: rgba(0, 0, 0, .28);
   box-shadow: inset 0 0 0 1px rgba(220, 180, 106, .1); font: 500 10px/13px var(--f-ui); font-style: normal; color: var(--a-mute); margin: 0; }
+html body #app#app .row.merc p.ms.pwl { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }      /* 2.2.0: 가주 교체 줄의 전투력 차이(8,921 → 9,140 +219)와 「비교」 단추 — 위 네 칸 격자가 덮어 겹치던 것 */
+html body #app#app .row.merc p.ms.pwl .pwd { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 html body #app#app .row.merc p.ms > i b { font: 700 13px/16px var(--f-num); color: var(--a-bone); }
 html body #app#app .row.merc p.ms > i em { font: 600 10px/12px var(--f-num); font-style: normal; }
 /* 머리 둘째 줄 (가문 창·인물 창·가계도 카드): 병과 · 성별 · 가주 */

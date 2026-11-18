@@ -76,7 +76,7 @@ module.exports = async (page, shot, L) => {
     out.yVac = DS.vacant(s, Y) && DS.bnEmpty(s).indexOf(Y.id) >= 0 && DS.barracks(s).length === 2; out.yL = Y.L;
     var h1 = DS.hand(s, Y.id, a1.id, { where: 'town' }); out.handNo = !h1.ok ? h1.why : '';
     var xb0 = DS.bearer(s, X), h2 = DS.hand(s, X.id, a2.id, { where: 'town' }); out.handOk = h2.ok && DS.bearer(s, X) === a2 && DS.isSb(xb0) && !xb0.o;
-    DS.pSync(s); out.xL2 = X.L; out.a2L = a2.L;
+    DS.pSync(s); out.xL2 = X.L; out.a2L = a2.L; out.X = X.id; out.xnc = !!(xb0.nc || xb0.cast) && DS.sbFits(X, xb0) && DS.sbHome(s, xb0) === X;
     var r = DS.recruitHero(s, Math.random, { ch: Y }); out.yRe = r && r.role === 'bear';
     out.solo = typeof DS.soloK === 'undefined' && DS.BN.solo === undefined;
     DS.mercTidy(s); DS.rebuildParty();
@@ -88,6 +88,12 @@ module.exports = async (page, shot, L) => {
   A(c.yVac && c.yL === 1, 'no same-class person in 막사 → house stays vacant (L 1) though the 막사 is not empty');
   A(!!c.handNo && c.handOk && c.xL2 === c.a2L, 'manual swap: other class refused (' + c.handNo + '), same class swaps, old 가주 goes to 막사');
   A(c.yRe && c.solo, 'refilled; no few-houses bonus');
+  A(c.xnc, 'swapped-out 가주 waits in the 막사 with that house class (nc or cast) and fits only it');
+  // 가주 교체 창 (390px): 전투력 차이 글과 「비교」 단추가 겹치지 않는다
+  await ev((id) => { DS.ui.closeAll(); DS.bnPickOpen(id); }, c.X); await L.sleep(500);
+  const ovl = await ev(() => { var bad = 0, n = 0; document.querySelectorAll('.ov .row.pk p.pwl').forEach(function (p) { var d = p.querySelector('.pwd'), b = p.querySelector('.cmpb'); if (!d || !b) return; n++; var dr = d.getBoundingClientRect(), br = b.getBoundingClientRect(), last = d.lastElementChild ? d.lastElementChild.getBoundingClientRect() : dr; if (Math.max(dr.right, last.right) > br.left || d.scrollWidth > d.clientWidth + 1) bad++; }); return { n: n, bad: bad, sw: document.documentElement.scrollWidth }; });
+  await shot('swap_pick');
+  A(ovl.n > 0 && !ovl.bad && ovl.sw <= 390, 'swap-pick rows: power delta does not overlap the compare button (' + ovl.n + ' rows)');
   // ④ 영웅관 창 (한 번 모집) · NaN 없음
   await ev(() => { DS.ui.closeAll(); DS.rebuildParty(); DS.openShop('merc'); }); await L.sleep(500);
   await shot('hall');
@@ -158,12 +164,41 @@ module.exports = async (page, shot, L) => {
   await L.sleep(600); await shot('arena');
   A(c.n > 8 && c.duel && c.champ && c.open, 'arena duel + tournament run (roster ' + c.n + ', standby ' + c.sb + ', kin ' + c.kin + ')');
   await ev(() => { DS.arenaClose(); DS.ui.closeAll(); }); await L.sleep(400);
-  // ⑩ 맹주가 이을 사람 없이 쓰러지고 다른 가문이 모두 비었다 → 대가 끊겨도 맹주 자리는 이어진다 (스무 해)
+  // ⑨-2 맹주의 뒤: 어른 핏줄이 없으면 막사의 같은 병과 가운데 가장 나은 이(등급 → 레벨)가 저절로, 제 레벨·등급 그대로 맹주가 된다 (의식 창에서 고르지 않는다)
+  c = await ev(() => {
+    var s = DS.G.save, h = s.chars[s.hero], P = s.lin.P;
+    s.mercs.slice().forEach(function (m) { if (DS.kidOf(s, m)) DS.loseMerc(s, m.id); });      // 어른 핏줄은 모두 떠났다
+    for (var k in P) if (P[k].st === 'young') P[k].st = 'gone';
+    DS.linTidy(s); DS.mercTidy(s);
+    function sbP(type, g, L, nc) { var m = DS.addMerc(s, type, g, 0); m.sb = 1; m.L = L; m.exp = 0; m.nc = nc; return m; }
+    var lo = sbP('m_sword', 2, 40, h.cls), best = sbP('m_sword', 4, 20, h.cls), other = sbP('m_sister', 5, 60, 'cle'); DS.mercTidy(s);
+    var gen0 = (P[h.pid] || {}).gen || 1, hid = s.hero;
+    h.down = true; var evs = DS.linSettle(s, '시험');
+    var pick = DS.linSbHeir(s, hid);
+    window.__sb = { hid: hid, gen0: gen0, best: best.id, lo: lo.id, other: other.id, pick: pick && pick.mid, ended: DS.linEnded(s, hid) };
+    DS.openLineageRite(evs, function () { window.__sbDone = 1; });
+    return window.__sb;
+  });
+  await L.sleep(600); await shot('rite_sb');
+  A(c.pick === c.best && !c.ended, 'no adult blood heir → the best same-class 막사 person (grade first) is the heir');
+  await page.click('.ov.rite [data-lgstep="pick"]').catch(() => {});
+  for (let i = 0; i < 30 && !(await ev(() => !!window.__sbDone)); i++) { await L.skipStory(page, 3); await L.sleep(300); }
+  c = await ev(() => {
+    var s = DS.G.save, X = window.__sb, h = s.chars[s.hero], p = s.lin.P[h.pid], ids = s.mercs.map(function (m) { return m.id; });
+    var lg = s.lin.log.slice(-6).map(function (e) { return DS.linEvText(s, e); }).join(' / ');
+    return { same: s.hero === X.hid, vac: !!h.vac, L: h.ps.L, g: h.ps.g, hL: h.L, gone: ids.indexOf(X.best) < 0, keep: ids.indexOf(X.lo) >= 0 && ids.indexOf(X.other) >= 0, gen: p && p.gen, gen0: X.gen0, live: p && p.st === 'live' && p.c === s.hero, name: h.name, lg: lg, done: !!window.__sbDone, fight: DS.partySpecs(s).length };
+  });
+  A(c.done && c.same && !c.vac && c.gone && c.keep && c.live, '막사 heir became 맹주 automatically (s.hero kept, lineage live, others stay in the 막사)');
+  A(c.L === 20 && c.hL === 20 && c.g === 4, 'new 맹주 keeps exactly own level and grade (L ' + c.L + ', g ' + c.g + ')');
+  A(c.gen === c.gen0 + 1 && /2세|3세|4세/.test(c.name) && /막사에서 나와/.test(c.lg), 'generation +1, title 「' + c.name + '」, chronicle line');
+  await L.closeAll(page);
+  // ⑩ 맹주가 쓰러졌는데 어른 핏줄도 막사의 같은 병과도 없다 (다른 병과만 막사에) · 다른 가문이 모두 비었다 → 대가 끊겨도 맹주 자리는 이어진다 (스무 해)
   c = await ev(() => {
     var s = DS.G.save, h = s.chars[s.hero];
     s.mercs.slice().forEach(function (m) { DS.loseMerc(s, m.id); });      // 가주·막사·가문원 모두 떠난다
     if (s.lin && s.lin.P) for (var k in s.lin.P) if (s.lin.P[k].st === 'young') s.lin.P[k].st = 'gone';
     DS.linTidy(s); DS.mercTidy(s);
+    var oc = DS.charList(s).filter(function (ch) { return ch.id !== s.hero && ch.cls !== h.cls && !DS.CLASSES[ch.cls].master; })[0], om = DS.addMerc(s, DS.heroType(oc.cls), 5, 0); om.sb = 1; om.nc = oc.cls; om.L = 50; DS.mercTidy(s);      // 다른 병과 한 사람은 막사에 (맹주를 잇지 못한다)
     var allVac = DS.charList(s).every(function (ch) { return ch.id === s.hero || DS.vacant(s, ch); });
     h.down = true; var e = DS.linSettle(s, '시험'), heirs = DS.linHeirs(s, s.hero).filter(function (x) { return !x.young; });
     var ended = DS.linEnded(s, s.hero), r = DS.linAutoAll(s);
@@ -171,7 +206,7 @@ module.exports = async (page, shot, L) => {
     var h2 = s.chars[s.hero];
     return { allVac: allVac, heirs: heirs.map(x => x.kind), ended: ended, lapse: (r || []).some(x => x.t === 'lapse'), hero: !!(h2 && !h2.vac && h2.ps), fight: DS.partySpecs(s).length, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length };
   });
-  A(c.allVac && c.ended && c.lapse && c.hero && c.fight >= 1 && c.units >= 1, 'no heir + every house vacant → lapse fallback, 맹주 seat refilled, ' + c.fight + ' fighter(s)');
+  A(c.allVac && c.ended && c.lapse && c.hero && c.fight >= 1 && c.units >= 1, 'no blood heir + only other-class 막사 + every house vacant → lapse fallback, 맹주 seat refilled, ' + c.fight + ' fighter(s)');
   await L.closeAll(page); await shot('after_lapse');
   // ⑪ 스무 해 창 (빈 가문이 있는 채로 한 대 넘기기)
   c = await ev(() => {
@@ -191,10 +226,12 @@ module.exports = async (page, shot, L) => {
     var old = JSON.parse(raw), fol = old.mercs.filter(function (m) { return m.o && !m.h; }).length, bar = old.mercs.filter(function (m) { return !m.o; }).length, g0 = old.gold;
     var s = DS.Save.read(raw), R = DS.lastMig13 || {};
     var noFree = s.mercs.every(function (m) { return m.h || (m.sb && !m.o) || m.o === s.hero; });
-    return { v: s.v, fol: fol, bar: bar, R: R, gold: s.gold - g0, news: (s.news || []).join(' / '), noFree: noFree, n0: old.mercs.length, n1: s.mercs.length, barr: DS.barracks(s).length, kin: DS.mercsOf(s, s.hero).length, fight: DS.partySpecs(s).length };
+    return { v: s.v, fol: fol, bar: bar, R: R, gold: s.gold - g0, news: (s.news || []).join(' / '), noFree: noFree, n0: old.mercs.length, n1: s.mercs.length, barr: DS.barracks(s).length, kin: DS.mercsOf(s, s.hero).length, fight: DS.partySpecs(s).length,
+      one: DS.barracks(s).filter(function (m) { return !(m.nc || m.cast) || Object.keys(DS.CLASSES).filter(function (k) { return !DS.CLASSES[k].master && DS.sbFits({ cls: k }, m); }).length !== 1; }).map(function (m) { return m.type + '>' + m.nc; }) };
   }, raw);
   A(c.v === 13 && c.R.sb > 0 && c.R.left === 0 && c.gold === 0, 'v12 → v13: 가솔 ' + c.fol + ' + 막사 ' + c.bar + ' → 막사 ' + c.R.sb + ' (지금 ' + c.barr + '), 가문원 ' + c.R.kin + ', 떠남 0, 골드 0');
   A(c.n1 >= c.n0 && c.noFree, 'nobody leaves (' + c.n0 + ' → ' + c.n1 + ' rows), every non-가주 non-kin row is in the 막사');
+  A(!c.one.length, 'every 막사 person has exactly one class (nc) after migration' + (c.one.length ? ': ' + c.one.join(' ') : ''));
   A(/한 사람 한 사람/.test(c.news) && /모두 막사에서 기다린다/.test(c.news), 'migration news line');
   // 판 올림한 저장으로 실제로 이어 하기 (부팅 경로)
   await page.evaluate((raw) => { DS.G.save = null; DS.G.running = false; localStorage.clear(); localStorage.setItem(DS.Save.KEY, raw); }, raw);      // 지금 판이 떠나며 저장을 덮지 않게

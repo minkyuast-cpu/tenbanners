@@ -387,15 +387,15 @@ DS.mercTidy = function (save) {
   var n = 0, hid = +save.hero, bear = {};
   save.mercs.forEach(function (m) {
     if (m.o && !save.chars[m.o]) { m.o = 0; delete m.h; n++; }
-    if (m.h && (!m.o || m.o === hid)) { delete m.h; if (m.o === hid && !DS.lineOf(save, m)) { m.o = 0; m.sb = 1; } n++; }      // 맹주 가문의 깃발은 맹주가 든다
-    if (m.h) { m.h = 1; if (bear[m.o]) { delete m.h; m.o = 0; m.sb = 1; n++; } else { bear[m.o] = 1; delete m.sb; } }      // 한 깃발에 든 사람은 하나 (앞의 줄이 남는다 — 나머지는 막사로)
+    if (m.h && (!m.o || m.o === hid)) { delete m.h; if (m.o === hid && !DS.lineOf(save, m)) { if (DS.sbNc) DS.sbNc(save, m, save.chars[hid]); m.o = 0; m.sb = 1; } n++; }      // 맹주 가문의 깃발은 맹주가 든다
+    if (m.h) { m.h = 1; if (bear[m.o]) { if (DS.sbNc) DS.sbNc(save, m, save.chars[m.o]); delete m.h; m.o = 0; m.sb = 1; n++; } else { bear[m.o] = 1; delete m.sb; } }      // 한 깃발에 든 사람은 하나 (앞의 줄이 남는다 — 나머지는 막사로)
   });
   save.mercs.forEach(function (m) {
     if (m.h) return;
     if (!m.sb && m.o === hid) return;      // 가문원
     if (DS.lineOf(save, m) && !m.sb) { m.o = hid; n++; return; }      // 맹주 집 사람은 맹주 가문의 가문원으로
-    if (m.sb && !m.o) { m.sb = 1; return; }      // 막사
-    if (m.o) n++; m.o = 0; m.sb = 1;      // 그 밖의 사람은 막사로
+    if (m.sb && !m.o) { m.sb = 1; if (DS.sbNc && !m.nc && !m.cast) DS.sbNc(save, m, null); return; }      // 막사 (2.2.0: 병과는 꼭 하나 — DS.sbNc)
+    if (m.o) n++; if (DS.sbNc && !m.nc && !m.cast) DS.sbNc(save, m, m.o ? save.chars[m.o] : null); m.o = 0; m.sb = 1;      // 그 밖의 사람은 막사로
   });
   if (DS.partySync) DS.partySync(save);
   return n;

@@ -135,6 +135,7 @@ DS.mig13 = function (s) {
     delete m.sb;
     if (m.h) return;
     if (line(m)) { m.kn = 1; m.o = hid; R.kin++; return; }
+    if (DS.sbNc) DS.sbNc(s, m, valid(+m.o) ? s.chars[+m.o] : null);      // 병과는 하나: 옛 가솔은 섬기던 가문의 병과(종류가 맞으면), 그 밖은 종류의 태생 병과
     m.o = 0; m.sb = 1; R.sb++;      // 옛 가솔 · 옛 막사 → 막사
   });
   if (s.opt && typeof s.opt === 'object') delete s.opt.refill;
