@@ -2622,8 +2622,8 @@ function lgRite(ev, cb, griefs) {
     var ch = s.chars[chId]; if (!ch) return '';
     var k = oldKid();
     if (k) return josa(k.ttl || k.n || '', '이가') + ' 그 가문의 가주가 된다';
-    var b = DS.barracks(s).filter(function (x) { return DS.sbFits(ch, x); }).sort(function (a, b) { return (b.g || 0) - (a.g || 0) || DS.pL(b) - DS.pL(a) || a.id - b.id; })[0];
-    if (b) return '막사의 ' + josa(b.n || '', '이가') + ' 그 가문의 가주가 된다';
+    var b = DS.barracks(s).filter(function (x) { return DS.sbFits(ch, x); }).concat((s.mercs || []).filter(function (x) { return x.o === ch.id && !x.h && !x.sb && !x.cast && DS.lineOf && DS.lineOf(s, x); })).sort(function (a, b) { return (b.g || 0) - (a.g || 0) || DS.pL(b) - DS.pL(a) || a.id - b.id; })[0];
+    if (b) return (b.sb ? '막사의 ' : '막사로 가는 ') + josa(b.n || '', '이가') + ' 그 가문의 가주가 된다';      // 2.2.1: 막사로 갈 가족(배우자 · 선대)도 그 가문을 잇는다
     return '빈 가문이 되어 레벨과 단을 잃는다';
   }
   function lgCandBtn(c) {
