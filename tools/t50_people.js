@@ -130,7 +130,7 @@ module.exports = async (page, shot, L) => {
   A(c.vac > 0 || (!!c.why && !c.r && c.dis), '막사 full (' + c.cap + ') → recruit blocked (' + c.why + ')');
   await ev((ids) => { var s = DS.G.save; ids.forEach(function (id) { DS.loseMerc(s, id); }); DS.mercTidy(s); }, c.add); await L.closeAll(page);
   // ⑥ 싸움에서 가주가 쓰러진다: 막사에 같은 병과가 있으면 싸움 뒤 그이가 잇는다 / 없으면 빈 가문 (레벨·단도 잃는다)
-  await ev(() => { var s = DS.G.save; DS.charList(s).forEach(function (ch) { if (ch.cls === 'cle') DS.sbOf(s, ch.id).forEach(function (m) { DS.loseMerc(s, m.id); }); }); var m = DS.addMerc(s, DS.heroType('arc'), 3, 0); m.o = 0; m.sb = 1; m.nc = 'arc'; m.L = 25; DS.mercTidy(s); DS.rebuildParty(); });
+  await ev(() => { var s = DS.G.save; DS.charList(s).forEach(function (ch) { if (ch.cls === 'cle' || ch.cls === 'arc') DS.sbOf(s, ch.id).forEach(function (m) { DS.loseMerc(s, m.id); }); }); var m = DS.addMerc(s, DS.heroType('arc'), 3, 0); m.o = 0; m.sb = 1; m.nc = 'arc'; m.L = 25; DS.mercTidy(s); DS.rebuildParty(); });
   await ev(() => { DS.G.quiet = true; DS.startScenario(DS.scn(9)); }); await L.sleep(800);
   c = await ev(() => {
     var s = DS.G.save, sim = DS.G.sim, out = {};
