@@ -576,7 +576,7 @@ DS.linSucceed = function (s, chId, pick, opt) {
   return evs;
 };
 // r42: 맹주 자리를 다른 가문 줄로 옮긴다 — 사람 칸(이름·가계도 고리·성별·나이·체력·사람 줄)은 새 줄로, 옛 줄은 보통 가문
-var SEATK = ['name', 'pid', 'sx', 'by', 'ls', 'gr', 'eld', 'hp', 'down', 'vac', 'nat', 'cu', 'lsc', 'ps'];
+var SEATK = ['name', 'pid', 'sx', 'by', 'ls', 'gr', 'eld', 'hp', 'down', 'vac', 'nat', 'cu', 'lsc', 'ps', 'st'];      // 2.2.0: st(가문원 태세)도 맹주 자리를 따라간다
 function seatMove(s, from, to) {
   if (!from || !to || from === to) return;
   SEATK.forEach(function (k) { if (from[k] !== undefined) to[k] = from[k]; else delete to[k]; delete from[k]; });

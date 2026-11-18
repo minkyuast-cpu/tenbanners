@@ -12,7 +12,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 // r44: 든 사람(가주·맹주)의 등급은 배율이다 — gmul (일반 0.85 · 고급 0.95 · 희귀 1.05 · 영웅 1.20 · 전설 1.42, 전설/일반 1.67배).
 //   희귀(아홉 집 본인 · 1세 맹주의 고정 등급)는 예전 +2% → +5% 로 거의 그대로, 자동으로 서는 가주(일반~희귀)의 평균도 예전과 몇 % 안쪽이다.
 //   (예전: 더하기 몫 일반 0 · 고급 1 · 희귀 2 · 영웅 4 · 전설 6 % — 사용자 「전설과 일반 사이에 스탯 총합이 유의미하게 차이나게」. grade 칸은 옛 값 그대로 둔다 — 읽는 곳 없음)
-DS.BN = { slope: 1, cap: 20, grade: [0, 0, 1, 2, 4, 6], gmul: [1, 0.85, 0.95, 1.05, 1.2, 1.42], bench: 2, retro: 10, retroCap: 300, cmdK: 1, kinK: 1, solo: 0.3, soloN: 6, nK: 0 };      // 2.2.0: cmdK = 깃발 유닛(가주·맹주)의 본디 힘 배율 · kinK = 가문원 배율 · solo/soloN = 「소수 정예」: 싸우는 가문이 soloN 보다 적으면 가주가 그만큼 단단하다 (가솔이 맡던 몫 — 한 가문이면 +solo, soloN 이상이면 0) · nK = 지금 싸우는 가문 수 (DS.partySync 가 적는다)
+DS.BN = { slope: 1, cap: 20, grade: [0, 0, 1, 2, 4, 6], gmul: [1, 0.85, 0.95, 1.05, 1.2, 1.42], bench: 2, retro: 10, retroCap: 300, cmdK: 1, kinK: 1, solo: 0.3, soloN: 6, nK: 0, meritK: 2 };      // 2.2.0: cmdK = 깃발 유닛(가주·맹주)의 본디 힘 배율 · kinK = 가문원 배율 · solo/soloN = 「소수 정예」: 싸우는 가문이 soloN 보다 적으면 가주가 그만큼 단단하다 (가솔이 맡던 몫 — 한 가문이면 +solo, soloN 이상이면 0) · nK = 지금 싸우는 가문 수 (DS.partySync 가 적는다) · meritK = 시나리오 승리 공훈에서 가주 몫 (가솔이 나눠 받던 몫까지 — 들판 기습·현상금도 가문마다 두 몫)
 // 아홉(과 1세 대장)의 사람 종류 — 「깃발을 내려놓으면」 (⑥-1 표. 마스터는 돌아온 이 표 RET_KIND 와 같다)
 DS.CAST_KIND = { inf: 'm_sword', cav: 'm_lancer', fly: 'm_lancer', mar: 'm_pike', pike: 'm_pike', arc: 'm_archer', cle: 'm_sister', mon: 'm_templar', mag: 'm_sister', sha: 'm_templar', bm: 'm_sword', tm: 'm_pike', mm: 'm_templar' };
 // 아홉의 고정 특성 (1세 대장도 제 병과 줄에서 특성만 받는다). 마스터는 그 묶음의 주인공 병과 줄

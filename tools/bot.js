@@ -111,7 +111,7 @@ function run(sim, mode, zid, maxT) {
             if (u.ch === s.hero) { ch.down = true; st.heroDeaths++; st.deaths++; }
             else { const bm = D.bearer(s, ch); if (bm) { if (bm.it) D.giveMercItem(s, bm.id, null); const lost = D.loseMerc(s, bm.id); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.bearDeaths++; } } }
           } else if (u.role === 'merc' && u.mid) {
-            const lost = D.loseMerc(s, u.mid); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.kinDeaths++; }
+            const lost = D.loseMerc(s, u.mid); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.kinDeaths++; st.log.push('kin died ' + mode + ' L' + D.pL(lost) + ' party L' + D.partyL(s) + ' age ' + D.ageOf(s, lost)); }
           }
         } else if (u.side === 'enemy' && e.by) {
           const ku = sim.byId[e.by]; let km = null;

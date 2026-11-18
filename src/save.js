@@ -155,6 +155,7 @@ DS.mig13 = function (s) {
   s.gold = Math.max(0, Math.round(+s.gold || 0)) + R.gold;
   if (s.opt && typeof s.opt === 'object') delete s.opt.refill;
   for (var id in s.chars) if (s.chars[id] && typeof s.chars[id] === 'object') { delete s.chars[id].gm; delete s.chars[id].manual0; }
+  if (s.chars[hid] && s.chars[hid].st == null) s.chars[hid].st = 'side';      // 맹주를 따르는 가문원은 「호위」로 (예전 가솔의 「앞장」 기본값 대신)
   try { if (DS.sbTick) R.seat = DS.sbTick(s).length; } catch (e) { R.seat = 0; }
   var news = '2.2.0 「한 사람 한 사람」: 가솔과 막사가 없어졌다. 가주가 선 가문은 모두 싸운다.';
   if (R.sb) news += ' 가솔 ' + R.sb + '명은 그 가문의 대기조가 되었다.';

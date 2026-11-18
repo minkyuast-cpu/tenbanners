@@ -605,6 +605,7 @@ DS.newSave = function (name, heroCls) {
     opt: { sfx: true, bgm: true, speed: 1, refill: true }, seen: {}, perk: null, news: [], ver: DS.VERSION || ''
   };
   s.hero = DS.addChar(s, heroCls, 1, s.name).id;
+  s.chars[s.hero].st = 'side';      // 2.2.0: 맹주를 따르는 가문원은 처음부터 「호위」 (아이는 귀하다 — 부대 판에서 「돌격」으로 바꾼다)
   s.us = 1 + Math.floor(Math.random() * 2147483646);      // r38: 타고난 필살기의 씨앗 (새 판마다 다르게 — 옛 저장은 eg.seed)
   s.bn = 1;      // 4.0: 새 구조 (판정의 근거가 아니라 참고 표시 — 근거는 DS.bnFix 의 불변식)
   if (DS.CAST_KIND) s.chars[s.hero].ps = { type: DS.CAST_KIND[heroCls] || 'm_sword', g: DS.CAST_G || 3, t: DS.heroTrait ? DS.heroTrait(heroCls) : DS.CAST_TRAIT[heroCls] || 'guard', v: 0, L: s.chars[s.hero].L, exp: 0, k: 0, b: 0 };      // r42: 맹주의 개인 레벨      // 대장이라는 사람 한 줄 (1세: 희귀 · 병과 고정 특성)
