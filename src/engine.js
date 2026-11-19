@@ -1052,7 +1052,7 @@ P.aiSkill = function (u, foes, dry) {
   }
   // cmdCast 일 때 치유를 맡은 지휘관은 치유 몫의 마나를 남긴다 (공격·가호로 마나를 다 쓰고 정작 쓰러져 가는 용병을 못 고치던 것). 끄면 0.
   var keep = 0;
-  if (u.role === 'cmd' && DS.BAL.cmdCast) for (k0 = 0; k0 < ord.length; k0++) { S0 = SK[ord[k0]]; if (S0.tg === 'ally' && (S0.eff[0].t === 'heal' || (S0.eff[0].t === 'buff' && S0.eff[0].s === 'shd'))) { keep = Math.max(S0.mp * 3, u.mmp * 0.3); break; } }      // 2.2.6: 보호막을 거는 신관도
+  if (u.role === 'cmd' && DS.BAL.cmdCast) for (k0 = 0; k0 < ord.length; k0++) { S0 = SK[ord[k0]]; if (S0.tg === 'ally' && (S0.eff[0].t === 'heal' || (S0.eff[0].t === 'buff' && S0.eff[0].s === 'shd' && S0.eff[0].stat !== 'atk'))) { keep = Math.max(S0.mp * 3, u.mmp * 0.3); break; } }      // 2.2.6: 마공으로 보호막을 거는 신관도 (마나가 적은 보병의 수호는 빼고)
   if (bestOn) u.healer = keep > 0;
   for (var n = 0; n < ord.length; n++) {
     var id = ord[n], S = SK[id];
@@ -1082,6 +1082,7 @@ P.aiSkill = function (u, foes, dry) {
       continue;
     }
     if (posBuff(e0)) {
+      if (S.ai === 'boss' && !(boss || foes.length >= 5)) continue;      // 2.2.6: 큰 싸움에서만 거는 가호 (신속)
       var shd = e0.s === 'shd', all = S.area === 'all', lack = function (f) { var b = f.buffs[e0.s]; return !(b && (shd ? b.p > (b.mx || 0) * 0.35 : (all || b.p >= e0.p) && b.t > 3)); };      // 2.2.6: 더 약한 같은 가호만 있으면 받을 이로 친다 (모두에게 거는 호령은 예전처럼 — 서로 다시 외치지 않게)
       if (S.tg === 'self' && (!S.area || S.area === 'single')) {      // 2.2.6 자기에게만 거는 가호 (철벽): 적이 붙어 있을 때
         if (!lack(u)) continue;
