@@ -3135,7 +3135,7 @@ function agComingShow(adults, elders, cb, mnats) {
   var all = lgAll(), W = AGL(), L = LORE().lineage || {};
   var ad = adults.map(function (e) { return all[e.a]; }).filter(Boolean), el = elders.map(function (e) { return all[e.a]; }).filter(function (p) { return p && p.alive; });      // 같은 때에 숨진 이는 노년 줄에서 뺀다
   if (!ad.length && !el.length && !mnats.length) { if (cb) cb(); return; }      // (mnats 에는 adultWait 도 섞여 온다)
-  if (ad.length && DS.cine && !agComingShow.seen) { DS.cine({ k: 'adult', por: ad.slice(0, 3).map(function (p) { return p.spr || ''; }), title: ad.length > 1 ? '아이 ' + ad.length + '명이 성년이 되었다' : josa(ad[0].name, '이가') + ' 성년이 되었다', sub: '이제 가문원으로 함께 싸운다' }, function () { agComingShow.seen = 1; try { agComingShow(adults, elders, cb, mnats); } finally { agComingShow.seen = 0; } }); return; }      // 2.2.4: 먼저 연출
+  if (ad.length && DS.cine && !agComingShow.seen) { DS.cine({ k: 'adult', por: ad.slice(0, 3).map(function (p) { return p.spr || ''; }), title: ad.length > 1 ? '아이 ' + ad.length + '명이 성년이 되었다' : josa(ad[0].name, '이가') + ' 성년이 되었다', sub: '이제 한 사람 몫을 한다' }, function () { agComingShow.seen = 1; try { agComingShow(adults, elders, cb, mnats); } finally { agComingShow.seen = 0; } }); return; }      // 2.2.4: 먼저 연출
   A2('birth', 'level');
   var html = '<div class="result lgev agev"><p class="eyebrow">' + esc(W.timeTitle || '세월') + '</p>' + (!ad.length && !el.length ? '<h2>' + esc(W.mnatTitle || '오래 함께한 이들이 잠들었다') + '</h2>' : '');
   if (ad.length) {
