@@ -790,7 +790,7 @@ function chipSwipe(box) {
   var d = null, raf = 0;
   box.addEventListener('pointerdown', function (e) {
     if (e.button > 0 || !box.classList.contains('swipe')) { d = null; return; }
-    chipGlideStop(box);
+    chipGlideStop(box); box._tgtT = 0;
     d = { id: e.pointerId, x: e.clientX, y: e.clientY, sl: box.scrollLeft, m: e.pointerType !== 'touch', moved: false, drag: false, lx: e.clientX, lt: performance.now(), v: 0 };
   });
   box.addEventListener('pointermove', function (e) {
@@ -828,6 +828,7 @@ function chipSwipe(box) {
     if (d && !d.moved && Math.abs(box.scrollLeft - d.sl) > CHIP_TH) d.moved = true;
     if (!raf) raf = requestAnimationFrame(function () { raf = 0; chipEdges(box); });
   }, { passive: true });
+  box.addEventListener('scrollend', function () { box._tgtT = 0; chipEdges(box); }, { passive: true });
   window.addEventListener('resize', function () { chipEdges(box); });
 }
 // 고른 칩이 줄 밖에 있으면 보이는 자리까지 민다 (now: 바로)
@@ -835,7 +836,7 @@ function chipFollow(uid, now) {
   var ce = G.chipEls[uid], box = $('#chips'); if (!ce || !box || !box.classList.contains('swipe') || box.classList.contains('drag')) return;
   var cs = getComputedStyle(box), pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
   var br = box.getBoundingClientRect(), cr = ce.el.getBoundingClientRect(), t = null, rd = null, sl = box.scrollLeft;
-  var base = box._tgtT && performance.now() - box._tgtT < 700 ? box._tgt : sl, l = cr.left + sl - base, r = cr.right + sl - base;      // 부드럽게 미는 중이면 닿을 자리에서 본다
+  var base = box._tgtT && performance.now() - box._tgtT < 2500 && Math.abs(sl - box._tgt) > 1 ? box._tgt : sl, l = cr.left + sl - base, r = cr.right + sl - base;      // 부드럽게 미는 중이면 닿을 자리에서 본다 (2.2.4: 0.7초로 끊지 않고 닿을 때까지 — 느린 폰에서는 밀기가 더 걸린다. scrollend · 손가락이 닿으면 지운다)
   if (l < br.left + pl - 1) { t = base + l - (br.left + pl); rd = Math.floor; }
   else if (r > br.right - pr + 1) { t = base + r - (br.right - pr); rd = Math.ceil; }
   if (t == null) return;
@@ -1995,7 +1996,13 @@ function refillMercs() {
   if (seat.length) renderChips();
 }
 // 2.2.0: 막사의 사람이 빈 가문을 이었다 — 「센주 가문의 가주를 막사의 난새가 잇는다」. 같은 병과가 없으면 그 가문은 빈 채로 (부대 탭에 「빈 가문」)
-function bnNote(list) { (list || []).forEach(function (e) { if (e && e.text) later(e.text, 4200); }); }
+function bnNote(list) {
+  (list || []).forEach(function (e) {
+    if (e && e.text) later(e.text, 4200);      // 기록 · 알림 글은 그대로
+    var ch = e && e.t === 'sbSeat' && G.save && G.save.chars[e.ch], m = ch && DS.bearer ? DS.bearer(G.save, ch) : null;
+    if (m && DS.cine) DS.cine({ k: 'succ', por: [charSpr(ch, 4)], fc: DS.FLAG[ch.cls] || '', title: (m.n || '') + ', ' + DS.flagName(ch.cls) + ' 가주', sub: '막사에서 나와 가문을 이었다' });      // 2.2.4: 가주를 잇는 순간 (한가할 때)
+  });
+}
 DS.bnNote = bnNote;
 function checkExit() {
   if (G.scn || G.ending || G.hold) return;

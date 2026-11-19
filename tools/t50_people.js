@@ -8,10 +8,11 @@ const fs = require('fs'), path = require('path');
 module.exports = async (page, shot, L) => {
   const A = L.assert, ev = (f, a) => page.evaluate(f, a);
   await L.newGame(page, { cls: 'inf', name: '시험' });
-  // 판 꾸미기: 시나리오 1~9 를 깬 것으로 (가문 여덟), 레벨을 올리고 골드
+  await ev(() => { var a = 20261119; Math.random = function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; DS.G.save.opt.cine = 'off'; });      // 2.2.4: 난수를 씨앗에 묶는다 (영웅관 병과 · 등급이 판마다 달라 뒤의 검사가 흔들리지 않게) · 사건 연출은 그것을 보는 검사에서만 켠다: 시나리오 1~9 를 깬 것으로 (가문 여덟), 레벨을 올리고 골드
   await L.edit(page, function () {
     s.gold = 2000000;
     for (var id = 1; id <= 9; id++) DS.applyClear(s, DS.scn(id));
+    DS.houseOpenN(s, 7);      // 2.2.4: 가문은 영웅관에서만 연다 — 예전 1~9번 합류와 같은 일곱 곳
     DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 30; b.exp = 0; } });
     DS.mercTidy(s); DS.pSync(s);
   });
@@ -125,11 +126,63 @@ module.exports = async (page, shot, L) => {
   await page.click('[data-pull]'); await L.sleep(2500); await shot('hall_result');
   A((await L.badText(page, '.ov')).length === 0, 'recruit result has no NaN/undefined');
   await L.closeAll(page);
-  // ⑤ 막사가 가득(정원 DS.MERC_MAX)하고 빈 가문이 없으면 막힌다
-  c = await ev(() => { var s = DS.G.save, add = []; while (DS.barracks(s).length < DS.MERC_MAX) { var m = DS.addMerc(s, 'm_sword', 1, 0); m.o = 0; m.sb = 1; add.push(m.id); } var vac = DS.charList(s).filter(function (ch) { return DS.vacant(s, ch); }).length; var why = DS.recruitWhy(s), r = vac ? null : DS.recruitHero(s, Math.random); DS.ui.closeAll(); DS.openShop('merc'); var btn = document.querySelector('.ov [data-pull]'); return { why: why, r: r, vac: vac, dis: !!(btn && btn.disabled), add: add, cap: DS.MERC_MAX }; });
+  // ⑤ 막사가 가득(정원 DS.MERC_MAX)하고 빈 가문이 없으면 막힌다 — 2.2.4: 닫힌 가문이 남아 있으면 막히지 않는다 (그 병과만 온다 · 가문이 열린다)
+  c = await ev(() => { var s = DS.G.save, add = []; while (DS.barracks(s).length < DS.MERC_MAX) { var m = DS.addMerc(s, 'm_sword', 1, 0); m.o = 0; m.sb = 1; add.push(m.id); } var vac = DS.charList(s).filter(function (ch) { return DS.vacant(s, ch); }).length;
+    var shut = DS.closedCls(s).length, why0 = DS.recruitWhy(s);
+    var c1 = DS.fixSave(JSON.parse(JSON.stringify(s))), r1 = vac ? null : DS.recruitHero(c1, Math.random), n1 = DS.barracks(c1).length;      // 사본: 닫힌 가문이 있으면 열린다 (막사는 그대로)
+    var c2 = DS.fixSave(JSON.parse(JSON.stringify(s))); DS.houseOpenN(c2, 10); var why = DS.recruitWhy(c2), r2 = vac ? null : DS.recruitHero(c2, Math.random);      // 사본: 모두 열면 막힌다
+    DS.ui.closeAll(); DS.openShop('merc'); var btn = document.querySelector('.ov [data-pull]');
+    return { why: why, why0: why0, shut: shut, r1: r1 && r1.role, n1: n1, r2: r2, vac: vac, dis: !!(btn && btn.disabled), add: add, cap: DS.MERC_MAX }; });
   await shot('hall_full');
-  A(c.vac > 0 || (!!c.why && !c.r && c.dis), '막사 full (' + c.cap + ') → recruit blocked (' + c.why + ')');
+  A(c.vac > 0 || (c.shut > 0 && !c.why0 && !c.dis && c.r1 === 'open' && c.n1 === c.cap), '막사 full but ' + c.shut + ' closed houses → pull still allowed and opens a house (' + c.r1 + ')');
+  A(c.vac > 0 || (!!c.why && !c.r2), '막사 full and every house open → recruit blocked (' + c.why + ')');
   await ev((ids) => { var s = DS.G.save; ids.forEach(function (id) { DS.loseMerc(s, id); }); DS.mercTidy(s); }, c.add); await L.closeAll(page);
+  // ⑤-2 2.2.4 가문은 영웅관에서만: 시나리오를 깨도 가문이 오지 않는다(모집권) · 닫힌 가문의 병과가 나오면 그 영웅이 가주로 가문이 열린다 · 닫힌 가문 쏠림 · 천장 · 옛 저장
+  c = await ev(() => {
+    var s = DS.G.save, o = {}, cp = function () { return DS.fixSave(JSON.parse(JSON.stringify(s))); };
+    var n0 = DS.newSave('새', 'arc'); o.start = DS.charList(n0).length; o.t0 = n0.tickets;
+    [2, 3, 4, 5, 6, 7, 9, 10, 11, 13].forEach(function (id) { DS.applyClear(n0, DS.scn(id)); }); o.after = DS.charList(n0).length; o.tk = n0.tickets; o.joins = 0;
+    o.tk2 = DS.applyClear(n0, DS.scn(2)).tickets;      // 다시 깨면 없다
+    o.t12 = DS.applyClear(n0, DS.scn(12)).tickets;     // 가문이 오지 않던 판은 한 장도 없다 (열 번째가 아니면)
+    var a = cp(), shut0 = DS.closedCls(a).slice(), r = DS.recruitHero(a, Math.random, { cls: shut0[0] }), ch = r && r.ch;
+    o.role = r && r.role; o.open = !!ch && ch.cls === shut0[0] && DS.bearer(a, ch) === r.m && DS.closedCls(a).length === shut0.length - 1; o.L = r && r.m.L; o.rL = DS.recruitL(s, r ? r.g : 3); o.party = !!ch && DS.partyIds(a).indexOf(ch.id) >= 0 && DS.partySpecs(a).some(function (u) { return u.ch === ch.id; });
+    o.hp0 = a.hpity;
+    var b = cp(); b.hpity = DS.HOUSE_OPEN.pity; o.odds1 = DS.openOdds(b); var rb = DS.recruitHero(b, function () { return 0.001; }); o.sure = rb && rb.role === 'open';      // 천장: 반드시 연다 (난수가 선 가문 쪽이어도)
+    var cnt = 0, N = 400, rs = 7; var rnd = function () { rs = (rs * 16807) % 2147483647; return rs / 2147483647; };
+    for (var i = 0; i < N; i++) { var c = cp(); c.hpity = 0; var rr = DS.recruitHero(c, rnd); if (rr && rr.role === 'open') cnt++; }
+    var cc = cp(); cc.hpity = 0; o.exp = DS.openOdds(cc); o.got = cnt / N;
+    var d = cp(); d.hpity = 0; var miss = 0, seq = []; for (var k = 0; k < 12; k++) { var x = DS.recruitHero(d, function () { return 0.001; }); seq.push(x.role); }
+    o.seq = seq.slice(0, DS.HOUSE_OPEN.pity + 1).join(',');      // 늘 선 가문 쪽 난수여도 pity 번 뒤에는 연다
+    var e = cp(); DS.houseOpenN(e, 10); var re = DS.recruitHero(e, Math.random); o.allOpen = DS.closedCls(e).length === 0 && re && re.role !== 'open'; o.oddsAll = DS.openOdds(e);
+    return o;
+  });
+  A(c.start === 1 && c.t0 === 1 && c.after === 1 && c.tk === 1 + 10 && c.tk2 === 0 && c.t12 === 0, 'scenario clears never add a house: houses ' + c.start + ' → ' + c.after + ', tickets ' + c.t0 + ' → ' + c.tk + ' (join scenarios and 10th give a ticket, replays none)');
+  A(c.role === 'open' && c.open && c.party && c.hp0 === 0, 'pull of a closed class opens that house with this hero as 가주, who fights at once');
+  A(Math.abs(c.L - c.rL) <= 2, 'new house 가주 comes at the usual recruit level (L ' + c.L + ' ≈ ' + c.rL + ')');
+  A(c.odds1 === 1 && c.sure, 'pity: after ' + c.seq + ' the next pull always opens a house');
+  A(/^(sb|bear),(sb|bear),open$/.test(c.seq), 'pity sequence with worst-case luck: ' + c.seq);
+  A(Math.abs(c.got - c.exp) < 0.08, 'closed-house bias: opened ' + Math.round(c.got * 100) + '% of 400 pulls, expected ' + Math.round(c.exp * 100) + '%');
+  A(c.allOpen && c.oddsAll === 0, 'with every house open pulls behave as before (no open odds)');
+  // 영웅관 화면: 닫힌 가문 칸 · 열 확률 → 반드시 여는 모집 → 가문이 열리는 연출 → 부대 탭에 그 가문
+  await ev(() => { var s = DS.G.save; s.tickets = 3; s.hpity = DS.HOUSE_OPEN.pity; s.opt.cine = 'full'; DS.ui.closeAll(); DS.openShop('merc'); }); await L.sleep(500);
+  c = await ev(() => { var o = document.querySelector('.ov'), s = DS.G.save; return { chips: o.querySelectorAll('.hshut .hrm.shut').length, shut: DS.closedCls(s).length, sure: /반드시/.test((o.querySelector('.hshut') || {}).textContent || ''), n0: DS.charList(s).length }; });
+  A(c.chips === c.shut && c.shut >= 1 && c.sure, 'hall lists ' + c.chips + ' closed houses and the pity line');
+  if (process.env.V224) { fs.mkdirSync(process.env.V224, { recursive: true }); await page.screenshot({ path: path.join(process.env.V224, 'hall_closed.png') }); }
+  await shot('hall_closed');
+  await page.click('[data-pull]'); await L.sleep(400);
+  await ev(() => { var fa = document.querySelector('.pullov [data-flipall]'); if (fa) fa.click(); }); await L.sleep(900);
+  await ev(() => { var b = document.querySelector('.pullov [data-close]'); if (b) b.click(); }); await L.sleep(700);
+  c = await ev(() => { var el = document.querySelector('.cine.ck-open'); return { on: !!el, title: el ? el.querySelector('.crib').textContent : '', flag: !!(el && el.querySelector('.cflag svg')), face: !!(el && el.querySelector('.cfa canvas, .cfa img, .cfa .spr')), n: DS.charList(DS.G.save).length }; });
+  A(c.on && /열렸다/.test(c.title) && c.flag && c.face, 'house-opening pull plays the banner cinematic: ' + c.title);
+  if (process.env.V224) await page.screenshot({ path: path.join(process.env.V224, 'pull_opens_house.png') });
+  await shot('pull_open');
+  await page.mouse.click(195, 420); await L.sleep(400);
+  A(await ev(() => !document.querySelector('.cine')), 'tap dismisses the cinematic');
+  await ev(() => { DS.G.save.opt.cine = 'off'; });
+  await L.closeAll(page);
+  // 옛 저장: 시나리오로 합류한 가문은 그대로 · 남은 가문은 영웅관 · 깨진 hpity 는 0
+  c = await ev(() => { var s = DS.G.save, raw = JSON.parse(JSON.stringify(s)); raw.hpity = 'x'; raw.ver = '2.2.3'; var f = DS.fixSave(raw); return { same: DS.charList(f).length === DS.charList(s).length, hp: f.hpity, shut: DS.closedCls(f).length }; });
+  A(c.same && c.hp === 0, 'old save keeps every joined house (hpity sanitized to ' + c.hp + ', closed ' + c.shut + ')');
   // ⑥ 싸움에서 가주가 쓰러진다: 막사에 같은 병과가 있으면 싸움 뒤 그이가 잇는다 / 없으면 빈 가문 (레벨·단도 잃는다)
   await ev(() => { var s = DS.G.save; DS.charList(s).forEach(function (ch) { if (ch.cls === 'cle' || ch.cls === 'arc') DS.sbOf(s, ch.id).forEach(function (m) { DS.loseMerc(s, m.id); }); }); var m = DS.addMerc(s, DS.heroType('arc'), 3, 0); m.o = 0; m.sb = 1; m.nc = 'arc'; m.L = 25; DS.mercTidy(s); DS.rebuildParty(); });
   await ev(() => { DS.G.quiet = true; DS.startScenario(DS.scn(9)); }); await L.sleep(800);
@@ -197,7 +250,7 @@ module.exports = async (page, shot, L) => {
   // ⑨-2 맹주의 뒤 (2.2.0): 저절로(봇·화면 없음)는 어른 핏줄 → 막사의 같은 병과(등급 → 레벨, 제 레벨 그대로) → 대가 끊김
   c = await ev(() => {
     var s = DS.fixSave(JSON.parse(JSON.stringify(DS.G.save))), h = s.chars[s.hero], P = s.lin.P;      // 사본에서 (화면 판은 그대로)
-    s.mercs.slice().forEach(function (m) { if (DS.kidOf(s, m)) DS.loseMerc(s, m.id); });
+    s.mercs.slice().forEach(function (m) { if (DS.kidOf(s, m) || (DS.isSb(m) && DS.sbFits(h, m))) DS.loseMerc(s, m.id); });      // 2.2.4: 앞서 영웅관에서 뽑힌 같은 병과(병과 · 등급 무작위 — 전설이면 「best」를 앞질렀다)도 막사에서 뺀다
     for (var k in P) if (P[k].st === 'young') P[k].st = 'gone';
     DS.linTidy(s); DS.mercTidy(s);
     function sbP(type, g, L, nc) { var m = DS.addMerc(s, type, g, 0); m.sb = 1; m.L = L; m.exp = 0; m.nc = nc; return m; }
@@ -401,8 +454,8 @@ module.exports = async (page, shot, L) => {
     A(fin && inc && st[500].bhp < 1e7, 'pit floors 1 / 50 / 500: finite and increasing (boss hp ' + st[1].bhp + ' / ' + st[50].bhp + ' / ' + st[500].bhp + ', atk ' + st[1].batk + ' / ' + st[50].batk + ' / ' + st[500].batk + ', ' + st[1].txt + ' / ' + st[500].txt + ')');
     const mg = await ev(() => { var a = { pit: 10, lootPit: 10 }, b = { pit: 4 }, c = {}; DS.pitFix(a); DS.pitFix(b); DS.pitFix(c); return [a.pitBest, a.pit, a.lootPit, b.pitBest, c.pitBest, c.pitCur, a.pitV]; });
     A(mg[0] === 27 && mg[1] === 28 && mg[2] === 27 && mg[3] === 6 && mg[4] === 0 && mg[5] === 1 && mg[6] === 2, 'old pit progress migrates by enemy level (old 10 → best ' + mg[0] + ', old pit 4 → best ' + mg[3] + ', new save 0)');
-    await L.newGame(page, { cls: 'inf', name: '갱도' });
-    await L.edit(page, function () { s.gold = 500000; for (var id = 1; id <= 15; id++) DS.applyClear(s, DS.scn(id)); DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 60; b.exp = 0; } }); s.visited.stone = true; DS.mercTidy(s); DS.pSync(s); });
+    await L.newGame(page, { cls: 'inf', name: '갱도' }); await ev(() => { DS.G.save.opt.cine = 'off'; });
+    await L.edit(page, function () { s.gold = 500000; for (var id = 1; id <= 15; id++) DS.applyClear(s, DS.scn(id)); DS.houseOpenN(s, 9); DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 60; b.exp = 0; } }); s.visited.stone = true; DS.mercTidy(s); DS.pSync(s); });
     await ev(() => { DS.ui.closeAll(); DS.enterZone('stone'); }); await L.sleep(700); await L.closeAll(page);
     await ev(() => DS.openPit(null)); await L.sleep(500);
     let w = await ev(() => { var o = document.querySelector('.ov .pitw'); return { same: !!o.querySelector('[data-pf]') && o.querySelectorAll('[data-pf]').length, next: (o.querySelector('.pitb.gold small') || {}).textContent, sel: o.querySelector('.pitsel').textContent, rec: /권장/.test(o.textContent), sw: document.documentElement.scrollWidth }; });

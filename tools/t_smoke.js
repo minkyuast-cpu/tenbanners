@@ -5,6 +5,7 @@
 module.exports = async (page, shot, L) => {
   const A = L.assert, ev = (f, a) => page.evaluate(f, a);
   await L.newGame(page, { cls: 'mag', name: '연기' });
+  await ev(() => { DS.G.save.opt.cine = 'off'; });      // 2.2.4: 사건 연출은 tools/t_cine.js 가 본다 (여기서는 창 · 칩 검사에 끼어들지 않게)
   await shot('town');
   // 들판 싸움
   await ev(() => { DS.ui.closeAll(); DS.enterZone('dawn'); DS.G.sim.hunt = true; DS.G.save.opt.speed = 2; });
@@ -38,7 +39,7 @@ module.exports = async (page, shot, L) => {
   }
   await ev(() => DS.ui.closeAll());
   // 많은 가문으로 시나리오: 칩 고르기 · 필살기 칸 · 모두 출발 칸에 선다
-  await L.edit(page, function () { for (var id = 2; id <= 13; id++) DS.applyClear(s, DS.scn(id)); DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 45; b.exp = 0; } }); for (var i = 0; i < 2; i++) { var m = DS.addMerc(s, 'm_sword', 3, s.hero); m.kn = 1; m.L = 40; } DS.mercTidy(s); DS.pSync(s); });
+  await L.edit(page, function () { for (var id = 2; id <= 13; id++) DS.applyClear(s, DS.scn(id)); DS.houseOpenN(s, 9); DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 45; b.exp = 0; } }); for (var i = 0; i < 2; i++) { var m = DS.addMerc(s, 'm_sword', 3, s.hero); m.kn = 1; m.L = 40; } DS.mercTidy(s); DS.pSync(s); });
   await ev(() => { DS.G.quiet = true; DS.G.pause = true; DS.startScenario(DS.scn(14)); }); await L.sleep(800);
   const sc = await ev(() => { var ids = Object.keys(DS.G.chipEls), want = DS.partySpecs(DS.G.save).length; var last = ids[ids.length - 1]; DS.G.chipEls[last].el.click(); return { want: want, have: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length, chips: ids.length, sel: DS.G.sel === last, ult: !!document.querySelector('#acts .act.ult'), swipe: document.querySelector('#chips').classList.contains('swipe'), docW: document.documentElement.scrollWidth }; });
   A(sc.have === sc.want && sc.want >= 12, 'scenario with ' + sc.want + ' allies: all placed (' + sc.have + ')');
@@ -48,13 +49,13 @@ module.exports = async (page, shot, L) => {
   const geo = () => ev(() => { var b = document.querySelector('#chips'), r = b.getBoundingClientRect(), cs = getComputedStyle(b), pl = parseFloat(cs.paddingLeft), pr = parseFloat(cs.paddingRight);
     var vis = [...b.querySelectorAll('.chip')].filter(c => { var q = c.getBoundingClientRect(); return q.left >= r.left + pl - 1 && q.right <= r.right - pr + 1; });
     return { sl: b.scrollLeft, sw: b.scrollWidth, cw: b.clientWidth, top: r.top + r.height / 2, left: r.left, right: r.right, vis: vis.length, names: vis.every(c => c.querySelector('.cn b') && getComputedStyle(c.querySelector('.cn')).display !== 'none' && c.querySelector('.cn b').offsetWidth > 0), lvs: vis.every(c => /단/.test(c.querySelector('em.lv').textContent)), sel: DS.G.sel, docW: document.documentElement.scrollWidth, fl: b.classList.contains('fl'), fr: b.classList.contains('fr') }; });
-  await ev(() => { DS.select(Object.keys(DS.G.chipEls)[0]); }); await L.sleep(700);
+  await ev(() => { DS.select(Object.keys(DS.G.chipEls)[0]); }); await L.chipRest(page);      // 2.2.4: 쉬는 시간을 정하지 않고 줄이 멈출 때까지 (브라우저가 바쁘면 밀기가 늦게 끝난다)
   let g0 = await geo();
   A(g0.sw > g0.cw + 100 && g0.vis === 3 && g0.names && g0.lvs, 'chip row: 3 full chips with name and 단/Lv visible, scrolls horizontally (' + g0.cw + ' of ' + g0.sw + ')');
   A(g0.sl < 2 && !g0.fl && g0.fr, 'edge fade only on the side with more chips (fl ' + g0.fl + ', fr ' + g0.fr + ', scrollLeft ' + g0.sl + ', sel ' + g0.sel + ')');
   // 마우스로 끌기: 첫 칩 위에서 눌러 왼쪽으로 끌면 줄이 밀리고, 아무도 고르지 않는다
   const sel0 = g0.sel, x0 = g0.right - 30;
-  await page.mouse.move(x0, g0.top); await page.mouse.down(); for (let i = 1; i <= 8; i++) { await page.mouse.move(x0 - i * 22, g0.top); await L.sleep(16); } await page.mouse.up(); await L.sleep(900);
+  await page.mouse.move(x0, g0.top); await page.mouse.down(); for (let i = 1; i <= 8; i++) { await page.mouse.move(x0 - i * 22, g0.top); await L.sleep(16); } await page.mouse.up(); await L.chipRest(page);
   let g1 = await geo();
   A(g1.sl > 40 && g1.sel === sel0, 'mouse drag scrolls the row (scrollLeft ' + Math.round(g1.sl) + ') and does not select (' + g1.sel + ')');
   A(g1.fl, 'left edge fade after scrolling');
@@ -68,15 +69,15 @@ module.exports = async (page, shot, L) => {
   const cdp = await page.context().newCDPSession(page), tsl = (await geo()).sl;
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx, y: g0.top }] });
   for (let i = 1; i <= 8; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cx + i * 20, y: g0.top }] }); await L.sleep(16); }
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await L.sleep(900);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await L.sleep(300); await L.chipRest(page);
   const g2 = await geo();
   A(g2.sel === sel0 && Math.abs(g2.sl - tsl) > 30, 'touch swipe scrolls the row (' + Math.round(tsl) + ' → ' + Math.round(g2.sl) + ') and does not select');
   // 그냥 누르면 고른다
   await page.mouse.click(cx, g0.top); await L.sleep(300);
   A((await ev(() => DS.G.sel)) !== sel0, 'a plain tap still selects');
   // 고른 가문이 바뀌면(지도 · 열쇠 · 저절로) 그 칩이 보이는 자리로
-  await ev(() => { DS.select(Object.keys(DS.G.chipEls)[0]); }); await L.sleep(700);
-  await ev(() => { var ids = Object.keys(DS.G.chipEls); DS.select(ids[ids.length - 1]); }); await L.sleep(800);
+  await ev(() => { DS.select(Object.keys(DS.G.chipEls)[0]); }); await L.chipRest(page);
+  await ev(() => { var ids = Object.keys(DS.G.chipEls); DS.select(ids[ids.length - 1]); }); await L.chipRest(page);
   const inView = await ev(() => { var b = document.querySelector('#chips'), r = b.getBoundingClientRect(), cs = getComputedStyle(b), c = document.querySelector('#chips .chip.sel').getBoundingClientRect(); return { ok: c.left >= r.left + parseFloat(cs.paddingLeft) - 1 && c.right <= r.right - parseFloat(cs.paddingRight) + 1, sl: b.scrollLeft }; });
   A(inView.ok && inView.sl > 0, 'selected chip scrolls into view (scrollLeft ' + Math.round(inView.sl) + ')');
   A((await geo()).docW <= 390, 'no horizontal page scroll after swiping');

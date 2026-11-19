@@ -3,6 +3,7 @@
 const D = require('./load.js')();
 const s = D.newSave('칸', 'inf');
 for (let id = 1; id <= 13; id++) D.applyClear(s, D.scn(id));
+D.houseOpenN(s, 9);
 D.charList(s).forEach(c => { const b = c.id === s.hero ? c.ps : D.bearer(s, c); if (b) b.L = 50; });
 for (let i = 0; i < 6; i++) { const m = D.addMerc(s, 'm_sword', 3, s.hero); m.kn = 1; m.L = 40; }
 D.mercTidy(s); D.pSync(s);

@@ -519,41 +519,17 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
   return { map: rowsOf(g), theme: s.theme, units: units, start: start, objective: objective, waves: waves, mk: mk, seed: s.id * 13 + 1 };
 };
 // 보상 적용. 돌려주는 값: 화면에 보여 줄 목록
-// 이 시나리오로 합류할 깃발. ㉑ 옛 사람을 데려온 대장은 inf·mag 밖의 병과로 설 수 있다 — 그 병과의 시나리오에서는
-// 어느 시나리오도 주지 않는 병과(보병)가 대신 온다. 깃발은 늘 열 개 (마스터를 이미 가진 계열은 그대로 골드)
-DS.joinOf = function (save, s) {
-  var r = (s && s.reward) || {}, j = r.join; if (!j) return null;
-  if (r.alt && DS.hasClass(save, j)) j = r.alt;
-  if (DS.hasClass(save, j)) {
-    var given = {}; DS.SCENARIOS.forEach(function (x) { if (x.reward && x.reward.join) given[x.reward.join] = 1; });
-    var miss = Object.keys(DS.CLASSES).filter(function (k) { var C = DS.CLASSES[k]; return !C.master && !given[k] && !DS.hasClass(save, k) && !DS.hasClass(save, DS.FAMILY[C.fam].master); });
-    if (miss.length) j = miss[0];
-  }
-  return j;
-};
-// r44: 대장이 cls 로 서면, 그 병과를 데려오던 시나리오에서 대신 오는 집 — { scn, from, to } (없으면 null: 보병처럼 어느 시나리오도 주지 않는 병과)
-//   DS.joinOf 를 그대로 돌려 본다 (첫 가문 고르기 화면의 안내 · 시험이 함께 쓴다). 다른 집은 모두 제 시나리오에서 그대로 온다
-DS.startSwap = function (cls) {
-  if (!DS.CLASSES[cls] || DS.CLASSES[cls].master) return null;
-  var sv = { chars: { 1: { id: 1, cls: cls } } }, out = null;
-  DS.SCENARIOS.forEach(function (s) {
-    var j = DS.joinOf(sv, s); if (!j || DS.hasClass(sv, j)) return;
-    if (!out && j !== s.reward.join) out = { scn: s, from: s.reward.join, to: j };
-    var n = Object.keys(sv.chars).length + 1; sv.chars[n] = { id: n, cls: j };
-  });
+// 2.2.4: 시나리오로 가문이 합류하던 길(DS.joinOf · DS.joinPlan · DS.startSwap)은 걷었다. 보상의 join 은 이제 「처음 깨면 모집권 한 장 더」와 이야기(5번 맺음 글)만 읽는다
+// 2.2.4: 처음 깰 때의 영웅 모집권 — 열 번째마다 한 장 + 예전에 가문이 합류하던 시나리오(보상의 join)는 한 장 더 (가문은 이제 영웅관에서만 연다 · 여는 빠르기를 예전과 비슷하게)
+DS.JOIN_TICKET = 1;
+// 시험 · 시뮬레이션용: 닫힌 가문을 예전 합류 차례(이야기 차례 — 보상의 join · alt)로 n 곳 연다 (가주는 등급 g, 기본 희귀). 돌려주는 것: 연 가문들
+DS.houseOpenN = function (save, n, g) {
+  var order = []; DS.SCENARIOS.forEach(function (x) { var r = x.reward || {}; [r.join, r.alt].forEach(function (k) { if (k && order.indexOf(k) < 0) order.push(k); }); });
+  Object.keys(DS.CLASSES).forEach(function (k) { if (!DS.CLASSES[k].master && order.indexOf(k) < 0) order.push(k); });
+  var out = []; order.forEach(function (k) { if (out.length < n && DS.closedCls(save).indexOf(k) >= 0) out.push(DS.houseOpen(save, k, null, g || 3)); });
   return out;
 };
-// r44: 아직 없는 집이 몇 번 시나리오에서 오는가 { 병과: 번호 } — 지금 판에서 DS.joinOf 를 차례로 돌려 본다 (대장 병과 때문에 자리가 바뀐 집도 맞게: 궁병 대장이면 보병 바우는 3번)
-DS.joinPlan = function (save) {
-  var sv = { chars: {} }, n = 0, out = {};
-  DS.charList(save).forEach(function (c) { sv.chars[++n] = { id: n, cls: c.cls }; });
-  DS.SCENARIOS.forEach(function (s) {
-    if (save.cleared && save.cleared[s.id]) return;
-    var j = DS.joinOf(sv, s); if (!j || DS.hasClass(sv, j) || DS.hasClass(sv, DS.FAMILY[DS.CLASSES[j].fam].master)) return;
-    out[j] = s.id; sv.chars[++n] = { id: n, cls: j };
-  });
-  return out;
-};
+DS.scnTickets = function (s) { if (!s || s.pit || s.gen) return 0; return (s.id % (DS.TICKET_EVERY || 10) === 0 ? 1 : 0) + (s.reward && s.reward.join ? (DS.JOIN_TICKET || 0) : 0); };
 // 2.2.3 갱도 층을 깼다: 최고 층(save.pitBest) · 지금 층(save.pitCur) · 처음 깬 층이면 보너스 골드(층 골드만큼 한 번 더), PIT.ticketEvery 층마다 처음 깰 때 모집권 한 장
 DS.pitClear = function (save, s, out) {
   var f = s.pit, first = f > (+save.pitBest || 0);
@@ -573,14 +549,8 @@ DS.applyClear = function (save, s) {
   save.cleared[s.id] = (save.cleared[s.id] || 0) + 1;
   if (!first) return out;
   var r = s.reward;
-  out.tickets = s.id % (DS.TICKET_EVERY || 10) === 0 ? 1 : 0; save.tickets = (save.tickets || 0) + out.tickets;      // 2.2.0: 영웅 모집권은 열 번째 시나리오마다 한 장 (r35: 다섯 번째마다)
-  var j = DS.joinOf(save, s);
-  if (j && !DS.hasClass(save, j) && !DS.hasClass(save, DS.FAMILY[DS.CLASSES[j].fam].master)) {
-    var ch = DS.addChar(save, j, Math.max(1, s.L - 3), '');
-    if (DS.castJoin) out.bearer = DS.castJoin(save, j, ch);      // 4.0: 합류 = 가문 하나 + 그 가문을 든 본인 (2.2.0: 따르던 부대원은 없다)
-    if (DS.mercTidy) DS.mercTidy(save);
-    out.joins.push(ch);
-  } else if (j) { out.gold += 400; save.gold += 400; }
+  out.tickets = DS.scnTickets(s); save.tickets = (save.tickets || 0) + out.tickets;      // 2.2.0: 영웅 모집권은 열 번째 시나리오마다 한 장 (r35: 다섯 번째마다) · 2.2.4: 가문이 오던 시나리오(2·3·4·5·6·7·9·11·13)는 처음 깨면 한 장 더
+  // 2.2.4: 시나리오를 깨도 가문은 오지 않는다 — 가문은 영웅관에서 그 병과의 영웅이 와야 열린다 (DS.recruitHero · DS.houseOpen). out.joins 는 늘 비어 있다 (옛 결과 창 칸)
   if (r.items) for (var k in r.items) { save.items[k] = (save.items[k] || 0) + r.items[k]; out.items[k] = r.items[k]; }
   if (r.gear && DS.gear(r.gear)) { if (DS.lootPut) DS.lootPut(save, r.gear, { at: s.name }); else save.gear[r.gear] = (save.gear[r.gear] || 0) + 1; out.gear = r.gear; }      // 2.1.0: 정해진 보상 전설 (맹세의 검 · 용뼈 창 — 옛 유물 자리)
   if (r.crest) { save.crest = true; out.crest = true; }

@@ -470,21 +470,45 @@ DS.rollPerson = function (save, rnd, minG, type) {
 };
 DS.pullMerc = function (save, rnd, minG) { var pity = save.pity; var m = DS.rollPerson(save, rnd, minG); save.pity = pity; return m; };      // 옛 이름 (봇·옛 호출)
 // ───────── 2.2.0 영웅 모집 (영웅관): 한 번에 한 사람, 값은 비싸다 ─────────
-// 등급은 확률표 + 천장(DS.PITY 번 안에 전설). 병과는 합류한 가문 가운데 고르게 하나 (막사가 가득하면 빈 가문 가운데서만).
-//   그 가문이 비었으면 곧바로 가주, 아니면 막사로. 생김새·태생은 그 가문 병과의 것 (m.nc = 병과).
+// 등급은 확률표 + 천장(DS.PITY 번 안에 전설). 병과는 선 가문(막사가 가득하면 빈 가문만)과 닫힌 가문 가운데 하나.
+//   선 가문의 병과면 그 가문이 비었을 때 곧바로 가주, 아니면 막사로. 생김새·태생은 그 가문 병과의 것 (m.nc = 병과).
+// 2.2.4: 가문은 영웅관에서만 연다. 닫힌 가문(아직 없는 병과 · 그 계열의 마스터도 없다)의 병과가 나오면 그 영웅이 가주가 되어 가문이 열린다 (DS.houseOpen).
+//   닫힌 가문 한 곳의 무게는 선 가문 한 곳의 DS.HOUSE_OPEN.w 배 · 닫힌 가문이 있는데 pity 번 연달아 못 열었으면 다음 모집은 반드시 닫힌 가문 (save.hpity = 연달아 못 연 수)
+//   닫힌 가문이 없으면 예전과 같다 (난수를 같은 차례로 쓴다).
+DS.HOUSE_OPEN = { w: 3, pity: 2 };
 DS.heroType = function (cls) { var C = DS.CLASSES[cls], k = C && C.master && DS.FAMILY[C.fam] ? DS.FAMILY[C.fam].members[0] : cls, t = DS.CAST_KIND && DS.CAST_KIND[k]; return t && DS.MERCS[t] ? t : DS.baseMercTypes(k)[0]; };
 DS.barFull = function (save) { return DS.barracks(save).length >= (DS.MERC_MAX || 50); };
 DS.heroRoom = function (save) {
   var full = DS.barFull(save);
   return DS.charList(save).filter(function (ch) { return !full || DS.vacant(save, ch); });
 };
+DS.closedCls = function (save) {      // 닫힌 가문의 병과 (병과 차례 그대로)
+  return Object.keys(DS.CLASSES).filter(function (k) { var C = DS.CLASSES[k], F = DS.FAMILY[C.fam]; return !C.master && !DS.hasClass(save, k) && !(F && DS.hasClass(save, F.master)); });
+};
+// 다음 모집이 닫힌 가문을 열 확률 (0 ~ 1) · 반드시 열기까지 남은 모집 수 (닫힌 가문이 없으면 0)
+DS.openOdds = function (save) {
+  var shut = DS.closedCls(save).length; if (!shut) return 0;
+  if ((+save.hpity || 0) >= DS.HOUSE_OPEN.pity) return 1;
+  var w = shut * DS.HOUSE_OPEN.w; return w / (w + DS.heroRoom(save).length);
+};
+DS.openSure = function (save) { return DS.closedCls(save).length ? Math.max(1, DS.HOUSE_OPEN.pity + 1 - (+save.hpity || 0)) : 0; };
 DS.recruitWhy = function (save) {
-  if (!DS.heroRoom(save).length) return '막사가 가득 찼다 (' + (DS.MERC_MAX || 50) + '명). 방출하면 자리가 난다';
+  if (!DS.heroRoom(save).length && !DS.closedCls(save).length) return '막사가 가득 찼다 (' + (DS.MERC_MAX || 50) + '명). 방출하면 자리가 난다';
   return '';
+};
+// 닫힌 가문 cls 를 연다: 새 가문 + 그 가문의 가주 m (없으면 등급 g 로 하나 굴린다). 레벨은 모집한 영웅과 같다 (DS.recruitL — 부대 평균보다 조금 아래). 장비는 그 단 아래의 기본 차림
+DS.houseOpen = function (save, cls, m, g) {
+  if (!DS.CLASSES[cls] || DS.closedCls(save).indexOf(cls) < 0) return null;
+  m = m || DS.addMerc(save, DS.heroType(cls), g || 3, 0);
+  var ch = DS.addChar(save, cls, DS.pL(m), '');
+  m.nc = cls; m.o = ch.id; m.h = 1; delete m.sb; ch.Ls = ch.L; ch.op = 1;      // op: 영웅관에서 연 가문 (보이는 표시만)
+  if (DS.nfGive) DS.nfGive(m);
+  if (DS.mercTidy) DS.mercTidy(save);
+  return ch;
 };
 DS.recruitHero = function (save, rnd, opt) {
   rnd = rnd || Math.random; opt = opt || {};
-  var room = DS.heroRoom(save); if (!room.length) return null;
+  var room = DS.heroRoom(save), shut = opt.ch ? [] : DS.closedCls(save); if (!room.length && !shut.length) return null;
   var r = rnd() * 100, g = 1, acc = 0, i;
   for (i = 5; i >= 1; i--) { acc += DS.GRADES[i].p; if (r < acc) { g = i; break; } }
   var PG = DS.PITY_G || 5;
@@ -492,7 +516,20 @@ DS.recruitHero = function (save, rnd, opt) {
   if (save.pity >= DS.PITY && g < PG) g = PG;
   if (opt.minG && g < opt.minG) g = opt.minG;
   if (g >= PG) save.pity = 0;
-  var ch = opt.ch && room.indexOf(opt.ch) >= 0 ? opt.ch : room[Math.floor(rnd() * room.length) % room.length], vac = DS.vacant(save, ch);
+  var ch = null, nc = null;
+  if (opt.ch && room.indexOf(opt.ch) >= 0) ch = opt.ch;
+  else if (opt.cls && shut.indexOf(opt.cls) >= 0) nc = opt.cls;
+  else {
+    var W = DS.HOUSE_OPEN.w, sure = shut.length && (+save.hpity || 0) >= DS.HOUSE_OPEN.pity, nr = sure ? 0 : room.length, x = rnd() * (nr + shut.length * W);
+    if (x < nr) ch = room[Math.floor(x) % room.length];
+    else nc = shut[Math.floor((x - nr) / W) % shut.length];
+  }
+  if (shut.length && !opt.ch) save.hpity = nc ? 0 : (+save.hpity || 0) + 1;
+  if (nc) {
+    var mo = DS.addMerc(save, DS.heroType(nc), g, 0), hc = DS.houseOpen(save, nc, mo);
+    return { m: mo, ch: hc, role: 'open', g: g };
+  }
+  var vac = DS.vacant(save, ch);
   var cls = DS.CLASSES[ch.cls].master && DS.FAMILY[DS.CLASSES[ch.cls].fam] ? DS.FAMILY[DS.CLASSES[ch.cls].fam].members[0] : ch.cls;
   var m = DS.addMerc(save, DS.heroType(ch.cls), g, ch.id);
   m.nc = cls;

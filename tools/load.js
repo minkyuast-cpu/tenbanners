@@ -5,7 +5,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const SRC = process.env.LOAD_SRC || path.join(__dirname, '..', 'src');      // LOAD_SRC: 다른 판의 src (옛 저장 만들기 — tools/mkv12.js)
-const SKIP = { game: 1, joystick: 1, ui: 1 };
+const SKIP = { game: 1, joystick: 1, ui: 1, cine: 1 };
 let DS0 = null;
 function order() {
   const b = fs.readFileSync(path.join(SRC, '..', 'build.js'), 'utf8'), m = /const ORDER = (\[[^\]]+\])/.exec(b);
