@@ -78,6 +78,8 @@ var SFX = {
   step:   function () { tone(190, 150, 0.05, 'triangle', 0.08); },
   slash:  function () { noise(0.11, 0.2, 2600, 0.7); tone(520, 180, 0.09, 'sawtooth', 0.05); },
   punch:  function () { noise(0.07, 0.22, 500, 0.9); tone(160, 90, 0.08, 'square', 0.08); },
+  kick:   function () { noise(0.12, 0.12, 2400, 1.2); noise(0.08, 0.24, 420, 0.9, 0.08); tone(190, 80, 0.1, 'square', 0.08, 0.08); },      // 2.2.5 날아차기: 바람 소리 뒤에 묵직한 한 방
+  qi:     function () { tone(220, 660, 0.16, 'sine', 0.07); noise(0.18, 0.1, 900, 0.7, 0.04, 'lowpass'); tone(110, 70, 0.14, 'square', 0.06, 0.1); },      // 기공장: 기가 모였다가 터진다
   arrow:  function () { noise(0.09, 0.12, 4200, 2); tone(1100, 700, 0.08, 'sine', 0.04); },
   magic:  function () { tone(480, 1250, 0.18, 'sine', 0.07); tone(960, 1900, 0.16, 'triangle', 0.03, 0.03); },
   skill:  function () { tone(440, 880, 0.12, 'square', 0.045); tone(660, 1320, 0.12, 'square', 0.035, 0.05); },

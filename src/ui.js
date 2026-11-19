@@ -1827,6 +1827,8 @@ function tabOpt() {
     '<div class="row"><div class="tx"><b>진동</b><small>거절, 기술, 큰 피해에 짧게 떨린다 (안드로이드)</small></div><button class="btn small' + (o.hap !== false ? ' gold' : '') + '" data-opt="hap">' + (o.hap !== false ? '켬' : '끔') + '</button></div>' +
     '<div class="row"><div class="tx"><b>사건 연출</b><small>혼인, 출생, 죽음, 가문이 열릴 때 같은 큰 일을 보여 준다. 보통은 누르면 닫히고, 짧게는 저절로 닫힌다</small></div><div class="seg" role="group" aria-label="사건 연출">' +
       [['full', '보통'], ['short', '짧게'], ['off', '끔']].map(function (x) { return '<button data-cine="' + x[0] + '"' + ((o.cine || 'full') === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>' +
+    '<div class="row"><div class="tx"><b>효과</b><small>기술과 필살기의 빛, 불티. 느린 기기라면 가볍게</small></div><div class="seg" role="group" aria-label="효과">' +
+      [['full', '보통'], ['lite', '가볍게']].map(function (x) { return '<button data-fxq="' + x[0] + '"' + ((o.fxq === 'lite' ? 'lite' : 'full') === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>' +
     '<div class="row"><div class="tx"><b>죽음 연출</b><small>아군이 영영 쓰러질 때 화면을 확대해 마지막 모습을 보여 준다</small></div><button class="btn small' + (o.dfx !== false ? ' gold' : '') + '" data-opt="dfx">' + (o.dfx !== false ? '켬' : '끔') + '</button></div>' +
     '<div class="row"><div class="tx"><b>전투 대사</b><small>싸우는 동안 가끔 가문마다 제 말버릇을 말풍선으로 한다</small></div><button class="btn small' + (o.bark !== false ? ' gold' : '') + '" data-opt="bark">' + (o.bark !== false ? '켬' : '끔') + '</button></div>' +
     (DS.fieldOptRow ? DS.fieldOptRow(o) : '') +      // r47: 들판 습격 (field.js)
@@ -2261,6 +2263,8 @@ DS.openMenu = function (tab) {
     if (zb) { G.save.opt.zoom = zb.dataset.zoom; if (G.view && G.view.resize) G.view.resize(); A('tap'); U.persist(); o.draw(); return; }      // 2.2.2 지도 보기
     var cn = e.target.closest('[data-cine]');
     if (cn) { G.save.opt.cine = cn.dataset.cine; A('tap'); U.persist(); o.draw(); return; }      // 2.2.4 사건 연출
+    var fq = e.target.closest('[data-fxq]');
+    if (fq) { if (fq.dataset.fxq === 'lite') G.save.opt.fxq = 'lite'; else delete G.save.opt.fxq; A('tap'); U.persist(); o.draw(); return; }      // 2.2.5 효과: 보통 · 가볍게
     var mt = e.target.closest('[data-mtag]');
     if (mt) { G.save.opt.mtag = mt.dataset.mtag; if (G.view) G.view.mtag = mt.dataset.mtag; A('tap'); U.persist(); o.draw(); return; }
     var us = e.target.closest('[data-use]');
@@ -3293,7 +3297,7 @@ DS.askGrand = askGrand;
 // r44: 첫 가문은 열 병과 가운데 아무것이나 (사용자 「보병 말고 다른 원하는 병과를 선택할 수 있게」). 카드 열 장(세로 2×5, 가로 5×2) + 고른 병과의 자세한 칸.
 //   그 병과를 데려오던 시나리오에서는 어느 시나리오도 주지 않던 집(보병 바우)이 대신 온다 — DS.joinOf / DS.startSwap. 열 집은 늘 한 번씩 모인다
 var START_LINE = { inf: '튼튼한 전열. 앞에서 버틴다', cav: '두 칸 창과 번개. 평지에서 빠르다', fly: '산과 물을 넘는다. 화살에 약하다', mar: '물에 서면 강해지는 전열',
-  pike: '두 칸 찌르기와 보조 마법', arc: '멀리서 쏜다. 몸이 약하다', cle: '아군을 고치는 치유사', mon: '가호를 거는 서포터', mag: '여럿을 태우는 마법. 몸이 약하다', sha: '생기를 빨고 망자를 부른다' };
+  pike: '두 칸 찌르기와 보조 마법', arc: '멀리서 쏜다. 몸이 약하다', cle: '맨손 무투가. 기공으로 곁을 돌본다', mon: '가호를 거는 서포터', mag: '여럿을 태우는 마법. 몸이 약하다', sha: '생기를 빨고 망자를 부른다' };
 DS.START_LINE = START_LINE;
 var START_HARD = { fly: '어려움' };      // r44: 봇 8판에서 대장이 가장 자주 쓰러진 병과 (화살에 약하고 보병이 11번에야 온다) — 카드에 꼬리표
 function startClasses() { return Object.keys(DS.CLASSES).filter(function (k) { return !DS.CLASSES[k].master; }); }

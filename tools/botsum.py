@@ -18,3 +18,7 @@ if rows:
     if ha: print('houses after scenario 1..15: ' + ' '.join('%d:%.1f' % (i + 1, sum(h[i] for h in ha if len(h) > i) / len([h for h in ha if len(h) > i])) for i in range(15) if any(len(h) > i for h in ha)))
     el = [(d['eL'], d['rAt']) for d in rows if d.get('eL') and d.get('rAt')]
     if el: print('entry L - rec, scenario 1..30: ' + ' '.join('%d:%+.1f' % (i + 1, sum(e[i] - r[i] for e, r in el if len(e) > i and len(r) > i) / max(1, len([1 for e, r in el if len(e) > i and len(r) > i]))) for i in range(30)))
+    bd = {}
+    for d in rows:
+        for k, v in (d.get('bdc') or {}).items(): bd[k] = bd.get(k, 0) + v
+    if bd: print('bearer deaths by house (per run): ' + ' '.join('%s:%.2f' % (k, v / n) for k, v in sorted(bd.items(), key=lambda x: -x[1])))

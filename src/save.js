@@ -231,6 +231,7 @@ DS.fixSave = function (s) {
     c.hx = Math.max(0, +c.hx || 0); if (!c.hx) delete c.hx;      // r42: 가문 공훈
     ['w', 'a'].forEach(function (sl) { if (c[sl] && DS.gearRepair) c[sl] = DS.gearRepair(c[sl]); var gd = DS.gear(c[sl]); if (!gd || gd.slot !== sl) c[sl] = null; });      // 2.1.0: 누구나 무엇이든 입는다 (칸만 맞으면)
     delete c.mc; delete c.mg; delete c.relic; delete c.gt;      // 2.1.0: 유물 칸은 없어졌다
+    if (c.ps && typeof c.ps === 'object' && c.ps.ul != null && DS.skAlias) { c.ps.ul = DS.skAlias(c.ps.ul); if (!own(DS.ULTS, c.ps.ul)) { delete c.ps.ul; delete c.ps.ulr; } }      // 2.2.5: 승려의 옛 필살기 이름 → 무투가의 것 (모르는 이름은 지운다 — 다시 굴린다)
     var person = +id === hid0 || c.pid != null || c.hp != null || c.name != null;      // 4.0: 사람 칸은 대장 줄(과 아직 옮기지 않은 옛 줄)에만 채운다 — 새 모양 깃발 줄에 새로 만들지 않는다
     if (person) { c.down = !!c.down; c.name = typeof c.name === 'string' ? c.name : ''; c.hp = c.hp == null ? 1 : Math.max(0.01, Math.min(1, +c.hp || 1)); }
     c.mp = c.mp == null ? 1 : Math.max(0, Math.min(1, +c.mp || 0));
@@ -251,7 +252,8 @@ DS.fixSave = function (s) {
     if (m.L == null && m.o && own(s.chars, m.o)) { m.L = +s.chars[m.o].L || 1; if (m.L > 70) m.fz = 1; }      // 레벨 칸이 없는 줄(시험용 옛 저장): 선 가문의 레벨에서 (이어 하기는 Save.read 가 이미 막는다)
     if (m.fz != null) { if (m.fz) m.fz = 1; else delete m.fz; } m.L = Math.max(1, Math.min(m.fz ? 100 : 70, Math.round(+m.L || 1))); m.exp = Math.max(0, +m.exp || 0);      // r42: 개인 단·레벨
     if (m.q != null && !(DS.QUIRKS && own(DS.QUIRKS, m.q))) delete m.q;
-    if (m.s != null && !own(DS.SKILLS, m.s)) delete m.s;
+    if (m.s != null && !own(DS.SKILLS, DS.skAlias ? (m.s = DS.skAlias(m.s)) : m.s)) delete m.s;
+    if (m.ul != null) { m.ul = DS.skAlias ? DS.skAlias(m.ul) : m.ul; if (!own(DS.ULTS, m.ul)) delete m.ul; }      // 2.2.5: 옛 필살기 이름
     if (m.it != null && !(DS.MGEAR && own(DS.MGEAR, m.it))) delete m.it;
     if (m.bk != null) m.bk = Math.max(0, Math.round(+m.bk || 0)); if (m.sv != null) m.sv = Math.max(0, Math.round(+m.sv || 0));
     if (m.h != null) { if (m.h && m.o) m.h = 1; else delete m.h; }      // 4.0: 깃발을 든다 (인구를 차지하지 않는다)

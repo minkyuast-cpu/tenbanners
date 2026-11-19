@@ -58,10 +58,10 @@ DS.CLASSES = {
     blurb: '멀리서 활을 쏜다. 「통솔」은 아군 모두를 북돋운다. 비병에게 강하다.' },
   cle: { name: '승려', fam: 'magic', start: 1, kind: 'holy', mt: 'foot',
     tiers: ['클레릭', '프리스트', '하이프리스트', '에이전트', '하이에이전트', '프린세스', '퀸'],
-    base: { hp: 46, mp: 30, atk: 10, def: 6, mag: 12, res: 10 }, grow: { hp: 3.8, mp: 2.0, atk: 0.85, def: 0.6, mag: 1.1, res: 0.95 },
-    spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys',
-    skills: [['heal', 1], ['cmd_cle', 3], ['cure', 3], ['healAll', 5]], merc: 'm_sister',
-    blurb: '아군을 고치고, 완드로 직접 때리기도 한다. 키우기 어렵지만 없으면 못 버틴다.' },
+    base: { hp: 54, mp: 24, atk: 13, def: 8, mag: 11, res: 9 }, grow: { hp: 4.6, mp: 1.5, atk: 1.15, def: 0.85, mag: 0.95, res: 0.85 },
+    spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys', martial: true,      // 2.2.5 무투가: 무기의 힘은 공격에도 기공(마공)에도 그대로 (DS.charStats)
+    skills: [['cle_combo', 1], ['cmd_cle', 3], ['cle_kick', 3], ['cle_palm', 5]], merc: 'm_sister',
+    blurb: '맨손으로 싸우는 무투가. 주먹과 발로 붙어 싸우고, 기공 장풍을 쏘면 곁의 아군이 조금씩 낫는다.' },
   mon: { name: '신관', fam: 'magic', start: 2, kind: 'holy', mt: 'foot',
     tiers: ['몽크', '비숍', '세이지', '패러딘', '세인트', '홀리마스터'],
     base: { hp: 48, mp: 28, atk: 9, def: 6, mag: 12, res: 10 }, grow: { hp: 4.0, mp: 1.9, atk: 0.75, def: 0.65, mag: 1.1, res: 1.0 },
@@ -140,12 +140,16 @@ DS.SKILLS = {
   cmd_fly:  { name: '강습 신호', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 15 }], desc: '호령 — 모든 아군의 행동 소모 −15% (15초).' },
   cmd_mar:  { name: '버텨라!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 12, dur: 20 }, { t: 'gauge', v: 25 }], desc: '호령 — 모든 아군의 방어 +12% (20초), 게이지 +25.' },
   cmd_pike: { name: '창벽 세워!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 15 }, { t: 'buff', s: 'atk', p: 5, dur: 15 }], desc: '호령 — 모든 아군의 방어 +15%, 공격 +5% (15초).' },
-  cmd_cle:  { name: '곁을 지켜라', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 20 }], desc: '호령 — 모든 아군의 방어 +15% (20초).' },
+  cmd_cle:  { name: '호흡을 맞춰라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'chi', eff: [{ t: 'buff', s: 'def', p: 15, dur: 20 }, { t: 'heal', m: 0.7 }], desc: '호령 — 모든 아군의 방어 +15% (20초), 기를 고르게 돌려 모두 조금 회복.' },      // 2.2.5: 무투가가 맡던 치유 몫 일부
   cmd_mon:  { name: '축복의 구령', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 12, dur: 20 }, { t: 'buff', s: 'def', p: 8, dur: 20 }], desc: '호령 — 모든 아군의 행동 소모 −12%, 방어 +8% (20초).' },
   cmd_mag:  { name: '마력을 받아라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 18, dur: 15 }], desc: '호령 — 모든 아군의 공격 +18% (15초).' },
   cmd_sha:  { name: '피의 계약', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 22, dur: 12 }, { t: 'buff', s: 'def', p: -8, dur: 12 }], desc: '호령 — 모든 아군의 공격 +22%, 대신 방어 −8% (12초).' },
   cmd_bm:   { name: '전군 돌격', mp: 12, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 20 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군의 행동 소모 −15% (20초), 게이지 +40.' },
   cmd_mm:   { name: '별빛 가호', mp: 14, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'atk', p: 15, dur: 20 }, { t: 'buff', s: 'quick', p: 15, dur: 20 }], desc: '호령 — 모든 아군의 공격 +15%, 행동 소모 −15% (20초).' },
+  // ── 2.2.5 승려(무투가)의 기술: 맨손 · 발 · 기공. fist = 기술 칸의 주먹 그림 (game.js skType). aura = 쓰는 이 둘레 r칸 아군을 마공 × m 만큼 고친다 (우리 편 치유 배율 그대로)
+  cle_combo: { name: '연환권', mp: 4, tick: 45, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.6 }, { t: 'dmg', m: 0.6 }, { t: 'dmg', m: 0.7 }, { t: 'mend', r: 4, m: 1.3 }], desc: '붙은 적을 주먹, 주먹, 발로 세 번 친다. 모두 190%. 기를 돌려 4칸 안에서 가장 다친 아군 하나(자신 포함)를 조금 회복.' },
+  cle_kick:  { name: '비연각', mp: 5, tick: 50, rng: [2, 3], tg: 'enemy', leap: true, fx: 'kick', fist: true, eff: [{ t: 'dmg', m: 1.6 }, { t: 'gauge', v: -25 }], desc: '2~3칸 밖의 적에게 날아차기 160%, 게이지를 깎는다.' },
+  cle_palm:  { name: '기공장', mp: 10, tick: 55, rng: [1, 2], tg: 'enemy', fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 1.8, type: 'magic', stat: 'mix' }, { t: 'knock', n: 1 }, { t: 'aura', r: 2, m: 1.2 }, { t: 'mend', r: 4, m: 1.0 }], desc: '2칸 안의 적 하나에 기공 180%(마법 저항으로 막는다), 1칸 밀어낸다. 둘레 2칸 아군을 회복하고, 4칸 안에서 가장 다친 아군은 더 회복.' },
   // ── 합일한 마스터의 고유 기술 (9단·10단). 자동 전투는 목록의 앞쪽 기술부터 살피므로 병과 표에서 앞에 둔다 ──
   bm_charge: { name: '강철 돌격', mp: 12, tick: 55, tg: 'dir', len: 4, fx: 'thrust', eff: [{ t: 'dmg', m: 1.6 }, { t: 'knock', n: 1 }], desc: '직선 4칸을 꿰뚫어 160%, 1칸 밀어낸다.' },
   bm_storm:  { name: '강철 폭풍', mp: 18, tick: 65, tg: 'self', area: 'r2', side: 'enemy', fx: 'slash', eff: [{ t: 'dmg', m: 1.7 }, { t: 'gauge', v: -30 }], desc: '둘레 2칸의 모든 적에게 170%, 게이지를 깎는다.' },
@@ -473,10 +477,10 @@ DS.ULTS = {
   u_onearrow:{ cls: 'arc', name: '한 대면 된다', tick: 40, rng: [2, 7], tg: 'enemy', fx: 'arrow', eff: [{ t: 'dmg', m: 3.4 }], fl: '숨을 멈추고, 한 대.', desc: '최대 7칸. 적 하나에 340%.' },
   u_downpour:{ cls: 'arc', name: '화살 폭우', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', eff: [{ t: 'dmg', m: 1.6 }], fl: '하늘이 잠깐 어두워진다.', desc: '2칸 반경에 화살 160%.' },
   u_three:   { cls: 'arc', name: '세 갈래 화살', tick: 40, tg: 'multi', n: 3, area: 'single', fx: 'arrow', eff: [{ t: 'dmg', m: 1.9 }, { t: 'status', s: 'slow', dur: 6 }], fl: '시위 하나에 화살 셋.', desc: '적 셋에게 190%와 둔화.' },
-  // 승려 (센주): 가리지 않는다
-  u_prayer:  { cls: 'cle', name: '흰 매듭 기도', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'heal', eff: [{ t: 'heal', m: 2.0 }], fl: '매듭을 풀며 이름을 하나씩 부른다.', desc: '모든 아군을 크게 회복.' },
-  u_mercy:   { cls: 'cle', name: '가리지 않는 손', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'heal', eff: [{ t: 'cleanse' }, { t: 'heal', m: 1.7 }], fl: '적이었던 이의 상처도 닦던 손.', desc: '둘레 2칸 아군의 상태 이상을 풀고 회복.' },
-  u_grove:   { cls: 'cle', name: '나무 울타리', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 45, dur: 15 }, { t: 'heal', m: 0.8 }], fl: '오래된 나무처럼 둘러선다.', desc: '둘레 2칸 아군의 방어 +45% (15초), 조금 회복.' },
+  // 승려 (센주): 가리지 않는다 — 2.2.5 무투가 (옛 흰 매듭 기도 · 가리지 않는 손 · 나무 울타리 → 차례대로 아래 셋, DS.SK_ALIAS)
+  u_flurry:  { cls: 'cle', name: '백렬권', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.6, drain: 0.3 }, { t: 'gauge', v: -40 }], fl: '셀 수 없으면 막을 수도 없다.', desc: '붙은 적 하나에 여섯 번 몰아쳐 모두 335%, 게이지를 깎는다. 마지막 한 방의 피해 일부만큼 회복.' },
+  u_stance:  { cls: 'cle', name: '부동심', tick: 40, tg: 'self', side: 'ally', fx: 'chi', fist: true, eff: [{ t: 'buff', s: 'def', p: 50, dur: 15 }, { t: 'buff', s: 'ctr', p: 90, dur: 15 }, { t: 'aura', r: 2, m: 1.6 }], fl: '산은 비켜서지 않는다.', desc: '15초 동안 자기 방어 +50%, 붙어서 때린 적을 90%로 되친다. 둘레 2칸 아군을 회복.' },
+  u_palm:    { cls: 'cle', name: '파산장', tick: 40, tg: 'dir', len: 4, fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 2.3, type: 'magic', stat: 'mix' }, { t: 'knock', n: 1 }, { t: 'aura', r: 2, m: 0.8 }], fl: '손바닥 하나로 산길을 연다.', desc: '직선 4칸에 기공 230%, 1칸 밀어낸다. 둘레 2칸 아군을 조금 회복.' },
   // 신관 (카마도): 불은 꺼뜨리지 않는다
   u_lampdance:{ cls: 'mon', name: '등잔불 춤', tick: 40, tg: 'dir', len: 4, fx: 'fire', eff: [{ t: 'dmg', m: 2.3, type: 'holy' }], fl: '불씨를 들고 추는 집안의 춤.', desc: '직선 4칸에 신성 230%. 망자, 악마에게 1.5배.' },
   u_ember:   { cls: 'mon', name: '감빛 등잔', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 35, dur: 18 }, { t: 'heal', m: 0.6 }], fl: '등잔 하나로 밤길을 다 건넜다.', desc: '모든 아군의 행동 소모 −35% (18초), 조금 회복.' },
@@ -498,6 +502,9 @@ DS.ULTS = {
   u_cover:   { pk: 'kind', name: '곁을 지킨다', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'heal', eff: [{ t: 'heal', m: 1.4 }, { t: 'buff', s: 'def', p: 30, dur: 12 }], fl: '옆 사람이 먼저다.', desc: '둘레 2칸 아군을 회복, 방어 +30% (12초).' }
 };
 (function () { for (var k in DS.ULTS) { var U = DS.ULTS[k]; U.mp = 0; U.ult = true; DS.SKILLS[k] = U; } })();
+// 2.2.5: 없어진 기술 이름 → 새 이름. 옛 저장의 타고난 필살기(ps.ul) · 연무장 기록(ul · sk)을 읽을 때 옮긴다 (save.js DS.fixSave · arena.js). 승려의 치유 · 정화 · 모두 치유는 기술 표에 그대로 있다 (매직마스터 · 장비가 쓴다)
+DS.SK_ALIAS = { u_prayer: 'u_flurry', u_mercy: 'u_stance', u_grove: 'u_palm' };
+DS.skAlias = function (id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(DS.SK_ALIAS, id) ? DS.SK_ALIAS[id] : id; };
 // 등급: 이름, 능력 배율, 모집 확률(%), 색
 DS.GRADES = [null,
   { name: '일반', mul: 0.85, p: 10, col: '#a7a1c2' },      // r35: 모집은 귀하게, 대신 가운데를 넓게 (10 · 30 · 30 · 20 · 10)

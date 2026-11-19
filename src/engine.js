@@ -337,6 +337,11 @@ P.hurt = function (v, dmg, src, o) {
   if (v.hp <= 0) this.kill(v, src);
   if (src && v.fx && v.fx.reflect && !o.refl && src !== v && !src.dead && !this.result)      // 받은 피해의 일부를 되돌려 준다 (되돌린 피해는 다시 되돌아오지 않는다)
     this.hurt(src, Math.max(1, Math.round(dmg * Math.min(0.4, v.fx.reflect))), v, { type: 'reflect', refl: true });
+  // 2.2.5 되치기(버프 ctr — 승려의 「부동심」): 붙어서 때린 적에게 제 공격의 p% 로 한 번 되친다 (0.4초에 한 번까지 · 되친 피해는 다시 되치지 않는다)
+  if (src && v.buffs && v.buffs.ctr && !v.dead && !o.refl && src !== v && !src.dead && src.side !== v.side && !this.result && dist(v, src) === 1 && this.t - (v.ctrT == null ? -9 : v.ctrT) >= 0.4) {
+    v.ctrT = this.t; this.emit({ t: 'ctr', id: v.id, tid: src.id });
+    this.hurt(src, this.calc(v, src, v.buffs.ctr.p / 100), v, { type: v.dtype || 'phys', refl: true });
+  }
 };
 P.heal = function (v, amt, quiet) {
   if (v.dead || amt <= 0) return 0;
@@ -517,6 +522,17 @@ P.resolve = function (u, id, tiles, unitTgt) {
       }); break;
       case 'gauge': vs.forEach(function (v) { if (!v.dead) v.gauge = Math.max(0, Math.min(100, v.gauge + (v.role === 'boss' && e.v < 0 ? e.v / 2 : e.v))); }); break;
       case 'cleanse': vs.forEach(function (v) { v.st = {}; for (var k in v.buffs) if (v.buffs[k].p < 0) delete v.buffs[k]; }); break;
+      case 'aura':      // 2.2.5 기공: 쓰는 이 둘레 e.r 칸의 우리 편을 마공 × m 만큼 (우리 편 치유 배율 · 자비 옵션 그대로)
+        if (u.dead) break;
+        var ak = (u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1), aa = (u.mag * e.m * pw + 8) * ak;
+        self.emit({ t: 'aura', id: u.id, r: e.r });
+        self.units.forEach(function (f) { if (!f.dead && f.side === u.side && dist(u, f) <= e.r) self.heal(f, aa); });
+        break;
+      case 'mend':      // 2.2.5 기 전하기: 쓰는 이 e.r 칸 안에서 가장 많이 다친 우리 편 하나(자신 포함, 체력 90% 아래)를 마공 × m 만큼
+        if (u.dead) break;
+        var mt = self.mendTgt(u, e.r), mk = (u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1);
+        if (mt) { self.emit({ t: 'mend', id: u.id, tid: mt.id }); self.heal(mt, (u.mag * e.m * pw + 8) * mk); }
+        break;
       case 'knock': vs.forEach(function (v) {
         if (v.dead || v.role === 'boss') return;
         var dx = 0, dy = 0;
@@ -815,6 +831,16 @@ P.estDmg = function (u, v, e, item) {
   if (u.fx && u.fx.bossDmg && v.role === 'boss') d *= 1 + u.fx.bossDmg;
   return d;
 };
+P.auraVal = function (u, e) {      // 2.2.5: 기공(aura)이 실제로 채울 체력의 합 (난수 없음)
+  var amt = (u.mag * e.m + 8) * (u.side === 'ally' ? DS.BAL.healAlly : 1), out = 0, us = this.units, f;
+  for (var i = 0; i < us.length; i++) { f = us[i]; if (!f.dead && f.side === u.side && dist(u, f) <= e.r) out += Math.min(f.mhp - f.hp, amt); }
+  return out;
+};
+P.mendTgt = function (u, r) {      // 2.2.5: 기 전하기의 대상 — r 칸 안 우리 편 가운데 체력 비율이 가장 낮은 이 (90% 아래만 · 가주는 조금 먼저)
+  var best = null, lo = 0.9, us = this.units, f, rt;
+  for (var i = 0; i < us.length; i++) { f = us[i]; if (f.dead || f.side !== u.side || dist(u, f) > r || f.hp >= f.mhp) continue; rt = f.hp / f.mhp - (f.role === 'cmd' ? 0.05 : 0); if (rt < lo) { lo = rt; best = f; } }
+  return best;
+};
 P.bestSkill = function (u, foes, ord, keep) {
   var self = this, best = null, bs = 0, bv = 0, mmp = u.mmp || 1, scarce = Math.max(0, 1 - (u.mp || 0) / mmp / this.bestFree), n, i, v, d;
   var BE = { m: u.basic || 1 }, ac = TK.attack * (u.fx && u.fx.atkTick ? Math.max(0.6, u.fx.atkTick) : 1), raw = 0, top = 0;
@@ -870,6 +896,10 @@ P.bestSkill = function (u, foes, ord, keep) {
       }
       if (!tgt) continue;
     } else continue;
+    for (i = 0; i < S.eff.length; i++) {      // 2.2.5 기공: 둘레 아군이 다쳤으면 그만큼 값이 오른다
+      if (S.eff[i].t === 'aura') val += this.auraVal(u, S.eff[i]) * 0.6;
+      else if (S.eff[i].t === 'mend') { var mtg = this.mendTgt(u, S.eff[i].r); if (mtg) val += Math.min(mtg.mhp - mtg.hp, (u.mag * S.eff[i].m + 8) * (u.side === 'ally' ? DS.BAL.healAlly : 1)) * (mtg.hp < mtg.mhp * 0.5 ? 1.2 : 0.6); }
+    }
     if (val / S.tick < this.bestMin * tp / ac) continue;      // 평타만 못하다
     var sc = val / (S.tick + (S.mp || 0) / mmp * this.bestMana * scarce);
     if (sc > bs * 1.0001 || (sc >= bs * 0.9999 && val > bv)) { bs = sc; bv = val; best = { id: id, tgt: tgt, val: val }; }

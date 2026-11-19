@@ -1221,25 +1221,38 @@ html body #app#app #s-game #bot.dock .arow.sk .act.ult.queued { border-color: tr
 html.calm body #app#app #s-game #bot.dock .arow.sk .act.ult.full { animation: none; }
 /* r38 컷인: 「필살기 쓸 때 화면을 너무 가린다」 — 가운데 띠(86px, 0.95초) 대신 위 막대 바로 아래 왼쪽에 붙는 얇은 이름표(초상 · 필살 · 기술 이름), 0.7초, 반투명.
    전장 가운데(쓰는 이와 기술 범위)는 가리지 않는다. 누를 수 없다. top 은 game.js 가 위 막대 아래로 맞춘다 */
-#ultcut { position: absolute; left: 8px; top: 64px; z-index: 26; pointer-events: none; display: none; max-width: min(72%, 340px); }
+/* 2.2.5 컷인: 「필살기는 좀 더 화려하게」 — 위 막대 바로 아래, 좌우 끝까지 비스듬한 띠 (높이 60px · 0.62~0.85초, 배속이 빠를수록 짧게). 큰 초상 · 가문과 이름 · 기술 이름 · 속도선.
+   전장 가운데(쓰는 이와 기술 범위)는 여전히 가리지 않는다. 누를 수 없다. 움직임은 transform · opacity 만. top · --ud(시간) · --fc(깃발 색)는 game.js 가 정한다 */
+#ultcut { position: absolute; left: 0; right: 0; top: 64px; z-index: 26; pointer-events: none; display: none; --ud: 850ms; }
 #ultcut.on { display: block; }
-#ultcut .ucb { position: relative; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 3px; overflow: hidden; border-radius: 21px;
-  background: linear-gradient(90deg, rgba(24, 14, 4, .78), rgba(24, 14, 4, .55) 80%, rgba(24, 14, 4, 0)); border: 1px solid color-mix(in srgb, var(--fc, #d8a640) 70%, transparent); box-shadow: 0 2px 8px rgba(0, 0, 0, .35); }
-#ultcut .ucb::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 240, 190, .25) 45%, transparent 60%); transform: translateX(-100%); }
-#ultcut .ucp { flex: none; width: 34px; height: 34px; display: grid; place-items: center; overflow: hidden; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--fc, #d8a640) 45%, #1a1006) 0%, #0c0803 75%); box-shadow: 0 0 0 1.5px var(--fc, #d8a640); }
-#ultcut .ucp canvas { width: 34px; height: 34px; image-rendering: pixelated; }
-#ultcut .uct { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
-#ultcut .uct small, #ultcut .uct em { display: none; }
-#ultcut .uct i { font: 700 10px/1 var(--f-head, sans-serif); font-style: normal; letter-spacing: .2em; color: #f0c860; }
-#ultcut .uct b { font: 700 17px/1.1 var(--f-title, var(--f-head, sans-serif)); color: #fff4d2; text-shadow: 0 0 6px rgba(255, 200, 90, .6), 0 1px 0 #000; overflow: hidden; text-overflow: ellipsis; }
-#ultcut.on .ucb { animation: ucIn .7s cubic-bezier(.2, .8, .2, 1) both; }
-#ultcut.on .ucb::after { animation: ucShine .5s .1s ease-out both; }
-@keyframes ucIn { 0% { transform: translateX(-24px); opacity: 0; } 15% { transform: translateX(0); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateX(0); opacity: 0; } }
+#ultcut .ucb { position: relative; display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 18px 0 14px; overflow: hidden;
+  clip-path: polygon(0 14%, 100% 0, 100% 86%, 0 100%);
+  background: linear-gradient(90deg, rgba(8, 5, 2, .94) 0%, color-mix(in srgb, var(--fc, #d8a640) 42%, #120a04) 46%, rgba(8, 5, 2, .9) 100%);
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--fc, #d8a640) 85%, #fff), inset 0 -2px 0 color-mix(in srgb, var(--fc, #d8a640) 70%, #000); }
+#ultcut .ucb::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 244, 210, .35) 46%, transparent 62%); transform: translateX(-100%); }
+#ultcut .ucl { position: absolute; inset: 0 -60px 0 0; background: repeating-linear-gradient(100deg, transparent 0 22px, rgba(255, 255, 255, .09) 22px 24px, transparent 24px 41px, rgba(255, 255, 255, .05) 41px 42px); }
+#ultcut .ucp { position: relative; flex: none; width: 52px; height: 52px; display: grid; place-items: center; overflow: hidden; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--fc, #d8a640) 55%, #1a1006) 0%, #0c0803 75%); box-shadow: 0 0 0 2px var(--fc, #d8a640), 0 0 14px color-mix(in srgb, var(--fc, #d8a640) 70%, transparent); }
+#ultcut .ucp canvas { width: 52px; height: 52px; image-rendering: pixelated; }
+#ultcut .uct { position: relative; display: grid; gap: 3px; min-width: 0; white-space: nowrap; }
+#ultcut .uct small { font: 600 11px/1 var(--f-ui, sans-serif); color: rgba(255, 238, 200, .8); overflow: hidden; text-overflow: ellipsis; }
+#ultcut .ucn { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+#ultcut .ucn i { font: 700 11px/1 var(--f-head, sans-serif); font-style: normal; letter-spacing: .22em; color: #f0c860; }
+#ultcut .ucn b { font: 800 22px/1.05 var(--f-title, var(--f-head, sans-serif)); color: #fff6dc; text-shadow: 0 0 8px color-mix(in srgb, var(--fc, #ffc85a) 80%, transparent), 0 2px 0 #000; overflow: hidden; text-overflow: ellipsis; }
+#ultcut.on .ucb { animation: ucIn var(--ud) cubic-bezier(.2, .8, .2, 1) both; }
+#ultcut.on .ucb::after { animation: ucShine calc(var(--ud) * .55) calc(var(--ud) * .12) ease-out both; }
+#ultcut.on .ucl { animation: ucLines var(--ud) linear both; }
+#ultcut.on .ucp { animation: ucPop calc(var(--ud) * .4) calc(var(--ud) * .06) cubic-bezier(.2, .9, .3, 1.3) both; }
+#ultcut.on .ucn b { animation: ucName calc(var(--ud) * .35) calc(var(--ud) * .1) ease-out both; }
+@keyframes ucIn { 0% { transform: translateX(-100%); opacity: .6; } 16% { transform: translateX(0); opacity: 1; } 80% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(6%); opacity: 0; } }
 @keyframes ucShine { to { transform: translateX(100%); } }
-#ultcut.calm .ucb { animation: ucFade .7s linear both; }
-#ultcut.calm .ucb::after { display: none; }
+@keyframes ucLines { from { transform: translateX(0); } to { transform: translateX(-60px); } }
+@keyframes ucPop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
+@keyframes ucName { from { transform: translateX(26px); opacity: 0; } }
+#ultcut.calm .ucb { animation: ucFade var(--ud) linear both; }
+#ultcut.calm .ucb::after, #ultcut.calm .ucl { display: none; }
+#ultcut.calm .ucp, #ultcut.calm .ucn b { animation: none; }
 @keyframes ucFade { 0% { opacity: 0; } 15%, 80% { opacity: 1; } 100% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { #ultcut .ucb { animation: ucFade .7s linear both !important; } #ultcut .ucb::after { display: none; } }
+@media (prefers-reduced-motion: reduce) { #ultcut .ucb { animation: ucFade var(--ud) linear both !important; } #ultcut .ucb::after, #ultcut .ucl { display: none; } #ultcut .ucp, #ultcut .ucn b { animation: none !important; } }
 /* ── r8 menus ── */
 /* 접어 두는 구역의 한 줄 (현상 수배·기술·가방 속 장비·누구 밑에서 어떤가) */
 .pfold { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "t a" "s a"; align-items: center; column-gap: 8px; width: 100%; min-height: 44px; margin: 8px 0 4px; padding: 7px 10px; text-align: left; background: var(--ink2); border: 1px solid var(--line); border-radius: 6px; color: var(--bone); }
@@ -2779,7 +2792,7 @@ html body #app #s-game #bot.dock:has(#bHunt[hidden])::after { content: ""; displ
   --a-hp1: #f06a52; --a-hp2: #a5241d; --a-mp1: #6db8f4; --a-mp2: #2a5ca6; --a-tk: #f0c860; --a-up: #8fd474; --a-dn: #ff8f86;
   --a-lacq: #7a231c; --a-lacq2: #3e0f0b;
   --g1: #a9a59b; --g1d: #55524c; --g2: #7fd06a; --g2d: #2f5e26; --g3: #5cc6e6; --g3d: #1f5468; --g4: #b88af0; --g4d: #4a2a78; --g5: #f6c65a; --g5d: #7a5216;
-  --sk-attack: #e0604c; --sk-heal: #78d08a; --sk-buff: #f0c860; --sk-guard: #6aa8e8; --sk-magic: #b48af0; --sk-ranged: #5cc6b0;
+  --sk-attack: #e0604c; --sk-fist: #f08a3a; --sk-heal: #78d08a; --sk-buff: #f0c860; --sk-guard: #6aa8e8; --sk-magic: #b48af0; --sk-ranged: #5cc6b0;
   --a-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .85 0 0 0 0 .74 0 0 0 0 .55 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
   --a-rim: linear-gradient(180deg, #f6dfa2 0%, #c79d55 38%, #8a6630 70%, #5a4120 100%);
   --a-rim-dim: linear-gradient(180deg, #8f7a55 0%, #5e4c30 60%, #3b2e1b 100%);

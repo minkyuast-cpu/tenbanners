@@ -215,13 +215,14 @@ DS.arenaChampRow = function (id, d) {
   if (C.start && tier < C.start) return null;
   var ref = { cls: d.cls, L: Lv }, rs; try { DS.stdGear(ref, tier); rs = DS.charStats(ref); } catch (x) { return null; }
   var top = Math.max(rs.atk, rs.mag), wall = Math.max(rs.def, rs.res);
-  var sk = (typeof d.sk === 'string' ? d.sk.slice(0, 200).split(',') : []).filter(function (k, i, a) { return a.indexOf(k) === i && skAllowed(k, tier); }).slice(0, 8);
+  var OLDC = d.cls === 'cle' ? { heal: 'cle_combo', cure: 'cle_kick', healAll: 'cle_palm' } : {};      // 2.2.5: 옛 판이 올린 승려 기록의 치유 기술 → 무투가의 기술 (필살기 이름은 DS.skAlias)
+  var sk = (typeof d.sk === 'string' ? d.sk.slice(0, 200).split(',') : []).map(function (k) { return OLDC[k] || k; }).filter(function (k, i, a) { return a.indexOf(k) === i && skAllowed(k, tier); }).slice(0, 8);
   var r1 = Math.round(num(d.r1, 1, 6, C.rng ? C.rng[1] : 1)), r0 = Math.round(num(d.r0, 0, r1, 1));
   var row = { id: id, name: clean(d.name, 12) || '이름 없는 맹주', house: clean(d.house, 16), cls: d.cls, hs: typeof d.hs === 'string' && own(DS.CLASSES, d.hs) ? d.hs : d.cls, L: Lv, tier: tier,
     g: Math.round(num(d.g, 1, 5, 3)), hp: Math.round(num(d.hp, 1, rs.hp * 2.5, rs.hp)), mp: Math.round(num(d.mp, 0, Math.max(50, rs.mp * 3), rs.mp)),
     atk: Math.round(num(d.atk, 1, top * 3.5 + 20, rs.atk)), mag: Math.round(num(d.mag, 1, top * 3.5 + 20, rs.mag)), def: Math.round(num(d.def, 0, wall * 4 + 30, rs.def)), res: Math.round(num(d.res, 0, wall * 4 + 30, rs.res)),
     spd: num(+d.spd / 100, C.spd * 0.5, C.spd * 1.6, C.spd), crit: num(+d.cr / 1000, 0, 0.6, 0.06), drain: num(+d.dr / 1000, 0, 0.5, 0), rng: [r0, r1], basic: num(+d.bs / 100, 0.5, 3, C.basic || 1),
-    skills: sk, ult: typeof d.ul === 'string' && own(DS.ULTS, d.ul) ? d.ul : null, ultP: num(+d.up / 100, 1, 2.5, 1), ultR: num(+d.ur / 100, 0.5, 2.5, 1),
+    skills: sk, ult: typeof d.ul === 'string' && own(DS.ULTS, DS.skAlias(d.ul)) ? DS.skAlias(d.ul) : null, ultP: num(+d.up / 100, 1, 2.5, 1), ultR: num(+d.ur / 100, 0.5, 2.5, 1),
     at: +d.at || 0, w: typeof d.w === 'string' && DS.gear && DS.gear(d.w) ? d.w : '', a: typeof d.a === 'string' && DS.gear && DS.gear(d.a) ? d.a : '' };
   if (!(row.at > 1.6e12 && row.at < Date.now() + 864e5)) row.at = 0;
   row.pow = DS.power(DS.arenaChampSpec(row));      // 올린 전투력은 믿지 않는다 — 걸러 낸 값으로 다시 잰다

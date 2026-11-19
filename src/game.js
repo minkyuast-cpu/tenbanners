@@ -614,7 +614,7 @@ function aimTap(t, u) {
 // 버프·상태 이상과 남은 초: [[종류, 이름, 초], …]
 function fxList(u) {
   var out = [], k, b;
-  for (k in u.buffs) { b = u.buffs[k]; out.push([b.p < 0 ? 'bad' : k, k === 'quick' ? '신속' : (k === 'atk' ? '공격' : k === 'def' ? '방어' : k) + (b.p < 0 ? '↓' : '↑'), Math.ceil(b.t), k === 'quick' ? '속' : (k === 'atk' ? '공' : k === 'def' ? '방' : k) + (b.p < 0 ? '↓' : '↑')]); }
+  for (k in u.buffs) { b = u.buffs[k]; out.push([b.p < 0 ? 'bad' : k, k === 'quick' ? '신속' : (k === 'atk' ? '공격' : k === 'def' ? '방어' : k === 'ctr' ? '되치기' : k) + (b.p < 0 ? '↓' : '↑'), Math.ceil(b.t), k === 'quick' ? '속' : (k === 'atk' ? '공' : k === 'def' ? '방' : k === 'ctr' ? '되' : k) + (b.p < 0 ? '↓' : '↑')]); }
   if (u.st && typeof u.st === 'object') for (k in u.st) out.push([k, DS.STATUS[k] ? DS.STATUS[k].name : k, Math.ceil(u.st[k].t), k === 'poison' ? '독' : k === 'slow' ? '둔' : (DS.STATUS[k] ? DS.STATUS[k].name : k).charAt(0)]);
   return out;
 }
@@ -873,6 +873,7 @@ DS.useCtl = useCtl;
 var ITEM_IC = { herb: 'herb', mana: 'mana', endo: 'stamina' };
 function skType(S) {
   var ef = S.eff || [], t = function (k) { return ef.some(function (e) { return e.t === k; }); }, dmg = ef.filter(function (e) { return e.t === 'dmg'; })[0];
+  if (S.fist) return 'fist';      // 2.2.5 승려(무투가)의 맨손 기술
   if (t('heal') || t('cleanse')) return 'heal';
   if (!dmg && ef.some(function (e) { return e.t === 'buff' && e.p > 0 && e.s === 'def'; })) return 'guard';
   if (!dmg && ef.some(function (e) { return (e.t === 'buff' && e.p > 0) || e.t === 'gauge'; })) return 'buff';
@@ -1778,16 +1779,17 @@ function ultCut(u, S) {
   var sv = G.save, ch = u.role === 'cmd' ? sv.chars[u.ch] : (G.sim.byId[u.owner] ? sv.chars[G.sim.byId[u.owner].ch] : null);
   var hn = ch ? (ch.id === sv.hero ? (DS.houseName ? DS.houseName(sv) : '') : (DS.LIN_HOUSE && DS.LIN_HOUSE[ch.cls] ? DS.LIN_HOUSE[ch.cls] + ' 가문' : DS.flagName(ch.cls))) : '';
   var fc = ch ? (DS.FLAG[ch.cls] || '#c9a96a') : '#c9a96a', who = u.mn || u.name || '';
-  el.style.setProperty('--fc', fc);
-  el.innerHTML = '<div class="ucb"><span class="ucp"></span><span class="uct"><small>' + esc([hn, who].filter(Boolean).join(', ')) + '</small><i>필살</i><b>' + esc(S.name) + '</b>' + (S.fl ? '<em>' + esc(S.fl) + '</em>' : '') + '</span></div>';
+  var spd = DS.spdOf ? DS.spdOf(sv.opt && sv.opt.speed) : 1, ud = spd >= 2 ? 620 : spd >= 1.5 ? 720 : 850;      // 2.2.5: 빠른 배속이면 더 짧게 (싸움은 멈추지 않는다)
+  el.style.setProperty('--fc', fc); el.style.setProperty('--ud', ud + 'ms'); el.dataset.k = DS.ultCls ? DS.ultCls(S, u) : '';
+  el.innerHTML = '<div class="ucb"><i class="ucl"></i><span class="ucp"></span><span class="uct"><small>' + esc([hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>필살</i><b>' + esc(S.name) + '</b></span></span></div>';      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
   try {
     var sp = DS.unitSprite(u), cv = DS.spriteCanvas(sp[0], sp[1], { hd: 1 }), c2 = document.createElement('canvas'), W = 72;
     c2.width = W; c2.height = W; var g = c2.getContext('2d'); g.imageSmoothingEnabled = false; var hh = W * cv.height / cv.width; g.drawImage(cv, 0, 0, cv.width, cv.height, 0, W - hh, W, hh);
     $('.ucp', el).appendChild(c2);
   } catch (x) {}
-  var tp = $('#top'), sgr = sg.getBoundingClientRect(); if (tp) { var tr = tp.getBoundingClientRect(); el.style.top = Math.max(4, Math.round(tr.bottom - sgr.top + 6)) + 'px'; el.style.left = Math.max(8, Math.round(tr.left - sgr.left + 8)) + 'px'; }      // r38: 위 막대 바로 아래에 붙는다 (전장 가운데를 가리지 않는다)
+  var tp = $('#top'), sgr = sg.getBoundingClientRect(); if (tp) { var tr = tp.getBoundingClientRect(); el.style.top = Math.max(4, Math.round(tr.bottom - sgr.top + 4)) + 'px'; }      // r38: 위 막대 바로 아래에 붙는다 (전장 가운데를 가리지 않는다) · 2.2.5: 좌우 끝까지
   el.classList.remove('on', 'calm'); void el.offsetWidth; if (calm()) el.classList.add('calm'); el.classList.add('on');
-  clearTimeout(G.ultCutTm); G.ultCutTm = setTimeout(function () { el.classList.remove('on'); }, 720);
+  clearTimeout(G.ultCutTm); G.ultCutTm = setTimeout(function () { el.classList.remove('on'); }, ud + 30);
 }
 DS.ultCut = ultCut;
 // 누군가 7단 10레벨에 닿았다: 그 깃발이 얼마나 모였는지 알린다. 다 모였으면 교회로.

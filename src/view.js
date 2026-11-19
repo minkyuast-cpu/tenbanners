@@ -34,15 +34,35 @@ var FXC = {
   fire: ['#ff9a3c', '#ffd75e', '#d9442b'], water: ['#6fb0e6', '#d6fbff', '#3d7fc6'], thunder: ['#fff0a0', '#ffffff'], holy: ['#ffffff', '#fff0a0'],
   dark: ['#b181e6', '#7446ad', '#2b2440'], heal: ['#7fcf6a', '#d6ffb0'], healDark: ['#b181e6', '#e0525e'], poison: ['#9ccc3c', '#5a8a2a'],
   quake: ['#a8754a', '#6f4a2c', '#d8c39a'], meteor: ['#ff9a3c', '#ffd75e', '#7a1f1f'], wind: ['#ffffff', '#cdd5e3'], slash: ['#ffffff', '#fff0a0'],
-  thrust: ['#ffffff'], arrow: ['#f1ead9'], arrowRain: ['#f1ead9', '#a8754a'], buffRed: ['#ff6a7a', '#ffd0d6'], buffBlue: ['#62b0ee', '#d6ecff'], buffGold: ['#f6cf57', '#fff6d0']
+  thrust: ['#ffffff'], arrow: ['#f1ead9'], arrowRain: ['#f1ead9', '#a8754a'], buffRed: ['#ff6a7a', '#ffd0d6'], buffBlue: ['#62b0ee', '#d6ecff'], buffGold: ['#f6cf57', '#fff6d0'],
+  fist: ['#ffb35a', '#fff0c0', '#f06a2a'], kick: ['#ffffff', '#ffd28a', '#f08a3a'], palm: ['#bfe8ff', '#ffffff', '#7fd0ff'], chi: ['#f6cf57', '#fff6d0', '#ffb35a']      // 2.2.5 승려(무투가): 주먹 · 날아차기 · 기공장 · 부동심
 };
 var FXS = { fire: 'fire', water: 'water', thunder: 'thunder', holy: 'holy', dark: 'dark', heal: 'heal', healDark: 'dark', poison: 'poison', quake: 'boom', meteor: 'boom',
-            wind: 'wind', slash: 'slash', thrust: 'slash', arrow: 'arrow', arrowRain: 'arrow', buffRed: 'buff', buffBlue: 'buff', buffGold: 'buff' };
+            wind: 'wind', slash: 'slash', thrust: 'slash', arrow: 'arrow', arrowRain: 'arrow', buffRed: 'buff', buffBlue: 'buff', buffGold: 'buff', fist: 'punch', kick: 'kick', palm: 'qi', chi: 'buff' };
 // r7: 기술마다 빛 [색, 반지름, 세기, 시간]
 var LIGHTC = { fire: ['#ff8a2a', 20, 0.55, 0.5], meteor: ['#ff7a2a', 26, 0.6, 0.6], thunder: ['#cfe6ff', 22, 0.6, 0.25], holy: ['#fff0a0', 20, 0.5, 0.45],
-  heal: ['#9ef08a', 14, 0.35, 0.45], dark: ['#b181e6', 16, 0.4, 0.45], water: ['#8fd0ff', 14, 0.3, 0.35], poison: ['#b6ff5a', 12, 0.28, 0.4], buffGold: ['#ffe27a', 14, 0.35, 0.4] };
-var BUFFTXT = { atk: '공격', def: '방어', quick: '퀵' };
-var PMAX = 240, SMAX = 48;      // 입자·모양 이펙트 상한 (3배속 난전에서도 넘지 않는다)
+  heal: ['#9ef08a', 14, 0.35, 0.45], dark: ['#b181e6', 16, 0.4, 0.45], water: ['#8fd0ff', 14, 0.3, 0.35], poison: ['#b6ff5a', 12, 0.28, 0.4], buffGold: ['#ffe27a', 14, 0.35, 0.4],
+  fist: ['#ffb35a', 12, 0.35, 0.25], palm: ['#bfe8ff', 18, 0.5, 0.4], chi: ['#ffd75e', 18, 0.45, 0.5] };
+// 2.2.5 필살기 연출: 병과마다 빛깔과 꼴이 다르다 (합일 마스터는 그 묶음의 주인공 병과 · 성격 몫 필살기는 쓰는 이의 병과)
+var ULTFX = {
+  inf: { c: ['#cfe3ff', '#ffffff', '#5b8fd6'], k: 'slash' }, cav: { c: ['#ffe27a', '#fff6d0', '#e8bb45'], k: 'thrust' }, fly: { c: ['#dff4ff', '#ffffff', '#62b0ee'], k: 'wind' },
+  mar: { c: ['#8fd0ff', '#d6fbff', '#2f86a6'], k: 'water' }, pike: { c: ['#bff0d8', '#ffffff', '#4c9a8a'], k: 'thrust' }, arc: { c: ['#d6f5b0', '#ffffff', '#5fae5a'], k: 'arrow' },
+  cle: { c: ['#ffd28a', '#fff6d0', '#f08a3a'], k: 'fist' }, mon: { c: ['#ffe0a0', '#ffffff', '#f09a4a'], k: 'holy' }, mag: { c: ['#d8c8ff', '#ffffff', '#8d6be0'], k: 'arcane' },
+  sha: { c: ['#d2a8ff', '#9a6ad0', '#3a2458'], k: 'dark' }
+};
+var ULT_MASTER = { bm: 'inf', tm: 'arc', mm: 'mag' };
+function ultCls(S, u) { var c = (S && S.cls) || (u && u.cls) || 'inf'; return ULT_MASTER[c] || c; }
+DS.ultCls = ultCls;
+var spotCv = null;      // 필살기의 어둠: 가운데가 뚫린 64×64 한 장 (쓰는 이 둘레만 밝다)
+function spotTex() {
+  if (spotCv) return spotCv;
+  try { spotCv = document.createElement('canvas'); spotCv.width = 64; spotCv.height = 64; var g = spotCv.getContext('2d'), gr = g.createRadialGradient(32, 32, 6, 32, 32, 32); gr.addColorStop(0, 'rgba(6,4,12,0)'); gr.addColorStop(0.45, 'rgba(6,4,12,.35)'); gr.addColorStop(1, 'rgba(6,4,12,1)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); } catch (x) { spotCv = null; }
+  return spotCv;
+}
+// 2.2.5 설정 「효과」: 보통 · 가볍게 (가볍게 = 알갱이 절반 남짓 · 덧그림 없이). 느린 기기(lowFx)도 덧그림은 저절로 줄인다
+DS.fxLite = function () { var o = DS.G && DS.G.save && DS.G.save.opt; return !!(o && o.fxq === 'lite'); };
+var BUFFTXT = { atk: '공격', def: '방어', quick: '퀵', ctr: '되치기' };
+var PMAX = 240, SMAX = 48;      // 입자·모양 이펙트 상한 (3배속 난전에서도 넘지 않는다) · 2.2.5: 입자는 다 쓴 것을 모아 다시 쓴다 (프레임마다 새로 만들지 않는다)
 // 지역의 공기: 테마마다 [종류, 개수(30 이하), 색] — 지도 바로 위, 예고 칸·유닛보다 아래에 그린다
 var AMB = {
   grass: ['drift', 12, ['#ffffff', '#ffe27a', '#ffb3c6']], meadow: ['drift', 16, ['#f6f0c0', '#ffe27a', '#ffffff']], lake: ['drift', 10, ['#ffffff', '#d6fbff']],
@@ -103,7 +123,7 @@ function redVignette() {
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return cv;
 }
 function hexA(hex, a) { var h = String(hex).replace('#', ''); if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; var n = parseInt(h, 16); if (isNaN(n)) return 'rgba(255,255,255,' + a.toFixed(3) + ')'; return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + Math.max(0, a).toFixed(3) + ')'; }
-var HOSTILE_FX = { slash: 1, thrust: 1, fire: 1, thunder: 1, quake: 1, dark: 1, wind: 1, arrowRain: 1, poison: 1, arrow: 1, water: 1, holy: 1, meteor: 1 };
+var HOSTILE_FX = { slash: 1, thrust: 1, fire: 1, thunder: 1, quake: 1, dark: 1, wind: 1, arrowRain: 1, poison: 1, arrow: 1, water: 1, holy: 1, meteor: 1, fist: 1, kick: 1, palm: 1 };
 function vignette(theme) {
   var v = VIG[theme] || [0.2, null], cv, g, gr;
   try { cv = document.createElement('canvas'); cv.width = 64; cv.height = 64; g = cv.getContext('2d'); } catch (x) { return null; }
@@ -189,12 +209,16 @@ V.casting = function () { return teleHostile(this); };      // r8 gfx: 화면 �
 // ── 연출 ──
 V.burst = function (tx, ty, cols, n, o) {
   o = o || {};
+  if (this.fxK < 1 && n > 1) n = Math.ceil(n * this.fxK);      // 2.2.5 설정 「효과: 가볍게」
   n = Math.min(n, PMAX - this.parts.length);
+  var pool = this.pfree || (this.pfree = []), p;
   for (var i = 0; i < n; i++) {
     var a = Math.random() * Math.PI * 2, sp = (o.spd || 26) * (0.4 + Math.random() * 0.8);
-    this.parts.push({ x: tx * 16 + 8 + (Math.random() - 0.5) * (o.spread || 8), y: ty * 16 + 8 + (Math.random() - 0.5) * (o.spread || 8),
-      vx: Math.cos(a) * sp * (o.flat ? 1 : 0.8), vy: Math.sin(a) * sp * 0.8 - (o.up || 0), g: o.grav == null ? 30 : o.grav,
-      life: (o.life || 0.45) * (0.6 + Math.random() * 0.6), t: 0, c: cols[i % cols.length], s: o.size || (Math.random() < 0.4 ? 2 : 1) });
+    p = pool.length ? pool.pop() : {};
+    p.x = tx * 16 + 8 + (Math.random() - 0.5) * (o.spread || 8); p.y = ty * 16 + 8 + (Math.random() - 0.5) * (o.spread || 8);
+    p.vx = Math.cos(a) * sp * (o.flat ? 1 : 0.8); p.vy = Math.sin(a) * sp * 0.8 - (o.up || 0); p.g = o.grav == null ? 30 : o.grav;
+    p.life = (o.life || 0.45) * (0.6 + Math.random() * 0.6); p.t = 0; p.c = cols[i % cols.length]; p.s = o.size || (Math.random() < 0.4 ? 2 : 1);
+    this.parts.push(p);
   }
 };
 V.float = function (tx, ty, text, col, o) {
@@ -358,7 +382,7 @@ V.drawCerText = function (g) {
   g.globalAlpha = 1;
 };
 // 모양 이펙트(베기 호·찌르기·번개·빛기둥·운석·불기둥·넋)는 parts 와 따로 shapes 에 담아 픽셀 사각형으로 그린다
-V.shape = function (o) { if (this.shapes.length < SMAX) { o.t = 0; this.shapes.push(o); } };
+V.shape = function (o) { if (this.shapes.length < SMAX) { o.t = -(o.d || 0); this.shapes.push(o); } };      // 2.2.5: d = 늦게 시작 (초)
 // 화면만 잠깐 멈춘다(시뮬은 그대로 돈다). 3배속에서 끊기지 않게 0.3초에 한 번까지만.
 V.hitStop = function (d) { if (this.time - this.stopT < 0.3) return; this.stopT = this.time; this.stop = d; };
 function boltPts(x, y) {
@@ -398,11 +422,87 @@ V.fx = function (name, tiles, from) {
         if (from) self.projs.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 5, x1: x * 16 + 8, y1: y * 16 + 6, t: 0, dur: 0.1, arrow: true });
         self.burst(x, y, cols, 4, { spd: 30, life: 0.2 }); break;
       case 'thrust': self.shape({ k: 'thrust', x: x, y: y, a: a, dur: 0.2, c: '#fff0a0', big: true }); self.burst(x, y, cols, 4, { spd: 30, life: 0.2 }); break;
+      case 'fist':      // 2.2.5 연환권: 주먹 · 주먹 · 발 — 세 번의 작은 충격이 잇달아 (마지막이 가장 크다)
+        for (var fj = 0; fj < 3; fj++) self.shape({ k: 'impact', x: x + (fj - 1) * 0.16, y: y - 0.12 * (fj % 2), dur: 0.2, c: fj === 2 ? '#ffffff' : cols[0], r: 5 + fj * 2, d: fj * 0.08 });
+        self.shape({ k: 'slash', x: x, y: y, a: a, s: -1, dur: 0.2, c: cols[2], big: true, d: 0.16 });
+        self.burst(x, y, cols, 6, { spd: 36, life: 0.25 }); break;
+      case 'kick':      // 비연각: 큰 발차기 호 + 내려앉는 먼지 고리
+        self.shape({ k: 'slash', x: x, y: y, a: a, s: 1, dur: 0.24, c: cols[1], big: true });
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.24, c: cols[2], r: 9, d: 0.06 });
+        self.rings.push({ x: x, y: y + 0.3, t: -0.05, dur: 0.35, c: '#d8c39a', r: 12 }); self.burst(x, y, cols, 7, { spd: 40, up: 10, life: 0.3 }); break;
+      case 'palm':      // 기공장: 손바닥 앞에서 퍼지는 기의 물결 (두 겹 고리 · 흰 심)
+        if (from) self.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: x * 16 + 8, y1: y * 16 + 7, c: cols[0], life: 0.16, t: 0, w: 3 });
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.28, c: cols[1], r: 10 });
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.4, c: cols[0], r: 16, w: 2 }); self.rings.push({ x: x, y: y, t: -0.08, dur: 0.35, c: cols[1], r: 9 });
+        self.burst(x, y, cols, 9, { spd: 42, life: 0.35, flat: true }); break;
+      case 'chi':      // 부동심: 기가 몸으로 모였다가 금빛 고리로 선다
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.45, c: cols[2], r: 18, inv: true, w: 2 }); self.rings.push({ x: x, y: y, t: -0.3, dur: 0.6, c: cols[0], r: 12, rise: true });
+        self.burst(x, y, cols, 10, { up: 32, grav: -24, spd: 10, life: 0.8 }); break;
       default:
         self.shape({ k: 'slash', x: x, y: y, a: a, s: n % 2 ? 1 : -1, dur: 0.22, c: cols[1] || '#fff0a0', big: true });
         self.burst(x, y, cols, 5, { spd: 36, life: 0.22 });
     }
+    // 2.2.5: 보통 기술도 조금 더 — 맞는 칸마다 짧은 충격 빛과 불티 둘 (가볍게 · 느린 기기면 생략)
+    if (!self.lite && HOSTILE_FX[name] && n <= 6) { self.shape({ k: 'impact', x: x, y: y, dur: 0.18, c: cols[1] || cols[0], r: 6, d: 0.03 }); self.burst(x, y, ['#ffffff', cols[0]], 2, { spd: 34, up: 8, life: 0.3 }); }
   });
+  // 2.2.5: 한 대상을 노린 기술은 쓰는 이에게서 대상까지 짧은 빛줄기
+  if (!this.lite && from && tiles && tiles.length === 1 && HOSTILE_FX[name] && name !== 'palm' && name !== 'arrow' && (Math.abs(tiles[0][0] - from[0]) + Math.abs(tiles[0][1] - from[1])) >= 1 && this.onScreen(tiles[0][0], tiles[0][1]))
+    this.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: tiles[0][0] * 16 + 8, y1: tiles[0][1] * 16 + 7, c: cols[0], life: 0.12, t: 0, w: 1 });
+};
+// ── 2.2.5 필살기: 쓰는 이 둘레만 밝게 (나머지는 잠깐 어둡게) · 병과 빛깔의 큰 고리와 불티 · 맞는 칸마다 충격 · 병과마다 다른 꼴 ──
+//   멈춤은 짧게 (화면만, 0.06초) · 움직임 줄이기면 흔들림 · 멈춤 없이 빛만 · 「효과: 가볍게」 · 느린 기기면 알갱이를 줄인다
+V.ultBlast = function (e, S, u) {
+  var v = this.vu[u.id]; if (!v) return;
+  var cm = this.calmN, q = this.lite ? 0.5 : 1, U = ULTFX[ultCls(S, u)] || ULTFX.inf, c = U.c, self = this, n = 0;
+  var hostile = S.eff.some(function (x) { return x.t === 'dmg' || x.t === 'status' || (x.t === 'buff' && x.p < 0); }), tiles = e.tiles || [];
+  this.ultDim = { t: 0, dur: cm ? 0.4 : 0.65, id: u.id }; this.ultHit = { id: u.id, t: this.time, c: c[0] };
+  this.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.38, c: c[1], r: 24, inv: true, w: 2 });
+  this.rings.push({ x: v.x, y: v.y, t: -0.14, dur: 0.5, c: c[0], r: 30, w: 2 });
+  this.burst(v.x, v.y, c, Math.round(16 * q), { spd: 48, up: 12, life: 0.6, size: 2 });
+  this.light(v.x * 16 + 8, v.y * 16 + 6, 36, c[0], 0.8, 0.7);
+  var far = null, fd = -1;
+  tiles.forEach(function (t, i) {
+    if (n >= 12 || !self.onScreen(t[0], t[1])) return; n++;
+    var x = t[0], y = t[1], d = Math.min(0.3, i * 0.035), dd = Math.abs(x - v.x) + Math.abs(y - v.y);
+    if (dd > fd) { fd = dd; far = t; }
+    if (hostile) {
+      self.shape({ k: 'impact', x: x, y: y, dur: 0.34, c: c[0], r: 11, d: d + 0.04 });
+      self.rings.push({ x: x, y: y, t: -d, dur: 0.45, c: c[2], r: 17, w: 2 });
+      if (i < 6) self.burst(x, y, c, Math.round(8 * q), { spd: 42, up: 14, life: 0.45 });
+    } else {
+      self.rings.push({ x: x, y: y, t: -d, dur: 0.6, c: c[0], r: 13, rise: true, w: 2 });
+      if (i < 8) self.burst(x, y, c, Math.round(5 * q), { up: 34, grav: -26, spd: 8, life: 0.8 });
+    }
+    if (i >= 6) return;
+    switch (U.k) {
+      case 'slash': if (hostile) { self.shape({ k: 'slash', x: x, y: y, a: 0.75, s: 1, dur: 0.26, c: c[1], big: true, d: d }); self.shape({ k: 'slash', x: x, y: y, a: -0.75, s: -1, dur: 0.26, c: c[0], big: true, d: d + 0.07 }); } break;
+      case 'water': self.burst(x, y, c, Math.round(9 * q), { up: 46, grav: 140, spd: 16, life: 0.6, spread: 10 }); break;
+      case 'arrow': for (var k = 0; k < 4; k++) { var ox = Math.random() * 14 - 7; self.lines.push({ x0: x * 16 + 16 + ox, y0: y * 16 - 50 - k * 9, x1: x * 16 + 8 + ox, y1: y * 16 + 8, c: k % 2 ? c[1] : c[0], life: 0.16 + k * 0.05, t: 0, w: 1 }); } break;
+      case 'fist': if (i < 2) for (var j = 0; j < 5; j++) self.shape({ k: 'impact', x: x + (Math.random() - 0.5) * 0.6, y: y - 0.2 + (Math.random() - 0.5) * 0.5, dur: 0.18, c: j % 2 ? '#ffffff' : c[0], r: 6 + j, d: 0.05 + j * 0.06 }); break;
+      case 'holy': self.shape({ k: 'pillar', x: x, y: y, dur: 0.5, d: d }); break;
+      case 'dark': self.rings.push({ x: x, y: y, t: -d, dur: 0.5, c: c[1], r: 14, inv: true }); self.burst(x, y, c, Math.round(6 * q), { up: 20, grav: -40, spd: 8, life: 0.9, spread: 12 }); break;
+    }
+  });
+  if (U.k === 'thrust' && far) { this.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: far[0] * 16 + 8, y1: far[1] * 16 + 7, c: c[0], life: 0.26, t: 0, w: 4 }); this.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: far[0] * 16 + 8, y1: far[1] * 16 + 7, c: '#ffffff', life: 0.18, t: 0, w: 1 }); }
+  if (U.k === 'wind') for (var w = 0; w < 3; w++) this.rings.push({ x: v.x, y: v.y, t: -w * 0.08, dur: 0.45, c: w % 2 ? c[1] : c[0], r: 22 + w * 10 });
+  if (U.k === 'arcane') this.shape({ k: 'sigil', x: far ? far[0] : v.x, y: far ? far[1] : v.y, dur: 0.7, c: c[0], r: hostile ? 24 : 20 });
+  if (U.k === 'fist' && !hostile) for (var r2 = 0; r2 < 3; r2++) this.rings.push({ x: v.x, y: v.y, t: -r2 * 0.1, dur: 0.5, c: r2 % 2 ? c[1] : c[2], r: 16 + r2 * 6, rise: true });
+  if (!cm) { this.shake = Math.max(this.shake, hostile ? 0.3 : 0.18); this.hitStop(0.06); }
+  this.flashA = Math.max(this.flashA, cm ? 0.04 : 0.1); this.flashC = c[0];
+};
+// 필살기의 어둠 (화면 좌표): 쓰는 이 둘레만 둥글게 밝고, 0.65초에 걸쳐 들어왔다 빠진다
+V.drawUltDim = function (g) {
+  var d = this.ultDim, v = d && this.vu[d.id]; if (!d) return;
+  if (!DS.fxFreeze) d.t += this.rdt || 0.016; var f = d.t / d.dur;
+  if (f >= 1 || !v) { this.ultDim = null; return; }
+  var a = (f < 0.12 ? f / 0.12 : f < 0.5 ? 1 : 1 - (f - 0.5) / 0.5) * (this.calmN ? 0.25 : 0.55) * (this.lite ? 0.8 : 1), tex = spotTex();
+  var sx = (v.x * 16 + 8 - this.cam.x) * this.k, sy = (v.y * 16 + 4 - this.cam.y) * this.k, R = 30 * this.k, W = this.W, H = this.H;
+  g.globalAlpha = Math.max(0, a); g.fillStyle = 'rgb(6,4,12)';
+  if (tex) {
+    g.imageSmoothingEnabled = true; g.drawImage(tex, sx - R, sy - R, R * 2, R * 2); g.imageSmoothingEnabled = false;
+    g.fillRect(0, 0, W, Math.max(0, sy - R)); g.fillRect(0, sy + R, W, Math.max(0, H - sy - R)); g.fillRect(0, sy - R, Math.max(0, sx - R), R * 2); g.fillRect(sx + R, sy - R, Math.max(0, W - sx - R), R * 2);
+  } else g.fillRect(0, 0, W, H);
+  g.globalAlpha = 1;
 };
 // 엔진 이벤트 → 연출
 V.handle = function (evs) {
@@ -461,9 +561,12 @@ V.handle1 = function (e, sim) {
         var mineHit = !ally && !!e.by && e.by === self.sel;
         var ncol = e.crit ? '#ffd24a' : e.type === 'poison' ? '#9ccc3c' : ally ? (self.hot ? '#ffe0e6' : '#ff5a6a') : mineHit ? '#fff3c4' : '#ffffff', lf = v.lastNum;      // r8: 붉은 땅에서는 아군 피해 숫자를 더 밝게 + 굵은 외곽선
         var nS = e.crit ? 2.5 : e.type === 'poison' ? 1 : mineHit ? 1.75 : 1.5, nP = e.crit ? 3.4 : e.type === 'poison' ? 1 : mineHit ? 2.4 : ally ? 2 : 2.1;
+        var uh = !ally && self.ultHit && e.by === self.ultHit.id && self.time - self.ultHit.t < 0.3;      // 2.2.5: 필살기가 맞힌 숫자는 크게 · 충격 빛
+        if (uh) { nS *= 1.4; nP *= 1.5; self.shape({ k: 'impact', x: u.x, y: u.y, dur: 0.26, c: self.ultHit.c || '#ffd24a', r: u.big ? 12 : 9 }); }
         // 3배속 난전: 같은 유닛에 아주 짧은 사이로 들어온 보통 피해는 숫자 하나로 합친다 (겹친 숫자 더미 대신 커지는 숫자 하나) — 합칠 때 다시 튄다
-        if (lf && !e.crit && !lf.big && lf.col === ncol && lf.t < (self.spd >= 2 ? 0.25 : 0.12) && self.floats.indexOf(lf) >= 0 && /^[0-9]+$/.test(lf.text) && typeof e.v === 'number') { lf.text = String(+lf.text + e.v); lf.t = Math.min(lf.t, 0.04); }
-        else v.lastNum = self.float(u.x, u.y, e.crit ? e.v + '!' : e.v, ncol, { num: true, big: e.crit, s: nS, pk: nP, vx: [0, -14, 14, -10, 10][fn % 5], out: e.crit ? '#5a2a00' : null, dx: [0, -4, 4, -2, 2][fn % 5] + Math.random() * 2 - 1, dy: -Math.min(fn, 3) * 5, ow: self.hot && ally ? 0.75 : 0, life: e.crit ? 1.1 : 0.8 });
+        if (uh && !e.crit) ncol = '#fff0b0';
+        if (lf && !e.crit && (!lf.big || uh) && lf.col === ncol && lf.t < (self.spd >= 2 ? 0.25 : 0.12) && self.floats.indexOf(lf) >= 0 && /^[0-9]+$/.test(lf.text) && typeof e.v === 'number') { lf.text = String(+lf.text + e.v); lf.t = Math.min(lf.t, 0.04); }
+        else v.lastNum = self.float(u.x, u.y, e.crit ? e.v + '!' : e.v, ncol, { num: true, big: e.crit || uh, s: nS, pk: nP, vx: [0, -14, 14, -10, 10][fn % 5], out: e.crit ? '#5a2a00' : null, dx: [0, -4, 4, -2, 2][fn % 5] + Math.random() * 2 - 1, dy: -Math.min(fn, 3) * 5, ow: self.hot && ally ? 0.75 : 0, life: e.crit ? 1.1 : 0.8 });
         self.burst(u.x, u.y, ['#ffffff', ally ? '#ff8a9a' : '#ffd75e'], e.crit ? 7 : 3, { spd: 30, life: 0.25 });
         if (!ally && e.by && e.by === self.sel && !e.crit) { self.combo = self.time - (self.comboT || -9) < 1.2 ? Math.min(4, (self.combo || 0) + 1) : 0; self.comboT = self.time; }      // r26: 고른 가문의 연타는 소리가 조금씩 오른다
         self.sfx(e.crit ? 'crit' : 'hit', !e.crit && !ally && e.by === self.sel ? Math.pow(2, (self.combo || 0) * 2 / 12) : 1);
@@ -480,6 +583,7 @@ V.handle1 = function (e, sim) {
       case 'mana': if (on) { self.float(u.x, u.y, '+' + Math.round(e.v), '#62b0ee', { num: true, s: 1.25, pk: 1.6, slow: true, life: 1 }); self.sfx('heal'); } break;
       case 'item': if (on) { self.burst(u.x, u.y, FXC.heal, 6, { up: 20, grav: -20, spd: 6 }); self.sfx(e.key === 'endo' ? 'buff' : 'heal'); if (e.key === 'endo') self.float(u.x, u.y, '기운초!', '#f6cf57', { life: 1 }); } break;
       case 'skill': if (self.lastSk) self.lastSk[e.id] = { fx: e.fx, t: self.time }; self.fx(e.fx, e.tiles, e.from); if (v && on) { var cc = (FXC[e.fx] || FXC.slash)[0]; v.cast = { t: 0, c: cc }; self.light(v.x * 16 + 8, v.y * 16 + 6, 14, cc, 0.5, 0.45); }
+        var SU = DS.SKILLS && DS.SKILLS[e.sk]; if (SU && SU.ult && u && u.side === 'ally' && (on || u.role === 'cmd')) { try { self.ultBlast(e, SU, u); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'ultBlast'); } }      // 2.2.5 필살기 연출
         // r26: 내가 고른 가문(또는 수동 가문)의 기술은 더 무겁게 — 멈칫 · 흔들림 · 그 색의 번쩍임 · 머리 위 기술 이름 판
         if (v && on && u.side === 'ally' && u.role === 'cmd' && (e.id === self.sel || !u.auto) && !/^i_/.test(e.sk || '')) {
           var hostile = HOSTILE_FX[e.fx], cm = calmFx();
@@ -489,6 +593,17 @@ V.handle1 = function (e, sim) {
         }
         break;
       case 'say': if (on) self.float(u.x, u.y, e.text, u.side === 'ally' ? '#fff3c4' : '#ffb0bc', { dy: -8, life: 1.1 }); break;
+      case 'aura': if (v && on && (e.r || 2) < 2) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.4, c: '#9ef08a', r: 14 }); break; }      // 곁 1칸: 작은 고리만 (연환권마다 소리를 내지 않는다)
+        if (v && on) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.55, c: '#9ef08a', r: (e.r || 2) * 15 }); self.rings.push({ x: v.x, y: v.y, t: -0.12, dur: 0.5, c: '#fff6d0', r: (e.r || 2) * 10 }); self.burst(v.x, v.y, ['#9ef08a', '#fff6d0'], 6, { up: 22, grav: -20, spd: 12, life: 0.7, spread: 20 }); self.sfx('heal'); } break;      // 2.2.5 기공: 둘레가 낫는다
+      case 'mend':      // 2.2.5 기 전하기: 쓰는 이에게서 다친 아군까지 옅은 초록 기 줄기 · 그 자리에 작은 고리
+        var mv2 = self.vu[e.tid]; if (!v || !mv2 || !(on || self.onScreen(mv2.u.x, mv2.u.y))) break;
+        if (mv2 !== v) self.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: mv2.x * 16 + 8, y1: mv2.y * 16 + 6, c: '#b6f5a0', life: 0.22, t: 0, w: 1, zig: !self.lite });
+        self.rings.push({ x: mv2.x, y: mv2.y, t: 0, dur: 0.4, c: '#9ef08a', r: 8, rise: true }); break;
+      case 'ctr':      // 2.2.5 되치기 (부동심)
+        var tv = self.vu[e.tid]; if (!v || !on) break;
+        if (tv) self.shape({ k: 'impact', x: tv.x, y: tv.y, dur: 0.22, c: '#ffd28a', r: 8 });
+        if (self.time - (v.ctrT || -9) > 1.5) { v.ctrT = self.time; self.float(u.x, u.y, '되치기', '#ffd28a', { dy: -10, life: 0.8 }); }
+        v.lunge = tv ? { dx: Math.sign(tv.x - v.x) || 0, dy: Math.sign(tv.y - v.y) || 0, t: 0 } : v.lunge; self.sfx('punch'); break;
       case 'cast': self.tele[e.tid] = { tiles: e.tiles, dur: e.dur, t: 0, side: e.side }; self.sfx('warn'); break;
       case 'castEnd': delete self.tele[e.tid]; break;
       case 'buff': case 'status':
@@ -532,6 +647,7 @@ V.handle1 = function (e, sim) {
 V.frame = function (dt, evs) {
   this.time += dt;
   this.calmN = calmFx();      // r26: 움직임 줄이기 (프레임마다 한 번만 읽는다)
+  var fxl = DS.fxLite(); this.fxK = fxl ? 0.55 : 1; this.lite = fxl || this.lowFx;      // 2.2.5 설정 「효과」 (가볍게: 알갱이 절반 남짓 · 덧그림 없이) · 느린 기기(lowFx)는 덧그림만 줄인다
   // r7: 프레임이 꾸준히 늦으면(평균 28ms↑, 중저가 폰) 이 장면 동안은 덧그림(빛·물비늘·비)을 끈다 — 켰다 껐다 하지 않게 장면 끝까지 유지
   this.ema = (this.ema || 0.016) * 0.97 + dt * 0.03; if (!this.lowFx && this.ema > 0.028 && this.time > 3) this.lowFx = true;
   var Gs = DS.G && DS.G.save; this.spd = DS.spdOf ? DS.spdOf(Gs && Gs.opt && Gs.opt.speed) : 1;      // r36: 1 · 1.5 · 2
@@ -542,6 +658,7 @@ V.frame = function (dt, evs) {
   if (this.dzTick && this.k0) this.k = this.k0 * this.dzTick(this.rdt);      // r16 fx: 죽음 연출의 줌(실제 시간)
   var fdt = dt;      // 히트스톱 중에는 움직임·이펙트의 시간만 멈춘다
   if (this.stop > 0) { this.stop -= dt; fdt = 0; }
+  if (DS.fxFreeze) fdt = 0;      // 2.2.5 시험용: 이펙트 시간을 멈춘다 (한가운데를 찍을 때)
   if (this.slowF && this.slowF < 1) fdt *= this.slowF;      // r16 fx: 죽음 연출 동안 세상이 느려진다 (장면 자체는 실제 시간)
   var id, v, i, k = this.k, g = this.g, sim = this.sim;
   if (!sim) return;
@@ -598,6 +715,7 @@ V.frame = function (dt, evs) {
   if (this.cer) for (var cid0 in this.cer) { this.drawCer(g, false); break; }      // r16 fx: 오름 연출의 기둥·고리는 유닛 밑에
   for (i = 0; i < list.length; i++) { if (list[i].decor) this.drawDecor(g, list[i].decor); else this.drawUnit(g, list[i]); }
   g.imageSmoothingEnabled = false;
+  if (this.ultDim) { g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); this.drawUltDim(g); g.setTransform(s, 0, 0, s, ox, oy); }      // 2.2.5 필살기의 어둠 — 유닛 위, 이펙트 아래
   this.drawFx(g, fdt);
   if (this.cer) for (var cid in this.cer) { this.drawCer(g, true); break; }
   if (this.lights && GO.light !== 0 && rich) this.drawLights(g, fdt); else if (this.lights) this.lights.length = 0;
@@ -1390,6 +1508,13 @@ function drawShape(g, p, f, time) {
       if (p.gr >= 3 && f > 0.22 && f < 0.8 && Math.sin(time * 7 + p.x) > 0.6) { g.fillStyle = '#ffffff'; g.fillRect(Math.round(lx) + 4, Math.round(ly) - 10, 1, 1); g.fillRect(Math.round(lx) + 3, Math.round(ly) - 11, 3, 1); g.fillRect(Math.round(lx) + 4, Math.round(ly) - 12, 1, 3); }
       g.globalAlpha = 1;
       break;
+    case 'sigil':      // 2.2.5 법사의 필살기: 도는 마법진 (점 고리 + 마주 도는 빛 여섯)
+      r = (p.r || 18) * (0.55 + 0.45 * Math.min(1, f * 3)); g.globalAlpha = f < 0.7 ? 0.9 : (1 - f) / 0.3 * 0.9; g.fillStyle = p.c;
+      for (j = 0; j < 28; j++) { a = j / 28 * 6.2832 + time * 2.6; g.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(cy + 2 + Math.sin(a) * r * 0.55), 1, 1); }
+      for (j = 0; j < 18; j++) { a = j / 18 * 6.2832 - time * 3.4; g.fillRect(Math.round(cx + Math.cos(a) * r * 0.66), Math.round(cy + 2 + Math.sin(a) * r * 0.66 * 0.55), 1, 1); }
+      g.fillStyle = '#ffffff'; for (j = 0; j < 6; j++) { a = j / 6 * 6.2832 + time * 4; g.fillRect(Math.round(cx + Math.cos(a) * r * 0.83) - 1, Math.round(cy + 2 + Math.sin(a) * r * 0.83 * 0.55) - 1, 2, 2); }
+      g.globalAlpha = 1;
+      break;
     case 'soul':
       y = Math.round(cy - 6 - f * 16); x = cx + Math.round(Math.sin(f * 9) * 2); g.globalAlpha = (1 - f) * 0.9; g.fillStyle = p.c;
       g.fillRect(x - 1, y - 2, 3, 3); g.fillRect(x, y + 1, 1, 2); g.fillStyle = '#ffffff'; g.fillRect(x, y - 1, 1, 1);
@@ -1403,14 +1528,15 @@ V.drawFx = function (g, dt) {
     p = this.rings[i]; p.t += dt; f = p.t / p.dur;
     if (f >= 1) { this.rings.splice(i, 1); continue; }
     if (f < 0) continue;
-    var r = p.inv ? p.r * (1 - f) + 2 : p.r * f + 2, cx = p.x * 16 + 8, cy = p.y * 16 + 8 - (p.rise ? f * 10 : 0);
+    var r = p.inv ? p.r * (1 - f) + 2 : p.r * f + 2, cx = p.x * 16 + 8, cy = p.y * 16 + 8 - (p.rise ? f * 10 : 0), rn = p.r > 14 ? 28 : 16, rw = p.w || 1;      // 2.2.5: 큰 고리는 점이 촘촘하고 두껍게(w)
     g.globalAlpha = 1 - f; g.fillStyle = p.c;
-    for (var a = 0; a < 16; a++) g.fillRect(Math.round(cx + Math.cos(a / 16 * Math.PI * 2) * r), Math.round(cy + Math.sin(a / 16 * Math.PI * 2) * r * 0.6), 1, 1);
+    for (var a = 0; a < rn; a++) g.fillRect(Math.round(cx + Math.cos(a / rn * Math.PI * 2) * r - (rw - 1) / 2), Math.round(cy + Math.sin(a / rn * Math.PI * 2) * r * 0.6 - (rw - 1) / 2), rw, rw);
   }
   g.globalAlpha = 1;
   for (i = this.shapes.length - 1; i >= 0; i--) {
     p = this.shapes[i]; p.t += dt; f = p.t / p.dur;
     if (f >= 1) { this.shapes.splice(i, 1); if (p.end) p.end.call(this, p); continue; }
+    if (f < 0) continue;      // 2.2.5: 늦게 시작하는 모양 (연타 · 잇단 충격)
     drawShape(g, p, f, this.time);
   }
   for (i = this.lines.length - 1; i >= 0; i--) {
@@ -1433,9 +1559,10 @@ V.drawFx = function (g, dt) {
       g.fillStyle = '#ffffff'; g.fillRect(Math.round(x), Math.round(y), 1, 1); g.fillStyle = '#f1ead9'; g.fillRect(Math.round(x - ux / ul * 5), Math.round(y - uy / ul * 5), 1, 1);
     } else { g.fillStyle = p.c; g.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); g.fillStyle = '#fff'; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2); }
   }
-  for (i = this.parts.length - 1; i >= 0; i--) {
-    p = this.parts[i]; p.t += dt;
-    if (p.t >= p.life) { this.parts.splice(i, 1); continue; }
+  var pl = this.parts, pool = this.pfree || (this.pfree = []);
+  for (i = pl.length - 1; i >= 0; i--) {
+    p = pl[i]; p.t += dt;
+    if (p.t >= p.life) { pl[i] = pl[pl.length - 1]; pl.pop(); if (pool.length < PMAX) pool.push(p); continue; }      // 2.2.5: 끝에 것을 이 자리로 (splice 없이) · 다 쓴 것은 모아 둔다
     p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt;
     g.globalAlpha = Math.min(1, (1 - p.t / p.life) * 1.6); g.fillStyle = p.c; g.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s);
   }

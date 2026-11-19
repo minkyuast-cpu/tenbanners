@@ -3,6 +3,7 @@
 //   2.2.3: 기술 예약(마나 모자람 → 예약 · 다시 누르면 취소 · 마나가 차면 가장 먼저 · 판이 끝나면 거둠 · 쓸 수 있으면 바로) · V223=폴더 면 예약 단추 화면을 그 폴더에
 'use strict';
 const fs = require('fs'), path = require('path');
+const DS_fx = v => !!v;      // 2.2.5: 효과 칸 (보통이면 칸이 없다)
 module.exports = async (page, shot, L) => {
   const A = L.assert, ev = (f, a) => page.evaluate(f, a);
   await L.newGame(page, { cls: 'mag', name: '연기' });
@@ -158,7 +159,67 @@ module.exports = async (page, shot, L) => {
   A(pk.n3 === 3 && pk.n6 > pk.n3 && pk.n10 > pk.n6 && pk.n16 >= pk.n10 && pk.n16 <= 8 && pk.ek < 1, 'field pack size scales with units: 3 mobs → ' + [pk.n3, pk.n6, pk.n10, pk.n16].join(' / ') + ' at 3 / 6 / 10 / 16 units (exp each ×' + pk.ek.toFixed(2) + ')');
   A(pk.now > pk.base * 1.5, 'dawn field with ' + pk.u + ' units: ' + pk.now + ' mobs (unscaled ' + pk.base + ')');
   await ev(() => DS.ui.closeAll());
+  // 2.2.5 승려(무투가): 기술 줄 · 옛 저장 옮김 · 기 전하기 · 되치기 · 예약 · 필살기 연출(병과마다 · 컷인 · 어둠) · 설정 「효과」
+  await L.newGame(page, { cls: 'cle', name: '무투' });
+  await L.edit(page, function () { s.opt.cine = 'off'; for (var id = 1; id <= 13; id++) DS.applyClear(s, DS.scn(id)); DS.houseOpenN(s, 10); DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 46; b.exp = 0; } }); DS.mercTidy(s); DS.pSync(s); DS.heroUlt(s); DS.ultRevealed(s); });
+  await ev(() => { DS.ui.closeAll(); DS.G.quiet = true; DS.enterZone('windy'); DS.G.save.opt.speed = 1; }); await L.sleep(1500); await L.skipStory(page, 3); await ev(() => DS.ui.closeAll());
+  await ev(() => { var u = DS.G.sim.units.filter(function (x) { return x.hero; })[0]; DS.select(u.id); }); await L.sleep(400);
+  const mb = await ev(() => { var bs = Array.from(document.querySelectorAll('#acts .act[data-sk]')).map(function (b) { return b.dataset.sk + ':' + b.querySelector('b').textContent + ':' + (b.style.getPropertyValue('--k').indexOf('fist') >= 0 ? 'f' : '-'); }); return bs.join(' '); });
+  A(/cle_combo:연환권:f/.test(mb) && /cmd_cle:호흡을 맞춰라/.test(mb) && /cle_kick:비연각:f/.test(mb) && /cle_palm:기공장:f/.test(mb), 'monk skill bar: ' + mb);
+  if (process.env.V225) { fs.mkdirSync(process.env.V225, { recursive: true }); await page.screenshot({ path: path.join(process.env.V225, 'monk_skillbar.png') }); }
+  const mig = await ev(() => {      // 옛 저장: 승려의 옛 필살기 이름(맹주 · 가주) · 가주의 옛 고유 기술
+    var raw = JSON.parse(JSON.stringify(DS.G.save)), m = raw.mercs.filter(function (x) { return x.h; })[0];
+    raw.chars[raw.hero].ps.ul = 'u_prayer'; if (m) { m.ul = 'u_grove'; m.s = 'heal'; }
+    var raw2 = JSON.parse(JSON.stringify(raw)); raw2.chars[raw2.hero].ps.ul = 'u_mercy';
+    var s2 = DS.Save.read(JSON.stringify(raw)), s3 = DS.Save.read(JSON.stringify(raw2)), m2 = s2 && s2.mercs.filter(function (x) { return x.h; })[0];
+    return { a: s2 && s2.chars[s2.hero].ps.ul, b: s3 && s3.chars[s3.hero].ps.ul, mul: m2 ? m2.ul || '' : 'none', ms: m2 ? m2.s || '' : 'none', sk: DS.charSkills(s2.chars[s2.hero]).join(','), arena: DS.skAlias('u_grove') };
+  });
+  A(mig.a === 'u_flurry' && mig.b === 'u_stance' && (mig.mul === 'u_palm' || mig.mul === 'none') && mig.arena === 'u_palm' && mig.sk === 'cle_combo,cmd_cle,cle_kick,cle_palm', 'old saves: monk ults map to the new ones (' + [mig.a, mig.b, mig.mul].join(', ') + '), skills ' + mig.sk);
+  const mn = await ev(() => {      // 기 전하기 · 되치기 · 예약
+    var sim = DS.G.sim, u = sim.units.filter(function (x) { return x.hero; })[0], foe = null, fr = sim.units.filter(function (x) { return x.side === 'ally' && !x.dead && x !== u; })[0];
+    DS.G.pause = true; sim.ev.length = 0;
+    var D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]], spot = null, mv = function (w, x, y) { sim.occ[w.y * sim.w + w.x] = null; w.x = x; w.y = y; sim.occ[y * sim.w + x] = w; };
+    foe = sim.units.filter(function (x) { return x.side === 'enemy' && !x.dead && D4.some(function (d) { return sim.pass('foot', x.x + d[0], x.y + d[1]) && !sim.at(x.x + d[0], x.y + d[1]); }); })[0];
+    D4.forEach(function (d) { var x = foe.x + d[0], y = foe.y + d[1]; if (!spot && sim.pass(u.mt, x, y) && !sim.at(x, y)) spot = [x, y]; });
+    mv(u, spot[0], spot[1]);      // 맹주를 적 바로 곁으로
+    foe.hp = foe.mhp = 99999;      // 연환권에 쓰러지지 않게 (되치기를 볼 상대)
+    fr.hp = Math.round(fr.mhp * 0.3); var fh = fr.hp, near = null;
+    for (var dx = -3; dx <= 3 && !near; dx++) for (var dy = -3; dy <= 3 && !near; dy++) { var x2 = u.x + dx, y2 = u.y + dy, dd = Math.abs(dx) + Math.abs(dy); if (dd >= 2 && dd <= 3 && sim.pass(fr.mt, x2, y2) && !sim.at(x2, y2)) near = [x2, y2]; }
+    if (near) mv(fr, near[0], near[1]);      // 다친 아군을 3칸 안으로
+    sim.units.forEach(function (x) { if (x.side === 'ally' && x !== fr && !x.dead) x.hp = x.mhp; });
+    u.gauge = 100; u.mp = u.mmp; u.cd = {};
+    var ok = sim.cast(u, 'cle_combo', foe), mend = sim.ev.some(function (e) { return e.t === 'mend' && e.tid === fr.id; }), healed = fr.hp > fh;
+    var fhp = foe.hp; u.buffs.ctr = { p: 90, t: 10 }; sim.hurt(u, 3, foe, {}); var ctr = sim.ev.some(function (e) { return e.t === 'ctr' && e.tid === foe.id; }), back = fhp - foe.hp;
+    u.mp = 0; var never = sim.rsvNever(u, 'cle_palm'); sim.reserve(u.id, 'cle_palm'); var rsv = u.rsv; sim.reserve(u.id, null);
+    DS.G.pause = false;
+    return { ok: ok, mend: mend, healed: healed, ctr: ctr, back: back, never: never, rsv: rsv, dbg: [u.x, u.y, foe.x, foe.y, !!spot, foe.dead, foe.side, JSON.stringify(u.buffs)].join(' ') };
+  });
+  A(mn.ok && mn.mend && mn.healed, '연환권 hits and sends chi to the most hurt ally (healed)');
+  A(mn.ctr && mn.back > 0, '부동심 counter: an adjacent attacker is struck back (' + mn.back + ') ' + (mn.ctr && mn.back > 0 ? '' : mn.dbg));
+  A(mn.never === '' && mn.rsv === 'cle_palm', 'monk skills can be reserved (2.2.3) while out of mana');
+  // 필살기 연출: 병과마다 하나씩 — 컷인(얼굴 · 이름) · 어둠 · 병과 빛깔, 오류 없이 · 배속이 빠르면 컷인이 짧다
+  const ucl = ['inf', 'cav', 'fly', 'mar', 'pike', 'arc', 'cle', 'mon', 'mag', 'sha'], seen = [];
+  for (const c of ucl) {
+    const r = await ev((c) => { var sim = DS.G.sim, u = sim.units.filter(function (x) { return x.hero; })[0], id = Object.keys(DS.ULTS).filter(function (k) { return DS.ULTS[k].cls === c; })[0], S = DS.SKILLS[id];
+      DS.G.view.ultBlast({ tiles: [[u.x + 1, u.y], [u.x + 2, u.y]], from: [u.x, u.y] }, S, u); DS.ultCut(u, S);
+      var el = document.getElementById('ultcut'); return { id: id, on: !!(el && el.classList.contains('on')), nm: el ? el.querySelector('.ucn b').textContent : '', face: !!(el && el.querySelector('.ucp canvas')), ud: el ? el.style.getPropertyValue('--ud') : '', k: el ? el.dataset.k : '', dim: !!DS.G.view.ultDim }; }, c);
+    seen.push(r.k);
+    A(r.on && r.nm === await ev((id) => DS.SKILLS[id].name, r.id) && r.face && r.dim && r.k === c, 'ultimate ' + c + ' 「' + r.nm + '」: cut-in with portrait (' + r.ud + '), screen dim');
+    if (process.env.V225 && ['inf', 'cle', 'mag', 'arc', 'sha'].indexOf(c) >= 0) { await L.sleep(170); await page.screenshot({ path: path.join(process.env.V225, 'ult_cutin_' + c + '.png') }); }
+    await L.sleep(950);
+    A(await ev(() => !document.querySelector('#ultcut.on')), 'ultimate ' + c + ': cut-in gone within 1 s');
+  }
+  const fast = await ev(() => { var u = DS.G.sim.units.filter(function (x) { return x.hero; })[0]; DS.G.save.opt.speed = 2; DS.ultCut(u, DS.SKILLS[u.ult]); var v = document.getElementById('ultcut').style.getPropertyValue('--ud'); DS.G.save.opt.speed = 1; return parseInt(v); });
+  A(fast >= 550 && fast <= 700, 'at 2× speed the cut-in is short (' + fast + 'ms)');
+  // 설정 「효과」: 보통 · 가볍게
+  await ev(() => { DS.ui.closeAll(); DS.openMenu('opt'); }); await L.sleep(400);
+  const fq = await ev(() => document.querySelectorAll('.ov [data-fxq]').length);
+  await page.click('.ov [data-fxq="lite"]'); await L.sleep(250);
+  const fq2 = await ev(() => ({ o: DS.G.save.opt.fxq, lite: DS.fxLite() }));
+  await page.click('.ov [data-fxq="full"]'); await L.sleep(250);
+  A(fq === 2 && fq2.o === 'lite' && fq2.lite && !DS_fx(await ev(() => DS.G.save.opt.fxq)), 'settings: 효과 보통 / 가볍게');
+  await ev(() => DS.ui.closeAll());
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.2\.4 [^/]+ \/ 2\.2\.4 \/ 7\.0\.4$/.test(notes), 'version ' + notes);
+  A(/^2\.2\.5 [^/]+ \/ 2\.2\.5 \/ 7\.0\.5$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };

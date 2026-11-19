@@ -166,16 +166,17 @@ DS.enhance = function (save, ref, rnd) {
 };
 // 캐릭터 능력치 (장비 포함). 2.1.0: 장비 수치는 그 깃발 줄의 레벨(= 든 사람의 개인 레벨)과 병과로 (DS.gearAt)
 DS.charStats = function (ch) {
-  var c = DS.CLASSES[DS.riseCls(ch)], k = ch.L - 1, magic = c.dtype === 'magic' || c.kind === 'holy', rise = DS.risen(ch) ? DS.RISE.mul : 1;
+  var c = DS.CLASSES[DS.riseCls(ch)], k = ch.L - 1, magic = (c.dtype === 'magic' || c.kind === 'holy') && !DS.CLASSES[ch.cls].martial, rise = DS.risen(ch) ? DS.RISE.mul : 1;      // 2.2.5: 무투가(승려)는 무기의 힘을 공격에
   var s = {
     hp: Math.round(c.base.hp + c.grow.hp * k), mp: c.base.mp + c.grow.mp * k,
     atk: c.base.atk + c.grow.atk * k, def: c.base.def + c.grow.def * k,
     mag: c.base.mag + c.grow.mag * k, res: c.base.res + c.grow.res * k
   };
+  if (DS.CLASSES[ch.cls].martial && c !== DS.CLASSES[ch.cls]) { s.atk = s.mag; s.mag *= 0.65; }      // 2.2.5: 8단 뒤 무투가는 마스터(매직마스터)의 마공 줄을 공격으로, 마공은 그 0.65 (주먹이 주무기다)
   if (rise !== 1) { s.hp = Math.round(s.hp * rise); s.atk *= rise; s.def *= rise; s.mag *= rise; s.res *= rise; }
-  var c0 = DS.CLASSES[ch.cls]; if (c0 !== c) { magic = c0.dtype === 'magic' || c0.kind === 'holy'; c = { rng: c0.rng, spd: c.spd }; }      // 사거리·공격 결은 제 병과 그대로
+  var c0 = DS.CLASSES[ch.cls]; if (c0 !== c) { magic = (c0.dtype === 'magic' || c0.kind === 'holy') && !c0.martial; c = { rng: c0.rng, spd: c.spd }; }      // 사거리·공격 결은 제 병과 그대로
   var W = DS.gearAt(DS.gear(ch.w), ch.L, ch.cls, ch.gt), A = DS.gearAt(DS.gear(ch.a), ch.L, ch.cls, ch.gt), w = W ? W.pow : 0, crit = 0.06, spd = 1, mp = 1;
-  if (magic) { s.mag += w; s.atk += w * 0.6; } else { s.atk += w; s.mag += w * 0.4; }
+  if (magic) { s.mag += w; s.atk += w * 0.6; } else if (c0.martial) { s.atk += w; s.mag += w; } else { s.atk += w; s.mag += w * 0.4; }      // 2.2.5: 무투가는 기공(마공)도 무기를 따른다
   [W, A].forEach(function (g) { if (!g) return; s.def += g.def; s.res += g.res; s.hp += g.hp; crit += g.crit; spd += g.spd; mp += g.mp; });
   var rng = c.rng.slice();
   if (W && W.amp) { s.atk *= 1 + W.amp; s.mag *= 1 + W.amp; }      // 강화된 무기
@@ -297,6 +298,7 @@ DS.ultPool = function (who) {
 // 2.1.0: 누구나 하나씩 타고난다 (DS.ultBorn — 레벨과 관계없이 무엇인지는 정해져 있다). 개인 5단(L41, DS.ULT.at)에 깨어난다 (DS.ultOf)
 DS.ultBorn = function (who, key) {
   if (!who || !(DS.BAL && DS.BAL.ult !== false)) return null;
+  if (who.ul && DS.SK_ALIAS[who.ul]) who.ul = DS.skAlias(who.ul);      // 2.2.5: 옛 이름 (저장을 고치기 전의 줄)
   if (who.ul && DS.ULTS[who.ul]) return who.ul;      // 맹주로 선 뒤에도 제 것 그대로 (사람 줄에 적혀 있다)
   var L = DS.ultPool(who); if (!L.length) return null;
   var seed = key != null ? key : (who.pk || who.id || 0), h = DS.hash2(seed | 0, 97, (who.type || '').length * 13 + 5);
@@ -344,6 +346,7 @@ DS.ultRoll = function (s, who) {
 };
 DS.ultInnate = function (s) {      // 맹주가 타고난 필살기 (깨어나기 전에도 무엇인지는 보인다)
   var p = DS.ultHeroWho(s); if (!p || !(DS.BAL && DS.BAL.ult !== false)) return null;
+  if (p.ul && DS.SK_ALIAS[p.ul]) p.ul = DS.skAlias(p.ul);      // 2.2.5
   if (p.ul && DS.ULTS[p.ul]) return p.ul;
   var id = DS.ultRoll(s, p);
   if (id && DS.ultOpen(s) && DS.ultAwake(p)) { p.ul = id; p.ulr = 1; }      // 2.1.0: 맹주도 개인 5단에 깨어난다      // 깨어난 뒤에야 적는다 (ultSpec 은 ps.ul 만 본다 — 깨어나기 전에 싸움에 나가지 않게). 굴림은 결정적이라 그 전에 보여 준 것과 같다. ulr: 굴려서 정해진 것 (1.3.0 에서 고른 것에는 없다)
@@ -356,7 +359,7 @@ DS.ultNeedReveal = function (s) { var p = DS.ultHeroWho(s); return !!(p && DS.he
 DS.ultRevealed = function (s) { var p = DS.ultHeroWho(s); if (p) p.ulw = 1; };
 DS.ultCost = function (s) { var ch = s && s.chars && s.chars[s.hero]; return DS.ULT.cost * Math.max(1, ch ? DS.tierOfL(ch.L) : 1); };
 DS.ultPick = function (s, id) { var p = DS.ultHeroWho(s); if (!p || !DS.ultOpen(s) || DS.ultOpts(s).indexOf(id) < 0 && id !== p.ul) return false; p.ul = id; return true; };      // r38: 화면에서는 더 부르지 않는다 (옛 시험 도구용)
-DS.ultSpec = function (u, who, hero, cmd) { var id = !(DS.BAL && DS.BAL.ult !== false) || !who || !DS.ultAwake(who) ? null : hero ? (who.ul && DS.ULTS[who.ul] ? who.ul : null) : cmd ? DS.ultOf(who) : null; u.ult = id; u.ultP = id ? DS.ultPow(who) : 1; u.ultR = id ? DS.ultRate(who) : 1; return u; };      // 2.1.0: 가주(지휘하는 사람)는 누구나 제 필살기 — 쓰는 것은 조작하는 사람만 (game.js 단추 · 엔진은 스스로 쓰지 않는다)
+DS.ultSpec = function (u, who, hero, cmd) { if (who && who.ul && DS.SK_ALIAS[who.ul]) who.ul = DS.skAlias(who.ul); var id = !(DS.BAL && DS.BAL.ult !== false) || !who || !DS.ultAwake(who) ? null : hero ? (who.ul && DS.ULTS[who.ul] ? who.ul : null) : cmd ? DS.ultOf(who) : null; u.ult = id; u.ultP = id ? DS.ultPow(who) : 1; u.ultR = id ? DS.ultRate(who) : 1; return u; };      // 2.1.0: 가주(지휘하는 사람)는 누구나 제 필살기 — 쓰는 것은 조작하는 사람만 (game.js 단추 · 엔진은 스스로 쓰지 않는다)
 DS.mercKind = function (m) { return DS.GRADES[m.g].name + ' ' + DS.MERCS[m.type].name; };
 // ───────── 2.2.0 「한 사람 한 사람」: 사람의 자리는 셋뿐이다 ─────────
 //   가주(m.h, m.o = 가문) — 그 가문의 깃발 유닛으로 싸운다. 맹주는 대장 줄의 사람(ch.ps).
