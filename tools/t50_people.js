@@ -156,7 +156,7 @@ module.exports = async (page, shot, L) => {
     var e = cp(); DS.houseOpenN(e, 10); var re = DS.recruitHero(e, Math.random); o.allOpen = DS.closedCls(e).length === 0 && re && re.role !== 'open'; o.oddsAll = DS.openOdds(e);
     return o;
   });
-  A(c.start === 1 && c.t0 === 1 && c.after === 1 && c.tk === 1 + 10 && c.tk2 === 0 && c.t12 === 0, 'scenario clears never add a house: houses ' + c.start + ' → ' + c.after + ', tickets ' + c.t0 + ' → ' + c.tk + ' (join scenarios and 10th give a ticket, replays none)');
+  A(c.start === 1 && c.t0 === 2 && c.after === 1 && c.tk === c.t0 + 10 && c.tk2 === 0 && c.t12 === 0, 'scenario clears never add a house: houses ' + c.start + ' → ' + c.after + ', tickets ' + c.t0 + ' → ' + c.tk + ' (join scenarios and 10th give a ticket, replays none)');
   A(c.role === 'open' && c.open && c.party && c.hp0 === 0, 'pull of a closed class opens that house with this hero as 가주, who fights at once');
   A(Math.abs(c.L - c.rL) <= 2, 'new house 가주 comes at the usual recruit level (L ' + c.L + ' ≈ ' + c.rL + ')');
   A(c.odds1 === 1 && c.sure, 'pity: after ' + c.seq + ' the next pull always opens a house');

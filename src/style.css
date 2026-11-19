@@ -4793,3 +4793,12 @@ html body #app#app .hk.lord .hkg { top: 34px; right: auto; left: calc(50% + 46px
 html body #app#app .hk.lord .hgs { width: 24px; height: 24px; border-radius: 6px; }
 html body #app#app .hk.lord .hgs .ico { width: 22px !important; height: 22px !important; background-size: 20px !important; }
 html body #app#app .hk.vac .hkg, html body #app#app .xb .hkg { opacity: .55; }
+/* 2.2.4 영웅관: 닫힌 가문 칸 */
+.hshut { display: grid; gap: 5px; margin: 8px 0 4px; padding: 8px 10px; border: 1px dashed rgba(201, 169, 106, .35); border-radius: 8px; background: rgba(0, 0, 0, .18); text-align: left; }
+.hshut .hsh { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; margin: 0; }
+.hshut .hsh b { color: var(--ember, #f0c060); }
+.hshut .hsh small { color: var(--bone, #e9dfc8); font-size: var(--fs-s); }
+.hshut .hsl { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0; }
+.hrm.shut { border-color: color-mix(in srgb, var(--fc, #c9a96a) 60%, transparent); background: color-mix(in srgb, var(--fc, #c9a96a) 12%, transparent); }
+.hrm.shut svg.crest { filter: grayscale(.4); }
+.hshut .hint { margin: 0; }
