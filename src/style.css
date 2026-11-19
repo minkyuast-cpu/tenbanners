@@ -4728,7 +4728,7 @@ html body #app#app .result.rsplit > .rfoot { position: relative; bottom: auto; f
 
 /* ───────── 2.2.4 사건 연출 (cine.js): 어두운 바탕 · 얼굴 · 리본 · 한 줄 · 빛 조각. 움직임은 transform · opacity 만 ───────── */
 .cine { position: absolute; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; cursor: pointer; --fc: #f6cf57; --cr: linear-gradient(180deg, #8a2a22, #5a1712); -webkit-tap-highlight-color: transparent; }
-.cine .cbd { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 42%, rgba(90, 66, 34, .35), transparent 62%), rgba(5, 4, 8, .9); animation: cnFade .3s ease-out both; }
+.cine .cbd { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 42%, rgba(90, 66, 34, .35), transparent 62%), rgba(5, 4, 8, .96); animation: cnFade .3s ease-out both; }
 .cine .cin { position: relative; display: grid; justify-items: center; gap: 6px; width: min(100%, 360px); text-align: center; }
 .cine .cey { margin: 0; font: 600 12px/1 var(--f-ui); letter-spacing: .3em; color: var(--a-gold, #dcb46a); opacity: .85; animation: cnUp .4s ease-out .05s both; }
 .cine .cst { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 10px; min-height: 112px; margin: 6px 0 2px; }
