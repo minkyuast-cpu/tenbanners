@@ -455,7 +455,7 @@ module.exports = async (page, shot, L) => {
     const mg = await ev(() => { var a = { pit: 10, lootPit: 10 }, b = { pit: 4 }, c = {}; DS.pitFix(a); DS.pitFix(b); DS.pitFix(c); return [a.pitBest, a.pit, a.lootPit, b.pitBest, c.pitBest, c.pitCur, a.pitV]; });
     A(mg[0] === 27 && mg[1] === 28 && mg[2] === 27 && mg[3] === 6 && mg[4] === 0 && mg[5] === 1 && mg[6] === 2, 'old pit progress migrates by enemy level (old 10 → best ' + mg[0] + ', old pit 4 → best ' + mg[3] + ', new save 0)');
     await L.newGame(page, { cls: 'inf', name: '갱도' }); await ev(() => { DS.G.save.opt.cine = 'off'; });
-    await L.edit(page, function () { s.gold = 500000; for (var id = 1; id <= 15; id++) DS.applyClear(s, DS.scn(id)); DS.houseOpenN(s, 9); DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 60; b.exp = 0; } }); s.visited.stone = true; DS.mercTidy(s); DS.pSync(s); });
+    await L.edit(page, function () { s.gold = 500000; for (var id = 1; id <= 15; id++) DS.applyClear(s, DS.scn(id)); DS.houseOpenN(s, 9); for (var kk = 0; kk < 3; kk++) { var km = DS.addMerc(s, 'm_sword', 3, s.hero); km.kn = 1; km.L = 50; } DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 60; b.exp = 0; } }); s.visited.stone = true; DS.mercTidy(s); DS.pSync(s); });
     await ev(() => { DS.ui.closeAll(); DS.enterZone('stone'); }); await L.sleep(700); await L.closeAll(page);
     await ev(() => DS.openPit(null)); await L.sleep(500);
     let w = await ev(() => { var o = document.querySelector('.ov .pitw'); return { same: !!o.querySelector('[data-pf]') && o.querySelectorAll('[data-pf]').length, next: (o.querySelector('.pitb.gold small') || {}).textContent, sel: o.querySelector('.pitsel').textContent, rec: /권장/.test(o.textContent), sw: document.documentElement.scrollWidth }; });
@@ -470,6 +470,20 @@ module.exports = async (page, shot, L) => {
     A(w.next && w.same && w.out && w.xb >= 5, 'pit win result: 「다음 층」 · 「같은 층 다시」 · 「나가기」 and the exp board (' + w.xb + ' bars)');
     A(w.best === 1 && w.cur === 1 && /첫 돌파/.test(w.note), 'best floor 1 saved, first-clear note (' + w.note + ')');
     await ev(() => DS.xbSkip()); await L.sleep(300); await vshot('pit_result.png'); await shot('pit_result');
+    // 2.2.4 결과 창: 위(.rbody)만 스크롤 — 경험치 판 · 「다음」 줄 · 단추가 겹치지 않고 모두 화면 안 (스크롤하면 판 끝까지 보인다)
+    const resGeo = (sel) => page.evaluate((sel) => { var o = document.querySelector(sel), b = o.querySelector('.rbody'), f = o.querySelector('.rfoot'), nl = f.querySelector('.nextl'), bt = [...f.querySelectorAll('.btn')], vh = innerHeight;
+      var br = b.getBoundingClientRect(), fr = f.getBoundingClientRect(), nr = nl.getBoundingClientRect(), xs = [...b.querySelectorAll('.xb .hk, .xb .xk, .xb .xbs')];
+      b.scrollTop = 1e6; var last = xs.length ? Math.max.apply(null, xs.map(function (e) { return e.getBoundingClientRect().bottom; })) : 0, bb = b.getBoundingClientRect().bottom, top0 = xs.length ? Math.min.apply(null, xs.map(function (e) { return e.getBoundingClientRect().top; })) : 0;
+      var ok = br.bottom <= fr.top + 0.5 && nr.top >= fr.top - 0.5 && bt.every(function (x) { var r = x.getBoundingClientRect(); return r.top >= nr.bottom - 0.5 && r.bottom <= vh && r.bottom <= fr.bottom + 0.5 && r.height >= 40; }) && fr.bottom <= vh && last <= bb + 0.5 && b.scrollHeight > b.clientHeight - 1;
+      var cells = xs.length; b.scrollTop = 0; return { ok: ok, body: Math.round(br.bottom), foot: Math.round(fr.top), next: [Math.round(nr.top), Math.round(nr.bottom)], btn: bt.map(function (x) { var r = x.getBoundingClientRect(); return Math.round(r.top) + '-' + Math.round(r.bottom); }).join(','), last: Math.round(last), bb: Math.round(bb), vh: vh, cells: cells }; }, sel);
+    let rg = await resGeo('.ov.res26');
+    A(rg.ok && rg.cells >= 10, 'pit result at 390×844: board, 「다음」 line and buttons never overlap, all on screen, board scrolls to its end (' + JSON.stringify(rg) + ')');
+    await page.setViewportSize({ width: 390, height: 667 }); await L.sleep(400);
+    rg = await resGeo('.ov.res26');
+    if (process.env.V224) { fs.mkdirSync(process.env.V224, { recursive: true }); await page.screenshot({ path: path.join(process.env.V224, 'pit_result_667.png') }); }
+    A(rg.ok, 'pit result at 390×667: same (' + JSON.stringify(rg) + ')');
+    await page.setViewportSize({ width: 390, height: 844 }); await L.sleep(400);
+    if (process.env.V224) await page.screenshot({ path: path.join(process.env.V224, 'pit_result.png') });
     A((await L.badText(page, '.ov')).length === 0, 'pit result has no NaN/undefined');
     // 같은 층 다시 → 1층 · 다음 층 → 2층
     await page.click('.ov.res26 [data-pitgo="1"]'); await L.sleep(900); await L.skipStory(page, 5); await L.closeAll(page).catch(() => {}); await L.sleep(300);

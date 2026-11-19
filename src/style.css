@@ -4715,7 +4715,7 @@ html body #app#app .result.rsplit > .rfoot { position: relative; bottom: auto; f
 
 /* ───────── 2.2.4 사건 연출 (cine.js): 어두운 바탕 · 얼굴 · 리본 · 한 줄 · 빛 조각. 움직임은 transform · opacity 만 ───────── */
 .cine { position: absolute; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; cursor: pointer; --fc: #f6cf57; --cr: linear-gradient(180deg, #8a2a22, #5a1712); -webkit-tap-highlight-color: transparent; }
-.cine .cbd { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 42%, rgba(30, 22, 14, .86), rgba(4, 3, 8, .94) 70%); animation: cnFade .3s ease-out both; }
+.cine .cbd { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 42%, rgba(90, 66, 34, .35), transparent 62%), rgba(5, 4, 8, .9); animation: cnFade .3s ease-out both; }
 .cine .cin { position: relative; display: grid; justify-items: center; gap: 6px; width: min(100%, 360px); text-align: center; }
 .cine .cey { margin: 0; font: 600 12px/1 var(--f-ui); letter-spacing: .3em; color: var(--a-gold, #dcb46a); opacity: .85; animation: cnUp .4s ease-out .05s both; }
 .cine .cst { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 10px; min-height: 112px; margin: 6px 0 2px; }
@@ -4756,7 +4756,7 @@ html body #app#app .result.rsplit > .rfoot { position: relative; bottom: auto; f
 .cine.ck-adult { --fc: #9fe08a; --cr: linear-gradient(180deg, #3f7a2c, #244a17); }
 /* 죽음: 어둡고 조용하게 — 잿빛 얼굴, 내려앉는 재 */
 .cine.ck-death { --fc: #8a8478; --cr: linear-gradient(180deg, #3a3530, #1c1916); }
-.cine.ck-death .cbd { background: radial-gradient(ellipse at 50% 42%, rgba(18, 16, 16, .9), rgba(0, 0, 0, .97) 70%); animation-duration: .6s; }
+.cine.ck-death .cbd { background: radial-gradient(ellipse at 50% 42%, rgba(60, 58, 56, .25), transparent 60%), rgba(0, 0, 0, .95); animation-duration: .6s; }
 .cine.ck-death .cfa { filter: grayscale(1) brightness(.85); box-shadow: none; animation: cnFade .9s ease-out .1s both; }
 .cine.ck-death .cfx i { top: -4%; width: 3px; height: 3px; background: #9a948a; box-shadow: none; animation: cnAsh 2.4s linear calc(var(--i) * .22s) both; }
 .cine.ck-death .crib b { color: #d9d2c3; text-shadow: none; }

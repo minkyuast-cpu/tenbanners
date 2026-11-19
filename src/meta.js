@@ -646,7 +646,7 @@ DS.newSave = function (name, heroCls) {
   var s = {
     v: DS.SAVE_V || 11, name: name || '대장', nid: 1, chars: {}, party: [], hero: 0, gold: 300,
     items: { herb: 5, mana: 2, endo: 1 }, cleared: {}, visited: { haemil: true },
-    gear: {}, mercs: [], mnid: 1, tickets: 1, pity: 0, fallen: [],      // r35: 처음 모집권 1장 (예전 2장)
+    gear: {}, mercs: [], mnid: 1, tickets: 2, pity: 0, fallen: [],      // r35: 처음 모집권 1장 (예전 2장) · 2.2.4: 다시 2장 — 가문이 영웅관에서만 열리니 첫 두 가문을 바로 열 수 있게 (초반에 셋이 함께 싸운다)
    
     zone: 'haemil', pos: null, town: 'haemil', crest: false, pit: 1, pitBest: 0, pitCur: 1, pitV: 2, kills: 0, time: 0,
     opt: { sfx: true, bgm: true, speed: 1, refill: true }, seen: {}, perk: null, news: [], ver: DS.VERSION || ''

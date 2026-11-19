@@ -230,9 +230,10 @@ function partyTier() { return D.partyTier(s); }
 const OLD_REC = { 1: 2, 2: 4, 3: 6, 4: 9, 5: 11, 6: 15, 7: 21, 8: 24, 9: 26, 10: 29, 11: 31, 12: 34, 13: 36, 14: 39, 15: 42, 16: 45, 17: 47, 18: 50, 19: 53, 20: 55, 21: 66, 22: 67, 23: 68, 24: 70, 25: 71, 26: 73, 27: 79, 28: 80, 29: 81, 30: 82 };
 const FOCUS = +(process.env.BOTFOCUS || 0), FD = +(process.env.BOTD || 0);
 function target(sc) { if (FOCUS) return Math.max(1, OLD_REC[sc.id] + (sc.id === FOCUS ? FD : 0)); return D.recSafe ? D.recSafe(sc) : D.recL(sc); }
-// BOTNOFIELD=1 (2.2.4): 들판에 나가지 않는 사람 — 시나리오를 차례로 한 번씩, 레벨을 맞추려 기다리지 않는다. 단 문턱에 막히거나 세 번 지면 깬 시나리오 가운데 가장 뒤의 것을 다시 한다 (시나리오만 되풀이)
+// BOTNOFIELD=1 (2.2.4): 들판에 나가지 않는 사람 — 권장(DS.recL)에 못 미치면 깬 시나리오 가운데 가장 뒤의 것을 다시 한다(시나리오마다 많아야 BOTREPLAY=6 번), 그래도 못 미치면 그냥 들어간다.
+//   단 문턱에 막히거나 세 번 지면 또 앞 시나리오를 다시 한다 (시나리오만 되풀이). 들어갈 때의 레벨 − 권장을 eL · rAt 로 남긴다
 const NOFIELD = !!process.env.BOTNOFIELD;
-function replay() { const ks = Object.keys(s.cleared).map(Number).filter(k => s.cleared[k]); const n = ks.length ? Math.max.apply(null, ks) : 0; if (!n) return fieldFight(); st.replays = (st.replays || 0) + 1; return scenario(D.scn(n)); }
+function replay() { const L = D.partyL(s), ks = Object.keys(s.cleared).map(Number).filter(k => s.cleared[k] && k <= 30).sort((a, b) => b - a); const n = ks.find(k => D.recL(D.scn(k)) <= L) || ks[ks.length - 1] || 0; if (!n) return fieldFight(); st.replays = (st.replays || 0) + 1; return scenario(D.scn(n)); }      // 깬 시나리오 가운데 권장이 지금 레벨 이하인 가장 뒤의 것 (없으면 1번)
 function farm() { if (NOFIELD) return replay(); const f = process.env.BOTPIT && D.partyTier(s) >= 5 && D.pitFarm ? D.pitFarm(s) : 0; return f ? pitFight(f) : fieldFight(); }
 const t0 = Date.now();
 let stuck = false;
@@ -245,7 +246,8 @@ for (let n = 1; n <= 30 && !stuck; n++) {
       if (s.crest && D.fuseCands(s).length >= D.FUSE_N) { const k = D.fuseAuto(s, 1); st.fuse += k; if (k) { st.log.push('fuse @' + n); continue; } }
       farm(); fields++; if (fields > MAX_FIELD) { stuck = true; break; } continue;
     }
-    if (NOFIELD && tries >= 3 && tries % 3 === 0 && fields < tries * 4) { farm(); fields++; continue; }      // 시나리오만: 세 번 지면 앞 시나리오를 몇 번 다시
+    if (NOFIELD && !tries && D.partyL(s) < D.recL(sc) && fields < +(process.env.BOTREPLAY || 6)) { farm(); fields++; continue; }      // 시나리오만: 권장에 못 미치면 앞 시나리오를 몇 번 다시
+    if (NOFIELD && tries >= 3 && tries % 3 === 0 && fields < tries * 4 + 6) { farm(); fields++; continue; }      // 시나리오만: 세 번 지면 앞 시나리오를 몇 번 다시
     if (!NOFIELD && D.partyL(s) < target(sc) + (D.partySpecs(s).length < 3 ? 3 : 0) && fields < MAX_FIELD) { farm(); fields++; continue; }      // 싸우는 이가 셋보다 적으면 권장보다 세 레벨 더 (사람이 하듯 조심스럽게)
     tries++; if (tries === 1) st.eL[n] = D.partyL(s);
     if (process.env.BOTSNAP && tries === 1 && !tag && (!FOCUS || FOCUS === n)) { require('fs').writeFileSync(require('path').join(process.env.BOTSNAP, cls + '_' + seed + '_' + n + '.json'), JSON.stringify(s)); if (FOCUS) process.exit(0); }      // 조율용(tools/calib.js): 시나리오 N 에 처음 들어가기 직전의 판

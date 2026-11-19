@@ -25,6 +25,8 @@ module.exports = function load(opt) {
   const DS = g.DS;
   if (!DS.lvText) DS.lvText = L => DS.tierOfL(L) + '단 Lv' + DS.lvOfL(L);
   DS.HEADLESS = true;
+  if (process.env.HARDK && DS.HARD) DS.HARD.k = +process.env.HARDK;      // 조율용: 시나리오 세기 (tune.js DS.HARD)
+  if (process.env.HARDL && DS.HARD) DS.HARD.late = +process.env.HARDL;
   DS0 = DS;
   return DS;
 };

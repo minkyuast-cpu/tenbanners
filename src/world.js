@@ -492,6 +492,7 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
   var g = buildMap(s), rnd = DS.rng(s.id * 91 + 3), base = g[18][6], y, n = s.pit ? 12 : s.id;
   if (!connect(g, 6, 18, 6, 2)) for (y = 2; y <= 18; y++) if (BLOCK[g[y][6]]) g[y][6] = g[y][6] === 'w' ? '=' : base;
   var size = n <= 2 ? 2 : n <= 20 ? 3 : 4, nPost = n <= 2 ? 2 : 3, units = [], diff = forceDiff || DS.tuneFor(heroCls, s.id) || s.diff || 1, gi = 0;
+  if (!forceDiff && !s.pit && !s.gen && DS.scnHard) diff *= DS.scnHard(s.id);      // 2.2.4: 시나리오는 조금 더 세게 (tune.js DS.HARD)
   var TE = !s.pit && !s.gen && DS.TUNE_E && DS.TUNE_E[s.id];      // 4.0 (⑫-3): 판마다 적의 체력·공격을 따로 (1~10 은 덜 아프게·조금 더 길게)
   var mk = function (type, o) { o = o || {}; o.diff = diff; if (TE) { o.hm = TE[0]; o.am = TE[1]; } if (s.xk && s.xk !== 1) o.expMul = (o.expMul == null ? 1 : o.expMul) * s.xk; if (s.pit) o.xpK = DS.PIT.xpK; return DS.enemySpec(type, o.L || s.L, o); };      // 2.2.3 갱도: 경험치만 PIT.xpK 배 (키 다지는 곳)
   if (s.pitKind) size = 4;      // 2.2.3: 갱도 수문장 · 밑바닥 층은 무리마다 하나 더

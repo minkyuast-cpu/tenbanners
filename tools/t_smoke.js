@@ -2,6 +2,7 @@
 //   H=844 OUT=qa_out/smoke node tools/shot.js tools/t_smoke.js   (웹 판: TARGET=web node build.js 뒤 PAGE=/home/user/dist/web/index.html 을 붙인다)
 //   2.2.3: 기술 예약(마나 모자람 → 예약 · 다시 누르면 취소 · 마나가 차면 가장 먼저 · 판이 끝나면 거둠 · 쓸 수 있으면 바로) · V223=폴더 면 예약 단추 화면을 그 폴더에
 'use strict';
+const fs = require('fs'), path = require('path');
 module.exports = async (page, shot, L) => {
   const A = L.assert, ev = (f, a) => page.evaluate(f, a);
   await L.newGame(page, { cls: 'mag', name: '연기' });
@@ -139,6 +140,15 @@ module.exports = async (page, shot, L) => {
   A(xe.done && !xe.bad.length && xe.lord, 'tap skips to the end: every bar and Lv at its saved value' + (xe.bad.length ? ' ' + JSON.stringify(xe.bad.slice(0, 3)) : ''));
   A(xe.up >= 8 && !xe.txt, 'level-ups marked (' + xe.up + '), no NaN/undefined');
   await shot('res_exp');
+  // 2.2.4 결과 창: 위(.rbody)만 스크롤 — 경험치 판 · 「다음」 줄 · 단추가 겹치지 않고 모두 화면 안 (스크롤하면 판 끝까지 보인다)
+  const resGeo = (sel) => page.evaluate((sel) => { var o = document.querySelector(sel), b = o.querySelector('.rbody'), f = o.querySelector('.rfoot'), nl = f.querySelector('.nextl'), bt = [...f.querySelectorAll('.btn')], vh = innerHeight;
+    var br = b.getBoundingClientRect(), fr = f.getBoundingClientRect(), nr = nl.getBoundingClientRect(), xs = [...b.querySelectorAll('.xb .hk, .xb .xk, .xb .xbs')];
+    b.scrollTop = 1e6; var last = xs.length ? Math.max.apply(null, xs.map(function (e) { return e.getBoundingClientRect().bottom; })) : 0, bb = b.getBoundingClientRect().bottom, top0 = xs.length ? Math.min.apply(null, xs.map(function (e) { return e.getBoundingClientRect().top; })) : 0;
+    var ok = br.bottom <= fr.top + 0.5 && nr.top >= fr.top - 0.5 && bt.every(function (x) { var r = x.getBoundingClientRect(); return r.top >= nr.bottom - 0.5 && r.bottom <= vh && r.bottom <= fr.bottom + 0.5 && r.height >= 40; }) && fr.bottom <= vh && last <= bb + 0.5 && b.scrollHeight > b.clientHeight - 1;
+    var cells = xs.length; b.scrollTop = 0; return { ok: ok, body: Math.round(br.bottom), foot: Math.round(fr.top), next: [Math.round(nr.top), Math.round(nr.bottom)], btn: bt.map(function (x) { var r = x.getBoundingClientRect(); return Math.round(r.top) + '-' + Math.round(r.bottom); }).join(','), last: Math.round(last), bb: Math.round(bb), vh: vh, cells: cells }; }, sel);
+  const rg = await resGeo('.ov.res26');
+  A(rg.ok && rg.cells >= 10, 'scenario result with many 가주: board, 「다음」 line and 계속 never overlap, all reachable (' + JSON.stringify(rg) + ')');
+  if (process.env.V224) { fs.mkdirSync(process.env.V224, { recursive: true }); await page.screenshot({ path: path.join(process.env.V224, 'result_many.png') }); }
   await L.settle(page, 30000);
   // 2.2.2 들판 무리는 싸우는 유닛 수만큼 불어난다
   const pk = await ev(() => { var g = { id: 'g', x: 1, y: 1, L: 5, list: ['wolf', 'wolf', 'bat'] }, n = function (k) { return DS.packOf(g, k).list.length; };
@@ -149,6 +159,6 @@ module.exports = async (page, shot, L) => {
   A(pk.now > pk.base * 1.5, 'dawn field with ' + pk.u + ' units: ' + pk.now + ' mobs (unscaled ' + pk.base + ')');
   await ev(() => DS.ui.closeAll());
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.2\.3 [^/]+ \/ 2\.2\.3 \/ 7\.0\.3$/.test(notes), 'version ' + notes);
+  A(/^2\.2\.4 [^/]+ \/ 2\.2\.4 \/ 7\.0\.4$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };
