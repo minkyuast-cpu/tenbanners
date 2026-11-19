@@ -4726,7 +4726,9 @@ html body #app#app .result.rsplit > .rfoot { position: relative; bottom: auto; f
 .cine .csub { margin: 2px 0 0; font: 500 14px/1.4 var(--f-ui); color: var(--a-bone, #efe3cc); animation: cnUp .4s ease-out .45s both; }
 .cine .csay { display: block; max-width: 320px; margin: 2px 0 0; font: 400 13px/1.45 var(--f-14, inherit); color: #e8d7b4; quotes: none; animation: cnUp .4s ease-out .6s both; }
 .cine .cnote { font: 500 12px/1.3 var(--f-ui); color: var(--a-mute, #b9ab90); animation: cnUp .4s ease-out .7s both; }
-.cine .ctap { margin-top: 6px; font: 500 11px/1 var(--f-ui); color: rgba(220, 200, 160, .55); }
+.cine .ctap { margin-top: 10px; padding: 5px 12px; border-radius: 12px; font: 600 12px/1 var(--f-ui); color: #f2e3c2; background: rgba(255, 236, 190, .08); box-shadow: inset 0 0 0 1px rgba(220, 190, 130, .28); animation: cnUp .3s ease-out var(--guard, 700ms) both; }      /* 2.2.5: 눌러도 되는 때(뜬 뒤 0.7초)부터 보인다 */
+.cine.hold .ctap { animation: cnUp .3s ease-out var(--guard, 700ms) both, cnTap 1.6s ease-in-out calc(var(--guard, 700ms) + .3s) infinite; }      /* 누를 때까지 기다리는 연출: 안내가 숨 쉰다 */
+@keyframes cnTap { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 .cine .cbar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--fc); opacity: .55; transform-origin: 0 50%; animation: cnBar var(--dur, 2300ms) linear both; }
 .cine .cfx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .cine .cfx i { position: absolute; left: calc(8% + var(--i) * 9%); top: 58%; width: 6px; height: 6px; border-radius: 50%; background: var(--fc); box-shadow: 0 0 10px var(--fc); opacity: 0; animation: cnSpark 1.6s ease-out calc(.25s + var(--i) * .07s) both; }
@@ -4782,6 +4784,7 @@ html body #app#app .result.rsplit > .rfoot { position: relative; bottom: auto; f
 .cine.short .cfx, .cine.calm .cfx { display: none; }
 .cine.calm *, .cine.calm .cbd { animation: none !important; }
 .cine.calm .cbar { animation: cnBar var(--dur, 1500ms) linear both !important; }
+.cine.calm .ctap { opacity: 1; }      /* 움직임 줄이기: 안내는 처음부터 그대로 */
 @media (max-height: 640px) { .cine .cfa { width: 80px; height: 80px; } .cine .cst { min-height: 92px; } .cine.ck-open .cst { min-height: 120px; } .cine .cflag { height: 116px; } }
 /* 2.2.4 부대 격자: 칸 안의 장비 (초상 오른쪽 세로 줄 · 가문 창과 같은 그림 · 빈 칸은 흐리게). 칸 전체가 그대로 누르는 자리 */
 html body #app#app .hk .hkg { position: absolute; top: 25px; right: 5px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; }

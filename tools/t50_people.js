@@ -176,7 +176,8 @@ module.exports = async (page, shot, L) => {
   A(c.on && /열렸다/.test(c.title) && c.flag && c.face, 'house-opening pull plays the banner cinematic: ' + c.title);
   if (process.env.V224) await page.screenshot({ path: path.join(process.env.V224, 'pull_opens_house.png') });
   await shot('pull_open');
-  await page.mouse.click(195, 420); await L.sleep(400);
+  A(await ev(() => { var i = DS.cineInfo && DS.cineInfo(); return !!(i && i.hold); }), 'the house-opening cinematic waits for a tap (2.2.5)');
+  await L.sleep(800); await page.mouse.click(195, 420); await L.sleep(400);      // 2.2.5: 뜬 뒤 0.7초는 누름을 받지 않는다
   A(await ev(() => !document.querySelector('.cine')), 'tap dismisses the cinematic');
   await ev(() => { DS.G.save.opt.cine = 'off'; });
   await L.closeAll(page);

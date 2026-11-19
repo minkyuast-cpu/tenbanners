@@ -1825,7 +1825,7 @@ function tabOpt() {
     (DS.Joy ? DS.Joy.opt() : '') +      // r40: 이동 방식 조이스틱/터치 · 조이스틱 자리 (joystick.js)
     '<div class="row"><div class="tx"><b>화면 켜 두기</b><small>보고만 있어도 화면이 꺼지지 않는다' + (DS.wakeOk && !DS.wakeOk() ? ' (이 브라우저는 지원하지 않는다)' : '') + '</small></div><button class="btn small' + (o.wake !== false ? ' gold' : '') + '" data-opt="wake">' + (o.wake !== false ? '켬' : '끔') + '</button></div>' +
     '<div class="row"><div class="tx"><b>진동</b><small>거절, 기술, 큰 피해에 짧게 떨린다 (안드로이드)</small></div><button class="btn small' + (o.hap !== false ? ' gold' : '') + '" data-opt="hap">' + (o.hap !== false ? '켬' : '끔') + '</button></div>' +
-    '<div class="row"><div class="tx"><b>사건 연출</b><small>혼인, 출생, 죽음, 가문이 열릴 때 같은 큰 일을 짧게 보여 준다</small></div><div class="seg" role="group" aria-label="사건 연출">' +
+    '<div class="row"><div class="tx"><b>사건 연출</b><small>혼인, 출생, 죽음, 가문이 열릴 때 같은 큰 일을 보여 준다. 보통은 누르면 닫히고, 짧게는 저절로 닫힌다</small></div><div class="seg" role="group" aria-label="사건 연출">' +
       [['full', '보통'], ['short', '짧게'], ['off', '끔']].map(function (x) { return '<button data-cine="' + x[0] + '"' + ((o.cine || 'full') === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>' +
     '<div class="row"><div class="tx"><b>죽음 연출</b><small>아군이 영영 쓰러질 때 화면을 확대해 마지막 모습을 보여 준다</small></div><button class="btn small' + (o.dfx !== false ? ' gold' : '') + '" data-opt="dfx">' + (o.dfx !== false ? '켬' : '끔') + '</button></div>' +
     '<div class="row"><div class="tx"><b>전투 대사</b><small>싸우는 동안 가끔 가문마다 제 말버릇을 말풍선으로 한다</small></div><button class="btn small' + (o.bark !== false ? ' gold' : '') + '" data-opt="bark">' + (o.bark !== false ? '켬' : '끔') + '</button></div>' +
