@@ -356,9 +356,10 @@ DS.nextScn = function (save) { for (var i = 0; i < DS.SCENARIOS.length; i++) if 
 })(DS.SCENARIOS[4]);
 // 바닥 없는 갱도 (2.2.3: 끝없는 층 — 반복해 키를 다지는 곳). 층마다 벽에 옛 광부의 글이 있다 (DS.LORE.pit — 1~10층)
 //   적 레벨 = PIT.L0 + PIT.dL × 층 (100 에서 멈춘다) · 세기 = 0.95 × (k0 + dk × 층, 30층까지), 그 위로는 층마다 힘 배율이 곧게 오른다 (1 + over × 넘은 층 — 지수가 아니다. 500층도 유한).
+//   경험치는 PIT.xpK 배 (골드 · 드랍은 그대로 — 들판 무리보다 질긴 적을 상대로 들판만큼 키가 자라게, 봇으로 맞춤).
 //   5층마다 「수문장 층」(갱도지기가 더 질기고 무리가 하나 더), 10층마다 「밑바닥 층」(더 질기고 세다 · 첫 돌파에 높은 굴림 유니크).
 //   지도는 네 틀(hall · fort · gate · hall)을 돌려 쓰고, 층 번호로 씨앗이 달라 기둥·벽 자리가 바뀐다. 적 구성도 층 번호로 (세 묶음씩 돌고, 깊을수록 섞인다)
-DS.PIT = { L0: 41, dL: 2, cap: 100, k0: 2.2, dk: 0, over: 0.03, xp: 0.02, gold: [500, 85], boss5: { hp: 1.3, atk: 1.1 }, boss10: { hp: 1.6, atk: 1.2 }, ticketEvery: 25, max: 99999 };      // k0 · dk: 층의 기본 세기 (봇이 닿은 진짜 부대로 재어 권장이 적 레벨 가까이 오게 — 열 가문 · 가문원이 함께 싸우는 2.2 부대 기준)
+DS.PIT = { L0: 41, dL: 2, cap: 100, k0: 2.2, dk: 0, over: 0.03, xp: 0.02, xpK: 2.2, gold: [500, 85], boss5: { hp: 1.3, atk: 1.1 }, boss10: { hp: 1.6, atk: 1.2 }, ticketEvery: 25, max: 99999 };      // k0 · dk: 층의 기본 세기 (봇이 닿은 진짜 부대로 재어 권장이 적 레벨 가까이 오게 — 열 가문 · 가문원이 함께 싸우는 2.2 부대 기준)
 var PIT_MOBS = [['skeleton', 'golem', 'darkMage'], ['ghost', 'darkKnight', 'darkPriest'], ['demon', 'gargoyle', 'imp'], ['lizard', 'golem', 'skelArcher'], ['mummy', 'scorpion', 'darkMage'], ['iceGolem', 'salamander', 'demon']];
 var PIT_LAY = ['hall', 'fort', 'gate', 'hall'], PIT_TH = ['ruins', 'nether', 'blood'];
 DS.pitFloor = function (f) { f = Math.round(+f || 1); return Math.max(1, Math.min(DS.PIT.max, isFinite(f) ? f : 1)); };
@@ -492,7 +493,7 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
   if (!connect(g, 6, 18, 6, 2)) for (y = 2; y <= 18; y++) if (BLOCK[g[y][6]]) g[y][6] = g[y][6] === 'w' ? '=' : base;
   var size = n <= 2 ? 2 : n <= 20 ? 3 : 4, nPost = n <= 2 ? 2 : 3, units = [], diff = forceDiff || DS.tuneFor(heroCls, s.id) || s.diff || 1, gi = 0;
   var TE = !s.pit && !s.gen && DS.TUNE_E && DS.TUNE_E[s.id];      // 4.0 (⑫-3): 판마다 적의 체력·공격을 따로 (1~10 은 덜 아프게·조금 더 길게)
-  var mk = function (type, o) { o = o || {}; o.diff = diff; if (TE) { o.hm = TE[0]; o.am = TE[1]; } if (s.xk && s.xk !== 1) o.expMul = (o.expMul == null ? 1 : o.expMul) * s.xk; return DS.enemySpec(type, o.L || s.L, o); };
+  var mk = function (type, o) { o = o || {}; o.diff = diff; if (TE) { o.hm = TE[0]; o.am = TE[1]; } if (s.xk && s.xk !== 1) o.expMul = (o.expMul == null ? 1 : o.expMul) * s.xk; if (s.pit) o.xpK = DS.PIT.xpK; return DS.enemySpec(type, o.L || s.L, o); };      // 2.2.3 갱도: 경험치만 PIT.xpK 배 (키 다지는 곳)
   if (s.pitKind) size = 4;      // 2.2.3: 갱도 수문장 · 밑바닥 층은 무리마다 하나 더
   function put(type, x, y, grp, o) { o = o || {}; o.x = x; o.y = y; o.grp = grp; var u = mk(type, o); units.push(u); return u; }
   var posts = [[rnd() < 0.5 ? 4 : 8, 13], [0, 9], [6, 7]]; posts[1][0] = posts[0][0] === 4 ? 8 : 4;

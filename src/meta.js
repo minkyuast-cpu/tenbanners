@@ -595,7 +595,7 @@ DS.enemySpec = function (type, L, o) {
     atkKind: (B && B.atk) || e.atk, dtype: (B && B.dtype) || e.dtype || 'phys', kind: e.kind,
     tags: ((B && B.tags) || e.tags || []).slice(), passive: (B && B.passive) || e.passive,
     skills: ((B && (B.sets ? B.sets[Math.max(0, Math.min(B.sets.length - 1, Math.floor((L - 43) / 18)))] : B.skills)) || e.skills || []).slice(), info: B ? B.title : e.info,      // sets: 레벨 구간마다 다른 구성 (갱도지기)
-    exp: Math.round((6 + 1.6 * L) * (B ? 8 : 1) * (o.expMul == null ? 1 : o.expMul)), gold: Math.round((5 + 1.5 * DS.killGoldL(L)) * (B ? 6 : 1) * (o.expMul == null ? 1 : o.expMul)),
+    exp: Math.round((6 + 1.6 * L) * (B ? 8 : 1) * (o.expMul == null ? 1 : o.expMul) * (o.xpK || 1)), gold: Math.round((5 + 1.5 * DS.killGoldL(L)) * (B ? 6 : 1) * (o.expMul == null ? 1 : o.expMul)),
     phase2: B && B.phase2
   };
   if (!B && o.zone && o.save && o.save.cleared && o.save.cleared[DS.KGOLD.from]) u.gold = Math.round(u.gold * DS.killGoldLow(o.save, L) * (DS.KGOLD.zone[o.zone] || 1));      // 들판 적만 (시나리오 적은 o.save 가 없다)
@@ -871,9 +871,9 @@ DS.recTag = function (save, s) {
 };
 // 입구 창의 「권장보다 낮습니다」 경고 줄 (자동 전투 · 퇴각 안내): 반반 아래일 때
 DS.recLow = function (save, s) { return DS.partyL(save) < DS.recHalf(s); };
-// 갱도: 열린 다음 층 · 부대 평균에 맞는 가장 깊은 층(권장 ≤ 평균, 열린 층 안에서 — 길 안내 · 봇)
+// 갱도: 열린 다음 층 · 되풀이해 다지기 알맞은 가장 깊은 층(권장 + REC.farm ≤ 평균, 열린 층 안에서 — 길 안내 · 봇)
 DS.pitNext = function (save) { return Math.min(DS.PIT.max, (+(save && save.pitBest) || 0) + 1); };
-DS.pitFarm = function (save) { var pl = DS.partyL(save), nx = DS.pitNext(save), f = 0; for (var i = 1; i <= nx; i++) { if (DS.pitRec(i)[0] <= pl) f = i; else if (i > f + 12) break; } return f; };
+DS.pitFarm = function (save) { var pl = DS.partyL(save) - DS.REC.farm, nx = DS.pitNext(save), f = 0; for (var i = 1; i <= nx; i++) { if (DS.pitRec(i)[0] <= pl) f = i; else if (i > f + 12) break; } return f; };      // 되풀이해 다질 층: 권장 + REC.farm 레벨이 넘는 층 (열에 둘은 누가 쓰러지는 권장 층을 수백 번 돌면 사람을 잃는다)
 
 // ───────── 현상 수배 (20번 뒤 합일 준비 구간의 목표) ─────────
 // save.bty = { list: [현상금…], n: 달성 수, seq: 다음 번호 }. 현상금 = { id, k: 'hunt'|'elite'|'sweep', z: 지역, t: 적 종류, n: 필요 수, c: 센 수, L, r: 보상 {…}, … }
