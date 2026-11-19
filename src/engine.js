@@ -360,7 +360,7 @@ P.kill = function (v, by) {
   this.reDanger();
   if (v.side === 'ally' && v.role === 'cmd') {
     this.units.forEach(function (m) { if (!m.dead && m.owner === v.id) { if (m.role === 'merc') self.flee(m); else self.kill(m, by); } });   // 용병은 흩어질 뿐 죽지 않는다
-    if (!this.cmds().length && !this.result) { this.result = 'lose'; this.emit({ t: 'lose' }); }
+    if (!this.cmds().length && !this.result) { this.result = 'lose'; this.rsvClear(); this.emit({ t: 'lose' }); }
     else if (this.leader === v.id) { var c = this.cmds()[0]; if (c) { this.leader = c.id; this.emit({ t: 'leader', id: c.id }); } }
   }
   if (v.side === 'enemy') {
@@ -394,7 +394,7 @@ P.nextWave = function () {
 P.win = function () {
   if (this.result) return;
   var self = this;
-  this.result = 'win';
+  this.result = 'win'; this.rsvClear();      // 2.2.3: 싸움이 끝나면 예약도 끝
   this.units.forEach(function (e) { if (!e.dead && e.side === 'enemy') { e.dead = true; e.deadT = self.t; self._ver++; self.occ[e.y * self.w + e.x] = null; self.emit({ t: 'die', id: e.id, flee: true }); } });
   this.tele = []; this.reDanger(); this.combat = false;
   this.emit({ t: 'win' });

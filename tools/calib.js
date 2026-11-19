@@ -111,6 +111,15 @@ if (mode === 'scn') {
       }
     });
   });
+} else if (mode === 'pitnat') {      // 갱도: 판마다 옮기지 않은 제 레벨 그대로 (봇이 그 무렵 실제로 가진 부대) — node tools/calib.js pitnat <폴더> <층들> [시도=2]
+  const dir = process.argv[3], floors = process.argv[4].split(',').map(Number), K = +(process.argv[5] || 2);
+  snaps(dir).forEach(x => {
+    const s0 = load(x.f); if (D.partyTier(s0) < 5) return;
+    floors.forEach(f => { for (let k = 0; k < K; k++) { const s = load(x.f); shift(s, 0); const sc = D.pit(f); if (process.env.PITD) sc.diff *= +process.env.PITD; const r = fightScn(s, sc, x.seed * 1000 + x.n * 37 + k + 1); console.log(JSON.stringify({ k: 'pit', f, pd: +(process.env.PITD || 1), cls: x.cls, from: x.n, L: D.partyL(s), win: r.r === 'win' ? 1 : 0, dead: r.dead, cd: r.cmdDead, t: r.t, u: D.partySpecs(s).length })); } });
+  });
+} else if (mode === 'scnnat') {      // 시나리오: 봇이 제 레벨로 닿은 판(BOTFOCUS · BOTD 로 여러 레벨) 그대로 — node tools/calib.js scnnat <폴더> <N> [시도=12]
+  const dir = process.argv[3], n = +process.argv[4], K = +(process.argv[5] || 12), sc = D.scn(n);
+  snaps(dir).filter(x => x.n === n).forEach(x => { for (let k = 0; k < K; k++) { const s = load(x.f), L = shift(s, 0); const r = fightScn(s, sc, x.seed * 1000 + k + 1); console.log(JSON.stringify({ k: 'scn', n, cls: x.cls, seed: x.seed, d: 0, L, win: r.r === 'win' ? 1 : 0, dead: r.dead, cd: r.cmdDead, t: r.t, u: D.partySpecs(s).length })); } });
 } else if (mode === 'sum') {
   const rows = []; process.argv.slice(3).forEach(f => fs.readFileSync(f, 'utf8').split('\n').forEach(l => { if (l.startsWith('{')) { const o = JSON.parse(l); if (!o.skip) rows.push(o); } }));
   const groups = {};
@@ -123,7 +132,7 @@ if (mode === 'scn') {
     // 이웃 레벨과 묶어 고르게 (표본이 작다): 레벨 L 의 비율 = L-2 … L+2 의 무게 평균
     const sm = pts.map(p => { let W = 0, w = 0, c = 0, z = 0, dd = 0; pts.forEach(q => { const k = Math.abs(q.L - p.L) <= 1 ? 2 : Math.abs(q.L - p.L) <= 3 ? 1 : 0; if (!k) return; W += k * q.n; w += k * q.n * q.win; c += k * q.n * q.clean; z += k * q.n * q.zero; dd += k * q.n * q.dead; }); return { L: p.L, n: p.n, win: w / W, clean: c / W, zero: z / W, dead: dd / W }; });
     const at = (f, thr) => { for (let i = 0; i < sm.length; i++) { if (sm.slice(i).every(p => f(p) >= thr)) return sm[i].L; } return null; };
-    out[key] = { p80: at(p => p.win, 0.8), p50: at(p => p.win, 0.5), c80: at(p => p.clean, 0.8), z95: at(p => p.zero, 0.95), pts: pts.map(p => p.L + ':' + Math.round(p.win * 100) + '/' + Math.round(p.clean * 100) + '(' + p.n + ')').join(' ') };
+    out[key] = { p80: at(p => p.win, 0.8), p50: at(p => p.win, 0.5), c80: at(p => p.clean, 0.8), z95: at(p => p.zero, 0.95), z80: at(p => p.zero, 0.8), pts: pts.map(p => p.L + ':' + Math.round(p.win * 100) + '/' + Math.round(p.clean * 100) + '(' + p.n + ')').join(' ') };
   });
   console.log(JSON.stringify(out, null, 1));
 }

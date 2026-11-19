@@ -406,15 +406,15 @@ DS.mercTidy = function (save) {
 DS.popOf = function (save, chId) { return DS.mercsOf(save, chId).length; };
 DS.reserve = function (save) { return (save.mercs || []).filter(function (m) { return !m.o; }); };      // 막사 (DS.barracks 와 같다 — 옛 이름)
 // 싸우는 가문: 가주가 선 가문 모두 (맹주 가문은 맹주가 살아 서 있을 때). s.party 는 이 목록을 비춘다 (DS.partySync — 출전 고르기는 없다)
-//   2.2.3: 차례 = 맹주 → 다른 가문(부대 탭 격자와 같은 차례 — DS.houseCmp: 공훈 → 계급 → 합류). 가주가 바뀌어도 가문은 제자리, 맹주가 바뀌면 새 맹주가 맨 앞
+//   2.2.3: 차례 = 맹주 → 다른 가문(부대 탭 격자와 같은 차례 — DS.houseOrd: 공훈 계급 → 합류. 계급이 오를 때만 바뀐다). 가주가 바뀌어도 가문은 제자리, 맹주가 바뀌면 새 맹주가 맨 앞
 DS.partyIds = function (save) {
   if (!save || !save.chars) return [];
   var hid = +save.hero, list = DS.charList(save).filter(function (ch) { return !ch.down && !ch.vac && (ch.id === hid ? !!ch.ps : !!(DS.bearer && DS.bearer(save, ch, 1))); });
-  return list.sort(function (a, b) { return (b.id === hid) - (a.id === hid) || DS.houseCmp(a, b); }).map(function (ch) { return ch.id; });
+  return list.sort(function (a, b) { return (b.id === hid) - (a.id === hid) || DS.houseOrd(a, b); }).map(function (ch) { return ch.id; });
 };
-DS.partyOrder = function (save, ids) {      // 2.2.3: 아무 가문 번호 목록이나 같은 차례로 (맹주 → DS.houseCmp). 싸움 중에 쓰러진 가문도 빼지 않는다 (칩 줄 · 결과 창)
+DS.partyOrder = function (save, ids) {      // 2.2.3: 아무 가문 번호 목록이나 같은 차례로 (맹주 → DS.houseOrd). 싸움 중에 쓰러진 가문도 빼지 않는다 (칩 줄 · 결과 창)
   var hid = +save.hero;
-  return (ids || []).filter(function (id, i, a) { return save.chars[id] && a.indexOf(id) === i; }).sort(function (a, b) { return (+b === hid) - (+a === hid) || DS.houseCmp(save.chars[a], save.chars[b]); });
+  return (ids || []).filter(function (id, i, a) { return save.chars[id] && a.indexOf(id) === i; }).sort(function (a, b) { return (+b === hid) - (+a === hid) || DS.houseOrd(save.chars[a], save.chars[b]); });
 };
 DS.partySync = function (save) {
   if (!save || !save.chars) return [];
@@ -782,7 +782,8 @@ DS.fuseState = function (save, fam) { return { done: false, have: [], miss: [], 
 //   2.2.0: 아무도 제 가문을 떠나지 않는다 — 셋은 제자리에서 8단으로 오른다 (가주는 가주, 막사는 막사, 가문원은 가문원)
 DS.FUSE_HX = 1000;
 DS.houseCmp = function (a, b) { return (+(b && b.hx) || 0) - (+(a && a.hx) || 0) || DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 공훈 → 계급 → 합류 차례
-DS.houseSort = function (save, list) { return (list || DS.charList(save)).slice().sort(DS.houseCmp); };
+DS.houseOrd = function (a, b) { return DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 2.2.3: 보이는 차례 (부대 격자 · 칩 줄 · 결과 창) — 공훈 계급 → 합류 차례. 싸울 때마다 바뀌는 공훈 점수로는 줄을 섞지 않는다
+DS.houseSort = function (save, list) { return (list || DS.charList(save)).slice().sort(DS.houseOrd); };
 DS.fuseRep = function (save, who) { var hs = []; (who || []).forEach(function (w) { var h = DS.whoHouse(save, w); if (h && hs.indexOf(h) < 0) hs.push(h); }); return hs.sort(DS.houseCmp)[0] || null; };
 DS.fuse = function (save, ids, opt) {
   ids = (ids || []).slice();
@@ -855,16 +856,17 @@ function recPair(s) {
 // 시나리오(또는 갱도 층)의 권장 레벨: 부대 평균 레벨 기준 숫자 (100 넘는 갱도 층은 100)
 DS.recL = function (s) { return Math.min(100, recPair(s)[0]); };
 DS.recHalf = function (s) { return Math.min(100, recPair(s)[1]); };
+DS.recSafe = function (s) { var t = s && !s.pit && !s.gen && DS.REC.scn[s.id]; return t && t[2] ? t[2] : DS.recL(s); };      // 안전: 열 번 다 이기고 쓰러지는 이가 드문 레벨 (봇 · 조심스러운 사람)
 DS.recText = function (s) { var p = recPair(s); return '권장 ' + DS.lvText(Math.min(100, p[0])) + (p[2] ? ' 이상' : ''); };
 // 들판: [권장 낮은 끝, 높은 끝] (약한 무리 · 센 무리를 안전하게) · 반반은 센 무리 쪽
 DS.zoneRec = function (id) { var z = DS.REC.zone[id], Z = DS.ZONES && DS.ZONES[id]; if (z) return [z[0], z[1]]; return Z && Z.L ? [DS.recOfL(Z.L[0]), DS.recOfL(Z.L[1])] : [1, 1]; };
 DS.zoneHalf = function (id) { var z = DS.REC.zone[id], Z = DS.ZONES && DS.ZONES[id]; return z ? z[2] : Z && Z.L ? DS.halfOfL(Z.L[1]) : 1; };
-// 입구 창 · 지도 · 갱도 창의 「이 부대에게 얼마나 어려운가」: 반반 아래 = 위험(붉은 꼬리표) · 권장 아래 = 권장 미달(이기기는 해도 잃을 수 있다) · 권장 + DS.REC.easy 이상 = 여유
+// 입구 창 · 갱도 창의 「이 부대에게 얼마나 어려운가」: 반반 아래 = 위험(붉은 꼬리표) · 권장 아래 = 권장 미달(이기기는 해도 잃을 수 있다) · 안전 레벨(갱도는 권장 + DS.REC.easy) 이상 = 여유
 DS.recTag = function (save, s) {
   var pl = DS.partyL(save), r = DS.recL(s), h = DS.recHalf(s), ov = recPair(s)[2];
   if (pl < h || (ov && pl >= 100 && DS.pitK(s.pit) > 1.2)) return { k: 'risk', tag: '위험', cls: 'warn', tc: '' };
   if (pl < r) return { k: 'low', tag: '권장 미달', cls: 'warn', tc: 'soft' };
-  if (pl >= r + DS.REC.easy && !ov) return { k: 'easy', tag: '여유', cls: '', tc: 'ok' };
+  if (!ov && pl >= (s && !s.pit && !s.gen && DS.REC.scn[s.id] ? Math.max(r + 1, DS.recSafe(s)) : r + DS.REC.easy)) return { k: 'easy', tag: '여유', cls: '', tc: 'ok' };
   return { k: 'ok', tag: '', cls: '', tc: '' };
 };
 // 입구 창의 「권장보다 낮습니다」 경고 줄 (자동 전투 · 퇴각 안내): 반반 아래일 때

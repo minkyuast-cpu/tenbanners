@@ -1,6 +1,7 @@
 // 전민 — 머리 없는 캠페인 봇 (2.2.0 「한 사람 한 사람」 규칙). 진짜 엔진(DS.Sim)과 진짜 규칙 함수로 30번까지 깬다.
 //   node tools/bot.js [cls=inf] [seed=1] [gen2=0]          예: node tools/bot.js mag 3
 //   BOTCHECK=1: 싸움 밖마다 자리 불변식 검사(tools/inv.js) — 어김은 「INV …」 줄, 요약의 inv 칸에 수
+//   BOTPIT=1: 5단부터는 들판 대신 바닥 없는 갱도에서 키를 다진다 (DS.pitFarm 층 — 갱도 농사가 캠페인을 너무 빠르게 하지 않는지 보는 용도)
 //   BOTSNAP=폴더: 시나리오마다 처음 들어가기 직전의 판을 <폴더>/<병과>_<씨앗>_<번호>.json 으로 (tools/calib.js 의 재료)
 //   BOTSAVE=파일 BOTSAVEAT=15: 그 시나리오를 깬 판을 저장 글(JSON)로 쓰고 끝낸다 (화면 시험용 중반 저장)
 //   끝에 한 줄 요약과 「BOT {json}」 (hours · cleared · wipes · deaths · vacancies · recruits …).
@@ -22,7 +23,7 @@
 'use strict';
 const D = require('./load.js')();
 const cls = process.argv[2] || 'inf', seed = +(process.argv[3] || 1), gen2 = +(process.argv[4] || 0);
-const FIELD_OVER = 14, SCN_OVER = 45, MAX_FIELD = 20000, STEP = 0.5;
+const FIELD_OVER = 14, SCN_OVER = 45, PIT_OVER = 20, MAX_FIELD = 20000, STEP = 0.5;
 let rs = seed * 2654435761 >>> 0; const rnd = () => { rs = (rs + 0x6D2B79F5) | 0; let t = Math.imul(rs ^ rs >>> 15, 1 | rs); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 Math.random = rnd;      // 규칙 함수의 난수도 씨앗에 묶는다 (같은 씨앗이면 같은 판)
 D.BAL.ultAuto = true;
@@ -191,6 +192,20 @@ function fieldFight() {
   after(false, null);
   return r;
 }
+// BOTPIT=1: 5단부터는 들판 대신 갱도에서 키를 다진다 — 부대 평균에 맞는 가장 깊은 층(DS.pitFarm: 권장 ≤ 평균, 열린 층 안에서). 사람이 「같은 층 다시 · 다음 층」으로 하듯
+function pitFight(f) {
+  const sc = D.pit(f), b = D.buildScenario(sc, D.partySpecs(s).length, s.chars[s.hero] ? s.chars[s.hero].cls : 'inf');
+  const sim = new D.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (rnd() * 1e6 | 0) + 100 + f, inv: s.items, mode: 'scn' });
+  sim.heroId = 'c' + s.hero;
+  if (D.linBattleStart) D.linBattleStart(s);
+  place(sim, D.partySpecs(s), b.start);
+  const r = run(sim, 'scn', null, 900);
+  st.pit = (st.pit || 0) + 1; st.over += PIT_OVER; s.time += PIT_OVER; D.ageAdvance(s, PIT_OVER);
+  if (r === 'win') { const out = D.applyClear(s, sc); try { D.pitLoot(s, f, rnd); } catch (x) {} st.pitBest = Math.max(st.pitBest || 0, f); if (out.tickets) st.pitTickets = (st.pitTickets || 0) + out.tickets; }
+  else { st.pitLoss = (st.pitLoss || 0) + 1; st.log.push('pit loss f' + f + ' L' + D.partyL(s)); }
+  after(r === 'win', sc);
+  return r === 'win';
+}
 function scenario(sc) {
   const b = D.buildScenario(sc, D.partySpecs(s).length, s.chars[s.hero] ? s.chars[s.hero].cls : 'inf');
   const sim = new D.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (rnd() * 1e6 | 0) + sc.id, inv: s.items, mode: 'scn' });
@@ -209,6 +224,12 @@ function scenario(sc) {
   return r === 'win';
 }
 function partyTier() { return D.partyTier(s); }
+// 들어갈 레벨: 2.2.3 — 잰 표의 「안전」(DS.recSafe: 열 번 다 이기고 쓰러지는 이가 드문 레벨), 없으면 권장. 사람이 권장을 넘겨 조금 더 다지고 들어가듯
+//   조율용(tools/calib.js 의 재료): BOTFOCUS=N BOTD=d — N번만 2.2.2 의 권장(OLD_REC) + d 에 들어가고 나머지는 OLD_REC 그대로. N번 직전의 판을 BOTSNAP 에 쓰고 끝낸다
+const OLD_REC = { 1: 2, 2: 4, 3: 6, 4: 9, 5: 11, 6: 15, 7: 21, 8: 24, 9: 26, 10: 29, 11: 31, 12: 34, 13: 36, 14: 39, 15: 42, 16: 45, 17: 47, 18: 50, 19: 53, 20: 55, 21: 66, 22: 67, 23: 68, 24: 70, 25: 71, 26: 73, 27: 79, 28: 80, 29: 81, 30: 82 };
+const FOCUS = +(process.env.BOTFOCUS || 0), FD = +(process.env.BOTD || 0);
+function target(sc) { if (FOCUS) return Math.max(1, OLD_REC[sc.id] + (sc.id === FOCUS ? FD : 0)); return D.recSafe ? D.recSafe(sc) : D.recL(sc); }
+function farm() { const f = process.env.BOTPIT && D.partyTier(s) >= 5 && D.pitFarm ? D.pitFarm(s) : 0; return f ? pitFight(f) : fieldFight(); }
 const t0 = Date.now();
 let stuck = false;
 function campaign(getSc, done, tag) {
@@ -218,13 +239,13 @@ for (let n = 1; n <= 30 && !stuck; n++) {
     prep();
     if (sc.tier > partyTier()) {
       if (s.crest && D.fuseCands(s).length >= D.FUSE_N) { const k = D.fuseAuto(s, 1); st.fuse += k; if (k) { st.log.push('fuse @' + n); continue; } }
-      fieldFight(); fields++; if (fields > MAX_FIELD) { stuck = true; break; } continue;
+      farm(); fields++; if (fields > MAX_FIELD) { stuck = true; break; } continue;
     }
-    if (D.partyL(s) < D.recL(sc) + (D.partySpecs(s).length < 3 ? 3 : 0) && fields < MAX_FIELD) { fieldFight(); fields++; continue; }      // 싸우는 이가 셋보다 적으면 권장보다 세 레벨 더 (사람이 하듯 조심스럽게)
+    if (D.partyL(s) < target(sc) + (D.partySpecs(s).length < 3 ? 3 : 0) && fields < MAX_FIELD) { farm(); fields++; continue; }      // 싸우는 이가 셋보다 적으면 권장보다 세 레벨 더 (사람이 하듯 조심스럽게)
     tries++;
-    if (process.env.BOTSNAP && tries === 1 && !tag) require('fs').writeFileSync(require('path').join(process.env.BOTSNAP, cls + '_' + seed + '_' + n + '.json'), JSON.stringify(s));      // 조율용(tools/calib.js): 시나리오 N 에 처음 들어가기 직전의 판
+    if (process.env.BOTSNAP && tries === 1 && !tag && (!FOCUS || FOCUS === n)) { require('fs').writeFileSync(require('path').join(process.env.BOTSNAP, cls + '_' + seed + '_' + n + '.json'), JSON.stringify(s)); if (FOCUS) process.exit(0); }      // 조율용(tools/calib.js): 시나리오 N 에 처음 들어가기 직전의 판
     const ok = scenario(sc);
-    if (!ok) { st.wipes++; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + D.recL(sc)); if (tries > 12) { stuck = true; break; } }
+    if (!ok) { st.wipes++; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + target(sc)); if (tries > 12) { stuck = true; break; } }
   }
   if (process.env.BOTSAVE && !tag && n === +(process.env.BOTSAVEAT || 15)) { require('fs').writeFileSync(process.env.BOTSAVE, JSON.stringify(s)); console.log('saved', process.env.BOTSAVE); process.exit(0); }      // 화면 시험용: N번을 깬 판을 저장 글로
   st.perScn.push({ n: tag + n, h: +((st.simT + st.over) / 3600).toFixed(2), L: D.partyL(s), units: D.partySpecs(s).length, vac: D.bnEmpty(s).length, tries });
@@ -246,7 +267,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
 const H = (st.simT + st.over) / 3600;
 const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths,
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
-  births: st.births, inv: invBad, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
+  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
 console.log(`${cls} seed${seed}: ${out.cleared}/30 in ${out.hours}h, wipes ${out.wipes}, deaths ${out.deaths} (hero ${out.heroDeaths}, bearer ${out.bearDeaths}, kin ${out.kinDeaths}), recruits ${out.recruits}, kin sent ${out.kinSent}, vacancies max ${out.vacMax}/avg ${out.vacAvg}`);
 console.log('BOT ' + JSON.stringify(out));

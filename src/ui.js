@@ -63,7 +63,7 @@ function lt(x) { var t = x && typeof x === 'object' ? x.t : x; return String(t =
 function A2(name, old) { var Au = DS.Audio; A(Au && Au.has && !Au.has(name) ? old : name); }      // 새 효과음. 없다고 알려 주면 예전 소리로
 function partyFirst() {
   var s = G.save, list = DS.charList(s);
-  return list.sort(function (a, b) { var ia = s.party.indexOf(a.id), ib = s.party.indexOf(b.id); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || (DS.houseCmp ? DS.houseCmp(a, b) : a.id - b.id); });      // 2.1.0: 출전 차례 → 공훈 순 (가문 수를 열로 셈하지 않는다)
+  return list.sort(function (a, b) { var ia = s.party.indexOf(a.id), ib = s.party.indexOf(b.id); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || (DS.houseOrd ? DS.houseOrd(a, b) : a.id - b.id); });      // 2.1.0: 출전 차례 → 공훈 계급 순 (가문 수를 열로 셈하지 않는다)
 }
 function benchTag(ch) { return G.save.party.indexOf(ch.id) < 0 ? ' <i class="own bench">대기</i>' : ''; }
 function spend(n) { if (G.save.gold < n) { no('골드', '골드가 모자라다. ' + U.fmtN(G.save.gold) + ' / ' + U.fmtN(n)); goldShake(); return false; } G.save.gold -= n; A('coin'); return true; }
@@ -1628,7 +1628,7 @@ function houseGrid(s) {
   var all = DS.houseSort ? DS.houseSort(s, DS.charList(s)) : DS.charList(s), cells = [], have = {}, lord = null;
   all.forEach(function (c) { have[c.cls] = 1; var C = DS.CLASSES[c.cls]; if (C && C.master && DS.FAMILY[C.fam]) DS.FAMILY[C.fam].members.forEach(function (k) { have[k] = 1; }); if (c.id === s.hero) lord = c; else cells.push(hgCell(s, c)); });
   Object.keys(DS.CLASSES).forEach(function (k) { var C = DS.CLASSES[k]; if (!C.master && !have[k]) cells.push(hgCell(s, null, k)); });
-  return '<div class="hgrid hk2"><p class="hgsort">' + esc(DS.allyFull ? DS.allyFull(s) : '') + ' · 가문은 공훈 순</p>' + (lord ? '<div class="hkl">' + hgCell(s, lord) + hgKin(s, lord) + '</div>' : '') + '<div class="hk9">' + cells.join('') + '</div></div>';
+  return '<div class="hgrid hk2"><p class="hgsort">' + esc(DS.allyFull ? DS.allyFull(s) : '') + ' · 가문은 공훈 계급 순</p>' + (lord ? '<div class="hkl">' + hgCell(s, lord) + hgKin(s, lord) + '</div>' : '') + '<div class="hk9">' + cells.join('') + '</div></div>';
 }
 // 부대 탭 한 줄: 합일까지 (7단 Lv10 가문 수). 5단 넘은 가문이 없으면 빈칸
 function fuNear(s) {
@@ -1824,7 +1824,7 @@ function tabHelp() {
       '<b>등급</b>은 타고난 그릇이다. 모집하거나 태어날 때 정해지고 바뀌지 않는다. 등급이 높은 사람이 가주가 되면 가문이 더 강해진다. 맹주 자리는 희귀 밑으로 치지 않는다. 등급이 높을수록 경험치도 빨리 쌓인다.' +      // r45 표 · r44 숫자
         '<table class="htab"><thead><tr><th>등급</th><th>가문원</th><th>가주일 때</th><th>성장</th></tr></thead><tbody>' + DS.GRADES.slice(1).map(function (q, i) { var pc = DS.potMul ? Math.round((DS.potMul({ pot: i + 1 }) - 1) * 100) : 0; return '<tr><th style="color:' + q.col + '">' + q.name + '</th><td class="num">×' + q.mul.toFixed(2) + '</td><td class="num">×' + DS.BN.gmul[i + 1].toFixed(2) + '</td><td class="num">' + (pc > 0 ? '+' : pc < 0 ? '−' : '±') + Math.abs(pc) + '%</td></tr>'; }).join('') + '</tbody></table>',
       '<b>단과 레벨</b>은 사람마다 따로다. 싸우면 경험치를 얻어 오르고, 10레벨마다 단이 오른다. 단이 오를 때마다 기질에 맞는 능력치가 하나씩 더 오른다. 합일하지 않은 사람은 7단 Lv10에서 멈춘다.',
-      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 가주(맹주 가문은 가문원도)가 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 가문 목록은 공훈 순이다.' +
+      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 가주(맹주 가문은 가문원도)가 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 가문 목록과 위쪽 초상은 맹주 다음에 공훈 계급, 합류 차례로 선다.' +
         '<table class="htab"><thead><tr><th>계급</th><th>공훈</th><th>가주</th><th>가문원</th></tr></thead><tbody>' + DS.HVET.map(function (q, i) { return '<tr><th>' + DS.hName(i) + '</th><td class="num">' + q.at + '</td><td class="num">+' + q.pct + '%</td><td class="num">×' + q.mul.toFixed(2) + '</td></tr>'; }).join('') + '</tbody></table>',
       '가문에서 태어난 아이는 등급이 높을수록 경험치가 빨리 쌓인다. 희귀가 보통이고 일반은 30% 느리고 전설은 30% 빠르다.',
       '<b>대물림</b>: 맹주가 바뀌면 다음 맹주는 선대와의 레벨 차이 가운데 일부를 잇는다. 공훈 계급이 높을수록 많이 잇는다.' + '<table class="htab"><thead><tr><th>누가</th><th>신참</th><th>' + esc(DS.hName(DS.HVET.length - 1)) + '</th></tr></thead><tbody>' + [['맹주의 핏줄', 'kid'], ['맹주의 양자', 'adopt']].map(function (r) { var H = DS.HEIR[r[1]]; return '<tr><th>' + r[0] + '</th><td class="num">' + Math.round(H[0] * 100) + '%</td><td class="num">' + Math.round(H[1] * 100) + '%</td></tr>'; }).join('') + '</tbody></table>' + '<small>다른 가문의 가주를 맹주로 세우면 그 사람 가문의 계급으로 양자 몫을 잇는다. 막사에서 저절로 이은 이는 제 레벨 그대로다.</small>',
@@ -1862,6 +1862,9 @@ function tabHelp() {
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
       '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받는다. 아무도 제 자리를 떠나지 않는다.',
       '8단부터의 모습과 기술은 그 사람이 선 가문의 계열(강철, 바람, 별)을 따른다.',
+      '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
+      '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
+      '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
       '맹주가 쓰러지면 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 뒤를 고른다. 막사에서 이은 이는 제 레벨 그대로다. 다른 가문의 가주를 고르면 맹주 자리가 그 가문으로 간다. 그 가문의 장비와 공훈은 그대로다.', '옛 맹주 가문은 보통 가문이 된다. 어른 자식 가운데 레벨이 가장 높은 이가 가주가 되고, 없으면 막사의 같은 병과가, 그도 없으면 빈 가문이 된다. 남은 가족은 그 가문의 병과로 막사에 가고, 아이는 자라면 막사로 간다. 새 맹주를 따르지 않는다. 고를 이가 아무도 없으면 대가 끊기고 스무 해가 흐른다.']],
     ['혼인과 아이', '혼인', [
       '혼인은 <b>맹주만</b> 할 수 있다. 성별이 다른 가주나 막사의 사람을 배우자로 맞는다. 막사에 있던 배우자는 맹주 가문의 가문원이 되어 함께 싸운다. 시나리오와 전투 밖이면 어디서나 「마을 일」에서 한다.',
@@ -1979,7 +1982,7 @@ function pplRow(e, wedMode, top) {
 }
 // 가문 거르기: 문장 띠 (가로로 밀어 본다)
 function pplHouses(s) {
-  var chs = DS.charList(s).filter(function (c) { return c && DS.CLASSES[c.cls]; }); if (DS.houseSort) chs = DS.houseSort(s, chs);      // 2.1.0: 공훈 순
+  var chs = DS.charList(s).filter(function (c) { return c && DS.CLASSES[c.cls]; }); if (DS.houseSort) chs = DS.houseSort(s, chs);      // 2.1.0: 공훈 순 (2.2.3: 계급 → 합류)
   if (chs.length < 2) return '';
   return '<nav class="phs" aria-label="가문으로 거르기"><button data-ph="0"' + (!PV.h ? ' aria-current="true"' : '') + '>모든 가문</button>' + chs.map(function (c) { return '<button data-ph="' + c.id + '"' + (PV.h === c.id ? ' aria-current="true"' : '') + '>' + crestH(c, 16) + '<span>' + esc(hgShort(c)) + '</span></button>'; }).join('') + '</nav>';
 }

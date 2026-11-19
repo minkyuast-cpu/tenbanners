@@ -4684,7 +4684,7 @@ html.calm body #app#app .hk.lvf .xpop, html.calm body #app#app .hk.lvf .xup, htm
 @media (prefers-reduced-motion: reduce) { html body #app#app .hk.lvf .xpop, html body #app#app .hk.lvf .hkf, html body #app#app .hk.lvf.pro { animation: none !important; } }
 /* 2.2.3 기술 예약: 단추에 「예약」 꼬리표 + 숨 쉬는 테두리 · 위 칩에 작은 「예」 */
 html body #app#app #s-game .act > .rsvb { display: none; }
-html body #app#app #s-game #bot .act.rsv > .rsvb { display: block; position: absolute; top: -9px; left: 50%; transform: translateX(-50%); z-index: 5; padding: 2px 5px; border-radius: 4px; font: 700 9.5px/1 var(--f-ui); font-style: normal; color: #fff3d6; background: linear-gradient(180deg, #c0721e, #7a3d0c); box-shadow: 0 1px 0 #000; white-space: nowrap; pointer-events: none; }
+html body #app#app #s-game #bot .act.rsv > .rsvb { display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -58%); z-index: 8; padding: 3px 6px; font-size: 11px !important; border-radius: 4px; font: 700 9.5px/1 var(--f-ui); font-style: normal; color: #fff3d6; background: linear-gradient(180deg, #c0721e, #7a3d0c); box-shadow: 0 1px 0 #000; white-space: nowrap; pointer-events: none; }
 html body #app#app #s-game #bot .act.rsv { border-color: #f0a640; animation: rsvPulse 1.2s ease-in-out infinite; }
 html body #app#app #s-game #bot.dock .act.rsv.queued:not(.on)::after { content: none; }
 @keyframes rsvPulse { 0%, 100% { box-shadow: inset 0 0 0 1px rgba(240, 166, 64, .9), 0 0 0 1px rgba(240, 166, 64, .55); } 50% { box-shadow: inset 0 0 0 2px rgba(255, 196, 96, 1), 0 0 9px 2px rgba(255, 170, 60, .55); } }
@@ -4705,3 +4705,4 @@ html body #app#app #s-game .chip.rsv:not(.down) > .crs { display: grid; }
 .pitrb { display: grid; grid-template-columns: 1.3fr 1.3fr 1fr; gap: 8px; margin-top: 8px; }
 .pitrb.two { grid-template-columns: 1.4fr 1fr; }
 .rfoot.pitrf .nextl { margin-bottom: 0; }
+.result .rfoot { z-index: 6; }      /* 2.2.3: 경험치 판의 단/Lv 알약(z-index)이 아래 단추 위로 올라오던 것 */

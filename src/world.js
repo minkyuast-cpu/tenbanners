@@ -355,10 +355,10 @@ DS.nextScn = function (save) { for (var i = 0; i < DS.SCENARIOS.length; i++) if 
   } });
 })(DS.SCENARIOS[4]);
 // 바닥 없는 갱도 (2.2.3: 끝없는 층 — 반복해 키를 다지는 곳). 층마다 벽에 옛 광부의 글이 있다 (DS.LORE.pit — 1~10층)
-//   적 레벨 = PIT.L0 + PIT.dL × 층 (100 에서 멈춘다), 그 위로는 층마다 힘 배율이 곧게 오른다 (1 + over × 넘은 층 — 지수가 아니다. 500층도 유한).
+//   적 레벨 = PIT.L0 + PIT.dL × 층 (100 에서 멈춘다) · 세기 = 0.95 × (k0 + dk × 층, 30층까지), 그 위로는 층마다 힘 배율이 곧게 오른다 (1 + over × 넘은 층 — 지수가 아니다. 500층도 유한).
 //   5층마다 「수문장 층」(갱도지기가 더 질기고 무리가 하나 더), 10층마다 「밑바닥 층」(더 질기고 세다 · 첫 돌파에 높은 굴림 유니크).
 //   지도는 네 틀(hall · fort · gate · hall)을 돌려 쓰고, 층 번호로 씨앗이 달라 기둥·벽 자리가 바뀐다. 적 구성도 층 번호로 (세 묶음씩 돌고, 깊을수록 섞인다)
-DS.PIT = { L0: 41, dL: 2, cap: 100, over: 0.03, xp: 0.02, gold: [500, 85], boss5: { hp: 1.3, atk: 1.1 }, boss10: { hp: 1.6, atk: 1.2 }, ticketEvery: 25, max: 99999 };
+DS.PIT = { L0: 41, dL: 2, cap: 100, k0: 2.2, dk: 0, over: 0.03, xp: 0.02, gold: [500, 85], boss5: { hp: 1.3, atk: 1.1 }, boss10: { hp: 1.6, atk: 1.2 }, ticketEvery: 25, max: 99999 };      // k0 · dk: 층의 기본 세기 (봇이 닿은 진짜 부대로 재어 권장이 적 레벨 가까이 오게 — 열 가문 · 가문원이 함께 싸우는 2.2 부대 기준)
 var PIT_MOBS = [['skeleton', 'golem', 'darkMage'], ['ghost', 'darkKnight', 'darkPriest'], ['demon', 'gargoyle', 'imp'], ['lizard', 'golem', 'skelArcher'], ['mummy', 'scorpion', 'darkMage'], ['iceGolem', 'salamander', 'demon']];
 var PIT_LAY = ['hall', 'fort', 'gate', 'hall'], PIT_TH = ['ruins', 'nether', 'blood'];
 DS.pitFloor = function (f) { f = Math.round(+f || 1); return Math.max(1, Math.min(DS.PIT.max, isFinite(f) ? f : 1)); };
@@ -374,7 +374,7 @@ DS.pit = function (f) {
   var s = T(100 + f, '바닥 없는 갱도 ' + f + '층', 'stone', 'keeper', DS.pitL(f), PIT_LAY[(f - 1) % PIT_LAY.length], PIT_TH[Math.floor((f - 1) / 3) % PIT_TH.length], mobs, {},
     wall || null, ['갱도지기가 무너졌다. 아래로 가는 길이 드러났다.']);
   s.pit = f; s.tier = 5; s.pitKind = kind;
-  s.diff = 0.95 * DS.pitK(f);
+  s.diff = 0.95 * (P.k0 + P.dk * Math.min(f, Math.ceil((P.cap - P.L0) / P.dL))) * DS.pitK(f);
   var B = kind === 10 ? P.boss10 : kind === 5 ? P.boss5 : null;
   s.bossK = B ? [B.hp, B.atk] : null;      // 갱도지기만 (buildScenario)
   s.xk = 1 + P.xp * DS.pitOver(f);      // 100 넘은 층: 경험치·골드도 조금씩 (곧게)

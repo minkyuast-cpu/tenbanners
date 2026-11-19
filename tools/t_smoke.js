@@ -1,5 +1,6 @@
 // 연기 시험: 새로 시작 → 들판 싸움 → 시나리오 1 → 메뉴 탭과 창을 모두 연다. 오류가 없고 화면에 NaN·undefined 가 없어야 한다.
-//   H=844 OUT=qa_out/smoke node tools/shot.js tools/t_smoke.js
+//   H=844 OUT=qa_out/smoke node tools/shot.js tools/t_smoke.js   (웹 판: TARGET=web node build.js 뒤 PAGE=/home/user/dist/web/index.html 을 붙인다)
+//   2.2.3: 기술 예약(마나 모자람 → 예약 · 다시 누르면 취소 · 마나가 차면 가장 먼저 · 판이 끝나면 거둠 · 쓸 수 있으면 바로) · V223=폴더 면 예약 단추 화면을 그 폴더에
 'use strict';
 module.exports = async (page, shot, L) => {
   const A = L.assert, ev = (f, a) => page.evaluate(f, a);
@@ -80,6 +81,49 @@ module.exports = async (page, shot, L) => {
   A(inView.ok && inView.sl > 0, 'selected chip scrolls into view (scrollLeft ' + Math.round(inView.sl) + ')');
   A((await geo()).docW <= 390, 'no horizontal page scroll after swiping');
   await shot('scn_many');
+  // 2.2.3 기술 예약: 자동 전투 중 지금 못 쓰는 기술을 누르면 예약(단추 「예약」 · 칩 「예」) → 쓸 수 있게 되면 무엇보다 먼저 · 다시 누르면 취소 · 판이 끝나면 거둔다 · 지금 쓸 수 있으면 예전처럼 바로
+  const rp = await ev(() => { var sim = DS.G.sim, SK = DS.SKILLS, pick = null;
+    sim.cmds().forEach(function (u) { if (pick) return; (u.skills || []).forEach(function (k) { var S = SK[k]; if (!pick && S && S.mp > 0 && S.tg === 'self' && S.eff[0].t === 'buff' && S.eff[0].p > 0 && S.mp <= u.mmp) pick = { id: u.id, sk: k }; }); });
+    if (!pick) return null;
+    var u = sim.byId[pick.id]; u.auto = true; DS.G.save.chars[u.ch].manual = false; DS.select(u.id); DS.renderActs(); return pick; });
+  A(!!rp, 'reservation test unit: ' + JSON.stringify(rp));
+  const rbtn = '#acts .act[data-sk="' + rp.sk + '"]';
+  const rst = () => ev((p) => { var u = DS.G.sim.byId[p.id], b = document.querySelector('#acts .act[data-sk="' + p.sk + '"]'), bd = b && b.querySelector('.rsvb'), ch = DS.G.chipEls[p.id];
+    return { rsv: u.rsv || null, cls: !!(b && b.classList.contains('rsv')), badge: !!(bd && getComputedStyle(bd).display !== 'none' && bd.textContent === '예약'), chip: !!(ch && ch.el.classList.contains('rsv')), order: u.order ? u.order.t + ':' + u.order.id : null, mp: u.mp }; }, rp);
+  // ① 지금 쓸 수 있으면 예전처럼 바로 (예약하지 않는다)
+  await ev((p) => { var sim = DS.G.sim, u = sim.byId[p.id]; sim.units.forEach(function (e) { if (e.side === 'enemy' && !e.dead) e.aggro = true; }); u.mp = u.mmp; u.gauge = 100; u.cd = {}; u.casting = null; u.order = null; u.rsv = null; }, rp);      // 싸움이 붙어야 보통 자동 겨눔의 대상이 있다
+  await page.click(rbtn); await L.sleep(250);
+  let r0 = await rst();
+  A(!r0.rsv && !r0.cls && r0.order === 'skill:' + rp.sk, 'usable skill fires at once as before (order ' + r0.order + '), not reserved');
+  await ev((p) => { var u = DS.G.sim.byId[p.id]; u.order = null; }, rp);
+  // ② 마나가 모자라면 예약
+  await ev((p) => { var u = DS.G.sim.byId[p.id]; u.mp = 0; }, rp);
+  await page.click(rbtn); await L.sleep(600);
+  let r1 = await rst();
+  A(r1.rsv === rp.sk && r1.cls && r1.badge && r1.chip && !r1.order, 'mana short → reserved: button shows 예약, chip marked (' + JSON.stringify(r1) + ')');
+  if (process.env.V223) { try { require('fs').mkdirSync(process.env.V223, { recursive: true }); await page.screenshot({ path: require('path').join(process.env.V223, 'skill_reserved.png') }); } catch (e) {} }
+  await shot('skill_reserved');
+  // ③ 다시 누르면 취소
+  await page.click(rbtn); await L.sleep(400);
+  let r2 = await rst();
+  A(!r2.rsv && !r2.cls && !r2.chip, 'tapping again cancels the reservation');
+  // ④ 다시 예약 → 마나가 차면 다른 어떤 기술보다 먼저 쓴다
+  await page.click(rbtn); await L.sleep(300);
+  await ev((p) => { var sim = DS.G.sim, u = sim.byId[p.id]; DS.G.rsvLog = []; if (!sim._c0) { sim._c0 = sim.cast; sim.cast = function (w, id, t, f) { var ok = sim._c0.call(this, w, id, t, f); if (ok && w === u) DS.G.rsvLog.push(id); return ok; }; }
+    sim.units.forEach(function (e) { if (e.side === 'enemy' && !e.dead) e.aggro = true; }); u.mp = u.mmp; u.gauge = 0; DS.G.pause = false; }, rp);
+  for (let i = 0; i < 40; i++) { await L.sleep(250); if (!(await rst()).rsv) break; }
+  const r3 = await ev(() => (DS.G.rsvLog || []).slice());
+  let r3s = await rst();
+  A(!r3s.rsv && r3[0] === rp.sk, 'once mana is there the reserved skill is cast first (casts ' + JSON.stringify(r3) + ')');
+  // ⑤ 판이 끝나면 거둔다
+  await ev((p) => { var u = DS.G.sim.byId[p.id]; DS.G.pause = true; u.mp = 0; }, rp);
+  await page.click(rbtn); await L.sleep(300);
+  const r4a = (await rst()).rsv;
+  const r4 = await ev((p) => { var sim = DS.G.sim, u = sim.byId[p.id]; sim.result = null; sim.win(); return u.rsv || null; }, rp);
+  A(r4a === rp.sk && !r4, 'reservation clears when the battle ends');
+  await L.settle(page, 30000); await L.sleep(500);
+  await L.edit(page, function () { DS.charList(s).forEach(function (c) { c.hp = 1; c.mp = 1; }); });
+  await ev(() => { DS.G.quiet = true; DS.G.pause = true; DS.startScenario(DS.scn(14)); }); await L.sleep(800);
   // 2.2.2 결과 창의 경험치 판: 싸움 중에 얻은 경험치 → 막대가 판 전 자리에서 차올라 끝값에 선다 · 누르면 바로 끝 · NaN 없음
   await ev(() => { DS.gainExp(DS.G.save, DS.expNeed(46) * 1.4, 45); DS.G.sim.win(); });
   for (let i = 0; i < 40; i++) { await L.sleep(150); await L.skipStory(page, 1); if (await ev(() => !!document.querySelector('.ov.res26 .xb'))) break; }
@@ -104,6 +148,6 @@ module.exports = async (page, shot, L) => {
   A(pk.now > pk.base * 1.5, 'dawn field with ' + pk.u + ' units: ' + pk.now + ' mobs (unscaled ' + pk.base + ')');
   await ev(() => DS.ui.closeAll());
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.2\.2 [^/]+ \/ 2\.2\.2 \/ 7\.0\.2$/.test(notes), 'version ' + notes);
+  A(/^2\.2\.3 [^/]+ \/ 2\.2\.3 \/ 7\.0\.3$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };

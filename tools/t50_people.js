@@ -1,4 +1,5 @@
-// 2.2.0 「한 사람 한 사람」 브라우저 시험 (390×844). H=844 OUT=qa_out/t50 node tools/shot.js tools/t50_people.js
+// 2.2.0 「한 사람 한 사람」 브라우저 시험 (390×844). H=844 OUT=qa_out/t50 node tools/shot.js tools/t50_people.js   (웹 판: PAGE=/home/user/dist/web/index.html)
+//   2.2.3: 칩 차례(맹주가 바뀌면 새 맹주가 맨 앞 · 자리를 이은 가문은 제자리) · 끝없는 갱도(1 · 50 · 500층 세기 · 옛 저장 옮김 · 층 고르기 창 · 결과 창 다음 층/같은 층/나가기 · 지면 다시 도전 · 다시 켜도 최고 층) · V223=폴더 면 화면을 그 폴더에
 //   모두 싸운다 · 미성년은 싸우지 않는다 · 가주가 쓰러지면 막사의 같은 병과가 잇는다 / 없으면 빈 가문(레벨·단도 잃는다) · 영웅 모집(빈 가문 → 가주, 찬 가문 → 막사, 막사 가득 → 막힘)
 //   · 막사 경험치(같은 병과 가주 몫의 10%) · 소수 정예 없음 · 새벽의 모집권
 //   · 아이 보내기 · 맹주가 이을 사람 없이 쓰러지고 모든 가문이 비었을 때 · 합일(제자리) · v12 저장 판 올림 · 연무장·무술대회 · 스무 해 창(빈 가문) · NaN/undefined 없음
@@ -206,7 +207,7 @@ module.exports = async (page, shot, L) => {
     var pick = DS.linSbHeir(s, hid), ended = DS.linEnded(s, hid), ev = DS.linAutoAll(s), h2 = s.chars[s.hero], p2 = s.lin.P[h2.pid];
     return { pick: pick && pick.mid === best.id, ended: ended, same: s.hero === hid, L: h2.ps.L, g: h2.ps.g, gen: p2.gen === gen0 + 1, txt: ev.map(function (e) { return e.ev ? DS.linEvText(s, e.ev) : ''; }).join(' / '), gone: !s.mercs.some(function (m) { return m.id === best.id; }) };
   });
-  A(c.pick && !c.ended && c.same && c.gone && c.L === 20 && c.g === 4 && c.gen && /막사에서 나와/.test(c.txt), 'auto order: no adult blood heir → best same-class 막사 person (grade first) becomes 맹주 at own level/grade, generation +1 (' + c.txt + ')');
+  A(c.pick && !c.ended && c.same && c.gone && c.L === 20 && c.g === 4 && c.gen && /막사에서 나와/.test(c.txt), 'auto order: no adult blood heir → best same-class 막사 person (grade first) becomes 맹주 at own level/grade, generation +1 (' + c.txt + ')' + (c.pick && !c.ended && c.same && c.gone && c.L === 20 && c.g === 4 && c.gen ? '' : ' ' + JSON.stringify(c)));
   // ⑨-3 화면: 맹주가 쓰러지면 고른다 — 자식 · 막사(같은 병과) · 다른 가문. 고르기 전에 저장·다시 불러와도 그 창이 돌아온다
   await ev(() => {
     var s = DS.G.save, h = s.chars[s.hero], P = s.lin.P, hp = P[h.pid];
@@ -274,7 +275,7 @@ module.exports = async (page, shot, L) => {
   A(/보통 가문이 된다/.test(conf) && /작은별/.test(conf), 'option 3 confirm tells what happens to the old 맹주 house (' + conf.replace(/\s+/g, ' ').slice(0, 90) + ')');
   A(c.moved && c.ps && c.hx && c.w && c.oldHero, 'option 3: s.hero moves to that house; it keeps its gear and 공훈; the old house holds no 맹주 data');
   A(c.oldBear && c.oldL === 15 && c.nc && c.party && c.kinOk && c.units === c.specs && c.sel, 'option 3: old 맹주 house → its adult blood kin is 가주 at own level (L ' + c.oldL + '), takes the house class, both houses fight');
-  {      // 2.2.3: 맹주가 바뀌면 칩 줄의 맨 앞은 새 맹주, 나머지는 부대 탭 격자 차례 (DS.houseCmp)
+  {      // 2.2.3: 맹주가 바뀌면 칩 줄의 맨 앞은 새 맹주, 나머지는 부대 탭 격자 차례 (DS.houseOrd)
     await ev(() => { DS.ui.closeAll(); }); await L.sleep(300);
     const o = await ev(() => { var s = DS.G.save, ks = Object.keys(DS.G.chipEls), want = DS.houseSort(s, DS.partyIds(s).filter(function (id) { return id !== s.hero; }).map(function (id) { return s.chars[id]; })).map(function (ch) { return 'c' + ch.id; }); return { ks: ks, hero: 'c' + s.hero, rest: ks.slice(1).join(' ') === want.join(' '), sp: DS.partySpecs(s).map(function (u) { return u.role; }).join(','), u0: DS.G.sim.units.filter(function (u) { return u.side === 'ally' && u.role === 'cmd'; })[0].id }; });
     A(o.ks[0] === o.hero && o.rest && o.u0 === o.hero, 'chip order after option 3: new 맹주 first, then the 부대 grid order (' + o.ks.join(' ') + ')');
@@ -390,6 +391,66 @@ module.exports = async (page, shot, L) => {
   });
   A(c.st && c.years >= 20 && !c.pass && c.fight >= 1, '20-year generation pass with vacant houses (gen ' + c.gen + ', vacant ' + c.vac + ', fighters ' + c.fight + ')');
   A(c.tk === Math.min(3, c.vac) && c.tk > 0 && /빈 가문 \d+곳/.test(c.line), 'dawn of the next generation: ' + c.tk + ' recruit ticket(s) for vacant houses (max 3) — 「' + c.line + '」');
+  // ⑬ 2.2.3 끝없는 갱도: 층의 세기는 유한하고 늘어난다 · 층 고르기 창(같은 층 다시 · 다음 층 도전) · 결과 창(다음 층 · 같은 층 다시 · 나가기, 경험치 판) · 지면 다시 도전 · 다시 켜도 최고 층 · 옛 저장 옮김
+  {
+    const V = process.env.V223, vshot = async (n) => { if (V) { try { fs.mkdirSync(V, { recursive: true }); await page.screenshot({ path: path.join(V, n) }); } catch (e) {} } };
+    const st = await ev(() => { var o = {}; [1, 50, 500].forEach(function (f) { var sc = DS.pit(f), b = DS.buildScenario(sc, 12, 'inf'), boss = b.units.filter(function (u) { return u.role === 'boss'; })[0], mob = b.units.filter(function (u) { return u.role !== 'boss'; })[0], r = DS.pitRec(f);
+      o[f] = { L: sc.L, bhp: boss.hp, batk: boss.atk, bdef: boss.def, mhp: mob.hp, matk: mob.atk, exp: boss.exp, gold: DS.scnGold(sc), rec: r[0], txt: DS.recText(sc), n: b.units.length }; }); return o; });
+    const fin = [1, 50, 500].every(f => ['bhp', 'batk', 'bdef', 'mhp', 'matk', 'exp', 'gold', 'rec'].every(k => Number.isFinite(st[f][k]) && st[f][k] > 0) && !/NaN|undefined|Infinity/.test(st[f].txt));
+    const inc = ['bhp', 'batk', 'mhp', 'matk', 'exp', 'gold'].every(k => st[1][k] < st[50][k] && st[50][k] < st[500][k]);
+    A(fin && inc && st[500].bhp < 1e7, 'pit floors 1 / 50 / 500: finite and increasing (boss hp ' + st[1].bhp + ' / ' + st[50].bhp + ' / ' + st[500].bhp + ', atk ' + st[1].batk + ' / ' + st[50].batk + ' / ' + st[500].batk + ', ' + st[1].txt + ' / ' + st[500].txt + ')');
+    const mg = await ev(() => { var a = { pit: 10, lootPit: 10 }, b = { pit: 4 }, c = {}; DS.pitFix(a); DS.pitFix(b); DS.pitFix(c); return [a.pitBest, a.pit, a.lootPit, b.pitBest, c.pitBest, c.pitCur, a.pitV]; });
+    A(mg[0] === 27 && mg[1] === 28 && mg[2] === 27 && mg[3] === 6 && mg[4] === 0 && mg[5] === 1 && mg[6] === 2, 'old pit progress migrates by enemy level (old 10 → best ' + mg[0] + ', old pit 4 → best ' + mg[3] + ', new save 0)');
+    await L.newGame(page, { cls: 'inf', name: '갱도' });
+    await L.edit(page, function () { s.gold = 500000; for (var id = 1; id <= 15; id++) DS.applyClear(s, DS.scn(id)); DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 60; b.exp = 0; } }); s.visited.stone = true; DS.mercTidy(s); DS.pSync(s); });
+    await ev(() => { DS.ui.closeAll(); DS.enterZone('stone'); }); await L.sleep(700); await L.closeAll(page);
+    await ev(() => DS.openPit(null)); await L.sleep(500);
+    let w = await ev(() => { var o = document.querySelector('.ov .pitw'); return { same: !!o.querySelector('[data-pf]') && o.querySelectorAll('[data-pf]').length, next: (o.querySelector('.pitb.gold small') || {}).textContent, sel: o.querySelector('.pitsel').textContent, rec: /권장/.test(o.textContent), sw: document.documentElement.scrollWidth }; });
+    A(w.same === 1 && w.next === '1층' && w.sel === '1층' && w.rec && w.sw <= 390, 'pit entry (new save): only 「다음 층 도전」 1층, stepper, 권장 shown');
+    A((await L.badText(page, '.ov')).length === 0, 'pit entry has no NaN/undefined');
+    // 다음 층 도전 → 1층 → 이긴다 → 결과 창
+    const winPit = async () => { await ev(() => { DS.G.quiet = true; DS.G.sim.win(); }); for (let i = 0; i < 60; i++) { await L.sleep(200); await L.skipStory(page, 1); if (await ev(() => !!document.querySelector('.ov.res26 [data-pitgo]'))) break; } await L.sleep(400); };
+    await page.click('.ov .pitw .pitb.gold'); await L.sleep(700); await L.skipStory(page, 5); await L.sleep(300);
+    A(await ev(() => !!(DS.G.scn && DS.G.scn.pit === 1)), '「다음 층 도전」 enters floor 1');
+    await winPit();
+    w = await ev(() => { var o = document.querySelector('.ov.res26'), s = DS.G.save; return { next: !!o.querySelector('[data-pitgo="2"]'), same: !!o.querySelector('[data-pitgo="1"]'), out: !!o.querySelector('.pitrb [data-close]'), xb: o.querySelectorAll('.xb [data-v0]').length, best: s.pitBest, cur: s.pitCur, note: (o.querySelector('.pitnote') || {}).textContent || '' }; });
+    A(w.next && w.same && w.out && w.xb >= 5, 'pit win result: 「다음 층」 · 「같은 층 다시」 · 「나가기」 and the exp board (' + w.xb + ' bars)');
+    A(w.best === 1 && w.cur === 1 && /첫 돌파/.test(w.note), 'best floor 1 saved, first-clear note (' + w.note + ')');
+    await ev(() => DS.xbSkip()); await L.sleep(300); await vshot('pit_result.png'); await shot('pit_result');
+    A((await L.badText(page, '.ov')).length === 0, 'pit result has no NaN/undefined');
+    // 같은 층 다시 → 1층 · 다음 층 → 2층
+    await page.click('.ov.res26 [data-pitgo="1"]'); await L.sleep(900); await L.skipStory(page, 5); await L.closeAll(page).catch(() => {}); await L.sleep(300);
+    A(await ev(() => !!(DS.G.scn && DS.G.scn.pit === 1)), '「같은 층 다시」 re-enters floor 1');
+    await winPit();
+    await page.click('.ov.res26 [data-pitgo="2"]'); await L.sleep(900); await L.skipStory(page, 5); await L.sleep(300);
+    w = await ev(() => ({ pit: DS.G.scn && DS.G.scn.pit, cur: DS.G.save.pitCur, ret: DS.G.ret && DS.G.ret.zone }));
+    A(w.pit === 2 && w.cur === 2 && w.ret === 'stone', '「다음 층」 goes straight to floor 2 (return spot kept: ' + w.ret + ')');
+    // 지면: 「다시 도전」 · 「나가기」
+    await ev(() => { var sim = DS.G.sim; sim.units.filter(function (u) { return u.side === 'ally' && !u.dead; }).forEach(function (u) { sim.kill(u); }); });
+    for (let i = 0; i < 30 && !(await ev(() => !!document.querySelector('.ov .result.lose [data-pitre]'))); i++) await L.sleep(200);
+    w = await ev(() => { var o = document.querySelector('.ov .result.lose'); return { re: !!(o && o.querySelector('[data-pitre="2"]')), out: !!(o && o.querySelector('.pitrb [data-close]')) }; });
+    A(w.re && w.out, 'pit loss: 「다시 도전」 and 「나가기」');
+    await shot('pit_lose');
+    await ev(() => { var s = DS.G.save, h = s.chars[s.hero]; DS.G.lineageQ = []; delete h.vac; h.down = false; h.hp = 1; if (h.ps) h.ps.L = 60; DS.pSync(s); });      // 시험: 맹주는 살려 두고 (의식 창 없이) 다시 도전
+    await page.click('.ov .result.lose [data-pitre]'); await L.sleep(1200); await L.skipStory(page, 5); await L.sleep(300);
+    A(await ev(() => !!(DS.G.scn && DS.G.scn.pit === 2 && DS.G.sim.units.some(function (u) { return u.side === 'ally' && !u.dead; }))), '「다시 도전」 re-enters floor 2');
+    await winPit();
+    await page.click('.ov.res26 .pitrb [data-close]'); await L.sleep(500); await L.settle(page, 20000); await L.sleep(500);
+    w = await ev(() => ({ scn: !!DS.G.scn, zone: DS.G.zone && DS.G.zone.id, best: DS.G.save.pitBest }));
+    A(!w.scn && w.zone === 'stone' && w.best === 2, '「나가기」 returns to the field where we entered (best ' + w.best + ')');
+    // 다시 켜도 최고 층 · 지금 층
+    await ev(() => DS.ui.persist()); await page.reload(); await page.waitForSelector('#btnCont', { timeout: 30000 }); await page.click('#btnCont'); await L.sleep(1500); await L.skipStory(page); await L.closeAll(page);
+    w = await ev(() => ({ best: DS.G.save.pitBest, cur: DS.G.save.pitCur, v: DS.G.save.pitV }));
+    A(w.best === 2 && w.cur === 2 && w.v === 2, 'best floor survives a reload (best ' + w.best + ', current ' + w.cur + ')');
+    await ev(() => DS.openPit(null)); await L.sleep(500);
+    w = await ev(() => { var o = document.querySelector('.ov .pitw'), b = o.querySelectorAll('[data-pf]'); return { n: b.length, same: b[0] && b[0].dataset.pf, next: b[1] && b[1].dataset.pf }; });
+    A(w.n === 2 && w.same === '2' && w.next === '3', 'pit entry after reload: 「같은 층 다시」 2층 · 「다음 층 도전」 3층');
+    await page.click('.ov .pitw [data-pstep="-1"]'); await L.sleep(200);
+    A((await ev(() => document.querySelector('.ov .pitw .pitsel').textContent)) === '2층', 'floor stepper picks a cleared floor');
+    await page.click('.ov .pitw [data-pstep="1"]'); await L.sleep(200);
+    await vshot('pit_entry.png'); await shot('pit_entry');
+    await L.closeAll(page);
+  }
   // ⑫ v12 저장 판 올림 (2.1.2 규칙으로 만든 저장 — tools/mkv12.js)
   const raw = fs.readFileSync(path.join(__dirname, 'fixtures', 'v12.json'), 'utf8');
   c = await ev((raw) => {
