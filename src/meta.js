@@ -65,7 +65,7 @@ DS.gearTe = function (L) { return DS.GEAR_TE0 + (Math.max(1, Math.min(100, +L ||
 var refSave = null;      // 저장을 받는 장비 함수가 마지막으로 본 판 (화면 밖 — 봇·시험 — 의 기준 레벨)
 DS.gearRefSave = function (s) { if (s && s.chars) refSave = s; return refSave; };
 DS.gearRefL = function () { var s = (DS.G && DS.G.save) || refSave; return s && s.party && s.chars && DS.partyL ? DS.partyL(s) : 1; };
-DS.gearFits = function (cls, g) { var G = DS.CLS_GEAR[cls]; return !!(g && G && G[g.slot] && G[g.slot].indexOf(g.cat) >= 0); };
+DS.gearFits = function (cls, g) { var G = DS.CLS_GEAR[cls], X = DS.GEAR_ALSO && DS.GEAR_ALSO[cls]; return !!(g && G && ((G[g.slot] && G[g.slot].indexOf(g.cat) >= 0) || (X && X[g.slot] && X[g.slot].indexOf(g.cat) >= 0))); };      // 2.2.6: GEAR_ALSO (무투가의 옛 성구 · 로브)
 // 입은 사람 기준의 수치. L = 입은 사람의 레벨, cls = 그 병과 (없으면 깎지 않는다), te = 눈금을 바로 줄 때 (기본 장비 stdGear 의 단 — 용병·연무장 기준치)
 DS.gearAt = function (g, L, cls, te) {
   if (!g) return null;
@@ -274,7 +274,14 @@ DS.mercSkills = function (m, L) {
   list.forEach(function (k, i) { if (DS.SKILLS[k] && t >= (DS.MSK_AT[i] || 99) && out.indexOf(k) < 0) out.push(k); });
   return out;
 };
+// 2.2.6: 그 사람이 어느 병과의 기술을 지녔을까 (돌아온 이의 옛 깃발 · 가문을 맡은 이) — 받은 가문 병과 → 이야기의 집 → 종류가 맞는 병과
+DS.mClsOf = function (m) {
+  if (!m) return null; var k = m.nc || m.cast; if (k && DS.CLASSES[k]) return k;
+  var hit = null; Object.keys(DS.CLASSES).forEach(function (c) { if (!hit && !DS.CLASSES[c].master && ((DS.RET_KIND && DS.RET_KIND[c] === m.type) || DS.CLASSES[c].merc === m.type)) hit = c; });
+  return hit;
+};
 DS.mercSkill = function (m) {
+  if (m && m.s && DS.skOld) { var ns = DS.skOld(m.s, DS.mClsOf(m)); if (ns !== m.s && DS.SKILLS[ns]) m.s = ns; }      // 2.2.6: 옮기기 전의 옛 기술 이름 (관에서 꺼낸 줄 등)
   if (m && m.rv && m.s && DS.SKILLS[m.s]) return m.s;      // 3.3.0: 다시 부름으로 돌아온 이는 옛 깃발의 기술을 등급과 관계없이 지닌다
   if (!m || !(m.g >= 4)) return null;
   if (m.s && DS.SKILLS[m.s]) return m.s;

@@ -1238,6 +1238,8 @@ html.calm body #app#app #s-game #bot.dock .arow.sk .act.ult.full { animation: no
 #ultcut .ucn { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
 #ultcut .ucn i { font: 700 11px/1 var(--f-head, sans-serif); font-style: normal; letter-spacing: .22em; color: #f0c860; }
 #ultcut .ucn b { font: 800 22px/1.05 var(--f-title, var(--f-head, sans-serif)); color: #fff6dc; text-shadow: 0 0 8px color-mix(in srgb, var(--fc, #ffc85a) 80%, transparent), 0 2px 0 #000; overflow: hidden; text-overflow: ellipsis; }
+#ultcut .uci { position: relative; margin-left: auto; flex: none; width: 40px; height: 40px; display: grid; place-items: center; color: #fff6dc; --ic-a: var(--fc, #f0c860); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--fc, #ffc85a) 80%, transparent)); opacity: .92; }      /* 2.2.6 필살기 그림 */
+#ultcut.on .uci { animation: ucPop calc(var(--ud) * .4) calc(var(--ud) * .14) cubic-bezier(.2, .9, .3, 1.3) both; }
 #ultcut.on .ucb { animation: ucIn var(--ud) cubic-bezier(.2, .8, .2, 1) both; }
 #ultcut.on .ucb::after { animation: ucShine calc(var(--ud) * .55) calc(var(--ud) * .12) ease-out both; }
 #ultcut.on .ucl { animation: ucLines var(--ud) linear both; }

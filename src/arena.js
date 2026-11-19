@@ -215,8 +215,8 @@ DS.arenaChampRow = function (id, d) {
   if (C.start && tier < C.start) return null;
   var ref = { cls: d.cls, L: Lv }, rs; try { DS.stdGear(ref, tier); rs = DS.charStats(ref); } catch (x) { return null; }
   var top = Math.max(rs.atk, rs.mag), wall = Math.max(rs.def, rs.res);
-  var OLDC = d.cls === 'cle' ? { heal: 'cle_combo', cure: 'cle_kick', healAll: 'cle_palm' } : {};      // 2.2.5: 옛 판이 올린 승려 기록의 치유 기술 → 무투가의 기술 (필살기 이름은 DS.skAlias)
-  var sk = (typeof d.sk === 'string' ? d.sk.slice(0, 200).split(',') : []).map(function (k) { return OLDC[k] || k; }).filter(function (k, i, a) { return a.indexOf(k) === i && skAllowed(k, tier); }).slice(0, 8);
+  // 2.2.5 · 2.2.6: 옛 판이 올린 기록의 기술 → 그 병과의 새 기술 (DS.SK_OLD — 승려의 치유 · 정화 · 모두 치유도), 필살기 이름은 DS.skAlias
+  var sk = (typeof d.sk === 'string' ? d.sk.slice(0, 200).split(',') : []).map(function (k) { return DS.skOld ? DS.skOld(k, d.cls) : k; }).filter(function (k, i, a) { return a.indexOf(k) === i && skAllowed(k, tier); }).slice(0, 8);
   var r1 = Math.round(num(d.r1, 1, 6, C.rng ? C.rng[1] : 1)), r0 = Math.round(num(d.r0, 0, r1, 1));
   var row = { id: id, name: clean(d.name, 12) || '이름 없는 맹주', house: clean(d.house, 16), cls: d.cls, hs: typeof d.hs === 'string' && own(DS.CLASSES, d.hs) ? d.hs : d.cls, L: Lv, tier: tier,
     g: Math.round(num(d.g, 1, 5, 3)), hp: Math.round(num(d.hp, 1, rs.hp * 2.5, rs.hp)), mp: Math.round(num(d.mp, 0, Math.max(50, rs.mp * 3), rs.mp)),

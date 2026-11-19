@@ -24,40 +24,40 @@ DS.CLASSES = {
     tiers: ['파이터', '글라디에이터', '히어로', '킹', '카이저', '엠퍼러', '그레이트 엠퍼러'],
     base: { hp: 62, mp: 10, atk: 14, def: 10, mag: 3, res: 5 }, grow: { hp: 5.0, mp: 0.6, atk: 1.25, def: 1.0, mag: 0.3, res: 0.5 },
     spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys',
-    skills: [['cmd_inf', 3], ['bash', 2], ['attackUp', 4], ['protect', 5]], merc: 'm_sword',
-    blurb: '가까이에서 싸우는 튼튼한 전열. 4단 킹이 되면 「강화」, 5단 카이저가 되면 「수호」를 익힌다.' },
+    skills: [['cmd_inf', 3], ['inf_bash', 2], ['inf_wall', 4], ['inf_cover', 5]], merc: 'm_sword',
+    blurb: '방패를 든 전열. 적을 제게로 끌어 뒤를 지킨다. 4단 킹이 되면 「철벽」, 5단 카이저가 되면 「수호」를 익힌다.' },
   cav: { name: '기병', fam: 'battle', start: 1, kind: 'cav', mt: 'horse',
     tiers: ['나이트', '아크나이트', '실버나이트', '나이트마스터', '골드나이트', '로얄나이트', '로얄가드'],
     base: { hp: 56, mp: 14, atk: 15, def: 8, mag: 7, res: 4 }, grow: { hp: 4.6, mp: 0.9, atk: 1.35, def: 0.85, mag: 0.7, res: 0.45 },
     spd: 11, mv: 0.75, rng: [1, 2], atk: 'thrust', dtype: 'phys',
-    skills: [['cmd_cav', 3], ['thunder', 3], ['protect', 5], ['attackUp', 6]], merc: 'm_lancer',
-    blurb: '두 칸 앞까지 닿는 창과 번개 마법. 평지에서 빠르지만 숲과 고지에서는 느리다.' },
+    skills: [['cmd_cav', 3], ['cav_charge', 3], ['cav_trample', 5], ['cav_hunt', 6]], merc: 'm_lancer',
+    blurb: '말을 달려 적진을 꿰뚫는 돌격대. 두 칸 앞까지 닿는 창. 평지에서 빠르지만 숲과 고지에서는 느리다.' },
   fly: { name: '비병', fam: 'battle', start: 2, kind: 'fly', mt: 'fly', tags: ['fly'],
     tiers: ['호크나이트', '페가서스나이트', '유니콘나이트', '드래곤나이트', '드래곤로드', '드래곤마스터'],
     base: { hp: 50, mp: 10, atk: 14, def: 7, mag: 4, res: 6 }, grow: { hp: 4.2, mp: 0.6, atk: 1.3, def: 0.75, mag: 0.4, res: 0.55 },
     spd: 12, mv: 0.7, rng: [1, 2], atk: 'thrust', dtype: 'phys',
-    skills: [['cmd_fly', 3], ['dive', 3], ['whirl', 5]], merc: 'm_griffin',
-    blurb: '이동력이 가장 좋고 물과 산을 그냥 넘는다. 가호 기술은 없고 화살에 약하다.' },
+    skills: [['cmd_fly', 3], ['fly_dive', 3], ['fly_gale', 5]], merc: 'm_griffin',
+    blurb: '내리꽂고 다시 날아오르는 치고 빠지기. 물과 산을 그냥 넘는다. 화살에 약하다.' },
   mar: { name: '해병', fam: 'tactics', start: 2, kind: 'inf', mt: 'swim',
     tiers: ['캡틴', '서펜트나이트', '서펜트로드', '서펜트마스터', '크라켄나이트', '크라켄마스터'],
     base: { hp: 58, mp: 10, atk: 13, def: 9, mag: 5, res: 5 }, grow: { hp: 4.8, mp: 0.6, atk: 1.2, def: 0.95, mag: 0.45, res: 0.55 },
     spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys', passive: 'marine',
-    skills: [['cmd_mar', 3], ['harpoon', 2], ['tidal', 4]], merc: 'm_merman',
-    blurb: '보병과 닮았지만 물 위에서 멀리 움직이고, 물에 서면 강해진다.' },
+    skills: [['cmd_mar', 3], ['mar_hook', 2], ['mar_surge', 4]], merc: 'm_merman',
+    blurb: '작살로 끌어오고 물보라로 밀어낸다. 물 위에서 멀리 움직이고, 물에 서면 강해진다.' },
   pike: { name: '창병', fam: 'tactics', start: 2, kind: 'pike', mt: 'foot',
     tiers: ['로드', '하이로드', '제너럴', '하이랜더', '카운트', '듀크'],
     base: { hp: 54, mp: 16, atk: 14, def: 9, mag: 6, res: 5 }, grow: { hp: 4.5, mp: 1.0, atk: 1.25, def: 0.9, mag: 0.6, res: 0.5 },
     spd: 10, mv: 1, rng: [1, 2], atk: 'thrust', dtype: 'phys',
-    skills: [['cmd_pike', 3], ['slow', 2], ['pierce', 3], ['protect', 5]], merc: 'm_pike',
-    blurb: '두 칸 앞까지 찌르는 중거리 공격과 보조 마법. 기병에게 강하다.' },
+    skills: [['cmd_pike', 3], ['pike_pin', 2], ['pike_skewer', 3], ['pike_brace', 5]], merc: 'm_pike',
+    blurb: '두 칸 창끝으로 발을 묶고, 창벽을 세워 되찌른다. 기병에게 강하다.' },
   arc: { name: '궁병', fam: 'tactics', start: 2, kind: 'arc', mt: 'foot',
     tiers: ['스나이퍼', '레인저', '헌터', '보우로드', '보우마스터', '닌자마스터'],
     base: { hp: 44, mp: 12, atk: 14, def: 5, mag: 4, res: 5 }, grow: { hp: 3.6, mp: 0.7, atk: 1.3, def: 0.55, mag: 0.4, res: 0.5 },
     spd: 11, mv: 1, rng: [2, 4], atk: 'arrow', dtype: 'phys',
-    skills: [['charisma', 4], ['aimed', 2], ['arrowRain', 6]], merc: 'm_archer',
-    blurb: '멀리서 활을 쏜다. 「통솔」은 아군 모두를 북돋운다. 비병에게 강하다.' },
+    skills: [['charisma', 4], ['arc_mark', 2], ['arc_retreat', 6]], merc: 'm_archer',
+    blurb: '표식을 남기고 물러서며 쏜다. 표식이 있는 적은 누구에게나 더 아프게 맞는다. 비병에게 강하다.' },
   cle: { name: '승려', fam: 'magic', start: 1, kind: 'holy', mt: 'foot',
-    tiers: ['클레릭', '프리스트', '하이프리스트', '에이전트', '하이에이전트', '프린세스', '퀸'],
+    tiers: ['수련생', '권사', '무승', '철권', '권호', '권성', '무신'],      // 2.2.6: 무투가의 단 이름 (옛 클레릭 … 퀸)
     base: { hp: 54, mp: 24, atk: 13, def: 8, mag: 11, res: 9 }, grow: { hp: 4.6, mp: 1.5, atk: 1.15, def: 0.85, mag: 0.95, res: 0.85 },
     spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys', martial: true,      // 2.2.5 무투가: 무기의 힘은 공격에도 기공(마공)에도 그대로 (DS.charStats)
     skills: [['cle_combo', 1], ['cmd_cle', 3], ['cle_kick', 3], ['cle_palm', 5]], merc: 'm_sister',
@@ -66,38 +66,38 @@ DS.CLASSES = {
     tiers: ['몽크', '비숍', '세이지', '패러딘', '세인트', '홀리마스터'],
     base: { hp: 48, mp: 28, atk: 9, def: 6, mag: 12, res: 10 }, grow: { hp: 4.0, mp: 1.9, atk: 0.75, def: 0.65, mag: 1.1, res: 1.0 },
     spd: 11, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys',
-    skills: [['cmd_mon', 3], ['holy', 2], ['protect', 3], ['quick', 4], ['bless', 6]], merc: 'm_templar',
-    blurb: '가호를 거는 서포터. 4단 세이지가 되면 행동 소모를 줄여 주는 「신속」을 익힌다. 신성 마법은 망자에게 아프다.' },
+    skills: [['cmd_mon', 3], ['mon_smite', 2], ['mon_ward', 3], ['mon_sanct', 6], ['mon_haste', 4]], merc: 'm_templar',
+    blurb: '등불로 아군을 지키는 서포터. 보호막을 씌우고 상태 이상을 푼다. 4단 세이지가 되면 「신속」을 익힌다. 신성 마법은 망자에게 아프다.' },
   mag: { name: '법사', fam: 'magic', start: 1, kind: 'mage', mt: 'foot',
     tiers: ['매지션', '위저드', '하이위저드', '메이지', '아크메이지', '소서러', '로열위저드'],
     base: { hp: 38, mp: 34, atk: 5, def: 4, mag: 16, res: 9 }, grow: { hp: 3.2, mp: 2.3, atk: 0.4, def: 0.45, mag: 1.45, res: 0.85 },
     spd: 10, mv: 1, rng: [1, 3], atk: 'bolt', dtype: 'magic', basic: 0.75,
-    skills: [['cmd_mag', 3], ['fire', 1], ['ice', 3], ['blizzard', 5], ['meteor', 7]], merc: 'm_spirit',
-    blurb: '불과 얼음의 마법으로 여럿을 한꺼번에 태운다. 몸은 약하다.' },
+    skills: [['cmd_mag', 3], ['mag_ember', 1], ['mag_frost', 3], ['mag_bolt', 5], ['mag_meteor', 7]], merc: 'm_spirit',
+    blurb: '불, 얼음, 번개를 맞물려 쓴다. 불에 탄 적은 얼음에, 얼거나 젖은 적은 번개에 약하다. 몸은 약하다.' },
   sha: { name: '사교', fam: 'magic', start: 2, kind: 'mage', mt: 'foot',
     tiers: ['셔먼', '서머너', '워록', '네크로맨서', '일루저니스트', '다크마스터'],
     base: { hp: 42, mp: 32, atk: 6, def: 5, mag: 15, res: 10 }, grow: { hp: 3.5, mp: 2.2, atk: 0.5, def: 0.5, mag: 1.4, res: 0.9 },
     spd: 10, mv: 1, rng: [1, 3], atk: 'bolt', dtype: 'magic', basic: 0.75,
-    skills: [['cmd_sha', 3], ['drain', 2], ['summon', 3], ['curse', 4], ['deathCloud', 5]], merc: 'm_skeleton',
-    blurb: '생기를 빨고 망자를 불러낸다. 가장 마지막에 합류한다.' },
+    skills: [['cmd_sha', 3], ['sha_drain', 2], ['sha_raise', 3], ['sha_hex', 4], ['sha_plague', 5]], merc: 'm_skeleton',
+    blurb: '저주와 역병으로 적을 무르게 하고, 빨아들인 생기를 아군에게 나눈다. 망자를 불러낸다.' },
   // ── 합일 (8단~10단) ──
   bm: { name: '배틀마스터', short: '배틀', fam: 'battle', start: 8, kind: 'cav', mt: 'horse', master: true,
     tiers: ['배틀마스터', '그랑나이트', '그랜드나이트'],
     base: { hp: 80, mp: 16, atk: 17, def: 11, mag: 7, res: 6 }, grow: { hp: 5.6, mp: 0.9, atk: 1.5, def: 1.1, mag: 0.7, res: 0.6 },
     spd: 12, mv: 0.75, rng: [1, 2], atk: 'thrust', dtype: 'phys',
-    skills: [['cmd_bm', 8], ['bm_storm', 10], ['bm_charge', 9], ['bash', 8], ['thunder', 8], ['attackUp', 8], ['protect', 8], ['whirl', 8]], merc: 'm_lancer', mercs: ['m_sword', 'm_lancer', 'm_griffin'],
-    blurb: '보병, 기병, 비병이 하나로 합일한 전장의 주인. 9단에 「강철 돌격」, 10단에 「강철 폭풍」을 익힌다.' },
+    skills: [['cmd_bm', 8], ['bm_tempest', 10], ['bm_drive', 9], ['inf_bash', 8], ['cav_charge', 8], ['inf_wall', 8], ['inf_cover', 8], ['fly_gale', 8]], merc: 'm_lancer', mercs: ['m_sword', 'm_lancer', 'm_griffin'],
+    blurb: '보병, 기병, 비병이 하나로 합일한 전장의 주인. 9단에 「강철 돌파」, 10단에 「강철 폭풍」을 익힌다.' },
   tm: { name: '택틱스마스터', short: '택틱스', fam: 'tactics', start: 8, kind: 'arc', mt: 'swim', master: true,
     tiers: ['택틱스마스터', '그랑아처', '그랜드아처'],
     base: { hp: 66, mp: 16, atk: 17, def: 8, mag: 6, res: 6 }, grow: { hp: 4.8, mp: 0.9, atk: 1.5, def: 0.85, mag: 0.6, res: 0.6 },
     spd: 12, mv: 1, rng: [1, 4], atk: 'arrow', dtype: 'phys', passive: 'marine',
-    skills: [['charisma', 8], ['tm_rain', 10], ['tm_gale', 9], ['aimed', 8], ['slow', 8], ['tidal', 8], ['arrowRain', 8]], merc: 'm_archer', mercs: ['m_merman', 'm_pike', 'm_archer'],
+    skills: [['charisma', 8], ['tm_squall', 10], ['tm_hunt', 9], ['arc_mark', 8], ['pike_pin', 8], ['mar_surge', 8], ['arc_retreat', 8]], merc: 'm_archer', mercs: ['m_merman', 'm_pike', 'm_archer'],
     blurb: '해병, 창병, 궁병이 하나로 합일한 전술의 달인. 9단에 「바람길 화살」, 10단에 「소나기 화살」을 익힌다.' },
   mm: { name: '매직마스터', short: '매직', fam: 'magic', start: 8, kind: 'mage', mt: 'foot', master: true,
     tiers: ['매직마스터', '그랑메이지', '그랜드메이지'],
     base: { hp: 56, mp: 44, atk: 8, def: 6, mag: 19, res: 12 }, grow: { hp: 4.2, mp: 2.6, atk: 0.6, def: 0.65, mag: 1.65, res: 1.1 },
     spd: 11, mv: 1, rng: [1, 3], atk: 'bolt', dtype: 'magic', basic: 0.75,
-    skills: [['heal', 8], ['cmd_mm', 8], ['mm_dawn', 10], ['mm_grace', 9], ['quick', 8], ['fire', 8], ['blizzard', 8], ['healAll', 8], ['summon', 8], ['meteor', 8]], merc: 'm_spirit', mercs: ['m_sister', 'm_templar', 'm_spirit', 'm_skeleton'],
+    skills: [['mon_ward', 8], ['cmd_mm', 8], ['mm_sun', 10], ['mm_star', 9], ['mon_haste', 8], ['mag_ember', 8], ['mag_bolt', 8], ['cle_palm', 8], ['sha_raise', 8], ['mag_meteor', 8]], merc: 'm_spirit', mercs: ['m_sister', 'm_templar', 'm_spirit', 'm_skeleton'],
     blurb: '승려, 신관, 법사, 사교가 하나로 합일한 마도의 정점. 9단에 「별의 가호」, 10단에 「여명의 빛」을 익힌다.' }
 };
 
@@ -135,21 +135,62 @@ DS.SKILLS = {
   deathCloud:{ name: '독안개', mp: 14, tick: 60, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'poison', eff: [{ t: 'dmg', m: 1.1, type: 'magic' }, { t: 'status', s: 'poison', dur: 12, p: 4 }], desc: '십자 범위에 독안개. 피해와 중독.' },
   // ── 호령: 병과마다 하나인 지휘 기술 (궁병·택틱스마스터는 위의 「통솔」).
   //    2.2.0: 가솔이 없어져 모든 아군에게 걸린다 (예전 mercOnly — 세기는 절반). 자동 전투는 버프가 꺼진 아군이 둘 이상인 큰 싸움에서 쓴다.
-  cmd_inf:  { name: '방패 올려!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 18, dur: 15 }], desc: '호령 — 모든 아군의 방어 +18% (15초).' },
+  cmd_inf:  { name: '방패 올려!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 25 }, { t: 'taunt', to: 'foe', r: 2, dur: 6 }], desc: '호령 — 모든 아군의 방어 +15% (25초). 둘레 2칸 적은 6초 동안 나를 노린다.' },      // 2.2.6 보병: 방패 전열은 호령에도 도발이 붙는다
   cmd_cav:  { name: '돌격!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 12, dur: 12 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군의 공격 +12% (12초), 게이지 +40.' },
-  cmd_fly:  { name: '강습 신호', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 15 }], desc: '호령 — 모든 아군의 행동 소모 −15% (15초).' },
+  cmd_fly:  { name: '강습 신호', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 25 }, { t: 'gauge', v: 15 }], desc: '호령 — 모든 아군의 행동 소모 −15% (25초), 게이지 +15.' },
   cmd_mar:  { name: '버텨라!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 12, dur: 20 }, { t: 'gauge', v: 25 }], desc: '호령 — 모든 아군의 방어 +12% (20초), 게이지 +25.' },
-  cmd_pike: { name: '창벽 세워!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 15 }, { t: 'buff', s: 'atk', p: 5, dur: 15 }], desc: '호령 — 모든 아군의 방어 +15%, 공격 +5% (15초).' },
+  cmd_pike: { name: '창벽 세워!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 25 }, { t: 'buff', s: 'atk', p: 5, dur: 25 }], desc: '호령 — 모든 아군의 방어 +15%, 공격 +5% (25초).' },
   cmd_cle:  { name: '호흡을 맞춰라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'chi', eff: [{ t: 'buff', s: 'def', p: 15, dur: 20 }, { t: 'heal', m: 0.7 }], desc: '호령 — 모든 아군의 방어 +15% (20초), 기를 고르게 돌려 모두 조금 회복.' },      // 2.2.5: 무투가가 맡던 치유 몫 일부
   cmd_mon:  { name: '축복의 구령', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 12, dur: 20 }, { t: 'buff', s: 'def', p: 8, dur: 20 }], desc: '호령 — 모든 아군의 행동 소모 −12%, 방어 +8% (20초).' },
-  cmd_mag:  { name: '마력을 받아라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 18, dur: 15 }], desc: '호령 — 모든 아군의 공격 +18% (15초).' },
-  cmd_sha:  { name: '피의 계약', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 22, dur: 12 }, { t: 'buff', s: 'def', p: -8, dur: 12 }], desc: '호령 — 모든 아군의 공격 +22%, 대신 방어 −8% (12초).' },
+  cmd_mag:  { name: '마력을 받아라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 15, dur: 25 }], desc: '호령 — 모든 아군의 공격 +15% (25초).' },
+  cmd_sha:  { name: '피의 계약', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 22, dur: 20 }, { t: 'buff', s: 'def', p: -8, dur: 20 }], desc: '호령 — 모든 아군의 공격 +22%, 대신 방어 −8% (20초).' },
   cmd_bm:   { name: '전군 돌격', mp: 12, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 20 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군의 행동 소모 −15% (20초), 게이지 +40.' },
   cmd_mm:   { name: '별빛 가호', mp: 14, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'atk', p: 15, dur: 20 }, { t: 'buff', s: 'quick', p: 15, dur: 20 }], desc: '호령 — 모든 아군의 공격 +15%, 행동 소모 −15% (20초).' },
   // ── 2.2.5 승려(무투가)의 기술: 맨손 · 발 · 기공. fist = 기술 칸의 주먹 그림 (game.js skType). aura = 쓰는 이 둘레 r칸 아군을 마공 × m 만큼 고친다 (우리 편 치유 배율 그대로)
   cle_combo: { name: '연환권', mp: 4, tick: 45, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.6 }, { t: 'dmg', m: 0.6 }, { t: 'dmg', m: 0.7 }, { t: 'mend', r: 4, m: 1.3 }], desc: '붙은 적을 주먹, 주먹, 발로 세 번 친다. 모두 190%. 기를 돌려 4칸 안에서 가장 다친 아군 하나(자신 포함)를 조금 회복.' },
   cle_kick:  { name: '비연각', mp: 5, tick: 50, rng: [2, 3], tg: 'enemy', leap: true, fx: 'kick', fist: true, eff: [{ t: 'dmg', m: 1.6 }, { t: 'gauge', v: -25 }], desc: '2~3칸 밖의 적에게 날아차기 160%, 게이지를 깎는다.' },
   cle_palm:  { name: '기공장', mp: 10, tick: 55, rng: [1, 2], tg: 'enemy', fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 1.8, type: 'magic', stat: 'mix' }, { t: 'knock', n: 1 }, { t: 'aura', r: 2, m: 1.2 }, { t: 'mend', r: 4, m: 1.0 }], desc: '2칸 안의 적 하나에 기공 180%(마법 저항으로 막는다), 1칸 밀어낸다. 둘레 2칸 아군을 회복하고, 4칸 안에서 가장 다친 아군은 더 회복.' },
+  // ── 2.2.6 병과마다 새 기술 (옛 기술은 아래에 그대로 둔다 — 장비 · 옛 기록이 쓴다. 옛 이름 → 새 이름은 DS.SK_OLD)
+  //   덧효과: taunt 도발(그 적이 dur 초 동안 나를 노린다) · pull 끌어오기 · buff s 'shd' 보호막(공격 · 마공 × m 을 먼저 막는다) · ward 4칸 안 가장 다친 아군에게 보호막 · share 준 피해의 몫으로 가장 다친 아군 회복
+  //           chain 곁의 적에게 옮겨 간다 · status mark 표식(누구에게나 받는 피해 +p%) · burn 화상(2초마다 최대 체력의 p%) · wet 젖음(번개에 약하다)
+  //   vs: 그 상태인 적에게 vx 배 (slow 둔화 · mark 표식 · burn 화상 · wet 젖음 · curse 저주(공격 · 방어가 깎임) · low 체력 절반 아래, '|' 는 「또는」)
+  //   to: 'foe' | 'ally' | 'self' — 그 덧효과만 다른 무리에게 (r 칸 안, at: 'tgt' 면 대상 둘레) · dash 직선 끝까지 달려 나간다 · back 쓰고 나서 n 칸 물러선다 · ic 기술 칸 그림
+  // 보병 (로저스): 방패 전열 — 도발 · 보호막 · 되치기
+  inf_bash:   { name: '방패 치기', mp: 4, tick: 45, rng: [1, 1], tg: 'enemy', fx: 'shield', ic: 'shieldbash', eff: [{ t: 'dmg', m: 2.4 }, { t: 'gauge', v: -30 }, { t: 'taunt', dur: 6 }], desc: '붙은 적을 방패로 쳐 240%, 게이지를 깎고 6초 동안 나를 노리게 한다.' },
+  inf_wall:   { name: '철벽', mp: 8, tick: 45, tg: 'self', side: 'ally', fx: 'guard', ic: 'bulwark', eff: [{ t: 'buff', s: 'def', p: 40, dur: 12 }, { t: 'buff', s: 'ctr', p: 100, dur: 12 }, { t: 'taunt', to: 'foe', r: 2, dur: 8 }], desc: '12초 동안 방어 +40%, 붙어 때린 적을 100%로 되친다. 둘레 2칸 적은 나를 노린다.' },
+  inf_cover:  { name: '수호', mp: 8, tick: 40, rng: [1, 3], tg: 'ally', fx: 'cover', ic: 'cover', eff: [{ t: 'buff', s: 'shd', m: 1.8, stat: 'atk', dur: 15 }, { t: 'taunt', to: 'foe', at: 'tgt', r: 1, dur: 6 }], desc: '3칸 안 아군 하나에게 방패를 대 준다. 보호막(공격의 180%, 15초), 그 곁의 적은 나를 노린다.' },
+  // 기병 (라니스터): 돌격 — 꿰뚫고 달려 나가기 · 짓밟기 · 추격
+  cav_charge: { name: '돌파', mp: 6, tick: 50, tg: 'dir', len: 4, dash: true, fx: 'charge', ic: 'charge', eff: [{ t: 'dmg', m: 1.5 }, { t: 'gauge', v: -20 }], desc: '직선 4칸을 꿰뚫고 달려 나간다. 길 위의 적에게 150%, 게이지를 깎는다.' },
+  cav_trample:{ name: '말발굽', mp: 7, tick: 50, tg: 'self', area: 'r1', side: 'enemy', fx: 'quake', ic: 'hoof', eff: [{ t: 'dmg', m: 1.35 }, { t: 'status', s: 'slow', dur: 6 }], desc: '말을 세워 둘레 1칸 적을 짓밟는다. 135%와 둔화.' },
+  cav_hunt:   { name: '추격', mp: 5, tick: 45, rng: [2, 4], tg: 'enemy', leap: true, fx: 'thrust', ic: 'hunt', eff: [{ t: 'dmg', m: 1.5, vs: 'low', vx: 1.5 }], desc: '2~4칸 밖의 적에게 달려들어 150%. 체력이 절반 아래인 적에게 1.5배.' },
+  // 비병 (스카이워커): 치고 빠지기 — 내리꽂고 날아오른다
+  fly_dive:   { name: '급강하', mp: 5, tick: 45, rng: [2, 4], tg: 'enemy', leap: true, back: 2, fx: 'dive', ic: 'dive', eff: [{ t: 'dmg', m: 1.5, vs: 'mark', vx: 1.5 }], desc: '2~4칸 밖의 적에게 내리꽂아 150%(표식이 있으면 1.5배), 두 칸 날아오른다.' },
+  fly_gale:   { name: '날개 바람', mp: 7, tick: 50, tg: 'self', area: 'adj', side: 'enemy', back: 2, fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 1.25 }, { t: 'knock', n: 1 }, { t: 'gauge', v: -25 }], desc: '둘레 적에게 125%, 밀어내고 게이지를 깎은 뒤 두 칸 날아오른다.' },
+  // 해병 (앗쎄이): 물길 — 끌어오고 밀어내고 젖게 한다
+  mar_hook:   { name: '갈고리 작살', mp: 4, tick: 45, rng: [2, 4], tg: 'enemy', fx: 'hook', ic: 'hook', eff: [{ t: 'dmg', m: 1.2 }, { t: 'pull', n: 2 }, { t: 'status', s: 'slow', dur: 6 }], desc: '2~4칸 밖의 적에게 작살 120%, 두 칸 끌어오고 둔화.' },
+  mar_surge:  { name: '파도 밀기', mp: 7, tick: 50, tg: 'dir', len: 3, fx: 'water', ic: 'wave', eff: [{ t: 'dmg', m: 1.5, type: 'magic', stat: 'atk' }, { t: 'knock', n: 1 }, { t: 'status', s: 'wet', dur: 12 }], desc: '직선 3칸에 물보라 150%, 밀어내고 젖게 한다. 젖은 적은 번개에 1.5배로 맞는다.' },
+  // 창병 (프레이): 창벽 — 발 묶기 · 꿰뚫기 · 되찌르기
+  pike_pin:   { name: '발 묶기', mp: 4, tick: 45, rng: [1, 2], tg: 'enemy', fx: 'thrust', ic: 'pin', eff: [{ t: 'dmg', m: 1.5 }, { t: 'status', s: 'slow', dur: 10 }, { t: 'gauge', v: -20 }], desc: '두 칸 창끝으로 150%, 10초 둔화, 게이지를 깎는다.' },
+  pike_skewer:{ name: '꿰뚫기', mp: 6, tick: 50, tg: 'dir', len: 3, fx: 'thrust', ic: 'skewer', eff: [{ t: 'dmg', m: 1.8, vs: 'slow', vx: 1.4 }], desc: '직선 3칸을 꿰뚫어 180%. 둔화된 적에게 1.4배.' },
+  pike_brace: { name: '창벽', mp: 8, tick: 45, tg: 'self', area: 'r1', side: 'ally', fx: 'brace', ic: 'brace', eff: [{ t: 'buff', s: 'def', p: 20, dur: 12 }, { t: 'buff', s: 'ctr', p: 50, dur: 12 }], desc: '나와 곁의 아군이 창을 세운다. 방어 +20%, 붙어 때린 적을 50%로 되찌른다 (12초).' },
+  // 궁병 (퀸): 표식 사냥 — 표식 · 물러서며 쏘기
+  arc_mark:   { name: '표식 사격', mp: 4, tick: 45, rng: [2, 5], tg: 'enemy', fx: 'mark', ic: 'mark', eff: [{ t: 'dmg', m: 1.25 }, { t: 'status', s: 'mark', dur: 12, p: 20 }], desc: '최대 5칸. 125%, 표식을 남긴다. 표식이 있는 적은 누구에게나 20% 더 아프게 맞는다 (12초).' },
+  arc_retreat:{ name: '뒷걸음 사격', mp: 5, tick: 45, rng: [1, 5], tg: 'enemy', back: 2, fx: 'arrow', ic: 'retreat', eff: [{ t: 'dmg', m: 1.7, vs: 'mark', vx: 1.3 }], desc: '쏘고 두 칸 물러선다. 170%, 표식이 있으면 1.3배.' },
+  // 신관 (카마도): 등불 가호 — 보호막 · 정화 · 신성
+  mon_smite:  { name: '등불 치기', mp: 5, tick: 45, rng: [1, 3], tg: 'enemy', fx: 'holy', ic: 'lamp', eff: [{ t: 'dmg', m: 2.1, type: 'holy' }, { t: 'ward', r: 4, m: 0.9 }], desc: '신성 210% (망자, 악마에게 1.5배). 그 빛이 4칸 안 가장 다친 아군에게 작은 보호막이 된다.' },
+  mon_ward:   { name: '등불 가호', mp: 7, tick: 40, rng: [0, 3], tg: 'ally', fx: 'ward', ic: 'ward', eff: [{ t: 'buff', s: 'shd', m: 2.2, dur: 15 }, { t: 'cleanse' }], desc: '아군 하나에게 보호막(마공의 220%, 15초)을 씌우고 상태 이상을 푼다.' },
+  mon_haste:  { name: '신속', mp: 10, tick: 40, rng: [0, 3], tg: 'ally', fx: 'buffGold', ic: 'haste', eff: [{ t: 'buff', s: 'quick', p: 35, dur: 20 }, { t: 'gauge', v: 30 }], desc: '아군 하나의 행동 소모 −35% (20초), 게이지 +30.' },
+  mon_sanct:  { name: '성역', mp: 14, tick: 55, tg: 'self', area: 'r2', side: 'ally', fx: 'sanct', ic: 'sanct', eff: [{ t: 'buff', s: 'shd', m: 1.2, dur: 15 }, { t: 'buff', s: 'def', p: 20, dur: 20 }, { t: 'heal', m: 0.5 }], desc: '둘레 2칸 아군에게 보호막(마공의 120%)과 방어 +20% (20초), 조금 회복.' },
+  // 법사 (그레인저): 원소 맞물림 — 불은 화상, 얼음은 화상 입은 적에게, 번개는 얼거나 젖은 적에게
+  mag_ember:  { name: '불씨', mp: 6, tick: 50, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'fire', ic: 'flame', eff: [{ t: 'dmg', m: 0.8, type: 'magic' }, { t: 'status', s: 'burn', dur: 8, p: 2 }], desc: '십자 범위에 불 80%, 8초 화상.' },
+  mag_frost:  { name: '얼음창', mp: 6, tick: 50, rng: [1, 4], tg: 'enemy', fx: 'frost', ic: 'frost', eff: [{ t: 'dmg', m: 1.5, type: 'magic', vs: 'burn', vx: 1.4 }, { t: 'status', s: 'slow', dur: 10 }], desc: '얼음 150%, 10초 둔화. 화상을 입은 적에게 1.4배.' },
+  mag_bolt:   { name: '연쇄 번개', mp: 10, tick: 55, rng: [1, 4], tg: 'enemy', fx: 'thunder', ic: 'bolt', eff: [{ t: 'dmg', m: 1.4, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.5 }, { t: 'chain', n: 2, r: 2, m: 0.8, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.5 }], desc: '번개 140%, 2칸 안의 두 적에게 옮겨 간다(80%). 얼거나(둔화) 젖은 적에게 1.5배.' },
+  mag_meteor: { name: '별똥별', mp: 18, tick: 70, rng: [2, 5], tg: 'tile', area: 'r1', fx: 'meteor', ic: 'meteor', eff: [{ t: 'dmg', m: 1.3, type: 'magic', vs: 'burn', vx: 1.3 }, { t: 'status', s: 'burn', dur: 6, p: 1.5 }], desc: '십자 범위에 운석 130%, 화상. 이미 화상을 입은 적에게 1.3배.' },
+  // 사교 (아담스): 저주와 망자 — 생기 나눔 · 저주 · 역병 · 부름
+  sha_drain:  { name: '생기 나눔', mp: 5, tick: 45, rng: [1, 3], tg: 'enemy', fx: 'dark', ic: 'drain', eff: [{ t: 'dmg', m: 1.6, type: 'magic', share: 0.6 }], desc: '흑마법 160%. 준 피해의 60%로 4칸 안 가장 다친 아군(자신 포함)을 고친다.' },
+  sha_raise:  { name: '망자 부름', mp: 12, tick: 55, cd: 14, tg: 'self', fx: 'dark', ic: 'skull', ai: 'summon', cap: 2, eff: [{ t: 'summon', type: 'm_skeleton', n: 1, dur: 40, k: 0.85, ka: 1.2, kh: 1.3, kd: 1.5 }], desc: '40초 동안 싸울 해골 병사를 부른다 (둘까지).' },
+  sha_hex:    { name: '저주', mp: 7, tick: 45, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'curse', ic: 'hex', eff: [{ t: 'dmg', m: 1.0, type: 'magic' }, { t: 'buff', s: 'def', p: -20, dur: 12 }, { t: 'buff', s: 'atk', p: -15, dur: 12 }], desc: '십자 범위에 100%, 방어 −20%, 공격 −15% (12초).' },
+  sha_plague: { name: '역병 안개', mp: 12, tick: 55, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'poison', ic: 'plague', eff: [{ t: 'dmg', m: 1.4, type: 'magic', vs: 'curse', vx: 1.4 }, { t: 'status', s: 'poison', dur: 12, p: 3 }], desc: '십자 범위에 독안개 140%, 12초 중독. 저주받은 적에게 1.4배.' },
   // ── 합일한 마스터의 고유 기술 (9단·10단). 자동 전투는 목록의 앞쪽 기술부터 살피므로 병과 표에서 앞에 둔다 ──
   bm_charge: { name: '강철 돌격', mp: 12, tick: 55, tg: 'dir', len: 4, fx: 'thrust', eff: [{ t: 'dmg', m: 1.6 }, { t: 'knock', n: 1 }], desc: '직선 4칸을 꿰뚫어 160%, 1칸 밀어낸다.' },
   bm_storm:  { name: '강철 폭풍', mp: 18, tick: 65, tg: 'self', area: 'r2', side: 'enemy', fx: 'slash', eff: [{ t: 'dmg', m: 1.7 }, { t: 'gauge', v: -30 }], desc: '둘레 2칸의 모든 적에게 170%, 게이지를 깎는다.' },
@@ -157,6 +198,13 @@ DS.SKILLS = {
   tm_rain:   { name: '소나기 화살', mp: 18, tick: 65, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', eff: [{ t: 'dmg', m: 1.5 }], desc: '2칸 반경에 화살 소나기 150%.' },
   mm_grace:  { name: '별의 가호', mp: 22, tick: 60, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'atk', p: 20, dur: 25 }, { t: 'heal', m: 1.0 }], desc: '모든 아군의 공격 +20% (25초), 조금 회복.' },
   mm_dawn:   { name: '여명의 빛', mp: 26, tick: 75, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'holy', eff: [{ t: 'dmg', m: 1.8, type: 'holy' }], desc: '2칸 반경에 신성 180%. 망자, 악마에게 1.5배.' },
+  // 2.2.6 합일한 마스터의 새 고유 기술 (옛 bm_charge · bm_storm · tm_gale · tm_rain · mm_grace · mm_dawn 은 위에 그대로 — DS.SK_OLD)
+  bm_drive:   { name: '강철 돌파', mp: 12, tick: 55, tg: 'dir', len: 5, dash: true, fx: 'charge', ic: 'charge', eff: [{ t: 'dmg', m: 1.8 }, { t: 'gauge', v: -30 }], desc: '직선 5칸을 꿰뚫고 달려 나간다. 길 위의 적에게 180%, 게이지를 깎는다.' },
+  bm_tempest: { name: '강철 폭풍', mp: 16, tick: 60, tg: 'self', area: 'r2', side: 'enemy', fx: 'slash', ic: 'bulwark', eff: [{ t: 'dmg', m: 1.7 }, { t: 'gauge', v: -30 }, { t: 'taunt', dur: 6 }], desc: '둘레 2칸의 모든 적에게 170%, 게이지를 깎고 나를 노리게 한다.' },
+  tm_hunt:    { name: '바람길 화살', mp: 10, tick: 50, rng: [2, 6], tg: 'enemy', fx: 'mark', ic: 'mark', eff: [{ t: 'dmg', m: 2.0, vs: 'mark', vx: 1.3 }, { t: 'status', s: 'slow', dur: 8 }, { t: 'status', s: 'mark', dur: 10, p: 20 }], desc: '최대 6칸. 200%(표식이 있으면 1.3배), 둔화와 표식.' },
+  tm_squall:  { name: '소나기 화살', mp: 16, tick: 60, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', ic: 'volley', eff: [{ t: 'dmg', m: 1.4, vs: 'mark', vx: 1.4 }], desc: '2칸 반경에 화살 소나기 140%. 표식이 있는 적에게 1.4배.' },
+  mm_star:    { name: '별의 가호', mp: 20, tick: 55, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', ic: 'star', eff: [{ t: 'buff', s: 'atk', p: 20, dur: 25 }, { t: 'heal', m: 1.0 }], desc: '모든 아군의 공격 +20% (25초), 조금 회복.' },
+  mm_sun:     { name: '여명의 빛', mp: 22, tick: 65, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'holy', ic: 'sun', eff: [{ t: 'dmg', m: 1.7, type: 'holy' }, { t: 'ward', r: 4, m: 1.2 }], desc: '2칸 반경에 신성 170% (망자, 악마에게 1.5배). 가장 다친 아군에게 보호막.' },
   // ── 이름난 용병(영웅·전설)의 고유 기술: 마나 0, 재사용 시간(cd) ──
   ms_cleave: { name: '휩쓸기', mp: 0, tick: 50, cd: 9, tg: 'self', area: 'adj', side: 'enemy', fx: 'slash', eff: [{ t: 'dmg', m: 1.2 }], desc: '둘레의 적을 모두 벤다 (120%).' },
   ms_rush:   { name: '몸통 박치기', mp: 0, tick: 45, cd: 10, rng: [2, 4], tg: 'enemy', leap: true, fx: 'slash', eff: [{ t: 'dmg', m: 1.4 }, { t: 'gauge', v: -30 }], desc: '2~4칸 밖의 적에게 뛰어들어 140%, 게이지를 깎는다.' },
@@ -218,8 +266,7 @@ DS.SKILLS = {
 //   짧은 호령(12·15초): 싸움 내내 다시 외치느라 말풍선과 마나만 쓰던 것 → 20·25초. 효과 크기는 그대로.
 //     기병의 「돌격!」(12초)은 그대로 둔다 — 외칠 때마다 게이지 +40 을 주는 호령이라, 길게 잡으면 그만큼 덜 외쳐 약해진다.
 DS.SK_R8 = {
-  aimed: { tick: 45, desc: '최대 5칸. 180% 피해. 틱이 가벼운 견제 사격.' },
-  cmd_inf: { dur: 25 }, cmd_fly: { dur: 25 }, cmd_pike: { dur: 25 }, cmd_mag: { dur: 25 }, cmd_sha: { dur: 20 }
+  aimed: { tick: 45, desc: '최대 5칸. 180% 피해. 틱이 가벼운 견제 사격.' }      // 2.2.6: 호령의 늘린 지속은 기술 표에 바로 적었다 (도발 · 게이지 같은 덧효과의 시간은 따로)
 };
 DS.skTune = function (on) {
   var R = DS.SK_R8, id, S, T, k, d0;
@@ -453,46 +500,47 @@ DS.MERC_SK = {
 //   cls = 그 기술이 속한 태생 병과, pk = 성격 몫(누구나 쓸 수 있는 꼴). fl = 한 줄 내력.
 DS.ULT = { at: 280, charge: 60, hitGain: 0.4, hurtGain: 15, stars: [1000, 1500, 2000], starP: 0.08, starR: 0.12, gradeP: [0, 0, 0, 0, 0.08, 0.15] };
 DS.ULTS = {
+  // 2.2.6: 병과마다 새 필살기 셋 (자리 차례는 그대로 — 옛 것은 같은 자리의 새 것으로, DS.SK_ALIAS)
   // 보병 (로저스): 앞에 선다
-  u_wall:    { cls: 'inf', name: '방패 성벽', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 50, dur: 14 }, { t: 'gauge', v: 30 }], fl: '방패를 땅에 박고 뒤를 막는다.', desc: '둘레 2칸 아군의 방어 +50% (14초), 게이지 +30.' },
-  u_breach:  { cls: 'inf', name: '성문 깨기', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'slash', eff: [{ t: 'dmg', m: 3.0 }, { t: 'gauge', v: -50 }], fl: '문짝째 부수는 한 번의 내려침.', desc: '붙은 적 하나에 300%, 게이지를 크게 깎는다.' },
-  u_cyclone: { cls: 'inf', name: '강철 회오리', tick: 40, tg: 'self', area: 'adj', side: 'enemy', fx: 'wind', eff: [{ t: 'dmg', m: 2.0 }, { t: 'knock', n: 1 }], fl: '둘러싸였을 때 쓰라고 배운 칼.', desc: '둘레 모든 적에게 200%, 1칸 밀어낸다.' },
+  u_bastion: { cls: 'inf', name: '불락 성벽', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'guard', ic: 'bulwark', eff: [{ t: 'buff', s: 'def', p: 50, dur: 14 }, { t: 'buff', s: 'shd', m: 1.5, stat: 'atk', dur: 14 }, { t: 'taunt', to: 'foe', r: 3, dur: 8 }], fl: '이 뒤로는 한 걸음도 못 간다.', desc: '둘레 2칸 아군의 방어 +50%, 보호막(공격의 150%, 14초). 둘레 3칸 적은 나를 노린다.' },
+  u_ram:     { cls: 'inf', name: '성문 부수기', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'shield', ic: 'shieldbash', eff: [{ t: 'dmg', m: 3.2 }, { t: 'gauge', v: -60 }, { t: 'knock', n: 2 }], fl: '문짝째 부수는 한 번의 내려침.', desc: '붙은 적 하나에 320%, 게이지를 크게 깎고 2칸 밀어낸다.' },
+  u_riposte: { cls: 'inf', name: '반격의 회오리', tick: 40, tg: 'self', area: 'adj', side: 'enemy', fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 1.9 }, { t: 'knock', n: 1 }, { t: 'buff', s: 'ctr', p: 100, dur: 10, to: 'self' }], fl: '둘러싸였을 때 쓰라고 배운 칼.', desc: '둘레 모든 적에게 190%, 밀어낸다. 10초 동안 붙어 때린 적을 100%로 되친다.' },
   // 기병 (라니스터): 말은 제 주인을 안다
-  u_lance:   { cls: 'cav', name: '황금 창 돌격', tick: 40, tg: 'dir', len: 5, fx: 'thrust', eff: [{ t: 'dmg', m: 2.4 }, { t: 'knock', n: 1 }], fl: '금빛 말굽이 다섯 칸을 꿰뚫는다.', desc: '직선 5칸에 240%, 1칸 밀어낸다.' },
-  u_trample: { cls: 'cav', name: '말발굽 폭풍', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'quake', eff: [{ t: 'dmg', m: 1.8 }, { t: 'status', s: 'slow', dur: 8 }], fl: '말을 세우고 한 바퀴 돈다.', desc: '둘레 2칸 적에게 180%와 둔화.' },
-  u_debt:    { cls: 'cav', name: '빚은 갚는다', tick: 40, rng: [1, 2], tg: 'enemy', fx: 'thrust', eff: [{ t: 'dmg', m: 2.6, drain: 0.5 }], fl: '라니스터는 빚을 갚는다. 셈은 정확하다.', desc: '적 하나에 260%. 준 피해의 절반만큼 회복.' },
+  u_goldrush:{ cls: 'cav', name: '황금 돌격', tick: 40, tg: 'dir', len: 6, dash: true, fx: 'charge', ic: 'charge', eff: [{ t: 'dmg', m: 2.6 }, { t: 'gauge', v: -40 }], fl: '금빛 말굽이 여섯 칸을 꿰뚫는다.', desc: '직선 6칸을 꿰뚫고 달려 나간다. 길 위의 적에게 260%, 게이지를 깎는다.' },
+  u_stampede:{ cls: 'cav', name: '말발굽 폭풍', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'quake', ic: 'hoof', eff: [{ t: 'dmg', m: 1.8 }, { t: 'status', s: 'slow', dur: 8 }, { t: 'buff', s: 'quick', p: 30, dur: 10, to: 'self' }], fl: '말을 세우고 한 바퀴 돈다.', desc: '둘레 2칸 적에게 180%와 둔화. 10초 동안 내 행동 소모 −30%.' },
+  u_debt:    { cls: 'cav', name: '빚은 갚는다', tick: 40, rng: [1, 4], tg: 'enemy', leap: true, fx: 'thrust', ic: 'hunt', eff: [{ t: 'dmg', m: 2.7, drain: 0.5, vs: 'low', vx: 1.5 }], fl: '라니스터는 빚을 갚는다. 셈은 정확하다.', desc: '4칸 안의 적에게 달려들어 270%, 체력이 절반 아래면 1.5배. 준 피해의 절반만큼 회복.' },
   // 비병 (스카이워커): 먼저 본다
-  u_skyfall: { cls: 'fly', name: '하늘 낙하', tick: 40, rng: [2, 5], tg: 'enemy', leap: true, fx: 'wind', eff: [{ t: 'dmg', m: 2.8 }], fl: '구름 위에서 한 점을 고른다.', desc: '2~5칸 밖의 적에게 내리꽂아 280%.' },
-  u_gale:    { cls: 'fly', name: '돌개바람', tick: 40, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'wind', eff: [{ t: 'dmg', m: 1.8 }, { t: 'knock', n: 1 }], fl: '날개를 한 번 접었다 편다.', desc: '십자 범위에 180%, 1칸 밀어낸다.' },
-  u_wings:   { cls: 'fly', name: '날개 그늘', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 40, dur: 15 }, { t: 'gauge', v: 40 }], fl: '그늘 아래 선 이는 발이 가볍다.', desc: '둘레 2칸 아군의 행동 소모 −40% (15초), 게이지 +40.' },
+  u_stoop:   { cls: 'fly', name: '하늘 낙하', tick: 40, rng: [2, 6], tg: 'enemy', leap: true, back: 3, fx: 'dive', ic: 'dive', eff: [{ t: 'dmg', m: 3.0, vs: 'mark', vx: 1.5 }], fl: '구름 위에서 한 점을 고른다.', desc: '2~6칸 밖의 적에게 내리꽂아 300%(표식이 있으면 1.5배), 세 칸 날아오른다.' },
+  u_gale:    { cls: 'fly', name: '돌개바람', tick: 40, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 1.8 }, { t: 'knock', n: 1 }, { t: 'status', s: 'mark', dur: 10, p: 20 }], fl: '날개를 한 번 접었다 편다.', desc: '십자 범위에 180%, 밀어내고 표식을 남긴다.' },
+  u_canopy:  { cls: 'fly', name: '날개 그늘', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffGold', ic: 'haste', eff: [{ t: 'buff', s: 'quick', p: 40, dur: 15 }, { t: 'gauge', v: 40 }, { t: 'buff', s: 'shd', m: 1.0, stat: 'atk', dur: 12 }], fl: '그늘 아래 선 이는 발이 가볍다.', desc: '둘레 2칸 아군의 행동 소모 −40% (15초), 게이지 +40, 보호막(공격의 100%).' },
   // 해병 (앗쎄이): 물길을 연다
-  u_landing: { cls: 'mar', name: '해일 상륙', tick: 40, tg: 'dir', len: 5, fx: 'water', eff: [{ t: 'dmg', m: 2.2, type: 'magic', stat: 'atk' }, { t: 'knock', n: 1 }], fl: '파도와 함께 뭍에 오른다.', desc: '직선 5칸에 물보라 220%, 1칸 밀어낸다.' },
-  u_gihap:   { cls: 'mar', name: '기합 충전', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 30, dur: 15 }, { t: 'gauge', v: 30 }], fl: '악! 한 사람의 기합이 부대를 돈다.', desc: '모든 아군의 공격 +30% (15초), 게이지 +30.' },
-  u_anchor:  { cls: 'mar', name: '닻 내려찍기', tick: 40, rng: [1, 3], tg: 'tile', area: 'r1', fx: 'quake', eff: [{ t: 'dmg', m: 2.0 }, { t: 'status', s: 'slow', dur: 10 }], fl: '쇠닻을 던져 땅을 묶는다.', desc: '십자 범위에 200%와 둔화.' },
+  u_landing: { cls: 'mar', name: '해일 상륙', tick: 40, tg: 'dir', len: 5, dash: true, fx: 'water', ic: 'wave', eff: [{ t: 'dmg', m: 2.2, type: 'magic', stat: 'atk' }, { t: 'status', s: 'wet', dur: 12 }, { t: 'gauge', v: -30 }], fl: '파도와 함께 뭍에 오른다.', desc: '파도를 타고 직선 5칸을 달려 나간다. 물보라 220%, 젖게 하고 게이지를 깎는다.' },
+  u_warcry:  { cls: 'mar', name: '기합!', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', ic: 'horn', eff: [{ t: 'buff', s: 'atk', p: 25, dur: 15 }, { t: 'gauge', v: 40 }, { t: 'cleanse' }], fl: '악! 한 사람의 기합이 부대를 돈다.', desc: '모든 아군의 공격 +25% (15초), 게이지 +40, 상태 이상을 털어 낸다.' },
+  u_moor:    { cls: 'mar', name: '닻 끌기', tick: 40, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'hook', ic: 'hook', eff: [{ t: 'dmg', m: 2.0 }, { t: 'pull', n: 1 }, { t: 'status', s: 'slow', dur: 10 }], fl: '쇠닻을 던져 땅을 묶는다.', desc: '십자 범위에 200%, 한 칸 끌어오고 묶는다(둔화).' },
   // 창병 (프레이): 빗장은 안에서 건다
-  u_bolt:    { cls: 'pike', name: '빗장 꿰기', tick: 40, tg: 'dir', len: 4, fx: 'thrust', eff: [{ t: 'dmg', m: 2.5 }, { t: 'status', s: 'slow', dur: 8 }], fl: '문을 걸듯 한 줄을 꿴다.', desc: '직선 4칸을 꿰뚫어 250%와 둔화.' },
-  u_feast:   { cls: 'pike', name: '연회의 끝', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'thrust', eff: [{ t: 'dmg', m: 1.6 }, { t: 'buff', s: 'atk', p: -30, dur: 12 }], fl: '잔치는 끝났다. 문은 이미 닫혔다.', desc: '둘레 2칸 적에게 160%, 공격 −30% (12초).' },
-  u_keeper:  { cls: 'pike', name: '문지기', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 40, dur: 15 }, { t: 'buff', s: 'atk', p: 20, dur: 15 }], fl: '빗장 앞에 선 사람은 물러서지 않는다.', desc: '둘레 2칸 아군의 방어 +40%, 공격 +20% (15초).' },
+  u_crossbar:{ cls: 'pike', name: '빗장 꿰기', tick: 40, tg: 'dir', len: 4, fx: 'thrust', ic: 'skewer', eff: [{ t: 'dmg', m: 2.5, vs: 'slow', vx: 1.3 }, { t: 'status', s: 'slow', dur: 8 }, { t: 'gauge', v: -30 }], fl: '문을 걸듯 한 줄을 꿴다.', desc: '직선 4칸을 꿰뚫어 250%(둔화된 적에게 1.3배), 둔화와 게이지 깎기.' },
+  u_feast:   { cls: 'pike', name: '연회의 끝', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'thrust', ic: 'pin', eff: [{ t: 'dmg', m: 1.6 }, { t: 'buff', s: 'atk', p: -30, dur: 12 }, { t: 'status', s: 'slow', dur: 8 }], fl: '잔치는 끝났다. 문은 이미 닫혔다.', desc: '둘레 2칸 적에게 160%, 공격 −30% (12초)와 둔화.' },
+  u_gatekeep:{ cls: 'pike', name: '문지기', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'brace', ic: 'brace', eff: [{ t: 'buff', s: 'def', p: 40, dur: 15 }, { t: 'buff', s: 'atk', p: 20, dur: 15 }, { t: 'buff', s: 'ctr', p: 60, dur: 15 }], fl: '빗장 앞에 선 사람은 물러서지 않는다.', desc: '둘레 2칸 아군의 방어 +40%, 공격 +20%, 붙어 때린 적을 60%로 되찌른다 (15초).' },
   // 궁병 (퀸): 한 대면 된다
-  u_onearrow:{ cls: 'arc', name: '한 대면 된다', tick: 40, rng: [2, 7], tg: 'enemy', fx: 'arrow', eff: [{ t: 'dmg', m: 3.4 }], fl: '숨을 멈추고, 한 대.', desc: '최대 7칸. 적 하나에 340%.' },
-  u_downpour:{ cls: 'arc', name: '화살 폭우', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', eff: [{ t: 'dmg', m: 1.6 }], fl: '하늘이 잠깐 어두워진다.', desc: '2칸 반경에 화살 160%.' },
-  u_three:   { cls: 'arc', name: '세 갈래 화살', tick: 40, tg: 'multi', n: 3, area: 'single', fx: 'arrow', eff: [{ t: 'dmg', m: 1.9 }, { t: 'status', s: 'slow', dur: 6 }], fl: '시위 하나에 화살 셋.', desc: '적 셋에게 190%와 둔화.' },
+  u_oneshot: { cls: 'arc', name: '한 대면 된다', tick: 40, rng: [2, 7], tg: 'enemy', fx: 'mark', ic: 'mark', eff: [{ t: 'dmg', m: 3.4, vs: 'mark', vx: 1.4 }], fl: '숨을 멈추고, 한 대.', desc: '최대 7칸. 적 하나에 340%, 표식이 있으면 1.4배.' },
+  u_deluge:  { cls: 'arc', name: '화살 폭우', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', ic: 'volley', eff: [{ t: 'dmg', m: 1.5 }, { t: 'status', s: 'mark', dur: 10, p: 20 }], fl: '하늘이 잠깐 어두워진다.', desc: '2칸 반경에 화살 150%, 맞은 적 모두에게 표식.' },
+  u_three:   { cls: 'arc', name: '세 갈래 화살', tick: 40, tg: 'multi', n: 3, area: 'single', fx: 'arrow', ic: 'retreat', eff: [{ t: 'dmg', m: 1.8 }, { t: 'status', s: 'mark', dur: 8, p: 20 }, { t: 'status', s: 'slow', dur: 6 }], fl: '시위 하나에 화살 셋.', desc: '적 셋에게 180%, 표식과 둔화.' },
   // 승려 (센주): 가리지 않는다 — 2.2.5 무투가 (옛 흰 매듭 기도 · 가리지 않는 손 · 나무 울타리 → 차례대로 아래 셋, DS.SK_ALIAS)
   u_flurry:  { cls: 'cle', name: '백렬권', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.6, drain: 0.3 }, { t: 'gauge', v: -40 }], fl: '셀 수 없으면 막을 수도 없다.', desc: '붙은 적 하나에 여섯 번 몰아쳐 모두 335%, 게이지를 깎는다. 마지막 한 방의 피해 일부만큼 회복.' },
   u_stance:  { cls: 'cle', name: '부동심', tick: 40, tg: 'self', side: 'ally', fx: 'chi', fist: true, eff: [{ t: 'buff', s: 'def', p: 50, dur: 15 }, { t: 'buff', s: 'ctr', p: 90, dur: 15 }, { t: 'aura', r: 2, m: 1.6 }], fl: '산은 비켜서지 않는다.', desc: '15초 동안 자기 방어 +50%, 붙어서 때린 적을 90%로 되친다. 둘레 2칸 아군을 회복.' },
   u_palm:    { cls: 'cle', name: '파산장', tick: 40, tg: 'dir', len: 4, fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 2.3, type: 'magic', stat: 'mix' }, { t: 'knock', n: 1 }, { t: 'aura', r: 2, m: 0.8 }], fl: '손바닥 하나로 산길을 연다.', desc: '직선 4칸에 기공 230%, 1칸 밀어낸다. 둘레 2칸 아군을 조금 회복.' },
   // 신관 (카마도): 불은 꺼뜨리지 않는다
-  u_lampdance:{ cls: 'mon', name: '등잔불 춤', tick: 40, tg: 'dir', len: 4, fx: 'fire', eff: [{ t: 'dmg', m: 2.3, type: 'holy' }], fl: '불씨를 들고 추는 집안의 춤.', desc: '직선 4칸에 신성 230%. 망자, 악마에게 1.5배.' },
-  u_ember:   { cls: 'mon', name: '감빛 등잔', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 35, dur: 18 }, { t: 'heal', m: 0.6 }], fl: '등잔 하나로 밤길을 다 건넜다.', desc: '모든 아군의 행동 소모 −35% (18초), 조금 회복.' },
-  u_dawn:    { cls: 'mon', name: '해 뜨는 쪽', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'holy', eff: [{ t: 'dmg', m: 1.9, type: 'holy' }], fl: '어둠은 늘 해 뜨는 쪽에서 물러난다.', desc: '둘레 2칸 적에게 신성 190%.' },
+  u_lampdance:{ cls: 'mon', name: '등잔불 춤', tick: 40, tg: 'dir', len: 4, fx: 'fire', ic: 'lamp', eff: [{ t: 'dmg', m: 2.3, type: 'holy' }, { t: 'status', s: 'burn', dur: 8, p: 2 }, { t: 'ward', r: 4, m: 1.5 }], fl: '불씨를 들고 추는 집안의 춤.', desc: '직선 4칸에 신성 230%와 화상 (망자, 악마에게 1.5배). 가장 다친 아군에게 보호막.' },
+  u_lantern: { cls: 'mon', name: '감빛 등잔', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'ward', ic: 'haste', eff: [{ t: 'buff', s: 'quick', p: 35, dur: 18 }, { t: 'buff', s: 'shd', m: 0.9, dur: 15 }], fl: '등잔 하나로 밤길을 다 건넜다.', desc: '모든 아군의 행동 소모 −35% (18초), 보호막(마공의 90%).' },
+  u_sunrise: { cls: 'mon', name: '해 뜨는 쪽', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'holy', ic: 'sun', eff: [{ t: 'dmg', m: 1.9, type: 'holy' }, { t: 'cleanse', to: 'ally', r: 2 }, { t: 'buff', s: 'shd', m: 0.8, dur: 12, to: 'ally', r: 2 }], fl: '어둠은 늘 해 뜨는 쪽에서 물러난다.', desc: '둘레 2칸 적에게 신성 190%. 둘레 2칸 아군의 상태 이상을 풀고 보호막.' },
   // 법사 (그레인저): 모르면 적는다
-  u_starfall:{ cls: 'mag', name: '밤하늘 낙하', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'meteor', eff: [{ t: 'dmg', m: 2.1, type: 'magic' }], fl: '책 끝에 적어 둔 별 하나.', desc: '2칸 반경에 운석 210%.' },
-  u_notes:   { cls: 'mag', name: '적어 둔 주문', tick: 40, rng: [1, 5], tg: 'enemy', fx: 'thunder', eff: [{ t: 'dmg', m: 3.0, type: 'magic', stat: 'mix' }], fl: '밤새 외운 주문을 한 번에.', desc: '적 하나에 뇌격 300%. 마법 저항으로 막는다.' },
-  u_frost:   { cls: 'mag', name: '서리 감옥', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'water', eff: [{ t: 'dmg', m: 1.4, type: 'magic' }, { t: 'status', s: 'slow', dur: 12 }], fl: '숨까지 얼리는 겨울 한 장.', desc: '2칸 반경에 140%와 긴 둔화.' },
+  u_skyfire: { cls: 'mag', name: '밤하늘 낙하', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'meteor', ic: 'meteor', eff: [{ t: 'dmg', m: 2.0, type: 'magic' }, { t: 'status', s: 'burn', dur: 10, p: 3 }], fl: '책 끝에 적어 둔 별 하나.', desc: '2칸 반경에 운석 200%, 긴 화상.' },
+  u_spellbook:{ cls: 'mag', name: '적어 둔 주문', tick: 40, rng: [1, 5], tg: 'enemy', fx: 'thunder', ic: 'bolt', eff: [{ t: 'dmg', m: 2.8, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.4 }, { t: 'chain', n: 3, r: 2, m: 0.6, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.4 }], fl: '밤새 외운 주문을 한 번에.', desc: '적 하나에 뇌격 280%, 곁의 셋에게 옮겨 간다(60%). 얼거나 젖은 적에게 1.4배.' },
+  u_icejail: { cls: 'mag', name: '서리 감옥', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'frost', ic: 'frost', eff: [{ t: 'dmg', m: 1.3, type: 'magic', vs: 'burn', vx: 1.4 }, { t: 'status', s: 'slow', dur: 12 }, { t: 'gauge', v: -40 }], fl: '숨까지 얼리는 겨울 한 장.', desc: '2칸 반경에 140%(화상 입은 적에게 1.4배), 긴 둔화, 게이지를 깎는다.' },
   // 사교 (아담스): 죽은 이도 편이 있다
-  u_legion:  { cls: 'sha', name: '그믐 군단', tick: 40, tg: 'self', fx: 'dark', ai: 'summon', cap: 2, eff: [{ t: 'summon', type: 'm_skeleton', n: 2, dur: 30 }], fl: '그믐밤에는 집안 어른들이 일어난다.', desc: '30초 동안 싸울 해골 병사 둘을 부른다.' },
-  u_veil:    { cls: 'sha', name: '자줏빛 장막', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'poison', eff: [{ t: 'dmg', m: 1.2, type: 'magic' }, { t: 'status', s: 'poison', dur: 12, p: 5 }], fl: '장막 안에서는 숨이 무겁다.', desc: '2칸 반경에 피해와 강한 중독.' },
-  u_supper:  { cls: 'sha', name: '망자의 저녁', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'dark', eff: [{ t: 'dmg', m: 1.6, type: 'magic', drain: 0.6 }], fl: '식탁에 빈자리는 없다.', desc: '둘레 2칸 적에게 흑마법 160%, 준 피해의 60% 회복.' },
+  u_newmoon: { cls: 'sha', name: '그믐 군단', tick: 40, tg: 'self', fx: 'dark', ic: 'skull', ai: 'summon', cap: 3, eff: [{ t: 'summon', type: 'm_skeleton', n: 3, dur: 30, k: 0.9, ka: 1.25, kh: 1.3, kd: 1.5 }], fl: '그믐밤에는 집안 어른들이 일어난다.', desc: '30초 동안 싸울 해골 병사 셋을 부른다.' },
+  u_violet:  { cls: 'sha', name: '자줏빛 장막', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'poison', ic: 'plague', eff: [{ t: 'dmg', m: 1.2, type: 'magic' }, { t: 'status', s: 'poison', dur: 12, p: 5 }, { t: 'buff', s: 'def', p: -20, dur: 12 }], fl: '장막 안에서는 숨이 무겁다.', desc: '2칸 반경에 피해와 강한 중독, 방어 −20% (12초).' },
+  u_supper:  { cls: 'sha', name: '망자의 저녁', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'dark', ic: 'drain', eff: [{ t: 'dmg', m: 1.6, type: 'magic', share: 0.6 }], fl: '식탁에 빈자리는 없다.', desc: '둘레 2칸 적에게 흑마법 160%. 준 피해의 60%로 가장 다친 아군들을 고친다.' },
   // 성격 몫 (누구의 몸에도 맞는 꼴)
   u_steady:  { pk: 'plain', name: '늘 하던 대로', tick: 40, tg: 'self', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 40, dur: 15 }, { t: 'buff', s: 'def', p: 30, dur: 15 }, { t: 'gauge', v: 50 }], fl: '특별한 건 없다. 그게 비결이다.', desc: '자기 공격 +40%, 방어 +30% (15초), 게이지 +50.' },
   u_rally:   { pk: 'chatty', name: '끝나고 한잔', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 30, dur: 15 }, { t: 'gauge', v: 30 }], fl: '술값은 이긴 쪽이 낸다.', desc: '둘레 2칸 아군의 공격 +30% (15초), 게이지 +30.' },
@@ -503,7 +551,42 @@ DS.ULTS = {
 };
 (function () { for (var k in DS.ULTS) { var U = DS.ULTS[k]; U.mp = 0; U.ult = true; DS.SKILLS[k] = U; } })();
 // 2.2.5: 없어진 기술 이름 → 새 이름. 옛 저장의 타고난 필살기(ps.ul) · 연무장 기록(ul · sk)을 읽을 때 옮긴다 (save.js DS.fixSave · arena.js). 승려의 치유 · 정화 · 모두 치유는 기술 표에 그대로 있다 (매직마스터 · 장비가 쓴다)
-DS.SK_ALIAS = { u_prayer: 'u_flurry', u_mercy: 'u_stance', u_grove: 'u_palm' };
+DS.SK_ALIAS = { u_prayer: 'u_flurry', u_mercy: 'u_stance', u_grove: 'u_palm',
+  // 2.2.6: 병과마다 새 필살기 — 같은 자리의 새 것으로 (타고난 굴림의 차례가 그대로라 같은 사람은 같은 자리를 지닌다)
+  u_wall: 'u_bastion', u_breach: 'u_ram', u_cyclone: 'u_riposte', u_lance: 'u_goldrush', u_trample: 'u_stampede', u_skyfall: 'u_stoop', u_wings: 'u_canopy',
+  u_gihap: 'u_warcry', u_anchor: 'u_moor', u_bolt: 'u_crossbar', u_keeper: 'u_gatekeep', u_onearrow: 'u_oneshot', u_downpour: 'u_deluge',
+  u_ember: 'u_lantern', u_dawn: 'u_sunrise', u_starfall: 'u_skyfire', u_notes: 'u_spellbook', u_frost: 'u_icejail', u_legion: 'u_newmoon', u_veil: 'u_violet' };
+// 2.2.6: 병과의 옛 보통 기술 → 새 기술 (병과마다 — 같은 옛 기술이 병과에 따라 다른 새 기술이 된다). 옛 기술은 기술 표에 그대로 있다 (장비의 기술 · 옮기기 전의 줄)
+//   쓰는 곳: 돌아온 이의 옛 깃발 기술(m.s · save.js) · 연무장 기록(sk · arena.js). 병과를 모르면 SK_OLD._ (가장 먼저 그 기술을 지녔던 병과의 것)
+DS.SK_OLD = {
+  inf: { bash: 'inf_bash', attackUp: 'inf_wall', protect: 'inf_cover' },
+  cav: { thunder: 'cav_charge', protect: 'cav_trample', attackUp: 'cav_hunt' },
+  fly: { dive: 'fly_dive', whirl: 'fly_gale' },
+  mar: { harpoon: 'mar_hook', tidal: 'mar_surge' },
+  pike: { slow: 'pike_pin', pierce: 'pike_skewer', protect: 'pike_brace' },
+  arc: { aimed: 'arc_mark', arrowRain: 'arc_retreat' },
+  cle: { heal: 'cle_combo', cure: 'cle_kick', healAll: 'cle_palm' },
+  mon: { holy: 'mon_smite', protect: 'mon_ward', quick: 'mon_haste', bless: 'mon_sanct' },
+  mag: { fire: 'mag_ember', ice: 'mag_frost', blizzard: 'mag_bolt', meteor: 'mag_meteor' },
+  sha: { drain: 'sha_drain', summon: 'sha_raise', curse: 'sha_hex', deathCloud: 'sha_plague' },
+  bm: { bash: 'inf_bash', thunder: 'cav_charge', attackUp: 'inf_wall', protect: 'inf_cover', whirl: 'fly_gale', bm_charge: 'bm_drive', bm_storm: 'bm_tempest' },
+  tm: { aimed: 'arc_mark', slow: 'pike_pin', tidal: 'mar_surge', arrowRain: 'arc_retreat', tm_gale: 'tm_hunt', tm_rain: 'tm_squall' },
+  mm: { heal: 'mon_ward', quick: 'mon_haste', fire: 'mag_ember', blizzard: 'mag_bolt', healAll: 'cle_palm', summon: 'sha_raise', meteor: 'mag_meteor', mm_grace: 'mm_star', mm_dawn: 'mm_sun' }
+};
+(function () {      // 병과를 모를 때: 그 옛 기술을 가장 먼저(병과 표 차례로) 지녔던 병과의 새 기술
+  var A = DS.SK_OLD._ = {}; for (var c in DS.SK_OLD) { if (c === '_') continue; var M = DS.SK_OLD[c]; for (var k in M) if (!Object.prototype.hasOwnProperty.call(A, k)) A[k] = M[k]; }
+  // 합일한 이(8단 위)의 9 · 10단 고유 기술은 병과가 아니라 묶음을 따른다 — 아홉 병과 표에도 그 묶음의 것을 넣는다
+  ['inf', 'cav', 'fly'].forEach(function (c) { DS.SK_OLD[c].bm_charge = 'bm_drive'; DS.SK_OLD[c].bm_storm = 'bm_tempest'; });
+  ['mar', 'pike', 'arc'].forEach(function (c) { DS.SK_OLD[c].tm_gale = 'tm_hunt'; DS.SK_OLD[c].tm_rain = 'tm_squall'; });
+  ['cle', 'mon', 'mag', 'sha'].forEach(function (c) { DS.SK_OLD[c].mm_grace = 'mm_star'; DS.SK_OLD[c].mm_dawn = 'mm_sun'; });
+})();
+DS.skOld = function (id, cls) {      // 옛 기술 id → 새 id (필살기는 DS.skAlias). 모르는 것 · 새것은 그대로
+  if (typeof id !== 'string') return id;
+  var own = Object.prototype.hasOwnProperty, M = cls && own.call(DS.SK_OLD, cls) ? DS.SK_OLD[cls] : null;
+  if (M && own.call(M, id)) return M[id];
+  if (own.call(DS.SK_OLD._, id)) return DS.SK_OLD._[id];
+  return DS.skAlias(id);
+};
 DS.skAlias = function (id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(DS.SK_ALIAS, id) ? DS.SK_ALIAS[id] : id; };
 // 등급: 이름, 능력 배율, 모집 확률(%), 색
 DS.GRADES = [null,
@@ -650,14 +733,19 @@ DS.GEAR_CAT = {
   staff: { name: '지팡이', slot: 'w', A: { n: '스태프', pow: 1 }, B: { n: '룬 스태프', pow: 0.85, mp: 0.25, note: '마나 +25%' } },
   heavy: { name: '중갑', slot: 'a', A: { n: '플레이트', def: 1, res: 0.5 }, B: { n: '체인메일', def: 0.8, res: 0.95, note: '마법에 강하다' } },
   light: { name: '경갑', slot: 'a', A: { n: '레더 아머', def: 1, res: 0.5 }, B: { n: '윙 가드', def: 0.8, res: 0.5, spd: 0.06, note: '행동 회복 +6%' } },
-  robe:  { name: '로브', slot: 'a', A: { n: '로브', def: 1, res: 0.5 }, B: { n: '실크 로브', def: 0.7, res: 1.0, mp: 0.15, note: '마방 중심, 마나 +15%' } }
+  robe:  { name: '로브', slot: 'a', A: { n: '로브', def: 1, res: 0.5 }, B: { n: '실크 로브', def: 0.7, res: 1.0, mp: 0.15, note: '마방 중심, 마나 +15%' } },
+  // 2.2.6 무투가(승려)의 장비: 권갑 · 도복 (수치의 크기는 다른 계열과 같다 — 위력 1 · 방어 1)
+  fist:  { name: '권갑', slot: 'w', A: { n: '너클', pow: 1 }, B: { n: '수투', pow: 0.85, spd: 0.06, note: '행동 회복 +6%' } },
+  gi:    { name: '도복', slot: 'a', A: { n: '도복', def: 1, res: 0.5 }, B: { n: '띠 도복', def: 0.8, res: 0.75, spd: 0.04, note: '행동 회복 +4%' } }
 };
 // 병과에 「맞는」 계열 (2.1.0: 입는 제한이 아니다 — 맞지 않는 계열은 능력치 −10%)
 DS.CLS_GEAR = {
   inf: { w: ['sword'], a: ['heavy'] }, cav: { w: ['lance'], a: ['heavy'] }, fly: { w: ['lance'], a: ['light'] }, mar: { w: ['lance'], a: ['heavy'] }, pike: { w: ['lance'], a: ['heavy'] },
-  arc: { w: ['bow'], a: ['light'] }, cle: { w: ['wand'], a: ['robe'] }, mon: { w: ['wand'], a: ['robe'] }, mag: { w: ['staff'], a: ['robe'] }, sha: { w: ['staff'], a: ['robe'] },
+  arc: { w: ['bow'], a: ['light'] }, cle: { w: ['fist'], a: ['gi'] }, mon: { w: ['wand'], a: ['robe'] }, mag: { w: ['staff'], a: ['robe'] }, sha: { w: ['staff'], a: ['robe'] },
   bm: { w: ['sword', 'lance'], a: ['heavy'] }, tm: { w: ['bow', 'lance'], a: ['light', 'heavy'] }, mm: { w: ['staff', 'wand'], a: ['robe'] }
 };
+// 2.2.6: 무투가가 되기 전에 승려가 들던 성구 · 로브도 맞는 계열로 친다 (가방 · 저장의 옛 장비가 깎이지 않게 — 떨어지는 장비는 권갑 · 도복)
+DS.GEAR_ALSO = { cle: { w: ['wand'], a: ['robe'] } };
 DS.GEAR_OFF = 0.9;      // 2.1.0: 병과에 맞지 않는 장비는 위력·방어·마방·HP 를 이만큼만 낸다 (사용자: 「불리하게」 — 맞는 장비에 덤은 없다)
 // 강화(무기·방어구): 대장간에서 골드를 내고 한 번 굴린다. rate[n] = +n 으로 올릴 때의 성공 확률(%).
 //   r37 확률: 사용자 「90%부터 10%씩」 + 「50프로를 하한으로」 — +1 90%, +2 80%, +3 70%, +4 60%, +5 부터 끝까지 50%. 실패하면 부서진다(강화 보호 부적이 있으면 그대로).

@@ -272,6 +272,7 @@ P.calc = function (u, v, m, type, stat, flat) {
     if (u.fx.lone && this.alone(u)) dmg *= 1 + Math.min(0.5, u.fx.lone);
     if (u.fx.pair && this.paired(u)) dmg *= 1.15;
   }
+  if (v.st && v.st.mark) dmg *= 1 + (v.st.mark.p || 20) / 100;      // 2.2.6 표식 (궁병): 누구에게나 더 아프게 맞는다
   if (v.fx) {      // 2.1.0: 받는 쪽 장비 훅 (홀로·짝)
     if (v.fx.lone && this.alone(v)) dmg *= 1 - Math.min(0.5, v.fx.lone);
     if (v.fx.pair && this.paired(v)) dmg *= 0.9;
@@ -324,6 +325,13 @@ P.rouse = function (e) {
 P.hurt = function (v, dmg, src, o) {
   if (v.dead) return;
   o = o || {};
+  var sb = v.buffs && v.buffs.shd;      // 2.2.6 보호막 (버프 shd — p 가 남은 막는 양): 피해를 먼저 받아 낸다
+  if (sb && dmg > 0 && dmg < v.mhp * 50) {
+    var ab = Math.min(dmg, Math.max(0, sb.p)); sb.p -= ab; dmg -= ab;
+    if (ab > 0) this.emit({ t: 'shd', id: v.id, v: Math.round(ab), end: sb.p <= 0 });
+    if (sb.p <= 0) { delete v.buffs.shd; this.emit({ t: 'buffEnd', id: v.id, s: 'shd' }); }
+    if (dmg <= 0) { if (src && src.ult && src !== v && o.type !== 'reflect') src.uc = Math.min(100, (src.uc || 0) + DS.ULT.hitGain * this.ultUp(src)); return; }
+  }
   v.hp -= dmg; this.lastHit = this.t;
   if (v.er && dmg < v.mhp) this.erHit(v);      // r17: 이름 지우기 문턱 (왕만). 최대 체력 이상 한 방(시험·연출의 즉사)은 건너뛴다 — 실제 싸움에는 없는 값
   if (src && src.side === 'enemy' && v.side === 'ally') src.prov = this.t + 6;      // 우리를 때린 적은 멀어도 내버려 두지 않는다
@@ -491,49 +499,140 @@ P.cast = function (u, id, tgt, free) {
     return true;
   }
   this.resolve(u, id, tiles, tgt && tgt.id ? tgt : null);
+  if (S.dash && tiles && !u.dead) this.dashTo(u, tiles);      // 2.2.6 돌파 (기병): 길 위를 치고 그 끝까지 달려 나간다
+  if (S.back && !u.dead && !this.result) this.hopBack(u, S.back, tgt && tgt.id ? tgt : null);      // 2.2.6 치고 빠지기 (비병 · 궁병)
   u.busy = 0.55;
   return true;
 };
+// 2.2.6 돌파: 직선의 칸을 차례로 보며 지나갈 수 있는(땅) 데까지, 그 가운데 비어 있는 가장 먼 칸에 선다 (사람 위로는 지나간다)
+P.dashTo = function (u, tiles) {
+  var dest = null, i, t, oc;
+  for (i = 0; i < tiles.length; i++) { t = tiles[i]; if (!this.pass(u.mt, t[0], t[1])) break; oc = this.occ[t[1] * this.w + t[0]]; if (!oc || oc.dead) dest = t; }
+  if (!dest || (dest[0] === u.x && dest[1] === u.y)) return false;
+  this.occ[u.y * this.w + u.x] = null; u.x = dest[0]; u.y = dest[1]; this.occ[u.y * this.w + u.x] = u;
+  this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y, dash: 1 });
+  return true;
+};
+// 2.2.6 물러서기: 한 칸씩 n 번, 가장 가까운 적과 더 멀어지는 이웃 칸으로 (붉은 칸 · 용암은 피한다). 더 멀어질 데가 없으면 멈춘다
+P.hopBack = function (u, n, ref) {
+  var self = this, foes = this.units.filter(function (v) { return !v.dead && v.side !== u.side && v.side !== 'neutral' && dist(u, v) <= 8; }), moved = false, dz = this.dz[u.side], hot = this.burns(u);
+  if (!foes.length) return false;
+  function md(x, y) { var m = 99; for (var i = 0; i < foes.length; i++) { var d = Math.abs(foes[i].x - x) + Math.abs(foes[i].y - y); if (d < m) m = d; } return m; }
+  for (var k = 0; k < n; k++) {
+    var cur = md(u.x, u.y), best = null, bs = cur;
+    DIR.forEach(function (d) {
+      var x = u.x + d[0], y = u.y + d[1], j = y * self.w + x; if (!self.pass(u.mt, x, y) || self.occ[j] || dz[j] || (hot && self.kind[j] === 'lava')) return;
+      var sc = md(x, y) + (ref ? 0.01 * (Math.abs(ref.x - x) + Math.abs(ref.y - y)) : 0); if (sc > bs + 0.001) { bs = sc; best = [x, y]; }
+    });
+    if (!best) break;
+    this.occ[u.y * this.w + u.x] = null; u.x = best[0]; u.y = best[1]; this.occ[u.y * this.w + u.x] = u; moved = true;
+  }
+  if (moved) this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y, back: 1 });
+  return moved;
+};
+// 2.2.6: vs — 그 상태인 적에게 더 (slow 둔화 · mark 표식 · burn 화상 · wet 젖음 · curse 저주 · low 체력 절반 아래, '|' 로 여럿)
+function vsHit(v, key) {
+  if (!key || !v) return false;
+  var ks = key.split('|');
+  for (var i = 0; i < ks.length; i++) {
+    var k = ks[i];
+    if (k === 'low') { if (v.hp < v.mhp * 0.5) return true; }
+    else if (k === 'curse') { if ((v.buffs.def && v.buffs.def.p < 0) || (v.buffs.atk && v.buffs.atk.p < 0)) return true; }
+    else if (v.st && v.st[k]) return true;
+  }
+  return false;
+}
+DS.vsHit = vsHit;
+// 보호막 · 기 전하기 · 생기 나눔의 양: 쓰는 이의 공격 또는 마공 × m (우리 편 보통 기술이면 치유 배율 — 보호막은 그 두 배를 쓴다: 막고 나면 사라진다)
+P.shdAmt = function (u, e, S, pw) { var base = e.stat === 'atk' ? u.atk : u.mag; return Math.round(base * e.m * (pw || 1) + 10); };
 P.resolve = function (u, id, tiles, unitTgt) {
   var S = SK[id], self = this, vs, pw = S.ult ? (u.ultP || 1) : 1;      // r32: 필살기의 세기 (별·등급)
   if ((S.tg === 'enemy' || S.tg === 'ally') && unitTgt) vs = unitTgt.dead ? [] : [unitTgt];
   else vs = this.victims(u, S, tiles);
   this.emit({ t: 'skill', id: u.id, sk: id, fx: S.fx, tiles: tiles || vs.map(function (v) { return [v.x, v.y]; }), from: [u.x, u.y] });
   if (this._er && u.side === 'ally' && S.tg === 'ally' && unitTgt && unitTgt.erM && S.eff.some(function (e) { return e.t === 'heal' || e.t === 'cleanse'; })) this.erSave(unitTgt, 'heal', u);      // r17: 한 사람에게 거는 치유·정화
+  var hk0 = u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1, hup = u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1, by = u.side === 'ally' ? u.id : null, ctr0 = vs[0] || null;
+  // 2.2.6 to: 그 덧효과만 다른 무리에게 — 'self' 쓰는 이 · 'ally' / 'foe' 쓰는 이(at: 'tgt' 면 첫 대상) 둘레 r 칸
+  function grp(e) {
+    if (!e.to) return vs;
+    if (e.to === 'self') return u.dead ? [] : [u];
+    var c = e.at === 'tgt' && ctr0 ? ctr0 : u, out = [], us = self.units, f;
+    for (var i = 0; i < us.length; i++) { f = us[i]; if (f.dead || (e.to === 'ally' ? f.side !== u.side : f.side === u.side || f.side === 'neutral')) continue; if (e.r == null || dist(c, f) <= e.r) out.push(f); }
+    return out;
+  }
+  function vsk(e, v) { return e.vs && vsHit(v, e.vs) ? (self.emit({ t: 'weak', id: v.id, k: e.vs }), e.vx || 1.5) : 1; }
   S.eff.forEach(function (e) {
+    var T = grp(e);
     switch (e.t) {
-      case 'dmg': vs.forEach(function (v) {
+      case 'dmg': T.forEach(function (v) {
         if (v.dead) return;
-        var d = self.calc(u, v, e.m * pw, e.type || (S.item ? 'magic' : null), e.stat, e.flat);
+        var d = self.calc(u, v, e.m * pw * vsk(e, v), e.type || (S.item ? 'magic' : null), e.stat, e.flat);
         if (self._tele && v.fx && v.fx.teleRes) d = Math.max(1, Math.round(d * (1 - Math.min(0.6, v.fx.teleRes))));      // 예고(붉은 칸) 기술을 덜 아프게 받는다
         self.hurt(v, d, u, { type: e.type || u.dtype });
         if (e.drain) self.heal(u, d * e.drain);
         else if (self.drainOf(u)) self.leech(u, d * self.drainOf(u));
+        if (e.share && !u.dead) { var st = self.mendTgt(u, 4); if (st) { self.emit({ t: 'mend', id: u.id, tid: st.id, dark: 1 }); self.heal(st, d * e.share * (u.side === 'ally' && !S.ult ? 1 : 1) * hup); } }      // 2.2.6 생기 나눔 (사교)
       }); break;
-      case 'heal': var hk = u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1; vs.forEach(function (v) { self.heal(v, (u.mag * e.m * pw + 8) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1) * hk); }); break;      // healUp: 자비의 홀 등
-      case 'buff': vs.forEach(function (v) {
+      case 'chain':      // 2.2.6 연쇄 (법사의 번개): 맞은 적 둘레 r 칸에서 아직 안 맞은 적 n 에게 차례로 옮겨 간다
+        var hit = vs.slice(), from = vs[vs.length - 1];
+        for (var cn = 0; cn < e.n && from; cn++) {
+          var nx = null, nd = 99;
+          for (var ci = 0; ci < self.units.length; ci++) { var cf = self.units[ci]; if (cf.dead || cf.side === u.side || cf.side === 'neutral' || hit.indexOf(cf) >= 0) continue; var cd = dist(from, cf); if (cd <= e.r && cd < nd) { nd = cd; nx = cf; } }
+          if (!nx) break;
+          hit.push(nx); self.emit({ t: 'chain', id: u.id, a: from.id, b: nx.id });
+          var cdm = self.calc(u, nx, e.m * pw * vsk(e, nx), e.type || null, e.stat, e.flat); self.hurt(nx, cdm, u, { type: e.type || u.dtype });
+          from = nx;
+        }
+        break;
+      case 'heal': T.forEach(function (v) { self.heal(v, (u.mag * e.m * pw + 8) * hup * hk0); }); break;      // healUp: 자비의 홀 등
+      case 'buff': T.forEach(function (v) {
         if (v.dead) return;
+        if (e.s === 'shd') { var amt = self.shdAmt(u, e, S, pw) * hup, ob = v.buffs.shd; v.buffs.shd = { p: Math.max(amt, ob ? ob.p : 0), t: e.dur, mx: amt }; self.emit({ t: 'buff', id: v.id, s: 'shd', p: Math.round(amt) }); return; }      // 2.2.6 보호막: 더 큰 쪽으로 (쌓이지 않는다)
         var p = e.p; if (p < 0 && v.role === 'boss') p = Math.round(p / 2);
+        var ob2 = v.buffs[e.s]; if (ob2 && ob2.p > 0 && p > 0 && ob2.p > p && ob2.t > 2) return;      // 2.2.6: 더 센 같은 가호가 남아 있으면 약한 것으로 덮지 않는다 (철벽 위에 호령)
         v.buffs[e.s] = { p: p, t: e.dur }; self.emit({ t: 'buff', id: v.id, s: e.s, p: p });
       }); break;
-      case 'status': vs.forEach(function (v) {
+      case 'status': T.forEach(function (v) {
         if (v.dead) return;
-        self.addStatus(v, e.s, e.dur, e.p);
+        self.addStatus(v, e.s, e.dur, e.p, by);
       }); break;
-      case 'gauge': vs.forEach(function (v) { if (!v.dead) v.gauge = Math.max(0, Math.min(100, v.gauge + (v.role === 'boss' && e.v < 0 ? e.v / 2 : e.v))); }); break;
-      case 'cleanse': vs.forEach(function (v) { v.st = {}; for (var k in v.buffs) if (v.buffs[k].p < 0) delete v.buffs[k]; }); break;
+      case 'gauge': T.forEach(function (v) { if (!v.dead) v.gauge = Math.max(0, Math.min(100, v.gauge + (v.role === 'boss' && e.v < 0 ? e.v / 2 : e.v))); }); break;
+      case 'cleanse': T.forEach(function (v) { v.st = {}; for (var k in v.buffs) if (v.buffs[k].p < 0) delete v.buffs[k]; }); break;
+      case 'taunt':      // 2.2.6 도발 (보병): 그 적은 dur 초 동안 쓰는 이를 노린다 (보스는 절반)
+        if (u.dead) break;
+        var tl = T.filter(function (v) { return !v.dead && v.side !== u.side && v.side !== 'neutral'; });
+        tl.forEach(function (v) { v.hate = u.id; v.hateT = self.t + (v.role === 'boss' ? e.dur / 2 : e.dur); v.hateP = e.p || 40; });
+        if (tl.length) self.emit({ t: 'taunt', id: u.id, n: tl.length, ids: tl.map(function (x) { return x.id; }), sk: 1 });
+        break;
+      case 'pull': T.forEach(function (v) {      // 2.2.6 끌어오기 (해병의 작살): 쓰는 이 쪽으로 n 칸 (붙으면 멈춘다 · 보스는 끌리지 않는다)
+        if (v.dead || v.role === 'boss' || v.side === u.side) return;
+        for (var n = 0; n < e.n; n++) {
+          if (dist(u, v) <= 1) break;
+          var dx = 0, dy = 0, ax = u.x - v.x, ay = u.y - v.y;
+          if (Math.abs(ax) >= Math.abs(ay)) dx = ax > 0 ? 1 : -1; else dy = ay > 0 ? 1 : -1;
+          var px = v.x + dx, py = v.y + dy;
+          if (!self.pass(v.mt, px, py) || self.occ[py * self.w + px]) { if (dx && ay) { dx = 0; dy = ay > 0 ? 1 : -1; } else if (dy && ax) { dy = 0; dx = ax > 0 ? 1 : -1; } else break; px = v.x + dx; py = v.y + dy; if (!self.pass(v.mt, px, py) || self.occ[py * self.w + px]) break; }
+          self.occ[v.y * self.w + v.x] = null; v.x = px; v.y = py; self.occ[py * self.w + px] = v;
+        }
+        self.emit({ t: 'knock', id: v.id, x: v.x, y: v.y, pull: 1 });
+      }); break;
+      case 'ward':      // 2.2.6 등불 (신관): r 칸 안 가장 다친 우리 편 하나에게 보호막
+        if (u.dead) break;
+        var wt = self.mendTgt(u, e.r);
+        if (wt) { var wa = self.shdAmt(u, e, S, pw) * hup, wb = wt.buffs.shd; wt.buffs.shd = { p: Math.max(wa, wb ? wb.p : 0), t: e.dur || 12, mx: wa }; self.emit({ t: 'mend', id: u.id, tid: wt.id, ward: 1 }); self.emit({ t: 'buff', id: wt.id, s: 'shd', p: Math.round(wa) }); }
+        break;
       case 'aura':      // 2.2.5 기공: 쓰는 이 둘레 e.r 칸의 우리 편을 마공 × m 만큼 (우리 편 치유 배율 · 자비 옵션 그대로)
         if (u.dead) break;
-        var ak = (u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1), aa = (u.mag * e.m * pw + 8) * ak;
+        var ak = hk0 * hup, aa = (u.mag * e.m * pw + 8) * ak;
         self.emit({ t: 'aura', id: u.id, r: e.r });
         self.units.forEach(function (f) { if (!f.dead && f.side === u.side && dist(u, f) <= e.r) self.heal(f, aa); });
         break;
       case 'mend':      // 2.2.5 기 전하기: 쓰는 이 e.r 칸 안에서 가장 많이 다친 우리 편 하나(자신 포함, 체력 90% 아래)를 마공 × m 만큼
         if (u.dead) break;
-        var mt = self.mendTgt(u, e.r), mk = (u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1);
+        var mt = self.mendTgt(u, e.r), mk = hk0 * hup;
         if (mt) { self.emit({ t: 'mend', id: u.id, tid: mt.id }); self.heal(mt, (u.mag * e.m * pw + 8) * mk); }
         break;
-      case 'knock': vs.forEach(function (v) {
+      case 'knock': T.forEach(function (v) {
         if (v.dead || v.role === 'boss') return;
         var dx = 0, dy = 0;
         if (e.dir === 'down') dy = 1; else if (Math.abs(v.x - u.x) >= Math.abs(v.y - u.y)) dx = v.x >= u.x ? 1 : -1; else dy = v.y > u.y ? 1 : -1;
@@ -548,9 +647,9 @@ P.resolve = function (u, id, tiles, unitTgt) {
         for (var n = 0; n < e.n; n++) {
           var s;
           if (u.side === 'ally') {
-            var m = DS.MERCS[e.type];
-            s = { side: 'ally', role: 'summon', owner: u.id, type: e.type, name: m.name, L: u.L, look: [e.type, 1], hp: Math.round(u.mhp * 0.7), mp: 0, mmp: 0,
-                  atk: Math.round(u.mag * 0.7), mag: Math.round(u.mag * 0.7), def: Math.round(u.def * 0.9), res: Math.round(u.res * 0.7), spd: m.spd, mv: m.mv, mt: m.mt,
+            var m = DS.MERCS[e.type], kk = e.k || 0.7;      // 2.2.6 k: 부른 것의 세기 (옛 망자 부름 0.7)
+            s = { side: 'ally', role: 'summon', owner: u.id, type: e.type, name: m.name, L: u.L, look: [e.type, 1], hp: Math.round(u.mhp * (e.kh || kk)), mp: 0, mmp: 0,      // kh · ka · kd: 체력 · 공격 · 방어만 따로
+                  atk: Math.round(u.mag * (e.ka || kk)), mag: Math.round(u.mag * kk), def: Math.round(u.def * (e.kd || kk + 0.2)), res: Math.round(u.res * kk), spd: m.spd, mv: m.mv, mt: m.mt,
                   rng: m.rng.slice(), atkKind: m.atk, dtype: m.dtype, kind: m.kind, tags: (m.tags || []).slice(), life: e.dur, x: u.x, y: u.y };
             s.mhp = s.hp;
           } else { s = self.mk(e.type, { x: u.x, y: u.y, grp: u.grp, L: Math.max(1, u.L - 2), expMul: 0.25 }); s.summoned = true; s.owner = u.id; }
@@ -560,11 +659,11 @@ P.resolve = function (u, id, tiles, unitTgt) {
       case 'blink':
         var best = null, bs = -1e9, foes = self.units.filter(function (v) { return !v.dead && v.side !== u.side; });
         for (var k = 0; k < 24; k++) {
-          var bx = u.x + Math.floor(self.rand() * 11) - 5, by = u.y + Math.floor(self.rand() * 11) - 5;
-          if (!self.pass('foot', bx, by) || self.occ[by * self.w + bx]) continue;
-          var md = 99; foes.forEach(function (f) { md = Math.min(md, Math.abs(f.x - bx) + Math.abs(f.y - by)); });
-          var sc = -Math.abs(md - 3) + self.rand() * 0.5 - (Math.abs(bx - u.home.x) + Math.abs(by - u.home.y) > 7 ? 5 : 0);
-          if (sc > bs) { bs = sc; best = [bx, by]; }
+          var bx = u.x + Math.floor(self.rand() * 11) - 5, by2 = u.y + Math.floor(self.rand() * 11) - 5;
+          if (!self.pass('foot', bx, by2) || self.occ[by2 * self.w + bx]) continue;
+          var md = 99; foes.forEach(function (f) { md = Math.min(md, Math.abs(f.x - bx) + Math.abs(f.y - by2)); });
+          var sc = -Math.abs(md - 3) + self.rand() * 0.5 - (Math.abs(bx - u.home.x) + Math.abs(by2 - u.home.y) > 7 ? 5 : 0);
+          if (sc > bs) { bs = sc; best = [bx, by2]; }
         }
         if (best) { self.occ[u.y * self.w + u.x] = null; u.x = best[0]; u.y = best[1]; self.occ[u.y * self.w + u.x] = u; self.emit({ t: 'blink', id: u.id, x: u.x, y: u.y }); }
         break;
@@ -617,9 +716,9 @@ P.attack = function (u, v) {
   return true;
 };
 // 상태이상을 건다. 면역이면 걸리지 않고, 저항만큼 짧아진다. (보스에게는 절반)
-P.addStatus = function (v, s, dur, p) {
+P.addStatus = function (v, s, dur, p, by) {
   if (v.fx) { if (v.fx.immune && v.fx.immune[s]) return false; if (v.fx.stRes) dur *= 1 - Math.min(0.7, v.fx.stRes); }
-  v.st[s] = { t: v.role === 'boss' ? dur * 0.5 : dur, p: p || 0, acc: 0 }; this.emit({ t: 'status', id: v.id, s: s });
+  v.st[s] = { t: v.role === 'boss' ? dur * 0.5 : dur, p: p || 0, acc: 0 }; if (by) v.st[s].by = by; this.emit({ t: 'status', id: v.id, s: s });      // by: 우리 편이 건 화상 · 중독은 그 사람이 준 피해로 친다 (2.2.6)
   return true;
 };
 // 흡혈 회복. 때릴 때마다 숫자를 띄우면 화면을 덮으므로 모아 두었다가 1초에 한 번 알린다 (tick 에서).
@@ -815,7 +914,8 @@ P.bestDebuff = 2;      // 피해 없는 약화 기술(둔화·저주)의 값: �
 P.bestSup = 8;         // 가호를 건 뒤 이 초 동안은(또는 공격 기술을 쓸 때까지) 다음 가호를 미룬다
 P.bestMin = 1.15;
 P.bestNoOwe = 1;      // 1: 치유를 맡은 지휘관은 치유·가호·소환 뒤에 평타를 빚지지 않고 바로 공격 기술을 모은다 (aiCmd) / 2: 모든 지휘관 / 0: 끔
-function isOff(S) { var t = S.eff[0].t; return !(t === 'heal' || t === 'cleanse' || t === 'summon' || (t === 'buff' && S.eff[0].p > 0)); }
+function posBuff(e) { return e.t === 'buff' && (e.p > 0 || e.s === 'shd'); }      // 2.2.6: 보호막(shd)은 p 대신 m 을 지닌 가호
+function isOff(S) { var t = S.eff[0].t; return !(t === 'heal' || t === 'cleanse' || t === 'summon' || posBuff(S.eff[0])); }
 // 어림 피해 (난수·지형 없이). e: { m, type, stat, flat }
 P.estDmg = function (u, v, e, item) {
   var type = e.type || (item ? 'magic' : null) || u.dtype || 'phys';
@@ -829,7 +929,17 @@ P.estDmg = function (u, v, e, item) {
   }
   if (type === 'holy' && (has(v, 'undead') || has(v, 'demon'))) d *= 1.5;
   if (u.fx && u.fx.bossDmg && v.role === 'boss') d *= 1 + u.fx.bossDmg;
+  if (v.st && v.st.mark) d *= 1 + (v.st.mark.p || 20) / 100;      // 2.2.6 표식
+  if (e.vs && vsHit(v, e.vs)) d *= e.vx || 1.5;      // 2.2.6 맞물림 (둔화 · 화상 · 젖음 · 표식 …)
   return d;
+};
+// 2.2.6: 화상 · 중독이 남은 시간 동안 깎을 어림 (보스는 4분의 1 · 시간도 절반)
+P.dotVal = function (v, e) { var bs = v.role === 'boss', n = Math.floor((bs ? e.dur * 0.5 : e.dur) / 2); return Math.min(v.hp, v.mhp * (e.p || 0) / 100 * (bs ? 0.25 : 1) * n); };
+// 2.2.6: 연쇄가 옮겨 갈 적의 어림 피해 (맞은 적 둘레 r 칸에서 가까운 차례로 n)
+P.chainVal = function (u, v0, e, foes) {
+  var hit = [v0], from = v0, out = 0, i, f, d, nx, nd;
+  for (var c = 0; c < e.n; c++) { nx = null; nd = 99; for (i = 0; i < foes.length; i++) { f = foes[i]; if (hit.indexOf(f) >= 0) continue; d = dist(from, f); if (d <= e.r && d < nd) { nd = d; nx = f; } } if (!nx) break; hit.push(nx); out += Math.min(nx.hp, this.estDmg(u, nx, e)) * (nx.role === 'boss' ? 1.5 : 1); from = nx; }
+  return out;
 };
 P.auraVal = function (u, e) {      // 2.2.5: 기공(aura)이 실제로 채울 체력의 합 (난수 없음)
   var amt = (u.mag * e.m + 8) * (u.side === 'ally' ? DS.BAL.healAlly : 1), out = 0, us = this.units, f;
@@ -853,7 +963,11 @@ P.bestSkill = function (u, foes, ord, keep) {
       for (q = 0; q < S.eff.length; q++) {
         e = S.eff[q];
         if (e.t === 'dmg') { d = self.estDmg(u, x, e, S.item); one += Math.min(d, x.hp) + (e.drain ? b * 0.2 : 0); }
+        else if (e.t === 'status' && (e.s === 'burn' || e.s === 'poison')) one += x.st[e.s] ? 0 : self.dotVal(x, e) * 0.5;      // 2.2.6: 화상 · 중독은 깎을 만큼 (반쯤만 믿는다)
+        else if (e.t === 'status' && e.s === 'mark') one += x.st.mark ? 0 : b * (x.role === 'boss' ? 1.2 : 0.6);      // 표식: 모두가 더 아프게 친다
         else if (e.t === 'status') one += x.st[e.s] ? 0 : b * (dm ? 0.2 : self.bestDebuff);
+        else if (e.t === 'taunt' && !e.to) one += x.hate === u.id && x.hateT > self.t + 1 ? 0 : b * (u.hp > u.mhp * 0.5 ? 0.35 : 0.05);      // 도발: 튼튼할 때 값이 있다
+        else if (e.t === 'pull') one += dist(u, x) > 1 ? b * 0.2 : 0;
         else if (e.t === 'buff' && e.p < 0) one += b * (dm ? 0.1 : self.bestDebuff * 0.5);
         else if (e.t === 'gauge' && e.v < 0) one += b * 0.3;
       }
@@ -874,6 +988,8 @@ P.bestSkill = function (u, foes, ord, keep) {
         v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue;
         if (e0.t !== 'dmg' && (v.role !== 'boss' || (v.buffs[e0.s] && v.buffs[e0.s].p < 0) || v.st[e0.s])) continue;
         var sc2 = (v.role === 'boss' ? 50 : 0) + v.hp / v.mhp * 10 + (holy && (has(v, 'undead') || has(v, 'demon')) ? 20 : 0);
+        if (e0.vs && vsHit(v, e0.vs)) sc2 += 30;      // 2.2.6: 맞물림을 노린다 (표식 · 둔화 · 화상 …)
+        if (S.eff.length > 1 && S.eff[1].t === 'status' && v.st[S.eff[1].s]) sc2 -= 12;      // 이미 그 상태인 적은 덜 (표식 · 둔화를 새 적에게)
         if (sc2 > bsc) { bsc = sc2; tgt = v; }
       }
       if (!tgt) continue;
@@ -897,8 +1013,12 @@ P.bestSkill = function (u, foes, ord, keep) {
       if (!tgt) continue;
     } else continue;
     for (i = 0; i < S.eff.length; i++) {      // 2.2.5 기공: 둘레 아군이 다쳤으면 그만큼 값이 오른다
-      if (S.eff[i].t === 'aura') val += this.auraVal(u, S.eff[i]) * 0.6;
-      else if (S.eff[i].t === 'mend') { var mtg = this.mendTgt(u, S.eff[i].r); if (mtg) val += Math.min(mtg.mhp - mtg.hp, (u.mag * S.eff[i].m + 8) * (u.side === 'ally' ? DS.BAL.healAlly : 1)) * (mtg.hp < mtg.mhp * 0.5 ? 1.2 : 0.6); }
+      var ei = S.eff[i];
+      if (ei.t === 'aura') val += this.auraVal(u, ei) * 0.6;
+      else if (ei.t === 'mend') { var mtg = this.mendTgt(u, ei.r); if (mtg) val += Math.min(mtg.mhp - mtg.hp, (u.mag * ei.m + 8) * (u.side === 'ally' ? DS.BAL.healAlly : 1)) * (mtg.hp < mtg.mhp * 0.5 ? 1.2 : 0.6); }
+      else if (ei.t === 'ward') { var wtg = this.mendTgt(u, ei.r); if (wtg && !(wtg.buffs.shd && wtg.buffs.shd.p > 20)) val += Math.min(wtg.mhp - wtg.hp + 20, this.shdAmt(u, ei)) * (wtg.hp < wtg.mhp * 0.5 ? 0.9 : 0.4); }      // 2.2.6 등불: 가장 다친 아군의 보호막
+      else if (ei.t === 'chain' && S.tg === 'enemy' && tgt && tgt.id) val += this.chainVal(u, tgt, ei, foes);      // 2.2.6 연쇄 번개
+      else if (ei.t === 'dmg' && ei.share) { var stg = this.mendTgt(u, 4); if (stg) val += Math.min(stg.mhp - stg.hp, val * ei.share * 0.8) * (stg.hp < stg.mhp * 0.5 ? 1.0 : 0.5); }      // 2.2.6 생기 나눔
     }
     if (val / S.tick < this.bestMin * tp / ac) continue;      // 평타만 못하다
     var sc = val / (S.tick + (S.mp || 0) / mmp * this.bestMana * scarce);
@@ -920,18 +1040,19 @@ P.aiSkill = function (u, foes, dry) {
   function cast(id, tgt) {
     if (dry) { dn = SK[id].tick * q; return true; }
     var ok = self.cast(u, id, tgt), e;
-    if (ok && bestOn) { e = SK[id].eff[0]; u.lastOff = isOff(SK[id]); if (e.t === 'buff' && e.p > 0) u.supT = self.t + self.bestSup; else if (u.lastOff) u.supT = 0; }
+    if (ok && bestOn) { e = SK[id].eff[0]; u.lastOff = isOff(SK[id]); if (posBuff(e)) u.supT = self.t + self.bestSup; else if (u.lastOff) u.supT = 0; }
     return ok;
   }
-  // 살피는 순서: 치유·정화 → 소환 → 나머지(목록 순서). 목록 앞의 공격 기술이 늘 먼저 나가서, 뒤에 붙은 치유·소환(장비·특성으로 얹은 기술 포함)이 한 번도 쓰이지 않던 문제.
+  // 살피는 순서: 치유·정화 → 소환 → 가호 → 나머지(목록 순서). 목록 앞의 공격 기술이 늘 먼저 나가서, 뒤에 붙은 치유·소환(장비·특성으로 얹은 기술 포함)이 한 번도 쓰이지 않던 문제.
+  //   2.2.6: 가호(버프 · 보호막)도 공격 묶음보다 먼저 살핀다 — 목록 뒤의 철벽 · 수호 · 창벽 · 신속이 공격 기술에 늘 밀리던 것 (걸고 나면 bestSup 초 동안은 공격 차례)
   var ord = [], pass, k0, S0, t0;
-  for (pass = 0; pass < 3; pass++) for (k0 = 0; k0 < u.skills.length; k0++) {
+  for (pass = 0; pass < 4; pass++) for (k0 = 0; k0 < u.skills.length; k0++) {
     S0 = SK[u.skills[k0]]; if (!S0) continue; t0 = S0.eff[0].t;
-    if ((t0 === 'heal' || t0 === 'cleanse' ? 0 : t0 === 'summon' ? 1 : 2) === pass) ord.push(u.skills[k0]);
+    if ((t0 === 'heal' || t0 === 'cleanse' ? 0 : t0 === 'summon' ? 1 : posBuff(S0.eff[0]) ? 2 : 3) === pass) ord.push(u.skills[k0]);
   }
   // cmdCast 일 때 치유를 맡은 지휘관은 치유 몫의 마나를 남긴다 (공격·가호로 마나를 다 쓰고 정작 쓰러져 가는 용병을 못 고치던 것). 끄면 0.
   var keep = 0;
-  if (u.role === 'cmd' && DS.BAL.cmdCast) for (k0 = 0; k0 < ord.length; k0++) { S0 = SK[ord[k0]]; if (S0.tg === 'ally' && S0.eff[0].t === 'heal') { keep = Math.max(S0.mp * 3, u.mmp * 0.3); break; } }
+  if (u.role === 'cmd' && DS.BAL.cmdCast) for (k0 = 0; k0 < ord.length; k0++) { S0 = SK[ord[k0]]; if (S0.tg === 'ally' && (S0.eff[0].t === 'heal' || (S0.eff[0].t === 'buff' && S0.eff[0].s === 'shd'))) { keep = Math.max(S0.mp * 3, u.mmp * 0.3); break; } }      // 2.2.6: 보호막을 거는 신관도
   if (bestOn) u.healer = keep > 0;
   for (var n = 0; n < ord.length; n++) {
     var id = ord[n], S = SK[id];
@@ -945,7 +1066,7 @@ P.aiSkill = function (u, foes, dry) {
     }
     if (!S || (u.mp || 0) < S.mp || u.cd[id] > 0 || (!dry && u.gauge < S.tick * q)) continue;
     if (u.rsv && this.rsvBlocks(u, id)) continue;      // 2.2.3: 예약
-    if (keep && S.mp && S.eff[0].t !== 'heal' && S.eff[0].t !== 'cleanse' && u.mp - S.mp < keep) continue;
+    if (keep && S.mp && S.eff[0].t !== 'heal' && S.eff[0].t !== 'cleanse' && !(S.tg === 'ally' && S.eff[0].s === 'shd') && u.mp - S.mp < keep) continue;
     if (dry && S.item && !(this.inv[id.slice(2)] > 0)) continue;
     var e0 = S.eff[0], r1 = S.rng ? S.rng[1] : 0, r0 = S.rng ? S.rng[0] : 0, tgt = null, i, v, cnt;
     if (e0.t === 'heal' || e0.t === 'cleanse') {
@@ -960,18 +1081,32 @@ P.aiSkill = function (u, foes, dry) {
       }
       continue;
     }
-    if (e0.t === 'buff' && e0.p > 0) {
-      if (!big) continue;
+    if (posBuff(e0)) {
+      var shd = e0.s === 'shd', all = S.area === 'all', lack = function (f) { var b = f.buffs[e0.s]; return !(b && (shd ? b.p > (b.mx || 0) * 0.35 : (all || b.p >= e0.p) && b.t > 3)); };      // 2.2.6: 더 약한 같은 가호만 있으면 받을 이로 친다 (모두에게 거는 호령은 예전처럼 — 서로 다시 외치지 않게)
+      if (S.tg === 'self' && (!S.area || S.area === 'single')) {      // 2.2.6 자기에게만 거는 가호 (철벽): 적이 붙어 있을 때
+        if (!lack(u)) continue;
+        var nf = 0, nb = false; foes.forEach(function (f) { if (dist(u, f) <= 2) { nf++; if (f.role === 'boss') nb = true; } });
+        if ((nf >= 2 || nb || (nf && u.hp < u.mhp * 0.7)) && cast(id, null)) return dry ? dn : true;
+        continue;
+      }
+      if (!big && !(shd && fr.some(function (f) { return f.hp < f.mhp * 0.6 && dist(u, f) <= Math.max(r1, 2); }))) continue;      // 보호막은 작은 싸움에서도 다친 이가 있으면
       if (bestOn && u.supT > this.t && getB()) continue;      // 방금 가호를 걸었다: 이번 차례는 공격 후보에게 (bestSup 초가 지나도록 못 썼으면 — 치유에 바쁜 지휘관 — 가호를 다시 살핀다)
       if (S.tg === 'self') {
-        var need = fr.filter(function (f) { return (!S.mercOnly || f.role === 'merc' || f.role === 'summon') && !(f.buffs[e0.s] && f.buffs[e0.s].t > 3); });
-        if (need.length >= 2 && cast(id, null)) return dry ? dn : true;
+        if (S.area === 'all') {
+          var need = fr.filter(function (f) { return (!S.mercOnly || f.role === 'merc' || f.role === 'summon') && lack(f); });
+          if (need.length >= 2 && cast(id, null)) return dry ? dn : true;
+        } else {      // 2.2.6 둘레에만 거는 가호 (성역 · 창벽): 둘레에 받을 이가 둘 이상이고 적이 가까이 있을 때
+          var inA = this.victims(u, S, this.areaTiles(u, S, u.x, u.y)).filter(lack), rr = S.area === 'r2' ? 3 : 2;
+          if (inA.length >= 2 && foes.some(function (f) { return dist(u, f) <= rr; }) && cast(id, null)) return dry ? dn : true;
+        }
         continue;
       }
       var bs = -1;
       fr.forEach(function (f) {
-        if (f.role !== 'cmd' || dist(u, f) > r1 || (f.buffs[e0.s] && f.buffs[e0.s].t > 3)) return;
-        var sc = e0.s === 'def' ? 200 - Math.min.apply(null, foes.map(function (x) { return dist(f, x); })) * 10 + f.def * 0.1 : Math.max(f.atk, f.mag);
+        if ((f.role !== 'cmd' && !(shd && f.role === 'merc')) || dist(u, f) > r1 || dist(u, f) < r0 || !lack(f)) return;
+        var sc;
+        if (shd) { var adj = 0; foes.forEach(function (x) { if (dist(f, x) <= 1) adj++; }); if (!(f.hp < f.mhp * 0.7 || adj >= 2 || (adj && f.hp < f.mhp * 0.9))) return; sc = (1 - f.hp / f.mhp) * 100 + adj * 12 + (f.role === 'cmd' ? 8 : 0); }      // 2.2.6 보호막: 다쳤거나 적이 붙은 이
+        else sc = e0.s === 'def' ? 200 - Math.min.apply(null, foes.map(function (x) { return dist(f, x); })) * 10 + f.def * 0.1 : Math.max(f.atk, f.mag);
         if (sc > bs) { bs = sc; tgt = f; }
       });
       if (tgt && cast(id, tgt)) return dry ? dn : true;
@@ -1068,7 +1203,7 @@ P.rsvTarget = function (u, S, foes) {
   }
   if (S.tg === 'self' || S.tg === 'multi') {
     if (e0.t === 'heal' || e0.t === 'cleanse') { fr = this.victims(u, S, this.areaTiles(u, S, u.x, u.y)); return fr.some(function (f) { return f.side === u.side && f.hp < f.mhp; }) ? { t: null } : null; }
-    if (e0.t === 'buff' && e0.p > 0) return foes.length ? { t: null } : null;
+    if (posBuff(e0)) return foes.length ? { t: null } : null;
     if (S.tg === 'multi') return foes.length ? { t: null } : null;
     return n(this.victims(u, S, this.areaTiles(u, S, u.x, u.y))) >= 1 ? { t: null } : null;
   }
@@ -1244,11 +1379,15 @@ P.mercRejoin = 2;      // fix28: 줄 끝에서 따라붙기 시작하면 줄 안
 var TAUNT0 = { m_sword: 1, m_spirit: 2, m2_ogre: 2 };
 function mercKey(u, k, def) { if (u[k] != null) return u[k]; var M = DS.MERCS && DS.MERCS[u.type]; return M && M[k] != null ? M[k] : def; }
 // 물러날 곳: 주인 4칸 안에서 치유 기술(마나가 남은)이 있는 지휘관이나 치유하는 용병. 가장 가까운 이.
+function healsOf(a) {      // 2.2.6: 곁을 고치는 기술(치유 · 기공 · 기 전하기 · 등불 · 보호막)을 지닌 지휘관 (한 번 재어 둔다)
+  if (a._hl == null) a._hl = (a.skills || []).some(function (k) { var S = SK[k]; return S && S.eff.some(function (e) { return e.t === 'heal' || e.t === 'aura' || e.t === 'mend' || e.t === 'ward' || (e.t === 'buff' && e.s === 'shd'); }); }) ? 1 : 0;
+  return !!a._hl;
+}
 P.healerNear = function (u, own) {
   var al = this.allies(), best = null, bd = 99, i, a, d;
   for (i = 0; i < al.length; i++) {
     a = al[i]; if (a === u || a.dead || a.back || dist(a, own) > 4) continue;
-    if (!(a.heal > 0 || (a.role === 'cmd' && a.mp >= 6 && a.skills.indexOf('heal') >= 0))) continue;
+    if (!(a.heal > 0 || (a.role === 'cmd' && a.mp >= 6 && healsOf(a)))) continue;
     d = dist(u, a); if (d < bd) { bd = d; best = a; }
   }
   return best;
@@ -1537,7 +1676,7 @@ P.tick = function (dt) {
     for (k in u.st) {
       var s = u.st[k]; s.t -= dt;
       if (k === 'slow') slow = true;
-      if (k === 'poison') { s.acc += dt; if (s.acc >= 2) { s.acc -= 2; this.hurt(u, Math.max(1, Math.round(u.mhp * s.p / 100 * (u.role === 'boss' ? 0.25 : 1))), null, { type: 'poison' }); if (u.dead) break; } }
+      if (k === 'poison' || k === 'burn') { s.acc += dt; if (s.acc >= 2) { s.acc -= 2; var dsrc = s.by ? this.byId[s.by] : null; this.hurt(u, Math.max(1, Math.round(u.mhp * s.p / 100 * (u.role === 'boss' ? 0.25 : 1))), dsrc && !dsrc.dead ? dsrc : null, { type: k, refl: true }); if (u.dead) break; } }      // 2.2.6 화상 (법사): 중독과 같은 셈, 따로 쌓인다
       if (s.t <= 0) { delete u.st[k]; this.emit({ t: 'statusEnd', id: u.id, s: k }); }
     }
     if (u.dead) continue;

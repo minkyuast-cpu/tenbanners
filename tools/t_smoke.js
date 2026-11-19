@@ -219,7 +219,89 @@ module.exports = async (page, shot, L) => {
   await page.click('.ov [data-fxq="full"]'); await L.sleep(250);
   A(fq === 2 && fq2.o === 'lite' && fq2.lite && !DS_fx(await ev(() => DS.G.save.opt.fxq)), 'settings: 효과 보통 / 가볍게');
   await ev(() => DS.ui.closeAll());
+  // 2.2.6 모든 병과의 새 기술: ① 병과마다 모든 기술 · 필살기를 진짜 판(그림 · 소리 · 컷인)에서 한 번씩 — 오류 없이, 효과가 난다 ② 옛 저장 · 연무장 기록 옮김 (병과마다) ③ 새 기술의 예약
+  await ev(() => { DS.ui.closeAll(); DS.G.quiet = true; DS.G.save.opt.speed = 1; if (DS.G.sim && DS.G.sim.result) DS.enterZone('windy'); }); await L.sleep(600); await L.skipStory(page, 2); await ev(() => DS.ui.closeAll());
+  const CL = await ev(() => Object.keys(DS.CLASSES));
+  let nCast = 0, nUlt = 0;
+  for (const c of CL) {
+    const r = await ev((c) => {
+      var sim = DS.G.sim, SK = DS.SKILLS, C = DS.CLASSES[c], u = sim.units.filter(function (x) { return x.hero && !x.dead; })[0], out = [], D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      if (!u) return { err: 'no hero' };
+      DS.G.pause = true;
+      var mv = function (w, x, y) { sim.occ[w.y * sim.w + w.x] = null; w.x = x; w.y = y; sim.occ[y * sim.w + x] = w; };
+      var spot = function (cx, cy, rmin, rmax, mt) { for (var r = rmin; r <= rmax; r++) for (var dx = -r; dx <= r; dx++) { var dy = r - Math.abs(dx); for (var sg = -1; sg <= 1; sg += 2) { var x = cx + dx, y = cy + dy * sg; if (sim.pass(mt || 'foot', x, y) && !sim.at(x, y)) return [x, y]; } } return null; };
+      var ch = { cls: c, L: 95, id: 999 }; DS.stdGear(ch, 10); var st = DS.charStats(ch);
+      var ids = C.skills.map(function (s) { return s[0]; }).concat(Object.keys(DS.ULTS).filter(function (k) { return DS.ULTS[k].cls === c; }));
+      ids.forEach(function (id) {
+        var S = SK[id]; if (!S) { out.push(id + ':missing'); return; }
+        sim.units.forEach(function (x) { if (x.side === 'enemy' && !x.dead && x.summoned) sim.kill(x); });
+        u.cls = c; u.mt = C.mt; u.rng = C.rng.slice(); u.atk = st.atk; u.mag = st.mag; u.def = st.def; u.res = st.res; u.mhp = u.hp = st.hp; u.mmp = u.mp = 999; u.gauge = 100; u.cd = {}; u.dead = false; u.casting = null; u.order = null;
+        u.skills = C.skills.map(function (s) { return s[0]; }); u.ult = S.ult ? id : u.ult; u.uc = 100; u.buffs = {}; u.st = {};
+        var fs = sim.units.filter(function (x) { return x.side === 'enemy' && !x.dead; });
+        while (fs.length < 4) { var p0 = spot(u.x, u.y, 2, 6); if (!p0) break; var e = DS.enemySpec('goblin', 60, { x: p0[0], y: p0[1] }); var nu = sim.add(e); if (!nu) break; nu.aggro = true; fs.push(nu); }
+        fs.forEach(function (f, i) { f.hp = f.mhp = 999999; f.aggro = true; f.st = {}; f.buffs = {}; var p1 = i === 0 ? spot(u.x, u.y, 1, 1) : i === 1 ? spot(u.x, u.y, 2, 3) : spot(u.x, u.y, 1, 2); if (p1) mv(f, p1[0], p1[1]); });
+        var near = fs.filter(function (f) { return Math.abs(f.x - u.x) + Math.abs(f.y - u.y) === 1; })[0] || fs[0], far = fs.filter(function (f) { var d = Math.abs(f.x - u.x) + Math.abs(f.y - u.y); return d >= 2 && d <= 3; })[0] || fs[1];
+        var al = sim.units.filter(function (x) { return x.side === 'ally' && !x.dead && x !== u && x.role === 'cmd'; })[0];
+        if (al) { var pa = spot(u.x, u.y, 1, 2); if (pa) mv(al, pa[0], pa[1]); al.hp = Math.round(al.mhp * 0.4); al.buffs = {}; }
+        var tgt = null;
+        if (S.tg === 'enemy') tgt = S.rng && S.rng[0] >= 2 ? far : near; else if (S.tg === 'ally') { tgt = al || u; var fa = fs[2] || far, pa2 = spot(tgt.x, tgt.y, 1, 1); if (fa && pa2 && Math.abs(fa.x - tgt.x) + Math.abs(fa.y - tgt.y) > 1) mv(fa, pa2[0], pa2[1]); }      // 대상 곁에도 적 하나 (수호의 도발) else if (S.tg === 'tile') tgt = { x: far.x, y: far.y }; else if (S.tg === 'dir') tgt = { x: u.x + Math.sign(near.x - u.x), y: u.y + Math.sign(near.y - u.y) };
+        if (S.tg === 'dir') {      // 직선: 땅이 가장 길게 이어지는 쪽 — 첫 칸에 적을 세운다 (돌파가 달려 나갈 빈칸이 남게)
+          var bd = null, bn = -1; D4.forEach(function (d) { var n = 0; for (var i = 1; i <= S.len; i++) { var x = u.x + d[0] * i, y = u.y + d[1] * i; if (!sim.pass(u.mt, x, y)) break; var o = sim.at(x, y); if (o && o.side === 'ally') break; n++; } if (n > bn) { bn = n; bd = d; } });
+          var t1 = [u.x + bd[0], u.y + bd[1]], o1 = sim.at(t1[0], t1[1]);
+          if (o1 !== near && !o1) mv(near, t1[0], t1[1]);
+          for (var i2 = 2; i2 <= S.len; i2++) { var o2 = sim.at(u.x + bd[0] * i2, u.y + bd[1] * i2); if (o2 && o2.side === 'enemy') { var pf = null; for (var rr = 3; rr <= 8 && !pf; rr++) { var cand = spot(u.x - bd[0] * rr, u.y - bd[1] * rr, 0, 2); if (cand) pf = cand; } if (pf) mv(o2, pf[0], pf[1]); } }      // 첫 칸 뒤는 비워 둔다 (돌파가 설 자리)
+          tgt = { x: t1[0], y: t1[1] };
+        }
+        sim.ev.length = 0;
+        var ok = false; try { ok = sim.cast(u, id, tgt); } catch (x) { out.push(id + ':THROW ' + x.message); return; }
+        var ev = sim.ev.slice(), has = function (t) { return ev.some(function (e) { return e.t === t; }); }, want = [];
+        S.eff.forEach(function (e) { var w = e.t === 'dmg' ? 'hit' : e.t === 'buff' ? 'buff' : e.t === 'status' ? 'status' : e.t === 'taunt' ? 'taunt' : e.t === 'summon' ? 'spawn' : e.t === 'heal' ? null : e.t === 'pull' || e.t === 'knock' ? 'knock' : e.t === 'chain' ? 'chain' : e.t === 'ward' || e.t === 'mend' ? null : null; if (w && want.indexOf(w) < 0) want.push(w); });
+        if (S.dash || S.leap || S.back) want.push('leap');
+        var miss = want.filter(function (w) { return !has(w) && !(w === 'leap' && S.back && !S.leap && !S.dash) && !(w === 'spawn' && has('skill')) && !(w === 'chain' && fs.length < 2) && !(w === 'knock' && !has('hit')); });
+        out.push(id + (ok && has('skill') ? '' : ':NOCAST') + (miss.length ? ':miss ' + miss.join('/') : '') + (S.ult ? (has('ult') ? '' : ':NOULT') : ''));
+      });
+      DS.G.pause = false;
+      return { list: out };
+    }, c);
+    await L.sleep(450);      // 화면이 기술 · 필살기 연출을 그린다 (오류가 나면 shot.js 가 잡는다)
+    const bad = (r.list || []).filter(x => /:/.test(x));
+    nCast += (r.list || []).length; nUlt += (r.list || []).filter(x => /^u_/.test(x)).length;
+    A(!r.err && !bad.length, c + ': every skill and ultimate casts with its effect (' + (r.list || []).length + ')' + (bad.length ? ' — ' + bad.join(', ') : '') + (r.err || ''));
+  }
+  A(nCast >= 70 && nUlt === 30, 'all classes: ' + nCast + ' skills and ultimates cast, ' + nUlt + ' ultimates');
+  await ev(() => DS.ui.closeAll());
+  // ② 옛 저장: 병과마다 옛 필살기 이름(맹주 · 가주), 돌아온 이의 옛 깃발 기술(m.s), 연무장 기록(sk · ul)이 새 것으로
+  const mig2 = await ev(() => {
+    var A0 = DS.SK_ALIAS, old = {}, out = [], k;
+    for (k in A0) { var nk = A0[k], c = DS.ULTS[nk] && DS.ULTS[nk].cls; if (c && !old[c]) old[c] = k; }
+    var oldSk = { inf: ['bash', 'attackUp', 'protect'], cav: ['thunder', 'protect', 'attackUp'], fly: ['dive', 'whirl'], mar: ['harpoon', 'tidal'], pike: ['slow', 'pierce', 'protect'], arc: ['aimed', 'arrowRain'], cle: ['heal', 'cure', 'healAll'], mon: ['holy', 'protect', 'quick', 'bless'], mag: ['fire', 'ice', 'blizzard', 'meteor'], sha: ['drain', 'summon', 'curse', 'deathCloud'] };
+    Object.keys(oldSk).forEach(function (c) {
+      var raw = JSON.parse(JSON.stringify(DS.G.save)), m = raw.mercs.filter(function (x) { return x.h; })[0] || raw.mercs[0];
+      raw.chars[raw.hero].ps.ul = old[c] || 'u_prayer';
+      if (m) { m.ul = old[c] || 'u_prayer'; m.s = oldSk[c][0]; m.nc = c; m.rv = 1; }
+      var s2 = DS.Save.read(JSON.stringify(raw)), m2 = s2 && m ? s2.mercs.filter(function (x) { return x.id === m.id; })[0] : null;
+      var ul = s2 && s2.chars[s2.hero].ps.ul, msOk = !m || (m2 && m2.s === DS.SK_OLD[c][oldSk[c][0]]), mulOk = !m || (m2 && (m2.ul == null || DS.ULTS[m2.ul]));
+      var row = DS.arenaChampRow('t' + c, { v: 1, cls: c, L: 75, name: 'x', sk: oldSk[c].concat(['cmd_' + c]).join(','), ul: old[c] || '' });
+      var arOk = row && row.skills.every(function (id) { return DS.SKILLS[id] && !/^(bash|attackUp|protect|thunder|dive|whirl|harpoon|tidal|slow|pierce|aimed|arrowRain|heal|cure|healAll|holy|quick|bless|fire|ice|blizzard|meteor|drain|summon|curse|deathCloud)$/.test(id); }) && row.skills.length >= 1 && (!old[c] || row.ult === A0[old[c]]);
+      out.push({ c: c, ok: !!(s2 && ul === (A0[old[c]] || 'u_flurry') && DS.ULTS[ul] && DS.ULTS[ul].cls === c && msOk && mulOk && arOk), ul: ul, ms: m2 ? m2.s : '-', ar: row ? row.skills.join('+') + '/' + row.ult : 'null' });
+    });
+    return out;
+  });
+  mig2.forEach(function (m) { A(m.ok, 'old save ' + m.c + ': ult → ' + m.ul + ', returned flag skill → ' + m.ms + ', arena → ' + m.ar); });
+  // ③ 새 기술의 예약: 마나가 모자라면 예약, 마나가 차면 무엇보다 먼저 쓴다
+  const rv = await ev(() => {
+    var sim = DS.G.sim, u = sim.units.filter(function (x) { return x.hero && !x.dead; })[0], out = [];
+    [['mag', 'mag_meteor'], ['inf', 'inf_wall'], ['mon', 'mon_ward'], ['cav', 'cav_charge']].forEach(function (p) {
+      var C = DS.CLASSES[p[0]]; u.cls = p[0]; u.skills = C.skills.map(function (s) { return s[0]; }); u.mt = C.mt; u.rng = C.rng.slice(); u.auto = true; u.order = null; u.casting = null; u.cd = {}; u.buffs = {};
+      u.mmp = 99; u.mp = 0; var never = sim.rsvNever(u, p[1]); sim.reserve(u.id, p[1]); var held = u.rsv;
+      u.mp = 99; u.gauge = 100; sim.ev.length = 0; var foes = sim.units.filter(function (f) { return f.side === 'enemy' && !f.dead; }); foes.forEach(function (f) { f.aggro = true; });
+      var fired = sim.rsvTry(u, sim.foes(u)), cast = sim.ev.some(function (e) { return e.t === 'rsvCast' && e.sk === p[1]; });
+      out.push({ sk: p[1], ok: never === '' && held === p[1] && fired && cast && !u.rsv });
+    });
+    return out;
+  });
+  rv.forEach(function (r) { A(r.ok, 'reservation works on the new skill ' + r.sk); });
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.2\.5 [^/]+ \/ 2\.2\.5 \/ 7\.0\.5$/.test(notes), 'version ' + notes);
+  A(/^2\.2\.6 [^/]+ \/ 2\.2\.6 \/ 7\.0\.6$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };

@@ -35,18 +35,26 @@ var FXC = {
   dark: ['#b181e6', '#7446ad', '#2b2440'], heal: ['#7fcf6a', '#d6ffb0'], healDark: ['#b181e6', '#e0525e'], poison: ['#9ccc3c', '#5a8a2a'],
   quake: ['#a8754a', '#6f4a2c', '#d8c39a'], meteor: ['#ff9a3c', '#ffd75e', '#7a1f1f'], wind: ['#ffffff', '#cdd5e3'], slash: ['#ffffff', '#fff0a0'],
   thrust: ['#ffffff'], arrow: ['#f1ead9'], arrowRain: ['#f1ead9', '#a8754a'], buffRed: ['#ff6a7a', '#ffd0d6'], buffBlue: ['#62b0ee', '#d6ecff'], buffGold: ['#f6cf57', '#fff6d0'],
-  fist: ['#ffb35a', '#fff0c0', '#f06a2a'], kick: ['#ffffff', '#ffd28a', '#f08a3a'], palm: ['#bfe8ff', '#ffffff', '#7fd0ff'], chi: ['#f6cf57', '#fff6d0', '#ffb35a']      // 2.2.5 승려(무투가): 주먹 · 날아차기 · 기공장 · 부동심
+  fist: ['#ffb35a', '#fff0c0', '#f06a2a'], kick: ['#ffffff', '#ffd28a', '#f08a3a'], palm: ['#bfe8ff', '#ffffff', '#7fd0ff'], chi: ['#f6cf57', '#fff6d0', '#ffb35a'],      // 2.2.5 승려(무투가): 주먹 · 날아차기 · 기공장 · 부동심
+  // 2.2.6 병과마다: 방패 치기 · 철벽 · 수호 · 돌파 · 급강하 · 작살 · 창벽 · 표식 · 등불 · 성역 · 얼음 · 저주
+  shield: ['#cfe3ff', '#ffffff', '#5b8fd6'], guard: ['#62b0ee', '#d6ecff', '#ffffff'], cover: ['#9fd0ff', '#ffffff', '#5b8fd6'], charge: ['#ffe27a', '#fff6d0', '#e8bb45'],
+  dive: ['#dff4ff', '#ffffff', '#62b0ee'], hook: ['#cdd5e3', '#8fd0ff', '#2f86a6'], brace: ['#bff0d8', '#ffffff', '#4c9a8a'], mark: ['#ff6a5a', '#ffd0c0', '#f1ead9'],
+  ward: ['#ffe0a0', '#fff6d0', '#f09a4a'], sanct: ['#fff0a0', '#ffffff', '#f09a4a'], frost: ['#d6fbff', '#9fe8ec', '#5fa8e6'], curse: ['#b181e6', '#e6d4ff', '#4b2c7a']
 };
+var DIRS4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+var STC = { poison: '#9ccc3c', slow: '#9fe8ec', burn: '#ff9a3c', mark: '#ff6a5a', wet: '#6fb0e6' };      // 2.2.6 상태 빛깔 (머리 위 점 · 글자)
 var FXS = { fire: 'fire', water: 'water', thunder: 'thunder', holy: 'holy', dark: 'dark', heal: 'heal', healDark: 'dark', poison: 'poison', quake: 'boom', meteor: 'boom',
-            wind: 'wind', slash: 'slash', thrust: 'slash', arrow: 'arrow', arrowRain: 'arrow', buffRed: 'buff', buffBlue: 'buff', buffGold: 'buff', fist: 'punch', kick: 'kick', palm: 'qi', chi: 'buff' };
+            wind: 'wind', slash: 'slash', thrust: 'slash', arrow: 'arrow', arrowRain: 'arrow', buffRed: 'buff', buffBlue: 'buff', buffGold: 'buff', fist: 'punch', kick: 'kick', palm: 'qi', chi: 'buff',
+            shield: 'shield', guard: 'guard', cover: 'guard', charge: 'charge', dive: 'leap', hook: 'hook', brace: 'guard', mark: 'arrow', ward: 'ward', sanct: 'ward', frost: 'frost', curse: 'curse' };
 // r7: 기술마다 빛 [색, 반지름, 세기, 시간]
 var LIGHTC = { fire: ['#ff8a2a', 20, 0.55, 0.5], meteor: ['#ff7a2a', 26, 0.6, 0.6], thunder: ['#cfe6ff', 22, 0.6, 0.25], holy: ['#fff0a0', 20, 0.5, 0.45],
   heal: ['#9ef08a', 14, 0.35, 0.45], dark: ['#b181e6', 16, 0.4, 0.45], water: ['#8fd0ff', 14, 0.3, 0.35], poison: ['#b6ff5a', 12, 0.28, 0.4], buffGold: ['#ffe27a', 14, 0.35, 0.4],
-  fist: ['#ffb35a', 12, 0.35, 0.25], palm: ['#bfe8ff', 18, 0.5, 0.4], chi: ['#ffd75e', 18, 0.45, 0.5] };
+  fist: ['#ffb35a', 12, 0.35, 0.25], palm: ['#bfe8ff', 18, 0.5, 0.4], chi: ['#ffd75e', 18, 0.45, 0.5],
+  frost: ['#bfefff', 14, 0.4, 0.35], ward: ['#ffe0a0', 14, 0.4, 0.45], sanct: ['#fff0a0', 18, 0.45, 0.5], guard: ['#9fd0ff', 14, 0.35, 0.4], charge: ['#ffe27a', 12, 0.35, 0.3], curse: ['#b181e6', 14, 0.35, 0.45] };
 // 2.2.5 필살기 연출: 병과마다 빛깔과 꼴이 다르다 (합일 마스터는 그 묶음의 주인공 병과 · 성격 몫 필살기는 쓰는 이의 병과)
 var ULTFX = {
-  inf: { c: ['#cfe3ff', '#ffffff', '#5b8fd6'], k: 'slash' }, cav: { c: ['#ffe27a', '#fff6d0', '#e8bb45'], k: 'thrust' }, fly: { c: ['#dff4ff', '#ffffff', '#62b0ee'], k: 'wind' },
-  mar: { c: ['#8fd0ff', '#d6fbff', '#2f86a6'], k: 'water' }, pike: { c: ['#bff0d8', '#ffffff', '#4c9a8a'], k: 'thrust' }, arc: { c: ['#d6f5b0', '#ffffff', '#5fae5a'], k: 'arrow' },
+  inf: { c: ['#cfe3ff', '#ffffff', '#5b8fd6'], k: 'shield' }, cav: { c: ['#ffe27a', '#fff6d0', '#e8bb45'], k: 'thrust' }, fly: { c: ['#dff4ff', '#ffffff', '#62b0ee'], k: 'wind' },
+  mar: { c: ['#8fd0ff', '#d6fbff', '#2f86a6'], k: 'water' }, pike: { c: ['#bff0d8', '#ffffff', '#4c9a8a'], k: 'brace' }, arc: { c: ['#d6f5b0', '#ffffff', '#5fae5a'], k: 'arrow' },
   cle: { c: ['#ffd28a', '#fff6d0', '#f08a3a'], k: 'fist' }, mon: { c: ['#ffe0a0', '#ffffff', '#f09a4a'], k: 'holy' }, mag: { c: ['#d8c8ff', '#ffffff', '#8d6be0'], k: 'arcane' },
   sha: { c: ['#d2a8ff', '#9a6ad0', '#3a2458'], k: 'dark' }
 };
@@ -61,7 +69,7 @@ function spotTex() {
 }
 // 2.2.5 설정 「효과」: 보통 · 가볍게 (가볍게 = 알갱이 절반 남짓 · 덧그림 없이). 느린 기기(lowFx)도 덧그림은 저절로 줄인다
 DS.fxLite = function () { var o = DS.G && DS.G.save && DS.G.save.opt; return !!(o && o.fxq === 'lite'); };
-var BUFFTXT = { atk: '공격', def: '방어', quick: '퀵', ctr: '되치기' };
+var BUFFTXT = { atk: '공격', def: '방어', quick: '퀵', ctr: '되치기', shd: '보호막' };
 var PMAX = 240, SMAX = 48;      // 입자·모양 이펙트 상한 (3배속 난전에서도 넘지 않는다) · 2.2.5: 입자는 다 쓴 것을 모아 다시 쓴다 (프레임마다 새로 만들지 않는다)
 // 지역의 공기: 테마마다 [종류, 개수(30 이하), 색] — 지도 바로 위, 예고 칸·유닛보다 아래에 그린다
 var AMB = {
@@ -122,8 +130,15 @@ function redVignette() {
   gr = g.createRadialGradient(32, 32, 14, 32, 32, 46); gr.addColorStop(0, 'rgba(170,0,24,0)'); gr.addColorStop(0.55, 'rgba(170,0,24,.25)'); gr.addColorStop(1, 'rgba(170,0,24,.95)');
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return cv;
 }
+function markBrk(g, x, y, w, t, still) {      // 2.2.6 표식이 남은 적: 칸 네 모서리의 붉은 꺾쇠 (천천히 숨 쉰다)
+  var p = still ? 0 : Math.round((Math.sin(t * 5) + 1) * 0.6), a = x - p, b = y - p, c = x + w - 1 + p, d = y + w - 1 + p;
+  g.fillStyle = '#ff6a5a'; g.globalAlpha = 0.9;
+  g.fillRect(a, b, 3, 1); g.fillRect(a, b, 1, 3); g.fillRect(c - 2, b, 3, 1); g.fillRect(c, b, 1, 3);
+  g.fillRect(a, d, 3, 1); g.fillRect(a, d - 2, 1, 3); g.fillRect(c - 2, d, 3, 1); g.fillRect(c, d - 2, 1, 3);
+  g.globalAlpha = 1;
+}
 function hexA(hex, a) { var h = String(hex).replace('#', ''); if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; var n = parseInt(h, 16); if (isNaN(n)) return 'rgba(255,255,255,' + a.toFixed(3) + ')'; return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + Math.max(0, a).toFixed(3) + ')'; }
-var HOSTILE_FX = { slash: 1, thrust: 1, fire: 1, thunder: 1, quake: 1, dark: 1, wind: 1, arrowRain: 1, poison: 1, arrow: 1, water: 1, holy: 1, meteor: 1, fist: 1, kick: 1, palm: 1 };
+var HOSTILE_FX = { slash: 1, thrust: 1, fire: 1, thunder: 1, quake: 1, dark: 1, wind: 1, arrowRain: 1, poison: 1, arrow: 1, water: 1, holy: 1, meteor: 1, fist: 1, kick: 1, palm: 1, shield: 1, charge: 1, dive: 1, hook: 1, mark: 1, frost: 1, curse: 1 };
 function vignette(theme) {
   var v = VIG[theme] || [0.2, null], cv, g, gr;
   try { cv = document.createElement('canvas'); cv.width = 64; cv.height = 64; g = cv.getContext('2d'); } catch (x) { return null; }
@@ -438,6 +453,38 @@ V.fx = function (name, tiles, from) {
       case 'chi':      // 부동심: 기가 몸으로 모였다가 금빛 고리로 선다
         self.rings.push({ x: x, y: y, t: 0, dur: 0.45, c: cols[2], r: 18, inv: true, w: 2 }); self.rings.push({ x: x, y: y, t: -0.3, dur: 0.6, c: cols[0], r: 12, rise: true });
         self.burst(x, y, cols, 10, { up: 32, grav: -24, spd: 10, life: 0.8 }); break;
+      // ── 2.2.6 병과마다 ──
+      case 'shield':      // 방패 치기: 둔탁한 충격 둘 · 푸른 테
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.22, c: cols[1], r: 9 }); self.shape({ k: 'impact', x: x, y: y, dur: 0.2, c: cols[0], r: 6, d: 0.06 });
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.3, c: cols[2], r: 12, w: 2 }); self.burst(x, y, cols, 6, { spd: 34, life: 0.22 }); break;
+      case 'guard': case 'brace':      // 철벽 · 창벽: 몸으로 모이는 테 · 위로 서는 빛 (창벽은 사방으로 창끝)
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.4, c: cols[0], r: 15, inv: true, w: 2 }); self.rings.push({ x: x, y: y, t: -0.18, dur: 0.5, c: cols[1], r: 10, rise: true });
+        if (name === 'brace') for (var bj = 0; bj < 4; bj++) self.shape({ k: 'thrust', x: x + DIRS4[bj][0] * 0.5, y: y + DIRS4[bj][1] * 0.5, a: Math.atan2(DIRS4[bj][1], DIRS4[bj][0]), dur: 0.22, c: cols[2], d: 0.08 });
+        self.burst(x, y, cols, 6, { up: 26, grav: -18, spd: 8, life: 0.6 }); break;
+      case 'cover': case 'ward':      // 수호 · 등불 가호: 쓰는 이에게서 대상까지 빛줄기 · 대상 둘레에 방패 테
+        if (from && (from[0] !== x || from[1] !== y)) self.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: x * 16 + 8, y1: y * 16 + 6, c: cols[0], life: 0.2, t: 0, w: 2 });
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.45, c: cols[2], r: 11, w: 2 }); self.rings.push({ x: x, y: y, t: -0.1, dur: 0.5, c: cols[1], r: 7, rise: true });
+        self.burst(x, y, cols, 6, { up: 22, grav: -20, spd: 8, life: 0.6 }); break;
+      case 'sanct':      // 성역: 넓은 금빛 둥근 지붕
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.55, c: cols[0], r: 13, rise: true, w: 2 }); self.burst(x, y, cols, 4, { up: 30, grav: -26, spd: 6, life: 0.8 }); break;
+      case 'charge':      // 돌파: 지나간 칸마다 금빛 흙먼지 · 찌르기
+        self.shape({ k: 'thrust', x: x, y: y, a: a, dur: 0.18, c: cols[1], big: true, d: n * 0.03 }); self.burst(x, y, ['#d8c39a', cols[0]], 5, { up: 14, grav: 60, spd: 24, life: 0.4 }); break;
+      case 'dive':      // 급강하: 위에서 내리꽂는 빛 · 흩어지는 깃
+        self.lines.push({ x0: x * 16 + 8, y0: y * 16 - 26, x1: x * 16 + 8, y1: y * 16 + 6, c: cols[1], life: 0.14, t: 0, w: 2 });
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.24, c: cols[0], r: 10, d: 0.04 }); self.rings.push({ x: x, y: y + 0.2, t: -0.04, dur: 0.32, c: cols[2], r: 13 });
+        self.burst(x, y, ['#ffffff', '#cdd5e3'], 7, { spd: 30, up: 16, grav: 20, life: 0.5 }); break;
+      case 'hook':      // 작살: 쇠사슬 줄 · 물방울
+        if (from) self.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: x * 16 + 8, y1: y * 16 + 7, c: cols[0], life: 0.3, t: 0, w: 1, zig: true });
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.2, c: cols[1], r: 7 }); self.burst(x, y, cols, 6, { up: 18, grav: 80, spd: 18, life: 0.45 }); break;
+      case 'mark':      // 표식 사격: 화살 · 붉은 겨냥 테가 조여든다
+        if (from) self.projs.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 5, x1: x * 16 + 8, y1: y * 16 + 6, t: 0, dur: 0.1, arrow: true });
+        self.rings.push({ x: x, y: y, t: -0.06, dur: 0.4, c: cols[0], r: 14, inv: true, w: 2 }); self.burst(x, y, cols, 4, { spd: 28, life: 0.22 }); break;
+      case 'frost':      // 얼음창: 날아가는 얼음 · 깨지는 조각
+        if (from) self.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: x * 16 + 8, y1: y * 16 + 7, c: cols[0], life: 0.12, t: 0, w: 2 });
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.24, c: '#ffffff', r: 8, d: 0.05 }); self.rings.push({ x: x, y: y, t: -0.05, dur: 0.35, c: cols[2], r: 10 });
+        self.burst(x, y, cols, 9, { spd: 40, up: 10, grav: 70, life: 0.45, size: 2 }); break;
+      case 'curse':      // 저주: 보랏빛 테가 조여들고 검은 기운이 오른다
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.45, c: cols[0], r: 12, inv: true }); self.burst(x, y, cols, 7, { up: 16, grav: -24, spd: 8, life: 0.8, spread: 12 }); break;
       default:
         self.shape({ k: 'slash', x: x, y: y, a: a, s: n % 2 ? 1 : -1, dur: 0.22, c: cols[1] || '#fff0a0', big: true });
         self.burst(x, y, cols, 5, { spd: 36, life: 0.22 });
@@ -449,7 +496,7 @@ V.fx = function (name, tiles, from) {
     }
   });
   // 2.2.5: 한 대상을 노린 기술은 쓰는 이에게서 대상까지 짧은 빛줄기
-  if (!this.lite && from && tiles && tiles.length === 1 && HOSTILE_FX[name] && name !== 'palm' && name !== 'arrow' && (Math.abs(tiles[0][0] - from[0]) + Math.abs(tiles[0][1] - from[1])) >= 1 && this.onScreen(tiles[0][0], tiles[0][1]))
+  if (!this.lite && from && tiles && tiles.length === 1 && HOSTILE_FX[name] && name !== 'palm' && name !== 'arrow' && name !== 'mark' && name !== 'hook' && name !== 'frost' && name !== 'charge' && name !== 'dive' && (Math.abs(tiles[0][0] - from[0]) + Math.abs(tiles[0][1] - from[1])) >= 1 && this.onScreen(tiles[0][0], tiles[0][1]))
     this.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: tiles[0][0] * 16 + 8, y1: tiles[0][1] * 16 + 7, c: cols[0], life: 0.14, t: 0, w: 2 });
 };
 // ── 2.2.5 필살기: 쓰는 이 둘레만 밝게 (나머지는 잠깐 어둡게) · 병과 빛깔의 큰 고리와 불티 · 맞는 칸마다 충격 · 병과마다 다른 꼴 ──
@@ -478,6 +525,13 @@ V.ultBlast = function (e, S, u) {
     }
     if (i >= 6) return;
     switch (U.k) {
+      case 'shield':      // 2.2.6 보병: 맞는 칸마다 방패 충격 (막는 필살기는 아군 칸마다 푸른 방패 테)
+        if (hostile) { self.shape({ k: 'impact', x: x, y: y, dur: 0.3, c: c[1], r: 13, d: d }); self.shape({ k: 'slash', x: x, y: y, a: 0.75, s: 1, dur: 0.26, c: c[0], big: true, d: d + 0.05 }); }
+        else self.rings.push({ x: x, y: y, t: -d, dur: 0.55, c: c[2], r: 11, w: 2, inv: true });
+        break;
+      case 'brace':      // 2.2.6 창병: 사방에서 창끝이 엇갈린다
+        for (var bk = 0; bk < 4; bk++) self.shape({ k: 'thrust', x: x - DIRS4[bk][0] * 0.4, y: y - DIRS4[bk][1] * 0.4, a: Math.atan2(DIRS4[bk][1], DIRS4[bk][0]) + 0.6, dur: 0.24, c: bk % 2 ? c[1] : c[0], d: d + bk * 0.04 });
+        break;
       case 'slash': if (hostile) { self.shape({ k: 'slash', x: x, y: y, a: 0.75, s: 1, dur: 0.26, c: c[1], big: true, d: d }); self.shape({ k: 'slash', x: x, y: y, a: -0.75, s: -1, dur: 0.26, c: c[0], big: true, d: d + 0.07 }); } break;
       case 'water': self.burst(x, y, c, Math.round(9 * q), { up: 46, grav: 140, spd: 16, life: 0.6, spread: 10 }); break;
       case 'arrow': for (var k = 0; k < 4; k++) { var ox = Math.random() * 14 - 7; self.lines.push({ x0: x * 16 + 16 + ox, y0: y * 16 - 50 - k * 9, x1: x * 16 + 8 + ox, y1: y * 16 + 8, c: k % 2 ? c[1] : c[0], life: 0.16 + k * 0.05, t: 0, w: 1 }); } break;
@@ -487,6 +541,8 @@ V.ultBlast = function (e, S, u) {
     }
   });
   if (U.k === 'thrust' && far) { this.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: far[0] * 16 + 8, y1: far[1] * 16 + 7, c: c[0], life: 0.26, t: 0, w: 4 }); this.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: far[0] * 16 + 8, y1: far[1] * 16 + 7, c: '#ffffff', life: 0.18, t: 0, w: 1 }); }
+  if (U.k === 'shield') for (var sw = 0; sw < 3; sw++) this.rings.push({ x: v.x, y: v.y, t: -sw * 0.1, dur: 0.55, c: sw % 2 ? c[1] : c[2], r: 20 + sw * 8, w: 2, inv: sw === 0 });      // 2.2.6 보병: 겹겹이 서는 방패 벽
+  if (U.k === 'brace') { for (var bj = 0; bj < 8; bj++) { var ba = bj / 8 * 6.2832; this.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: v.x * 16 + 8 + Math.cos(ba) * 26, y1: v.y * 16 + 6 + Math.sin(ba) * 16, c: bj % 2 ? c[1] : c[0], life: 0.3, t: 0, w: 1 }); } }      // 창병: 여덟 갈래 창끝
   if (U.k === 'wind') for (var w = 0; w < 3; w++) this.rings.push({ x: v.x, y: v.y, t: -w * 0.08, dur: 0.45, c: w % 2 ? c[1] : c[0], r: 22 + w * 10 });
   if (U.k === 'arcane') this.shape({ k: 'sigil', x: far ? far[0] : v.x, y: far ? far[1] : v.y, dur: 0.7, c: c[0], r: hostile ? 24 : 20 });
   if (U.k === 'fist' && !hostile) for (var r2 = 0; r2 < 3; r2++) this.rings.push({ x: v.x, y: v.y, t: -r2 * 0.1, dur: 0.5, c: r2 % 2 ? c[1] : c[2], r: 16 + r2 * 6, rise: true });
@@ -556,14 +612,14 @@ V.handle1 = function (e, sim) {
         else if (lh && self.time - lh.t < 0.5) { kx = u.x - lh.x; ky = u.y - lh.y; }
         else if (self.lastSkill && self.time - self.lastSkill.t < 0.5) { kx = u.x - self.lastSkill.x; ky = u.y - self.lastSkill.y; }
         var kd = Math.sqrt(kx * kx + ky * ky);
-        if (e.type !== 'poison') v.hit = kd > 0 ? { dx: kx / kd, dy: ky / kd, t: -0.3, k: e.crit ? 4 : 2.5 } : { dx: 0, dy: -1, t: 0, k: 1.5 };
+        if (e.type !== 'poison' && e.type !== 'burn') v.hit = kd > 0 ? { dx: kx / kd, dy: ky / kd, t: -0.3, k: e.crit ? 4 : 2.5 } : { dx: 0, dy: -1, t: 0, k: 1.5 };
         if (!on) break;
         var ally = u.side === 'ally', fn = self.time - v.fnT < 0.5 ? v.fn + 1 : 0;      // 한 유닛에 숫자가 겹치지 않게 번갈아 비킨다
         v.fn = fn; v.fnT = self.time;
         // r26 숫자 v2: 색 = 누가 누구에게 (흰 = 보통 · 크림 = 고른 가문이 · 금 = 치명타 · 붉은 = 아군이 맞음 · 초록 = 독), 크기 = 무게. 튀었다가 호를 그리며 오른다
         var mineHit = !ally && !!e.by && e.by === self.sel;
-        var ncol = e.crit ? '#ffd24a' : e.type === 'poison' ? '#9ccc3c' : ally ? (self.hot ? '#ffe0e6' : '#ff5a6a') : mineHit ? '#fff3c4' : '#ffffff', lf = v.lastNum;      // r8: 붉은 땅에서는 아군 피해 숫자를 더 밝게 + 굵은 외곽선
-        var nS = e.crit ? 2.5 : e.type === 'poison' ? 1 : mineHit ? 1.75 : 1.5, nP = e.crit ? 3.4 : e.type === 'poison' ? 1 : mineHit ? 2.4 : ally ? 2 : 2.1;
+        var ncol = e.crit ? '#ffd24a' : e.type === 'poison' ? '#9ccc3c' : e.type === 'burn' ? '#ff9a3c' : ally ? (self.hot ? '#ffe0e6' : '#ff5a6a') : mineHit ? '#fff3c4' : '#ffffff', lf = v.lastNum;      // r8: 붉은 땅에서는 아군 피해 숫자를 더 밝게 + 굵은 외곽선
+        var nS = e.crit ? 2.5 : e.type === 'poison' || e.type === 'burn' ? 1 : mineHit ? 1.75 : 1.5, nP = e.crit ? 3.4 : e.type === 'poison' || e.type === 'burn' ? 1 : mineHit ? 2.4 : ally ? 2 : 2.1;
         var uh = !ally && self.ultHit && e.by === self.ultHit.id && self.time - self.ultHit.t < 0.3;      // 2.2.5: 필살기가 맞힌 숫자는 크게 · 충격 빛
         if (uh) { nS *= 1.4; nP *= 1.5; self.shape({ k: 'impact', x: u.x, y: u.y, dur: 0.26, c: self.ultHit.c || '#ffd24a', r: u.big ? 12 : 9 }); }
         // 3배속 난전: 같은 유닛에 아주 짧은 사이로 들어온 보통 피해는 숫자 하나로 합친다 (겹친 숫자 더미 대신 커지는 숫자 하나) — 합칠 때 다시 튄다
@@ -598,10 +654,23 @@ V.handle1 = function (e, sim) {
       case 'say': if (on) self.float(u.x, u.y, e.text, u.side === 'ally' ? '#fff3c4' : '#ffb0bc', { dy: -8, life: 1.1 }); break;
       case 'aura': if (v && on && (e.r || 2) < 2) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.4, c: '#9ef08a', r: 14 }); break; }      // 곁 1칸: 작은 고리만 (연환권마다 소리를 내지 않는다)
         if (v && on) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.55, c: '#9ef08a', r: (e.r || 2) * 15 }); self.rings.push({ x: v.x, y: v.y, t: -0.12, dur: 0.5, c: '#fff6d0', r: (e.r || 2) * 10 }); self.burst(v.x, v.y, ['#9ef08a', '#fff6d0'], 6, { up: 22, grav: -20, spd: 12, life: 0.7, spread: 20 }); self.sfx('heal'); } break;      // 2.2.5 기공: 둘레가 낫는다
-      case 'mend':      // 2.2.5 기 전하기: 쓰는 이에게서 다친 아군까지 옅은 초록 기 줄기 · 그 자리에 작은 고리
+      case 'mend':      // 2.2.5 기 전하기: 쓰는 이에게서 다친 아군까지 옅은 초록 기 줄기 · 그 자리에 작은 고리 (2.2.6: 등불은 금빛 · 생기 나눔은 자줏빛)
         var mv2 = self.vu[e.tid]; if (!v || !mv2 || !(on || self.onScreen(mv2.u.x, mv2.u.y))) break;
-        if (mv2 !== v) self.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: mv2.x * 16 + 8, y1: mv2.y * 16 + 6, c: '#b6f5a0', life: 0.22, t: 0, w: 1, zig: !self.lite });
-        self.rings.push({ x: mv2.x, y: mv2.y, t: 0, dur: 0.4, c: '#9ef08a', r: 8, rise: true }); break;
+        var mc = e.ward ? ['#ffe0a0', '#ffd27a'] : e.dark ? ['#d2a8ff', '#b181e6'] : ['#b6f5a0', '#9ef08a'];
+        if (mv2 !== v) self.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: mv2.x * 16 + 8, y1: mv2.y * 16 + 6, c: mc[0], life: 0.22, t: 0, w: 1, zig: !self.lite });
+        self.rings.push({ x: mv2.x, y: mv2.y, t: 0, dur: 0.4, c: mc[1], r: 8, rise: true }); break;
+      case 'shd':      // 2.2.6 보호막이 받아 낸 피해: 옅은 푸른 숫자 (작게) · 다 깨지면 조각
+        if (!v || !on) break;
+        if (self.time - (v.shdT || -9) > 0.35) { v.shdT = self.time; self.float(u.x, u.y, '막음 ' + e.v, '#bfe8ff', { dy: -12, life: 0.7, s: 1 }); }
+        if (e.end) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.3, c: '#d6ecff', r: 10 }); self.burst(v.x, v.y, ['#d6ecff', '#ffffff'], 5, { spd: 30, life: 0.3 }); }
+        break;
+      case 'weak':      // 2.2.6 맞물림 (둔화 · 화상 · 젖음 · 표식을 노린 기술): 금빛 「약점」
+        if (!v || !on || self.time - (v.wkT || -9) < 0.6) break;
+        v.wkT = self.time; self.float(u.x, u.y, '약점', '#ffd75e', { dy: -14, life: 0.7 }); break;
+      case 'chain':      // 2.2.6 연쇄 번개: 맞은 적에서 다음 적으로 번개 줄기
+        var ca = self.vu[e.a], cb = self.vu[e.b]; if (!ca || !cb || !(self.onScreen(cb.u.x, cb.u.y))) break;
+        self.lines.push({ x0: ca.x * 16 + 8, y0: ca.y * 16 + 6, x1: cb.x * 16 + 8, y1: cb.y * 16 + 6, c: '#fff0a0', life: 0.2, t: 0, w: 1, zig: true });
+        self.shape({ k: 'bolt', x: cb.x, y: cb.y, dur: 0.2, pts: boltPts(cb.x, cb.y) }); if (!self.lite) self.light(cb.x * 16 + 8, cb.y * 16 + 6, 14, '#cfe6ff', 0.4, 0.2); break;
       case 'ctr':      // 2.2.5 되치기 (부동심)
         var tv = self.vu[e.tid]; if (!v || !on) break;
         if (tv) self.shape({ k: 'impact', x: tv.x, y: tv.y, dur: 0.22, c: '#ffd28a', r: 8 });
@@ -615,7 +684,7 @@ V.handle1 = function (e, sim) {
         var tn = self.time - v.tnT < 0.8 ? v.tn + 1 : 0;      // 글자도 한 줄씩 위로 쌓는다
         v.tn = tn; v.tnT = self.time;
         if (e.t === 'buff') self.float(u.x, u.y, (BUFFTXT[e.s] || e.s) + (e.p > 0 ? '↑' : '↓'), e.p > 0 ? '#f6cf57' : '#b181e6', { dy: -4 - Math.min(tn, 3) * 6, delay: 0.15 });
-        else self.float(u.x, u.y, DS.STATUS[e.s].name, e.s === 'poison' ? '#9ccc3c' : '#62b0ee', { dy: -4 - Math.min(tn, 3) * 6, delay: 0.15 });
+        else self.float(u.x, u.y, DS.STATUS[e.s] ? DS.STATUS[e.s].name : e.s, STC[e.s] || '#62b0ee', { dy: -4 - Math.min(tn, 3) * 6, delay: 0.15 });
         break;
       case 'aggro':
         if (!on) break;
@@ -1418,7 +1487,8 @@ V.drawUnit = function (g, v) {
       if (cmd) { g.fillStyle = '#f6cf57'; g.fillRect(x0, top + 2, Math.ceil(w * u.gauge / 100), 1); g.fillStyle = '#62b0ee'; if (u.mmp) g.fillRect(x0, top + 3, Math.ceil(w * u.mp / u.mmp), 1); }
       else if (u.aggro) { g.fillStyle = '#f6cf57'; g.fillRect(x0, top + 2, Math.ceil(w * u.gauge / 100), 1); }
       for (k in u.buffs) { g.fillStyle = u.buffs[k].p < 0 ? '#b181e6' : k === 'atk' ? '#ff6a7a' : k === 'def' ? '#62b0ee' : '#f6cf57'; g.fillRect(x0 + n * 3, top - 4, 2, 2); n++; }
-      for (k in u.st) { g.fillStyle = k === 'poison' ? '#9ccc3c' : '#9fe8ec'; g.fillRect(x0 + n * 3, top - 4, 2, 2); n++; }
+      for (k in u.st) { g.fillStyle = STC[k] || '#9fe8ec'; g.fillRect(x0 + n * 3, top - 4, 2, 2); n++; }
+      if (u.buffs.shd && u.buffs.shd.p > 0) { g.fillStyle = '#d6ecff'; g.fillRect(x0, top - 1, Math.max(1, Math.min(w, Math.ceil(w * u.buffs.shd.p / u.mhp))), 1); }      // 2.2.6 보호막: 막대 위 흰 줄 (남은 양만큼)
     }
     if (u.side === 'enemy' && (u.elite != null || u.eliteCrew != null)) eliteMark(g, u.elite != null ? (show ? x0 - 10 : px + 4) : (show ? x0 - 6 : px + 6), u.elite != null ? (show ? top - 3 : top - 4) : (show ? top - 2 : top - 1), u.elite != null, t + v.bob);
     if (u.role === 'merc' && u.grade) {
@@ -1427,6 +1497,7 @@ V.drawUnit = function (g, v) {
       else gradeMark(g, px + 1, py + MARK_Y, u.grade, DS.GRADES[u.grade].col, t + v.bob);
     }
     if (boss) bossMark(g, px + 4, top - 9 - (n > 2 ? 4 : 0), t, this.hot);
+    if (u.st && u.st.mark) markBrk(g, px, py - (big ? 8 : 0), big ? 24 : 16, t + v.bob, this.calmN);      // 2.2.6 표식: 붉은 꺾쇠 넷
     if (u.side === 'ally' && !big) { if (!v.mdT || t - v.mdT > 1) { v.md = moodOf(u); v.mdT = t; if (cmd) { var wg = DS.unitDress ? DS.unitDress(u) : null, wgG = wg && wg.w && DS.gear ? DS.gear(wg.w) : null; v.leg = !!(wgG && wgG.grade >= 5); } } if (v.md) moodMark(g, x0 - 6, top - 1, v.md, t + v.bob); }      // r11: 비탄·노년 표식      // 버프·상태 점이 셋째부터 표식 자리에 닿는다 — 그때는 표식을 한 줄 올린다
   }
   g.globalAlpha = 1;
@@ -1809,6 +1880,8 @@ var T = {
   staff: ['.......c3...', '......c33c..', '......3113..', '.......33...', '.......o....', '......o.....', '.....o......', '....o.......', '...o........', '..o.........', '.o..........', 'o...........'],
   plate: ['............', '.333....333.', '.3113333113.', '.2111331112.', '..21133112..', '..21111112..', '..21g11g12..', '..21111112..', '..22111122..', '..21111112..', '..22222222..', '............'],
   vest: ['............', '..hh....hh..', '.h11h..h11h.', '.h111hh111h.', '..h111111h..', '..h1o11o1h..', '..h111111h..', '..hoooooooh.', '..h111111h..', '..h111111h..', '..hhhhhhhh..', '............'],
+  knuckle: ['............', '...33333....', '..3g3g3g3...', '..31111112..', '..311111112.', '..311111112.', '...21111112.', '....2111112.', '.....21112..', '.....2ggg2..', '.....22222..', '............'],      // 2.2.6 권갑: 주먹마디 징 · 손목 띠
+  gi: ['............', '..11.33.11..', '.111.33.111.', '.1113..3111.', '..11.33.11..', '..111..111..', '..gggggggg..', '..11g11g11..', '..111..111..', '..11....11..', '..22....22..', '............'],      // 2.2.6 도복: 엇갈린 깃 · 띠
   robe: ['....3333....', '...3....3...', '...111111...', '..11111111..', '..111gg111..', '..11111111..', '..1111111...', '.11111111...', '.111111111..', '.1111111111.', '.2222222222.', '............'],
   rope: ['....2222....', '..22311122..', '.2311..1132.', '.231....132.', '.21......12.', '.21......12.', '.231....122.', '..2311.122..', '...22312....', '.....312....', '.....3122...', '......22....'],
   cloak: ['....2222....', '...211112...', '..21kkkk12..', '..21kkkk12..', '..211gg112..', '.2111111112.', '.2131111112.', '.2131111112.', '213111111112', '213111111112', '211111111112', '22.22.22.22.'],
@@ -1865,7 +1938,7 @@ var ICON = {
     mg_whet: P('whet', 'stone'), mg_buckler: P('shield', 'wood'), mg_ration: P('sack', 'leather'), mg_boots: P('boot', 'leather'), mg_charm: P('talisman', 'red'), mg_plume: P('feather', 'red'),
     prot: P('talisman', 'gold')      // 2.1.0 강화 보호 부적
   },
-  gear: { sword: P('sword', 'steel'), lance: P('spear', 'steel'), bow: P('bow', 'wood'), wand: P('mace', 'steel', { m: '#f6cf57', 2: '#c08f2c' }), staff: P('staff', 'violet'), heavy: P('plate', 'steel'), light: P('vest', 'leather', { h: '#5e3a22' }), robe: P('robe', 'violet') },
+  gear: { sword: P('sword', 'steel'), lance: P('spear', 'steel'), bow: P('bow', 'wood'), wand: P('mace', 'steel', { m: '#f6cf57', 2: '#c08f2c' }), staff: P('staff', 'violet'), heavy: P('plate', 'steel'), light: P('vest', 'leather', { h: '#5e3a22' }), robe: P('robe', 'violet'), fist: P('knuckle', 'steel', { g: '#e0525e' }), gi: P('gi', 'white', { g: '#e0525e' }) },
   misc: { ticket: P('ticket', 'gold'), crest: P('banner', 'red'), gold: P('coinbag', 'leather'),
     coffin: P('coffin', 'wood'), rings: P('rings', 'gold'), cradle: P('cradle', 'wood'), fcrest: P('fcrest', 'red'), cane: P('cane', 'wood') }      // r8 가문 화면: DS.icon('misc', 'coffin'|'rings'|'cradle'|'fcrest'|'cane')
 };

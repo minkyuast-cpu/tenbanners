@@ -70,6 +70,34 @@ var HEAD = {
     '...kssssssssk...',
     '...ksskssksSk...',
     '....kssssssk....'],
+  // 2.2.6 무투가: 이마 띠(뒤로 매듭) · 상투 · 금 테 머리띠
+  band: [
+    '................',
+    '.....kkkkkk.....',
+    '....khhhhhhk....',
+    '...khhhhhhhHk...',
+    '.rrkrrrrrrrrk...',
+    '.R.khssssssHk...',
+    '...khskssksHk...',
+    '....kssssssk....'],
+  knot: [
+    '.......kk.......',
+    '......khhk......',
+    '.....kkrrkk.....',
+    '....kssssssk....',
+    '...kssssssssk...',
+    '...kSssssssSk...',
+    '...ksskssksSk...',
+    '....kssssssk....'],
+  circlet: [
+    '................',
+    '.....kkkkkk.....',
+    '....khhhhhhk....',
+    '...khhhhhhhHk...',
+    '...kiiiiciiik...',
+    '...khssssssHk...',
+    '...khskssksHk...',
+    '....kssssssk....'],
   mitre: [
     '......kkkk......',
     '.....kwwwwk.....',
@@ -145,6 +173,15 @@ var BODY = {
     '....kOOkkOOk....',
     '....kkk..kkk....',
     '................'],
+  gi: [      // 2.2.6 무투가의 도복: 엇갈린 깃 · 띠 · 넓은 바지 · 맨발
+    '...kkaalsaakk...',
+    '..kaAaalsaaAak..',
+    '..kskaaalaaksk..',
+    '...kbbbbbbbbk...',
+    '....kaBkkAak....',
+    '....kAAkkAAk....',
+    '....kssk.kssk...',
+    '................'],
   bones: [
     '...kkllllllkk...',
     '..klkLlLLlLklk..',
@@ -166,7 +203,10 @@ var ITEM = {
   club:   [12, 3, ['.oo', 'ooo', 'ooO', '.oO', '.o.', '.o.', '.o.', '.o.']],
   axe:    [12, 2, ['.omm', '.ommm'.slice(0, 4), '.omM', '.om.', '.o..', '.o..', '.o..', '.o..', '.o..']],
   beads:  [5, 8, ['.l..l.', 'l....l', '.l..l.', '..ll..']],
-  fists:  [1, 9, ['.kk.........kk.', 'kssk.......kssk', '.kk.........kk.']]
+  fists:  [1, 9, ['.kk.........kk.', 'kssk.......kssk', '.kk.........kk.']],
+  wraps:  [2, 10, ['l..........l']],      // 2.2.6 무투가: 손에 감은 천
+  gaunt:  [2, 9, ['M..........M', 'm..........m']],      // 권갑
+  scarf:  [0, 8, ['.qq', 'qqk', 'qk.']]
 };
 
 function compose(head, body, items) {

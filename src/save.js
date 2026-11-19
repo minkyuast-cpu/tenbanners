@@ -252,7 +252,7 @@ DS.fixSave = function (s) {
     if (m.L == null && m.o && own(s.chars, m.o)) { m.L = +s.chars[m.o].L || 1; if (m.L > 70) m.fz = 1; }      // 레벨 칸이 없는 줄(시험용 옛 저장): 선 가문의 레벨에서 (이어 하기는 Save.read 가 이미 막는다)
     if (m.fz != null) { if (m.fz) m.fz = 1; else delete m.fz; } m.L = Math.max(1, Math.min(m.fz ? 100 : 70, Math.round(+m.L || 1))); m.exp = Math.max(0, +m.exp || 0);      // r42: 개인 단·레벨
     if (m.q != null && !(DS.QUIRKS && own(DS.QUIRKS, m.q))) delete m.q;
-    if (m.s != null && !own(DS.SKILLS, DS.skAlias ? (m.s = DS.skAlias(m.s)) : m.s)) delete m.s;
+    if (m.s != null && !own(DS.SKILLS, DS.skOld ? (m.s = DS.skOld(m.s, DS.mClsOf ? DS.mClsOf(m) : null)) : DS.skAlias ? (m.s = DS.skAlias(m.s)) : m.s)) delete m.s;      // 2.2.6: 옛 깃발의 기술 → 그 병과의 새 기술 (DS.SK_OLD)
     if (m.ul != null) { m.ul = DS.skAlias ? DS.skAlias(m.ul) : m.ul; if (!own(DS.ULTS, m.ul)) delete m.ul; }      // 2.2.5: 옛 필살기 이름
     if (m.it != null && !(DS.MGEAR && own(DS.MGEAR, m.it))) delete m.it;
     if (m.bk != null) m.bk = Math.max(0, Math.round(+m.bk || 0)); if (m.sv != null) m.sv = Math.max(0, Math.round(+m.sv || 0));

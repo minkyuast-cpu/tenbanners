@@ -80,6 +80,14 @@ var SFX = {
   punch:  function () { noise(0.07, 0.22, 500, 0.9); tone(160, 90, 0.08, 'square', 0.08); },
   kick:   function () { noise(0.12, 0.12, 2400, 1.2); noise(0.08, 0.24, 420, 0.9, 0.08); tone(190, 80, 0.1, 'square', 0.08, 0.08); },      // 2.2.5 날아차기: 바람 소리 뒤에 묵직한 한 방
   qi:     function () { tone(220, 660, 0.16, 'sine', 0.07); noise(0.18, 0.1, 900, 0.7, 0.04, 'lowpass'); tone(110, 70, 0.14, 'square', 0.06, 0.1); },      // 기공장: 기가 모였다가 터진다
+  // 2.2.6 병과마다: 방패 · 철벽 · 돌파 · 작살 · 등불 · 얼음 · 저주 (있는 소리 조각을 섞는다)
+  shield: function () { noise(0.08, 0.24, 700, 0.9); tone(330, 160, 0.12, 'square', 0.07); tone(1250, 900, 0.1, 'triangle', 0.035, 0.02); },      // 쇠가 맞부딪는 둔탁한 소리
+  guard:  function () { tone(196, 392, 0.18, 'triangle', 0.07); tone(784, 784, 0.16, 'sine', 0.035, 0.08); noise(0.08, 0.06, 1800, 0.8, 0.02); },      // 철벽 · 창벽: 몸을 세운다
+  charge: function () { [0, 0.07, 0.14, 0.21].forEach(function (d) { noise(0.05, 0.16, 380, 0.9, d); }); tone(240, 520, 0.22, 'sawtooth', 0.035, 0.05); },      // 말굽 넷 · 함성
+  hook:   function () { noise(0.1, 0.1, 3200, 1.6); tone(900, 420, 0.1, 'square', 0.035, 0.05); noise(0.12, 0.08, 1200, 1.0, 0.1); },      // 사슬이 풀렸다 감긴다
+  ward:   function () { [988, 1319, 1760].forEach(function (f, i) { tone(f, f * 1.01, 0.14, 'sine', 0.045, i * 0.05); }); },      // 등불 · 보호막: 맑은 종소리
+  frost:  function () { noise(0.12, 0.14, 5200, 2.2); tone(1760, 1320, 0.08, 'triangle', 0.04); noise(0.06, 0.12, 2600, 1.4, 0.07); },      // 얼음이 꽂히고 갈라진다
+  curse:  function () { tone(196, 147, 0.32, 'sawtooth', 0.045); tone(208, 139, 0.32, 'sawtooth', 0.04, 0.03); noise(0.3, 0.05, 600, 0.6, 0, 'lowpass'); },      // 낮은 웅얼거림
   arrow:  function () { noise(0.09, 0.12, 4200, 2); tone(1100, 700, 0.08, 'sine', 0.04); },
   magic:  function () { tone(480, 1250, 0.18, 'sine', 0.07); tone(960, 1900, 0.16, 'triangle', 0.03, 0.03); },
   skill:  function () { tone(440, 880, 0.12, 'square', 0.045); tone(660, 1320, 0.12, 'square', 0.035, 0.05); },

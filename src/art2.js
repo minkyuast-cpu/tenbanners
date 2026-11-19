@@ -143,10 +143,16 @@ function human(g, S) {
   S.C = C;
   var items = S.items || [], has = function (n) { return items.indexOf(n) >= 0; };
   var w = child ? null : S.w ? gearW(S.w, S.cls) : itemW(items, S.tier || 1, pal);
+  // 2.2.6 무투가: 권갑 · 수투(또는 옛 성구)는 손에 감긴다 — 막대 무기로 그리지 않는다. 장비가 없으면 꼴의 wraps · gaunt
+  S._fist = null;
+  if (!child && (S.body === 'gi' || (w && w.cat === 'fist'))) {
+    if (w && (w.cat === 'fist' || (S.body === 'gi' && w.cat === 'wand'))) { S._fist = { metal: w.line === 'A' || w.cat === 'wand' || w.t >= 4 || w.grade >= 4, m: w.m, acc: w.acc, gem: w.gem, grade: w.grade, spike: w.cat === 'wand' && w.kind === 'mace' }; w = null; }
+    else if (!w || S.body === 'gi') { w = null; S._fist = has('gaunt') ? { metal: true, m: [mute(pal.m || '#cdd5e3'), mute(pal.m || '#cdd5e3'), mute(pal.M || '#8f9ab3')], acc: pal.i || '#d8b450', gem: pal.c || '#62b0ee', grade: 0 } : { metal: false }; }
+  }
   var shield = !child && has('shield') && !(S.w && S.w.cat !== 'sword' && S.w.cat !== 'wand');
   var bs = child ? 0.74 : age === 'teen' ? 0.9 : 1, hs = child ? 0.92 : age === 'teen' ? 0.96 : 1, bend = age === 'elder' ? 0.15 : 0;
   var lean = pose === 'atk' ? 0.12 : pose === 'hit' ? -0.17 : pose === 'cast' ? -0.05 : 0, dx = pose === 'hit' ? -1.6 : pose === 'atk' ? 1.2 : 0;
-  var robe = !S.ride && (S.body === 'robe' || (S.a && S.a.cat === 'robe'));
+  var robe = !S.ride && S.body !== 'gi' && (S.body === 'robe' || (S.a && S.a.cat === 'robe'));      // 2.2.6: 도복을 입은 무투가는 로브를 걸쳐도 도복 꼴
   var step = S.step || 0;
   g.save(); g.translate(32 + dx, 61.5); g.scale(bs, bs); g.translate(-32, -61.5);
   function upper(fn) { g.save(); g.translate(31, 51); g.rotate(lean + bend); g.translate(-31, -51); fn(); g.restore(); }
@@ -163,18 +169,20 @@ function human(g, S) {
     if (w.cat === 'bow' && pose === 'atk') hand = [50, 40];
   }
   S._hand = hand; S._ang = ang; S._wd = w;
-  if (S.maskOnly) { upper(function () { if (w) { g.save(); g.translate(hand[0], hand[1]); g.rotate(ang); weapon(g, w); g.restore(); } }); g.restore(); return; }
+  if (S.maskOnly) { upper(function () { if (w) { g.save(); g.translate(hand[0], hand[1]); g.rotate(ang); weapon(g, w); g.restore(); } else if (S._fist) fistP(g, S, hand, true); }); g.restore(); return; }
   // ── 뒤: 망토 · 날개 · 긴 머리
   upper(function () {
     if (has('mwing') || has('mwing2')) wings(g, C('w'), has('mwing2'), pose);
     if (S.a && S.a.sh === 'wings') wings(g, mute(S.a.m[1]), false, pose);
     if (has('cape')) cape(g, C('q'), C('b'), pose, step);
+    if (has('scarf')) scarf(g, C('q'), pose, step);      // 2.2.6 무투가: 뒤로 날리는 긴 목도리
     if (S.a && S.a.cat === 'light' && S.a.line === 'B') smallWings(g, mute(S.a.m[0]));
   });
   headT(function () { headBack(g, S); });
   // ── 다리
   if (S.bust) {}
   else if (S.ride) rideLeg(g, S);
+  else if (S.body === 'gi') giLegs(g, S, step);      // 2.2.6 도복 바지 · 맨발
   else if (!robe) legs(g, S, step);
   else robeFeet(g, S, step);
   upper(function () {
@@ -186,6 +194,7 @@ function human(g, S) {
   upper(function () {
     if (w) { g.save(); g.translate(hand[0], hand[1]); g.rotate(ang); weapon(g, w); g.restore(); }
     frontArm(g, S, hand, w);
+    if (S._fist) fistP(g, S, hand);      // 2.2.6 무투가의 주먹 (감은 천 · 권갑)
     if (has('beads')) for (var bi = 0; bi < 9; bi++) { var ba = 0.2 + bi / 8 * 2.7; part(g, circ(31 + Math.cos(ba) * 7, 37.6 + Math.sin(ba) * 4.6, bi === 4 ? 1.6 : 1.15), bi === 4 ? '#c0404c' : '#7a5034', { sd: 0.4, hl: 0.4, ln: 0.6 }); }
     if (has('kunai')) { part(g, function (g) { g.moveTo(22, 49); g.lineTo(18, 54.5); g.lineTo(19.5, 55); g.closePath(); }, '#c4ccd8', { sd: 0.3 }); }
   });
@@ -193,6 +202,41 @@ function human(g, S) {
 }
 DS.artHuman = human;
 
+// ── 2.2.6 무투가: 도복 바지 · 맨발 · 목도리 · 주먹 ──
+function giLegs(g, S, step) {
+  var C = S.C, pant = S.pal.p ? C('p') : sh1(C('a')), skin = C('s'), wrap = C('l');
+  [[27.2, step === 1 ? 2.4 : 0, -0.8], [35.2, step === 2 ? 2.4 : 0, 0.8]].forEach(function (L, i) {
+    var x = L[0], up = L[1], k = L[2];
+    part(g, function (g) { g.moveTo(x - 3, 48.4); g.lineTo(x + 3, 48.4); g.quadraticCurveTo(x + 4.6 + k, 52.6, x + 4 + k, 57 - up); g.lineTo(x - 4 + k, 57 - up); g.quadraticCurveTo(x - 4.4 + k, 52.6, x - 3, 48.4); g.closePath(); }, i ? pant : sh1(pant), { sd: 1.2 });
+    curve(g, x - 0.6 + k * 0.5, 50.5, x + 0.4 + k, 53.5, x - 0.2 + k, 56.4 - up, css(sh2(pant)), 0.5);
+    part(g, function (g) { RR(g, x - 2.7 + k, 56.4 - up, 5.4, 1.9, 0.8); }, wrap, { sd: 0.4, hl: 0.2 });
+    part(g, function (g) { g.moveTo(x - 2.4 + k, 58.1 - up); g.lineTo(x + 2.2 + k, 58.1 - up); g.quadraticCurveTo(x + 5.2 + k, 59.3 - up, x + 4.8 + k, 61.5 - up); g.lineTo(x - 2.6 + k, 61.5 - up); g.closePath(); }, i ? skin : sh1(skin), { sd: 0.7 });
+  });
+}
+function scarf(g, c, pose, step) {      // 목에서 뒤로 날리는 긴 천 두 가닥
+  var sw = pose === 'atk' ? -4 : pose === 'hit' ? 2 : step ? -1.5 : 0;
+  part(g, function (g) { g.moveTo(25, 37.5); g.quadraticCurveTo(17 + sw, 39, 10 + sw * 1.6, 44.5); g.quadraticCurveTo(13 + sw, 45.2, 15.5 + sw, 43.6); g.quadraticCurveTo(20 + sw * 0.6, 41.6, 27, 40.4); g.closePath(); }, c, { sd: 1.4 });
+  part(g, function (g) { g.moveTo(25.5, 39); g.quadraticCurveTo(19 + sw, 43, 14.5 + sw * 1.4, 50.5); g.quadraticCurveTo(17 + sw, 50.2, 18.6 + sw, 48.4); g.quadraticCurveTo(22, 44, 27.4, 41.4); g.closePath(); }, sh1(c), { sd: 1.2 });
+}
+function fistP(g, S, hand, maskOnly, back) {      // 감은 천(맨손) 또는 권갑 (쇠 · 장식 · 보석) — hand = 주먹 자리
+  var F = S._fist || {}, x = hand[0], y = hand[1], r = back ? 2.5 : 3.1;
+  if (maskOnly) { part(g, circ(x, y, r + 0.4), '#ffffff', { sd: 0, hl: 0 }); return; }
+  if (!F.metal) {
+    part(g, circ(x, y, r), S.C('l'), { sd: 0.9, hl: 0.5 });
+    line(g, [x - r * 0.8, y - 0.8, x + r * 0.8, y + 0.4], css(sh1(S.C('l'))), 0.5); line(g, [x - r * 0.7, y + 0.9, x + r * 0.7, y + 1.8], css(sh1(S.C('l'))), 0.5);
+    if (!back) part(g, function (g) { RR(g, x - 2.6, y + 1.6, 4.2, 2.6, 1); }, S.C('l'), { sd: 0.5, hl: 0 });      // 손목에 감은 끝
+    return;
+  }
+  var m = F.m || ['#d6dce6', '#9ea8ba', '#646d84'], mc = typeof m[1] === 'string' ? mute(m[1]) : m[1];
+  if (!back) part(g, function (g) { RR(g, x - 3.6, y + 0.8, 5.2, 4.6, 1.4); }, sh1(mc), { sd: 0.8, gl: function (g) { E(g, x - 2.2, y + 1.8, 0.7, 1.4); } });      // 팔목 가리개
+  part(g, function (g) { E(g, x, y, r + 0.3, r); }, mc, { sd: 1.1, hl: 0.8, gl: function (g) { E(g, x - 1, y - 1, 0.9, 0.6, -0.4); } });
+  if (!back) {
+    for (var i = 0; i < 3; i++) dot(g, x + 1.9, y - 1.6 + i * 1.6, 0.62, css(lt(mc, 0.45)));      // 주먹마디 징
+    if (F.spike) for (var j = 0; j < 3; j++) part(g, function (g) { var yy = y - 1.6 + j * 1.6; g.moveTo(x + 2.4, yy - 0.6); g.lineTo(x + 4.4, yy); g.lineTo(x + 2.4, yy + 0.6); g.closePath(); }, mc, { sd: 0.2, hl: 0, ln: 0.5 });
+    if (F.grade >= 4 || F.acc) line(g, [x - 3.4, y + 2.6, x + 1.4, y + 2.6], css(mute(F.acc || '#d8b450')), 0.7);
+    if (F.grade >= 4) dot(g, x - 1.2, y + 3.4, 0.8, css(mute(F.grade >= 5 ? (F.gem || '#62b0ee') : '#9a6ad0')));
+  }
+}
 function legs(g, S, step) {
   var C = S.C, armor = S.body === 'armor' || (S.a && S.a.cat === 'heavy'), bones = S.body === 'bones';
   var pant = bones ? C('l') : armor ? sh1(C('a')) : S.body === 'tunic' ? mute('#5a4a3e') : sh1(C('a')), boot = bones ? C('L') : armor ? (S.a ? mute(S.a.m[1]) : C('m')) : mute(BOOT);
@@ -239,7 +283,20 @@ function torso(g, S, robe) {
     part(g, function (g) { RR(g, 30, 37, 2.2, 14, 1); }, C('l'), { sd: 0.4, hl: 0, ln: 0.6 });
     part(g, el(31, 51, 6, 2.6), C('L'), { sd: 0.6 }); return;
   }
-  if (robe) {
+  if (body === 'gi') {      // 2.2.6 무투가의 도복: 넓은 어깨 · 엇갈린 깃 · 띠와 늘어진 띠 끝
+    var gm = main, inner = C('l'), sash = A && A.cat === 'gi' ? mute(A.acc) : C('b');
+    if (A && A.grade >= 5) gm = mix(gm, mute(A.m[1]), 0.5);
+    part(g, function (g) { g.moveTo(22.4, 37); g.lineTo(39.6, 37); g.quadraticCurveTo(42.8, 37.6, 42.4, 42); g.lineTo(41.2, 47); g.quadraticCurveTo(42.6, 50.6, 42.6, 53.6); g.quadraticCurveTo(31, 56, 19.6, 53.6); g.quadraticCurveTo(19.6, 50.6, 21, 47); g.lineTo(19.8, 42); g.quadraticCurveTo(19.4, 37.6, 22.4, 37); g.closePath(); }, gm, { sd: 3.2 });
+    part(g, function (g) { g.moveTo(27.4, 37); g.lineTo(34.8, 37); g.lineTo(31.2, 41.6); g.closePath(); }, S.tier >= 3 ? C('s') : inner, { sd: 0.6, hl: 0.3 });      // 목 아래 (높은 단은 가슴이 드러난다)
+    part(g, function (g) { g.moveTo(24.6, 37); g.lineTo(27.4, 37); g.lineTo(34.6, 46.6); g.lineTo(32, 46.6); g.closePath(); }, sh1(lt(gm, 0.2)), { sd: 0.5, hl: 0 });      // 안쪽 깃
+    part(g, function (g) { g.moveTo(34.8, 37); g.lineTo(37.8, 37.2); g.lineTo(29.8, 46.6); g.lineTo(26.8, 46.6); g.closePath(); }, lt(gm, 0.24), { sd: 0.6, hl: 0.3 });      // 겉 깃 (흰 테)
+    if (A && A.line === 'B') for (var gi = 0; gi < 3; gi++) curve(g, 22.5 + gi * 6.5, 40 + gi, 24 + gi * 6.5, 44 + gi, 23 + gi * 6.5, 46, css(lt(gm, 0.3), 0.6), 0.5);      // 띠 도복: 누빈 결
+    part(g, function (g) { RR(g, 20.6, 46, 21.2, 3.4, 1.4); }, sash, { sd: 0.8, hl: 0.4 });
+    part(g, el(25, 47.8, 1.9, 1.5), sh1(sash), { sd: 0.5 });      // 매듭
+    part(g, function (g) { g.moveTo(24.2, 48.6); g.quadraticCurveTo(22.6, 52, 22.8, 55.8); g.lineTo(24.4, 55.6); g.quadraticCurveTo(24.4, 52.4, 25.6, 49); g.closePath(); g.moveTo(25.4, 49); g.quadraticCurveTo(26.4, 52.4, 26.2, 55.2); g.lineTo(27.6, 55); g.quadraticCurveTo(27.6, 52, 26.4, 48.6); g.closePath(); }, sash, { sd: 0.6 });      // 늘어진 띠 끝
+    curve(g, 36, 50, 37.6, 52, 38.6, 54, css(sh1(gm)), 0.6); curve(g, 29.6, 50, 30.4, 52.4, 30.8, 54.6, css(sh1(gm)), 0.5);
+    if (S.tier >= 5 && !S.cls.indexOf('cle')) { dot(g, 38.6, 41.6, 0.85, css(mute(S.pal.i || '#d8b450'))); }
+  } else if (robe) {
     part(g, function (g) { g.moveTo(23.5, 37); g.lineTo(38.5, 37); g.quadraticCurveTo(42, 38, 42, 43); g.quadraticCurveTo(43.5, 53, 45, 60.3); g.quadraticCurveTo(31, 62.4, 17.5, 60.3); g.quadraticCurveTo(19.5, 52, 20, 43); g.quadraticCurveTo(20, 38, 23.5, 37); g.closePath(); }, main, { sd: 3.6 });
     curve(g, 27, 46, 25, 53, 23.5, 60, css(sh1(main)), 0.7); curve(g, 36, 47, 37.5, 54, 38.5, 60.5, css(sh1(main)), 0.7);
     part(g, function (g) { g.moveTo(17.6, 59); g.quadraticCurveTo(31, 61.2, 44.8, 59); g.lineTo(45.2, 61); g.quadraticCurveTo(31, 63.2, 17.3, 61); g.closePath(); }, trim, { sd: 0.5, hl: 0.3 });
@@ -278,6 +335,13 @@ function has2(S, n) { return (S.items || []).indexOf(n) >= 0; }
 function backArm(g, S, shield, pose) {
   var C = S.C, sl = C('a'), hd = pose === 'atk' ? [21.5, 45] : pose === 'hit' ? [17.5, 42] : [19.5, 47];
   if (S.body === 'bones') { part(g, cap(24, 39, hd[0], hd[1], 1.1), C('l'), { sd: 0.4 }); return; }
+  if (S.body === 'gi') {      // 2.2.6: 짧은 소매 · 맨 팔뚝 · 뒷주먹
+    var bm = [(23.4 + hd[0]) / 2, (39.5 + hd[1]) / 2];
+    part(g, cap(bm[0], bm[1], hd[0], hd[1], 2.1), sh1(C('s')), { sd: 0.8 });
+    part(g, cap(23.4, 39.5, bm[0], bm[1], 2.7), sh1(sl), { sd: 1 });
+    if (S._fist) fistP(g, S, [hd[0], hd[1] + 0.4], false, true); else part(g, circ(hd[0], hd[1] + 0.6, 2.1), sh1(C('s')), { sd: 0.6 });
+    return;
+  }
   part(g, cap(23.4, 39.5, hd[0], hd[1], 2.4), sh1(sl), { sd: 1 });
   if (!shield) part(g, circ(hd[0], hd[1] + 0.6, 2.1), sh1(C('s')), { sd: 0.6 });
 }
@@ -285,6 +349,12 @@ function frontArm(g, S, hand, w) {
   var C = S.C, sl = C('a'), pl = S.a && S.a.cat === 'heavy' ? mute(S.a.m[1]) : sl, sx = 39.2, sy = 39.6;
   if (S.body === 'bones') { part(g, cap(sx, sy, hand[0], hand[1], 1.1), C('l'), { sd: 0.4 }); part(g, circ(hand[0], hand[1], 1.6), C('l'), { sd: 0.4 }); return; }
   var mx = (sx + hand[0]) / 2 + 1, my = (sy + hand[1]) / 2;
+  if (S.body === 'gi') {      // 2.2.6: 짧은 소매 (소맷부리 테) · 맨 팔뚝 — 주먹은 fistP
+    part(g, cap(mx, my, hand[0], hand[1], 2.3), C('s'), { sd: 1 });
+    part(g, cap(sx, sy, mx, my, 2.8), sl, { sd: 1.1 });
+    part(g, circ(mx, my, 2.5), lt(sl, 0.22), { sd: 0.6, hl: 0.2 });
+    return;
+  }
   part(g, cap(sx, sy, mx, my, 2.5), sl, { sd: 1.1 });
   part(g, cap(mx, my, hand[0], hand[1], 2.2), sl, { sd: 1 });
   if (S.body === 'armor' || (S.a && S.a.cat === 'heavy')) { var big = S.a && S.a.cat === 'heavy' && S.a.line !== 'B' ? 1.25 : 1; part(g, el(40.2, 39.2, 4.8 * big, 3.6 * big, 0.2), S.grade >= 5 ? mute('#d8b450') : pl, { sd: 1.4, gl: function (g) { E(g, 38.8, 37.8, 1.2, 0.7); } }); }
@@ -299,11 +369,15 @@ function shieldP(g, S, pose) {
 }
 
 // ── 머리 ──
-var HAIRLESS = { helm: 1, plume: 1, horned: 1, hood: 1, mask: 1, veil: 1, darkhood: 1, skull: 1, bald: 1 };
+var HAIRLESS = { helm: 1, plume: 1, horned: 1, hood: 1, mask: 1, veil: 1, darkhood: 1, skull: 1, bald: 1, knot: 1 };
 function hairCol(S) { var h = S.head; if (S.age === 'elder') return mute('#e6e2da'); if (h === 'tricorn' || h === 'mitre' || h === 'wizhat') return mute(S.pal.hair || '#6b4a32'); return S.C('h'); }
 function isF(S) { return S.sx === 'f' || (!S.sx && (S.head === 'tiara' || S.head === 'veil')); }
 function headBack(g, S) {
   var C = S.C, h = S.head, hc = hairCol(S);
+  if (h === 'band') {      // 2.2.6 무투가의 이마 띠: 뒤로 날리는 띠 끝 둘
+    var bt = C('r'), sw = S.pose === 'atk' ? -2.5 : S.pose === 'hit' ? 1.5 : 0;
+    part(g, function (g) { g.moveTo(18.4, 19.6); g.quadraticCurveTo(12 + sw, 20.4, 7.6 + sw * 1.4, 25.6); g.lineTo(9.6 + sw, 26.4); g.quadraticCurveTo(13.4 + sw, 22.8, 18.6, 21.8); g.closePath(); g.moveTo(18.4, 20.8); g.quadraticCurveTo(13.6 + sw, 24.4, 11.6 + sw, 30.6); g.lineTo(13.6 + sw, 30.4); g.quadraticCurveTo(15.4 + sw, 25.4, 19, 22.4); g.closePath(); }, bt, { sd: 0.9 });
+  }
   if (h === 'veil') { part(g, function (g) { g.moveTo(17, 22); g.quadraticCurveTo(15, 34, 17.5, 42); g.quadraticCurveTo(24, 44, 29, 41); g.lineTo(40, 33); g.lineTo(44, 22); g.quadraticCurveTo(31, 6, 17, 22); g.closePath(); }, C('a'), { sd: 2.6 }); return; }
   if (h === 'hood' || h === 'mask' || h === 'darkhood') { var hcC = h === 'darkhood' ? C('a') : C('a'); part(g, function (g) { g.moveTo(15.5, 26); g.quadraticCurveTo(14, 14, 25, 10); g.quadraticCurveTo(38, 7, 45, 17); g.quadraticCurveTo(47.5, 28, 44, 36); g.quadraticCurveTo(32, 41, 18.5, 38); g.quadraticCurveTo(15, 34, 15.5, 26); g.closePath(); }, sh1(hcC), { sd: 2 }); return; }
   if (isF(S) && (h === 'helm' || h === 'plume' || h === 'horned')) { part(g, function (g) { g.moveTo(19, 22); g.quadraticCurveTo(9, 24, 10.6, 37); g.quadraticCurveTo(12.6, 42, 16.4, 41); g.quadraticCurveTo(13.6, 33, 21, 28); g.closePath(); }, hc, { sd: 1.4 }); return; }
@@ -367,6 +441,11 @@ function headFront(g, S) {
     if (f && S.head !== 'tiara' && S.head !== 'crown') part(g, function (g) { g.moveTo(18, 17); g.quadraticCurveTo(10, 18, 9.8, 26); g.quadraticCurveTo(12.6, 23, 16.6, 23.6); g.closePath(); }, hc, { sd: 1 });
   }
   if (h === 'bald') { g.fillStyle = css(lt(skin, 0.5), 0.8); g.beginPath(); E(g, 26, 14.6, 3.6, 1.6, -0.4); g.fill(); if (S.pal.b) dot(g, 33.5, 16.5, 0.95, css(mute(S.pal.b))); }
+  if (h === 'knot') {      // 2.2.6 무투가: 민머리 위 상투와 붉은 끈
+    g.fillStyle = css(lt(skin, 0.5), 0.8); g.beginPath(); E(g, 26, 14.8, 3.4, 1.5, -0.4); g.fill();
+    g.fillStyle = css(sh1(skin), 0.35); g.beginPath(); E(g, 31, 13.2, 11, 3.2); g.fill();
+    part(g, el2(30.6, 8.4, 4.2, 3.6), hc, { sd: 1.6, hl: 0.25 }); curve(g, 28, 7.2, 30.4, 5.8, 33, 7.4, css(lt(hc, 0.25)), 0.6); part(g, function (g) { RR(g, 27.2, 10.8, 6.6, 2, 0.9); }, C('r'), { sd: 0.4 });
+  }
   headGear(g, S, C);
 }
 function el2(x, y, rx, ry, a) { return function (g) { E(g, x, y, rx, ry, a); }; }
@@ -389,6 +468,11 @@ function headGear(g, S, C) {
     [[28.2, 6.4], [35.6, 6.6]].forEach(function (p) { dot(g, p[0], p[1], 0.85, css(lt(gold, 0.5))); });
     part(g, el2(31.6, 13.2, 1.5, 1.3), C('r'), { sd: 0.5, gl: function (g) { E(g, 31.1, 12.7, 0.45, 0.35); } }); part(g, el2(25, 13.6, 1.0, 1.0), '#5a8ac0', { sd: 0.3 });
     if (gc) part(g, el2(38.6, 13.6, 1.0, 1.0), gc, { sd: 0.3 });
+  } else if (h === 'band' || h === 'circlet') {      // 2.2.6 무투가: 이마 띠 (뒤로 매듭) · 높은 단은 금 테 머리띠와 보석
+    var bc = h === 'circlet' ? mute(S.pal.i || '#d8b450') : C('r');
+    part(g, function (g) { g.moveTo(17.2, 18.6); g.quadraticCurveTo(31, 12.6, 45.6, 16.6); g.lineTo(45.4, 19.4); g.quadraticCurveTo(31, 15.6, 17.4, 21.6); g.closePath(); }, bc, { sd: 0.8, hl: h === 'circlet' ? 0.8 : 0.3 });
+    if (h === 'circlet') { part(g, function (g) { g.moveTo(36.4, 13.4); g.lineTo(38.4, 16.2); g.lineTo(36.4, 19); g.lineTo(34.4, 16.2); g.closePath(); }, S.pal.c || '#e0525e', { sd: 0.6, gl: function (g) { E(g, 35.9, 15.4, 0.5, 0.7); } }); }
+    else part(g, el2(18.2, 20.2, 1.8, 1.5), sh1(bc), { sd: 0.4 });
   } else if (h === 'tiara') {
     var tg = mute(S.pal.i || '#d8b450');
     part(g, function (g) { g.moveTo(22, 14.8); g.quadraticCurveTo(31, 9.6, 41.8, 14.4); g.lineTo(41.4, 16.2); g.quadraticCurveTo(31, 12, 22.4, 16.6); g.closePath(); }, tg, { sd: 0.5 });

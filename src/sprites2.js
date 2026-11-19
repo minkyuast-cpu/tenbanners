@@ -182,14 +182,14 @@ var LOOKS = {
     L('horned', 'armor', ['cape', 'trident'], { a: '#7d55c0', A: '#4f3288', b: '#9fe8ec', q: '#2f86a6', Q: '#1f5d78', m: '#b181e6', M: '#7446ad' }),
     L('crown', 'armor', ['cape', 'trident'], { a: '#4b3a8a', A: '#2c2160', b: '#f6cf57', q: '#b181e6', Q: '#7446ad', h: '#2b2440', H: '#1b1626', m: '#f6cf57', M: '#c08f2c' })
   ],
-  cle: [
-    L('veil', 'robe', ['wand'], { a: '#f4efe2', A: '#cfc6ae', b: '#62b0ee' }),
-    L('veil', 'robe', ['wand'], { a: '#f4efe2', A: '#cfc6ae', b: '#f6cf57', l: '#62b0ee', L: '#3572b8' }),
-    L('veil', 'robe', ['cross'], { a: '#dfeaf6', A: '#a9bcd6', b: '#f6cf57', w: '#62b0ee', l: '#3572b8', L: '#24508a' }),
-    L('tiara', 'robe', ['cross'], { a: '#5b8fd6', A: '#3a62a8', b: '#f6cf57', h: '#d8b46a', H: '#a8843f' }),
-    L('tiara', 'robe', ['cape', 'cross'], { a: '#f4efe2', A: '#cfc6ae', b: '#e0525e', h: '#d8b46a', H: '#a8843f', q: '#5b8fd6', Q: '#3a62a8' }),
-    L('tiara', 'robe', ['cape', 'orb'], { a: '#ffb3d1', A: '#d6789e', b: '#f6cf57', h: '#f6cf57', H: '#c08f2c', q: '#f4efe2', Q: '#cfc6ae', c: '#ffffff', C: '#ff9de1' }),
-    L('crown', 'robe', ['cape', 'cross'], { a: '#f7f2e6', A: '#cfc6ae', b: '#f6cf57', h: '#f6cf57', H: '#c08f2c', q: '#5b8fd6', Q: '#3a62a8' })      // r8: 7단도 병과가 읽히게 — 신관은 흰 옷·푸른 망토·십자 지팡이 (구슬 지팡이는 법사만)
+  cle: [      // 2.2.6 무투가: 수련생 → 권사 → 무승 → 철권 → 권호 → 권성 → 무신 (도복 · 감은 천 → 권갑 · 목도리 → 금 테 머리띠)
+    L('knot', 'gi', ['wraps'], { a: '#d8c8a8', A: '#a89878', b: '#7a5a3a', B: '#5e4228', h: '#2b2440', r: '#8a5a36', l: '#efe6d0', p: '#8a7a5e' }),
+    L('band', 'gi', ['wraps'], { a: '#f4efe2', A: '#cfc6ae', b: '#3a3350', B: '#262036', r: '#e0525e', R: '#9c2f45', h: '#3a2a20', l: '#efe6d0', p: '#cfc6ae' }),
+    L('knot', 'gi', ['wraps', 'scarf'], { a: '#c0525e', A: '#8a3040', b: '#2b2440', B: '#1b1626', h: '#2b2440', r: '#f6cf57', l: '#efe6d0', q: '#f6cf57', Q: '#c08f2c', p: '#5e2a34' }),
+    L('band', 'gi', ['gaunt'], { a: '#3a3350', A: '#262036', b: '#e0525e', B: '#9c2f45', r: '#f6cf57', R: '#c08f2c', h: '#1b1626', l: '#d8d0bc', m: '#aab2c2', M: '#6a7488', p: '#2b2440' }),
+    L('band', 'gi', ['scarf', 'gaunt'], { a: '#e8bb45', A: '#b07f2a', b: '#3a3350', B: '#262036', r: '#3a3350', R: '#1b1626', h: '#3a2a20', l: '#f1ead9', q: '#e0525e', Q: '#9c2f45', m: '#cdd5e3', M: '#8f9ab3', p: '#7a5a2a' }),
+    L('knot', 'gi', ['cape', 'gaunt'], { a: '#f7f2e6', A: '#cfc6ae', b: '#f6cf57', B: '#c08f2c', h: '#2b2440', r: '#62b0ee', l: '#ffffff', q: '#3572b8', Q: '#24508a', m: '#f6cf57', M: '#c08f2c', p: '#3a4a6a' }),
+    L('circlet', 'gi', ['cape', 'scarf', 'gaunt'], { a: '#f7f2e6', A: '#cfc6ae', b: '#e0525e', B: '#9c2f45', h: '#1b1626', i: '#f6cf57', I: '#c08f2c', c: '#ff4d6d', l: '#ffffff', q: '#e0525e', Q: '#9c2f45', m: '#ffe27a', M: '#c08f2c', p: '#7a2a34' })
   ],
   mon: [
     L('bald', 'tunic', ['beads'], { a: '#f09a4a', A: '#b8642a', b: '#e0525e', B: '#f7e3bd', O: '#cf9670' }),
@@ -561,7 +561,7 @@ DS.unitSprite = function (u) {
 // ════════ r11 gfx: 옷차림 — 장비가 몸에 보이고, 나이가 몸에 보인다 (32px 원화 격자에 덧그린다) ════════
 // 이름 꼴: '병과_단#w=무기id,a=방어구id,g=나이,x=성별,f=1' (DS.dressName). 칸이 없으면 지금 모습 그대로다.
 //   g: child(아이·작은 몸) · teen(열다섯~열일곱) · youth(청년) · prime(장년) · elder(노년: 흰머리·굽은 자세) / f=1: 돌아온 이의 빛바랜 빛깔 한 점
-var WEAP_IT = { sword: 1, gsword: 1, spear: 1, halberd: 1, bow: 1, lbow: 1, staff: 1, sstaff: 1, wand: 1, cross: 1, orb: 1, trident: 1, mace: 1, kunai: 1, axe: 1, club: 1 };
+var WEAP_IT = { wraps: 0, sword: 1, gsword: 1, spear: 1, halberd: 1, bow: 1, lbow: 1, staff: 1, sstaff: 1, wand: 1, cross: 1, orb: 1, trident: 1, mace: 1, kunai: 1, axe: 1, club: 1 };
 DS.LOOKP = DS.LOOKP || {};
 for (cls in LOOKS) LOOKS[cls].forEach(function (l, n) { DS.LOOKP[cls + '_' + (n + DS.CLASSES[cls].start)] = l; });
 // 단(재질)마다 날의 빛깔 [밝음, 가운데, 그늘] — 청동·철·강철·은·미스릴·황금·용린·성은·창천·여명
@@ -823,6 +823,7 @@ var WCH = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1 };
 DS.dressPrep = function (name, s, d) {
   var o = typeof s === 'string' ? DS.dressParse(s) : s, look = DS.LOOKP[name], cls = name.split('_')[0];
   var W = gearOf(o.w), A = gearOf(o.a), out = { pal: {}, flat: {} }, age = o.g || '';
+  if (W && (W.cat === 'fist' || cls === 'cle')) W = null;      // 2.2.6 무투가: 권갑 · 옛 성구는 손에 감긴 꼴 그대로 (막대 무기를 그리지 않는다)
   var human = !!look || /_\d+_\d+$/.test(name) && d.size === 16;
   if (look && W && age !== 'child') out.rows = compose(look[0], look[1], look[2].filter(function (it) { return !WEAP_IT[it]; }));
   else if (look && age === 'child') out.rows = compose(look[0], look[1], look[2].filter(function (it) { return !WEAP_IT[it] && it !== 'shield'; }));

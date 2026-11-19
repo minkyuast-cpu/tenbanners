@@ -871,9 +871,12 @@ function useCtl(key) {
 DS.useCtl = useCtl;
 // r26 art: 기술 종류 → 아이콘·소켓 빛 (치유 · 지킴 · 강화 · 마법 · 원거리 · 공격)
 var ITEM_IC = { herb: 'herb', mana: 'mana', endo: 'stamina' };
+function skIcon(S, ty) { var k = S && S.ic && DS.ICONS.indexOf('sk_' + S.ic) >= 0 ? 'sk_' + S.ic : 'sk_' + (ty || skType(S)); return k; }      // 2.2.6: 기술마다 그림 (없으면 종류 그림)
+DS.skIcon = skIcon;
 function skType(S) {
   var ef = S.eff || [], t = function (k) { return ef.some(function (e) { return e.t === k; }); }, dmg = ef.filter(function (e) { return e.t === 'dmg'; })[0];
   if (S.fist) return 'fist';      // 2.2.5 승려(무투가)의 맨손 기술
+  if (!dmg && ef.some(function (e) { return e.t === 'buff' && e.s === 'shd'; })) return 'guard';      // 2.2.6 보호막
   if (t('heal') || t('cleanse')) return 'heal';
   if (!dmg && ef.some(function (e) { return e.t === 'buff' && e.p > 0 && e.s === 'def'; })) return 'guard';
   if (!dmg && ef.some(function (e) { return (e.t === 'buff' && e.p > 0) || e.t === 'gauge'; })) return 'buff';
@@ -895,7 +898,7 @@ function renderActs() {
       var S = SK[id];
       // r26 art: 둥근 소켓(종류 색 빛) + 충전 고리(--p) + 이름 · 위 모서리에 마나 보석과 틱 값
       var ty = skType(S);
-      var b = h('<button class="act" data-sk="' + id + '" style="--k:var(--sk-' + ty + ')" aria-label="' + esc(S.name + ', 마나 ' + S.mp + ', 틱 ' + S.tick) + '"><span class="sock"><i class="cring"></i>' + icon('sk_' + ty, 22) + '</span><b>' + esc(S.name) + '</b>' +
+      var b = h('<button class="act" data-sk="' + id + '" style="--k:var(--sk-' + ty + ')" aria-label="' + esc(S.name + ', 마나 ' + S.mp + ', 틱 ' + S.tick) + '"><span class="sock"><i class="cring"></i>' + icon(skIcon(S, ty), 22) + '</span><b>' + esc(S.name) + '</b>' +
         '<i class="mpb">' + icon('drop', 9) + '<span class="m">' + S.mp + '</span></i><i class="tkc">' + icon('tick', 9) + '<span class="t">' + S.tick + '</span></i><i class="rsvb" aria-hidden="true">예약</i></button>');
       b.addEventListener('click', function () {
         DS.Audio.unlock();
@@ -1009,7 +1012,7 @@ function ultBtn(row, u, me) {
   var i = ultInfo(u), id = i.id || i.born, S = id && SK[id], mine = me === u || (me && me.owner === u.id), lock = !i.id; if (!S && !lock) return;
   var ty = S ? skType(S) : 'attack', nm = S ? S.name : '필살기', who = DS.charName ? DS.charName(G.save.chars[u.ch]) : '';
   row.classList.add('hasult');
-  var b = h('<button class="act ult' + (mine ? '' : ' lord') + (lock ? ' lockd' : '') + '" data-sk="' + esc(id || '') + '"' + (lock ? ' aria-disabled="true"' : '') + ' style="--k:var(--sk-' + ty + ')" aria-label="' + esc(who + '의 필살기 ' + nm + (lock ? '. ' + i.lock : S ? '. ' + S.desc : '')) + '"><span class="usock"><i class="uring"></i>' + icon('sk_' + ty, 22) + '</span><b>' + esc(nm) + '</b><i class="ulab">' + (lock ? '5단부터' : mine ? '✦ 필살' : '✦ ' + esc(String(who).slice(0, 4))) + '</i><i class="upct num"></i><i class="rsvb" aria-hidden="true">예약</i></button>');
+  var b = h('<button class="act ult' + (mine ? '' : ' lord') + (lock ? ' lockd' : '') + '" data-sk="' + esc(id || '') + '"' + (lock ? ' aria-disabled="true"' : '') + ' style="--k:var(--sk-' + ty + ')" aria-label="' + esc(who + '의 필살기 ' + nm + (lock ? '. ' + i.lock : S ? '. ' + S.desc : '')) + '"><span class="usock"><i class="uring"></i>' + icon(S ? skIcon(S, ty) : 'sk_' + ty, 22) + '</span><b>' + esc(nm) + '</b><i class="ulab">' + (lock ? '5단부터' : mine ? '✦ 필살' : '✦ ' + esc(String(who).slice(0, 4))) + '</i><i class="upct num"></i><i class="rsvb" aria-hidden="true">예약</i></button>');
   b.addEventListener('click', function () {
     DS.Audio.unlock();
     var u2 = ultU(); if (!u2) { deny(b, '없음', '쓸 사람이 없다'); return; }
@@ -1781,7 +1784,7 @@ function ultCut(u, S) {
   var fc = ch ? (DS.FLAG[ch.cls] || '#c9a96a') : '#c9a96a', who = u.mn || u.name || '';
   var spd = DS.spdOf ? DS.spdOf(sv.opt && sv.opt.speed) : 1, ud = spd >= 2 ? 620 : spd >= 1.5 ? 720 : 850;      // 2.2.5: 빠른 배속이면 더 짧게 (싸움은 멈추지 않는다)
   el.style.setProperty('--fc', fc); el.style.setProperty('--ud', ud + 'ms'); el.dataset.k = DS.ultCls ? DS.ultCls(S, u) : '';
-  el.innerHTML = '<div class="ucb"><i class="ucl"></i><span class="ucp"></span><span class="uct"><small>' + esc([hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>필살</i><b>' + esc(S.name) + '</b></span></span></div>';      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
+  el.innerHTML = '<div class="ucb"><i class="ucl"></i><span class="ucp"></span><span class="uct"><small>' + esc([hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>필살</i><b>' + esc(S.name) + '</b></span></span>' + (S.ic && DS.ICONS.indexOf('sk_' + S.ic) >= 0 ? '<span class="uci">' + DS.icon('sk_' + S.ic, 30) + '</span>' : '') + '</div>';      // 2.2.6: 오른쪽 끝에 그 필살기의 그림      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
   try {
     var sp = DS.unitSprite(u), cv = DS.spriteCanvas(sp[0], sp[1], { hd: 1 }), c2 = document.createElement('canvas'), W = 72;
     c2.width = W; c2.height = W; var g = c2.getContext('2d'); g.imageSmoothingEnabled = false; var hh = W * cv.height / cv.width; g.drawImage(cv, 0, 0, cv.width, cv.height, 0, W - hh, W, hh);

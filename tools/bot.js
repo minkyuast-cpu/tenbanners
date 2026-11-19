@@ -29,7 +29,7 @@ Math.random = rnd;      // 규칙 함수의 난수도 씨앗에 묶는다 (같�
 D.BAL.ultAuto = true;
 if (process.env.CMDK) D.BN.cmdK = +process.env.CMDK;      // 조율용: 깃발 유닛 배율 덮어쓰기
 if (process.env.KINK) D.BN.kinK = +process.env.KINK;
-const st = { eL: {}, fieldT: 0, simT: 0, over: 0, field: 0, scn: 0, wipes: 0, deaths: 0, kinDeaths: 0, bearDeaths: 0, heroDeaths: 0, recruits: 0, recruitGold: 0, tickets: 0, kinSent: 0, sbSeat: 0, births: 0, vacMax: 0, vacSum: 0, vacN: 0, fuse: 0, lapse: 0, perScn: [], log: [], bdc: {} };
+const st = { eL: {}, fieldT: 0, simT: 0, over: 0, field: 0, scn: 0, wipes: 0, deaths: 0, kinDeaths: 0, bearDeaths: 0, heroDeaths: 0, recruits: 0, recruitGold: 0, tickets: 0, kinSent: 0, sbSeat: 0, births: 0, vacMax: 0, vacSum: 0, vacN: 0, fuse: 0, lapse: 0, perScn: [], log: [], bdc: {}, dmg: {}, sk: {}, ult: {} };
 const OLD = D.SAVE_V === 12;      // 2.1.2 규칙 (비교용)
 const s = D.newSave('봇', cls);
 D.allySet && D.allySet(s, '펜드래곤');
@@ -139,6 +139,10 @@ function run(sim, mode, zid, maxT) {
           else if (ku && ku.role === 'cmd' && ku.side === 'ally' && s.chars[ku.ch]) km = D.bearer(s, s.chars[ku.ch]);
           if (km) { km.k = (km.k || 0) + 1; D.meritAdd(km, u.role === 'boss' ? 6 : 1, s); }
         }
+      } else if (e.t === 'skill') {      // 2.2.6: 기술 · 필살기 쓴 수 (준 피해는 아래 hurt 감싸기)
+        const u = sim.byId[e.id]; if (!u || u.side !== 'ally' || u.role !== 'cmd') continue;
+        const S = D.SKILLS[e.sk]; if (!S) continue;
+        if (S.ult) { const k = hcls(sim, u) || '?'; st.ult[k + ':' + e.sk] = (st.ult[k + ':' + e.sk] || 0) + 1; } else st.sk[e.sk] = (st.sk[e.sk] || 0) + 1;
       } else if (e.t === 'win') res = 'win';
       else if (e.t === 'lose') res = 'lose';
     }
@@ -153,6 +157,23 @@ function run(sim, mode, zid, maxT) {
   }
   const dt = sim.t - born; st.simT += dt; s.time = (s.time || 0) + dt; D.ageAdvance(s, dt);
   return res;
+}
+{ const h0 = D.Sim.prototype.hurt, r0 = D.Sim.prototype.resolve;      // 2.2.6: 가문(병과)마다 실제로 깎은 체력 (넘친 피해는 빼고) · 무엇으로 깎았는가(기술 · 평타 · 상태 · 부른 것) — 균형 보기
+  st.dsk = {};
+  D.Sim.prototype.resolve = function (u) { const p = this._bsk; this._bsk = arguments[1]; try { return r0.apply(this, arguments); } finally { this._bsk = p; } };
+  D.Sim.prototype.hurt = function (v, dmg, src, o) {
+    if (src && v && !v.dead && v.side === 'enemy' && src.side === 'ally') {
+      const k = hcls(this, src); if (k) { const a = Math.min(dmg, Math.max(0, v.hp)); st.dmg[k] = (st.dmg[k] || 0) + a; const how = src.role === 'summon' ? 'summon' : o && (o.type === 'burn' || o.type === 'poison') ? o.type : o && o.refl ? 'ctr' : this._bsk || 'basic'; const kk = k.replace('+', '') + ':' + how; st.dsk[kk] = (st.dsk[kk] || 0) + a; }
+    }
+    return h0.apply(this, arguments);
+  }; }
+function hcls(sim, u) {      // 그 유닛이 어느 가문(병과) 몫인가: 가주 · 맹주는 제 가문, 부른 것은 부른 이의 가문, 가문원(맹주 가문)은 kin
+  for (let n = 0; u && n < 3; n++) {
+    if (u.role === 'cmd' && s.chars[u.ch]) { const ch = s.chars[u.ch]; return ch.cls + (D.risen && D.risen(ch) ? '+' : ''); }      // + : 합일한 마스터 (8단~)
+    if (u.role === 'merc') return 'kin';
+    u = u.owner != null ? sim.byId[u.owner] : null;
+  }
+  return null;
 }
 function place(sim, specs, starts, x, y) {
   const pos = starts ? D.formation(specs, starts) : null;
@@ -272,7 +293,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
   }
 }
 const H = (st.simT + st.over) / 3600;
-const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc,
+const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, sk: st.sk, ult: st.ult, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
   births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, houses: D.charList(s).length,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };

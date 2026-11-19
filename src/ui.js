@@ -3296,8 +3296,8 @@ function askGrand(tries) {
 DS.askGrand = askGrand;
 // r44: 첫 가문은 열 병과 가운데 아무것이나 (사용자 「보병 말고 다른 원하는 병과를 선택할 수 있게」). 카드 열 장(세로 2×5, 가로 5×2) + 고른 병과의 자세한 칸.
 //   그 병과를 데려오던 시나리오에서는 어느 시나리오도 주지 않던 집(보병 바우)이 대신 온다 — DS.joinOf / DS.startSwap. 열 집은 늘 한 번씩 모인다
-var START_LINE = { inf: '튼튼한 전열. 앞에서 버틴다', cav: '두 칸 창과 번개. 평지에서 빠르다', fly: '산과 물을 넘는다. 화살에 약하다', mar: '물에 서면 강해지는 전열',
-  pike: '두 칸 찌르기와 보조 마법', arc: '멀리서 쏜다. 몸이 약하다', cle: '맨손 무투가. 기공으로 곁을 돌본다', mon: '가호를 거는 서포터', mag: '여럿을 태우는 마법. 몸이 약하다', sha: '생기를 빨고 망자를 부른다' };
+var START_LINE = { inf: '방패 전열. 적을 끌어 지킨다', cav: '꿰뚫고 달려 나가는 돌격대', fly: '치고 빠진다. 화살에 약하다', mar: '작살로 끌고 물보라로 민다',
+  pike: '두 칸 창으로 묶고 되찌른다', arc: '표식을 남기고 물러서며 쏜다', cle: '맨손 무투가. 기공으로 곁을 돌본다', mon: '보호막과 신속으로 지킨다', mag: '불, 얼음, 번개를 맞물린다', sha: '저주와 역병, 생기를 나눈다' };      // 2.2.6: 병과마다 새 기술의 결
 DS.START_LINE = START_LINE;
 var START_HARD = { fly: '어려움' };      // r44: 봇 8판에서 대장이 가장 자주 쓰러진 병과 (화살에 약하고 보병이 11번에야 온다) — 카드에 꼬리표
 function startClasses() { return Object.keys(DS.CLASSES).filter(function (k) { return !DS.CLASSES[k].master; }); }

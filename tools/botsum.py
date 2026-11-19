@@ -22,3 +22,34 @@ if rows:
     for d in rows:
         for k, v in (d.get('bdc') or {}).items(): bd[k] = bd.get(k, 0) + v
     if bd: print('bearer deaths by house (per run): ' + ' '.join('%s:%.2f' % (k, v / n) for k, v in sorted(bd.items(), key=lambda x: -x[1])))
+    # 2.2.6: 가문(병과)마다 준 피해 몫 · 맹주 병과마다 시간 · 필살기 · 기술 쓴 수
+    dm = {}
+    for d in rows:
+        tot = sum((d.get('dmg') or {}).values()) or 1
+        one = {}
+        for k, v in (d.get('dmg') or {}).items(): one[k.rstrip('+')] = one.get(k.rstrip('+'), 0) + v / tot
+        for k, v in one.items(): dm.setdefault(k, []).append(v)
+    if dm: print('damage share by house (mean over runs it appears in, master forms merged): ' + ' '.join('%s:%.1f%%' % (k, 100 * sum(v) / len(v)) for k, v in sorted(dm.items(), key=lambda x: -sum(x[1]) / len(x[1]))))
+    dmm = {}
+    for d in rows:
+        tot = sum((d.get('dmg') or {}).values()) or 1
+        for k, v in (d.get('dmg') or {}).items():
+            if k.endswith('+'): dmm.setdefault(k, []).append(v / tot)
+    if dmm: print('  of which master forms: ' + ' '.join('%s:%.1f%%' % (k, 100 * sum(v) / len(v)) for k, v in sorted(dmm.items())))
+    print('hours by hero class: ' + ' '.join('%s:%.2f' % (c, sum(x['hours'] for x in L) / len(L)) for c, L in sorted(by.items())))
+    ul = {}
+    for d in rows:
+        for k, v in (d.get('ult') or {}).items(): ul[k.split(':')[1]] = ul.get(k.split(':')[1], 0) + v
+    if ul: print('ults used (total): ' + ' '.join('%s:%d' % (k, v) for k, v in sorted(ul.items(), key=lambda x: -x[1])))
+    sk = {}
+    for d in rows:
+        for k, v in (d.get('sk') or {}).items(): sk[k] = sk.get(k, 0) + v
+    if sk: print('skills used (per run): ' + ' '.join('%s:%.0f' % (k, v / n) for k, v in sorted(sk.items(), key=lambda x: -x[1])))
+    ds = {}
+    for d in rows:
+        tot = sum((d.get('dmg') or {}).values()) or 1
+        for k, v in (d.get('dsk') or {}).items(): ds[k] = ds.get(k, 0) + v / tot / n
+    if ds:
+        by_c = {}
+        for k, v in ds.items(): c, h = k.split(':'); by_c.setdefault(c, []).append((h, v))
+        print('damage by source (share of all, per run): ' + ' | '.join(c + ' ' + ' '.join('%s %.1f%%' % (h, 100 * v) for h, v in sorted(L, key=lambda x: -x[1])[:5]) for c, L in sorted(by_c.items(), key=lambda x: -sum(v for h, v in x[1]))))
