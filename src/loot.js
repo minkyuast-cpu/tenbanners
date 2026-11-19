@@ -778,20 +778,22 @@ DS.bossLoot = function (save, scn, first, rnd) {
   });
   return out;
 };
-// 갱도 층: 처음 닿은 층은 유니크 한 점(옵션 둘 · 5·10층은 높은 굴림 보장, 10층은 갱도지기의 곡괭이), 다시 깨면 절반 확률로 한 점 + 10층은 곡괭이 12%
+// 갱도 층 (2.2.3 끝없는 층): 처음 깬 5층마다(수문장 층) 유니크 한 점(옵션 둘 · 10층마다는 높은 굴림 보장), 그 밖에는 — 보통 층의 첫 돌파도, 다시 깬 층도 —
+//   적 레벨이 부대 평균 + minL 이상일 때만 절반 확률(× DROP.mul)로 한 점 + 보통 장비 pit 확률. 적 레벨 96 이상(옛 10층)부터 갱도지기의 곡괭이 (처음 · 다시 깨면 own[1] 확률).
+//   장비의 레벨은 적 레벨 + 1 (100 에서 멈춘다) — 깊은 층이라고 드랍이 불어나지 않는다
 DS.pitLoot = function (save, floor, rnd) {
   rnd = rnd || Math.random;
-  var T = DS.DROP, out = [], d, L = 42 + (floor - 1) * 6 + 1;
+  var T = DS.DROP, out = [], d, L = Math.min(100, (DS.pitL ? DS.pitL(floor) : 42 + (floor - 1) * 6) + 1);
   if (!save || !(floor >= 1) || !(T.mul > 0)) return out;
   lootState(save);
-  var first = floor > (save.lootPit || 0), fresh = L >= DS.partyL(save) + T.minL, u = uniqFrom('keeper');
+  var first = floor > (save.lootPit || 0), boss = floor % 5 === 0, fresh = L >= DS.partyL(save) + T.minL, u = uniqFrom('keeper');
   if (first) save.lootPit = floor;
-  if (first || (fresh && rnd() < 0.5 * T.mul)) {
-    d = putGear(save, DS.rollGear({ L: L, type: 'golem', boss: true, cats: rosterCats(save), grade: first && floor % 5 === 0 ? 4 : 0, save: save }, rnd), { at: '갱도 ' + floor + '층' }); if (d) out.push(d);
+  if ((first && boss) || (fresh && rnd() < 0.5 * T.mul)) {
+    d = putGear(save, DS.rollGear({ L: L, type: 'golem', boss: true, cats: rosterCats(save), grade: first && floor % 10 === 0 ? 4 : 0, save: save }, rnd), { at: '갱도 ' + floor + '층' }); if (d) out.push(d);
     d = rollItem(save, 'stone', rnd, 1); if (d) out.push(d);
     if (rnd() < T.plain.pit) { d = putGear(save, DS.rollPlain({ L: L, type: 'golem', boss: true, save: save, need: true }, rnd)); if (d) out.push(d); }      // r37
   }
-  if (floor >= 10 && u && (first || (fresh && rnd() < T.own[1]))) { save.lootGot.keeper = 1; d = putGear(save, u, { at: bossName('keeper') || '갱도 ' + floor + '층', w: bossName('keeper') ? 1 : 0 }); if (d) { d.boss = 'keeper'; out.push(d); } }
+  if (L >= 97 && u && (!save.lootGot.keeper || (fresh && rnd() < T.own[1]))) { save.lootGot.keeper = 1; d = putGear(save, u, { at: bossName('keeper') || '갱도 ' + floor + '층', w: bossName('keeper') ? 1 : 0 }); if (d) { d.boss = 'keeper'; out.push(d); } }
   return out;
 };
 // 이미 깬 보스의 고유 장비를 한 번씩 소급 지급한다 (이주에서 부른다. 여러 번 불러도 한 번만 준다)

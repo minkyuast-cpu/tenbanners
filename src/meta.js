@@ -406,9 +406,15 @@ DS.mercTidy = function (save) {
 DS.popOf = function (save, chId) { return DS.mercsOf(save, chId).length; };
 DS.reserve = function (save) { return (save.mercs || []).filter(function (m) { return !m.o; }); };      // 막사 (DS.barracks 와 같다 — 옛 이름)
 // 싸우는 가문: 가주가 선 가문 모두 (맹주 가문은 맹주가 살아 서 있을 때). s.party 는 이 목록을 비춘다 (DS.partySync — 출전 고르기는 없다)
+//   2.2.3: 차례 = 맹주 → 다른 가문(부대 탭 격자와 같은 차례 — DS.houseCmp: 공훈 → 계급 → 합류). 가주가 바뀌어도 가문은 제자리, 맹주가 바뀌면 새 맹주가 맨 앞
 DS.partyIds = function (save) {
   if (!save || !save.chars) return [];
-  return DS.charList(save).filter(function (ch) { return !ch.down && !ch.vac && (ch.id === +save.hero ? !!ch.ps : !!(DS.bearer && DS.bearer(save, ch, 1))); }).map(function (ch) { return ch.id; });
+  var hid = +save.hero, list = DS.charList(save).filter(function (ch) { return !ch.down && !ch.vac && (ch.id === hid ? !!ch.ps : !!(DS.bearer && DS.bearer(save, ch, 1))); });
+  return list.sort(function (a, b) { return (b.id === hid) - (a.id === hid) || DS.houseCmp(a, b); }).map(function (ch) { return ch.id; });
+};
+DS.partyOrder = function (save, ids) {      // 2.2.3: 아무 가문 번호 목록이나 같은 차례로 (맹주 → DS.houseCmp). 싸움 중에 쓰러진 가문도 빼지 않는다 (칩 줄 · 결과 창)
+  var hid = +save.hero;
+  return (ids || []).filter(function (id, i, a) { return save.chars[id] && a.indexOf(id) === i; }).sort(function (a, b) { return (+b === hid) - (+a === hid) || DS.houseCmp(save.chars[a], save.chars[b]); });
 };
 DS.partySync = function (save) {
   if (!save || !save.chars) return [];
@@ -552,15 +558,16 @@ DS.mercOrigin = function (m) {
   return { key: key, name: O.name, desc: (typeof lo === 'string' && lo) || O.desc };
 };
 // 부대 전체: 2.2.0 — 가주가 선 가문은 모두 싸운다 (깃발 유닛) + 맹주 가문의 어른 가문원 (따르는 유닛). 빈 가문·막사·미성년은 싸우지 않는다
+//   2.2.3: 차례 = 맹주 → 다른 가문의 가주(DS.partyIds 차례) → 맹주의 어른 가문원 (화면의 칩·고르기 차례와 같다)
 DS.partySpecs = function (save) {
-  var out = [];
+  var out = [], kin = [];
   (DS.partySync ? DS.partySync(save) : save.party).forEach(function (id) {
     var ch = save.chars[id]; if (!ch || ch.down || ch.vac) return;
     var who = DS.bearer ? DS.bearer(save, ch) : null; if (DS.bearer && !who) return;
     out.push(DS.cmdSpec(ch, id === save.hero, who));
-    DS.mercsOf(save, id).forEach(function (m) { out.push(DS.mercSpec(ch, m)); });
+    DS.mercsOf(save, id).forEach(function (m) { kin.push(DS.mercSpec(ch, m)); });
   });
-  return out;
+  return out.concat(kin);
 };
 
 // ── 적 ──
@@ -604,7 +611,7 @@ DS.newSave = function (name, heroCls) {
     items: { herb: 5, mana: 2, endo: 1 }, cleared: {}, visited: { haemil: true },
     gear: {}, mercs: [], mnid: 1, tickets: 1, pity: 0, fallen: [],      // r35: 처음 모집권 1장 (예전 2장)
    
-    zone: 'haemil', pos: null, town: 'haemil', crest: false, pit: 1, kills: 0, time: 0,
+    zone: 'haemil', pos: null, town: 'haemil', crest: false, pit: 1, pitBest: 0, pitCur: 1, pitV: 2, kills: 0, time: 0,
     opt: { sfx: true, bgm: true, speed: 1, refill: true }, seen: {}, perk: null, news: [], ver: DS.VERSION || ''
   };
   s.hero = DS.addChar(s, heroCls, 1, s.name).id;
@@ -820,26 +827,51 @@ DS.unfuse = function (save, ch, rep) {
   return { rep: ch, rows: rows };
 };
 // ───────── 권장 레벨 (표시용 — 적의 레벨 s.L 은 그대로) ─────────
-// 적 레벨 L 을 "부대 평균으로 이만하면 된다"는 권장으로 바꾼다: 시나리오 표(DS.REC_L)의 점들 사이를 잇는다 (갱도·필드에 쓴다)
+// 2.2.3: 모든 「권장」은 잰 값 하나에서 나온다 — DS.REC (data.js, tools/calib.js 가 봇이 닿은 진짜 부대로 잰 표). 화면 · 봇 · 갱도가 같은 함수를 읽어 어긋나지 않는다.
+//   권장(rec) = 열에 여덟 넘게 이기고, 이길 때 쓰러지는 이가 하나 이하인 부대 평균 레벨 · 반반(half) = 이길 확률이 반인 레벨.
+//   시나리오 = 표의 번호 · 들판 = 표의 지역 [약한 무리, 센 무리] · 갱도 층 = 적 레벨로 잇는 식(DS.REC.pit) · 그 밖(다음 세대의 장 등) = 시나리오 점들을 적 레벨로 잇는다
 var recPts = null;
-DS.recOfL = function (L) {
-  if (!recPts && DS.SCENARIOS) { recPts = []; (DS.SCENARIOS || []).forEach(function (s) { if (DS.REC_L[s.id]) recPts.push([s.L, DS.REC_L[s.id]]); }); recPts.sort(function (a, b) { return a[0] - b[0]; }); }
-  if (!recPts || !recPts.length) return L;
-  if (L <= recPts[0][0]) return Math.max(1, Math.min(L, recPts[0][1]));
-  for (var i = 1; i < recPts.length; i++) {
-    var a = recPts[i - 1], b = recPts[i];
-    if (L <= b[0]) return Math.round(a[1] + (b[1] - a[1]) * (L - a[0]) / Math.max(1, b[0] - a[0]));
-  }
-  var z = recPts[recPts.length - 1]; return Math.min(100, Math.round(z[1] + (L - z[0]) * 0.5));
+function recLine(L, k) {      // 시나리오 표의 (적 레벨 → 권장 · 반반) 점들 사이를 잇는다. k: 0 권장 · 1 반반
+  if (!recPts) { recPts = []; (DS.SCENARIOS || []).forEach(function (s) { var r = DS.REC.scn[s.id]; if (r) recPts.push([s.L, r[0], r[1]]); }); recPts.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; }); }
+  if (!recPts.length) return L;
+  var c = k ? 2 : 1;
+  if (L <= recPts[0][0]) return Math.max(1, Math.min(L, recPts[0][c]));
+  for (var i = 1; i < recPts.length; i++) { var a = recPts[i - 1], b = recPts[i]; if (L <= b[0]) return Math.round(a[c] + (b[c] - a[c]) * (L - a[0]) / Math.max(1, b[0] - a[0])); }
+  var z = recPts[recPts.length - 1]; return Math.min(100, Math.round(z[c] + (L - z[0]) * 0.5));
+}
+DS.recOfL = function (L) { return recLine(L, 0); };
+DS.halfOfL = function (L) { return recLine(L, 1); };
+DS.pitRec = function (f) {      // 갱도 층: [권장, 반반, 넘침(100 을 넘는 힘 — 「이상」)]
+  var P = DS.REC.pit, L = DS.pitL(f), k = DS.pitK(f), kd = DS.pitKind(f), x = L + (kd === 10 ? P.b10 : kd === 5 ? P.b5 : 0);
+  var r = P.a + P.b * x + P.over * (k - 1) * 100, h = r - P.half;
+  return [Math.max(1, Math.round(r)), Math.max(1, Math.round(h)), r > 100.5];
 };
-// 시나리오(또는 갱도 층)의 권장 레벨: 부대 평균 레벨 기준 숫자
-DS.recL = function (s) {
-  if (!s) return 1;
-  if (!s.pit && DS.REC_L[s.id]) return DS.REC_L[s.id];
-  return DS.recOfL(s.L);
+function recPair(s) {
+  if (!s) return [1, 1, false];
+  if (s.pit) return DS.pitRec(s.pit);
+  if (!s.gen && DS.REC.scn[s.id]) { var t = DS.REC.scn[s.id]; return [t[0], t[1], false]; }
+  return [DS.recOfL(s.L), DS.halfOfL(s.L), false];
+}
+// 시나리오(또는 갱도 층)의 권장 레벨: 부대 평균 레벨 기준 숫자 (100 넘는 갱도 층은 100)
+DS.recL = function (s) { return Math.min(100, recPair(s)[0]); };
+DS.recHalf = function (s) { return Math.min(100, recPair(s)[1]); };
+DS.recText = function (s) { var p = recPair(s); return '권장 ' + DS.lvText(Math.min(100, p[0])) + (p[2] ? ' 이상' : ''); };
+// 들판: [권장 낮은 끝, 높은 끝] (약한 무리 · 센 무리를 안전하게) · 반반은 센 무리 쪽
+DS.zoneRec = function (id) { var z = DS.REC.zone[id], Z = DS.ZONES && DS.ZONES[id]; if (z) return [z[0], z[1]]; return Z && Z.L ? [DS.recOfL(Z.L[0]), DS.recOfL(Z.L[1])] : [1, 1]; };
+DS.zoneHalf = function (id) { var z = DS.REC.zone[id], Z = DS.ZONES && DS.ZONES[id]; return z ? z[2] : Z && Z.L ? DS.halfOfL(Z.L[1]) : 1; };
+// 입구 창 · 지도 · 갱도 창의 「이 부대에게 얼마나 어려운가」: 반반 아래 = 위험(붉은 꼬리표) · 권장 아래 = 권장 미달(이기기는 해도 잃을 수 있다) · 권장 + DS.REC.easy 이상 = 여유
+DS.recTag = function (save, s) {
+  var pl = DS.partyL(save), r = DS.recL(s), h = DS.recHalf(s), ov = recPair(s)[2];
+  if (pl < h || (ov && pl >= 100 && DS.pitK(s.pit) > 1.2)) return { k: 'risk', tag: '위험', cls: 'warn', tc: '' };
+  if (pl < r) return { k: 'low', tag: '권장 미달', cls: 'warn', tc: 'soft' };
+  if (pl >= r + DS.REC.easy && !ov) return { k: 'easy', tag: '여유', cls: '', tc: 'ok' };
+  return { k: 'ok', tag: '', cls: '', tc: '' };
 };
-// 입구 창의 「권장보다 낮습니다」: 부대 평균이 권장보다 DS.REC_WARN 넘게 낮을 때
-DS.recLow = function (save, s) { return DS.partyL(save) < DS.recL(s) - DS.REC_WARN; };
+// 입구 창의 「권장보다 낮습니다」 경고 줄 (자동 전투 · 퇴각 안내): 반반 아래일 때
+DS.recLow = function (save, s) { return DS.partyL(save) < DS.recHalf(s); };
+// 갱도: 열린 다음 층 · 부대 평균에 맞는 가장 깊은 층(권장 ≤ 평균, 열린 층 안에서 — 길 안내 · 봇)
+DS.pitNext = function (save) { return Math.min(DS.PIT.max, (+(save && save.pitBest) || 0) + 1); };
+DS.pitFarm = function (save) { var pl = DS.partyL(save), nx = DS.pitNext(save), f = 0; for (var i = 1; i <= nx; i++) { if (DS.pitRec(i)[0] <= pl) f = i; else if (i > f + 12) break; } return f; };
 
 // ───────── 현상 수배 (20번 뒤 합일 준비 구간의 목표) ─────────
 // save.bty = { list: [현상금…], n: 달성 수, seq: 다음 번호 }. 현상금 = { id, k: 'hunt'|'elite'|'sweep', z: 지역, t: 적 종류, n: 필요 수, c: 센 수, L, r: 보상 {…}, … }

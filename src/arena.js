@@ -84,7 +84,10 @@ function placeText(s, key) {
 function young(s, e) { try { return !!(DS.ageStage && DS.ageStage(s, e) === 'young'); } catch (x) { return false; } }
 DS.arenaRoster = function (s) {
   var out = [], hero = heroOf(s); if (!hero) return out;
-  var keys = ['h'].concat((s.mercs || []).filter(function (m) { return m && !young(s, m); }).map(function (m) { return 'm' + m.id; }));
+  var ms = (s.mercs || []).filter(function (m) { return m && !young(s, m); }), hord = DS.partyOrder ? DS.partyOrder(s, Object.keys(s.chars).map(Number)) : [];
+  var rank = function (m) { var st = seatOf(s, m); if (st.k === 'bear' && !st.sb) { var i = hord.indexOf(st.ch.id); return 1 + (i < 0 ? 99 : i); } if (st.k === 'fol' && st.ch && st.ch.id === +s.hero) return 200; return 300; };      // 2.2.3: 맹주 → 가주(부대 차례) → 맹주의 가문원 → 나머지
+  ms = ms.map(function (m, i) { return { m: m, r: rank(m), i: i }; }).sort(function (a, b) { return a.r - b.r || a.i - b.i; }).map(function (x) { return x.m; });
+  var keys = ['h'].concat(ms.map(function (m) { return 'm' + m.id; }));
   keys.forEach(function (k) {
     var u = specOf(s, k); if (!u) return;
     var m = k === 'h' ? null : mercOf(s, +k.slice(1)), st = m ? seatOf(s, m) : { k: 'hero', ch: hero };

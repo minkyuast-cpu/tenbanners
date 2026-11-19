@@ -145,7 +145,7 @@ function setLore(path, val) {
     var arr = val.slice(), base = typeof cur === 'string' ? cur : '';
     val = null; put(chain, keys, base);
     var kp = DS.LORE.boss.keeper, kk = segs[2];
-    Object.defineProperty(kp, kk, { enumerable: true, configurable: true, get: function () { var f = DS.G && DS.G.scn && DS.G.scn.pit; return (f && arr[f - 1]) || base; } });
+    Object.defineProperty(kp, kk, { enumerable: true, configurable: true, get: function () { var f = DS.G && DS.G.scn && DS.G.scn.pit; return (f && arr[(f - 1) % arr.length]) || base; } });
     LOG.ok.push(path); return;
   }
   if (add) {

@@ -950,7 +950,7 @@ function takeSnap(s) {
   snap.P = {}; DS.persons(sv).forEach(function (p) { var k = DS.pKey(sv, p.who); if (k) snap.P[k] = { L: DS.pL(p.who), e: +p.who.exp || 0 }; });      // 2.2.2: 사람마다 레벨·경험치 — 결과 창의 경험치 막대가 정확히 그 자리에서 차오른다
 }
 DS.openGate = function (s, lock) {
-  var sv = G.save, B = s.boss ? DS.BOSSES[s.boss] : null, pl = DS.partyL(sv), rec = DS.recLOf ? DS.recLOf(s) : s.L, low = DS.recLow ? !!DS.recLow(sv, s) : pl < rec - 2;
+  var sv = G.save, B = s.boss ? DS.BOSSES[s.boss] : null, pl = DS.partyL(sv), rec = DS.recLOf ? DS.recLOf(s) : s.L, low = DS.recLow ? !!DS.recLow(sv, s) : pl < rec - 2, rtg = DS.recTag ? DS.recTag(sv, s) : { tag: '', cls: '', tc: '' };      // 2.2.3: 잰 값으로 — 반반 아래 「위험」 · 권장 아래 「권장 미달」 · 넉넉하면 「여유」
   var foes = s.mobs.map(function (m) { return sprTag(DS.ENEMIES[m].sprite, '', 2); }).join('');
   var lb = B && LORE().boss && LORE().boss[s.boss], title = B ? (lb && lb.title ? lt(lb.title) : B.title) : '';
   var moves = B ? (B.skills || []).map(function (k) { return DS.SKILLS[k] && DS.SKILLS[k].name; }).filter(Boolean).slice(0, 3) : [];
@@ -958,7 +958,7 @@ DS.openGate = function (s, lock) {
   // r12 screen: 흐름 창 — 닫기 | 입장(금) 아래 한 줄. 경고는 한 줄씩, 권유는 그 자리의 단추로
   var o = overlay('<header class="sh"><h3>' + (s.pit ? esc(s.name) : '시나리오 ' + s.id) + '</h3></header><div class="sb gate">' +
     '<div class="gate-head">' + (B ? sprTag(B.sprite, B.pal, 3) : '<span class="noboss">방어전</span>') + '<div><h2>' + esc(s.name) + '</h2><p>' + (B ? '<b class="boss">' + esc(B.name) + '</b>' + (title ? ', ' + esc(title) : '') : '세 차례 습격을 모두 막아라') + '</p></div></div>' +
-    '<dl class="facts"><dt>권장</dt><dd>' + lv(rec) + (s.tier ? ', ' + s.tier + '단 전용' : '') + (rec !== s.L ? ' <small class="dim">적 ' + lv(s.L) + '</small>' : '') + '</dd><dt>우리 부대</dt><dd class="' + (low ? 'warn' : '') + '">' + (DS.partySpecs ? DS.partySpecs(sv).length + '명, ' : '') + '평균 ' + lv(pl) + (low ? ' <i class="tagw">권장 미달</i>' : pl < rec ? ' <i class="tagw soft">조금 모자람</i>' : '') + '</dd>' +
+    '<dl class="facts"><dt>권장</dt><dd>' + lv(rec) + (s.tier ? ', ' + s.tier + '단 전용' : '') + (rec !== s.L ? ' <small class="dim">적 ' + lv(s.L) + '</small>' : '') + '</dd><dt>우리 부대</dt><dd class="' + rtg.cls + '">' + (DS.partySpecs ? DS.partySpecs(sv).length + '명, ' : '') + '평균 ' + lv(pl) + (rtg.tag ? ' <i class="tagw ' + rtg.tc + '">' + rtg.tag + '</i>' : '') + '</dd>' +
     '<dt>적</dt><dd class="foes">' + foes + '</dd>' + (moves.length ? '<dt>보스의 기술</dt><dd class="moves">' + moves.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</dd>' : '') + '<dt>보상</dt><dd>' + esc(rewardText(s)) + '</dd></dl>' +
     (empt ? '<p class="soft">빈 가문 ' + empt + '곳은 싸우지 않는다. <button class="lnk2" data-go="party">부대</button></p>' : '') +
     (hp < 0.6 ? '<p class="lock">부대 체력 ' + Math.round(hp * 100) + '% (자동 회복 안 됨)</p>' : '') +
@@ -975,6 +975,42 @@ DS.openGate = function (s, lock) {
   });
 };
 
+// ───────── 2.2.3 바닥 없는 갱도: 층 고르기 창 ─────────
+// 최고 층 · 「같은 층 다시」(마지막으로 들어간 층) · 「다음 층 도전」(최고 + 1) · 층 고르기(1 ~ 최고 + 1, 깬 층 어디서나 다시 — 키 다지기). 고른 층의 권장 · 적 · 우리 부대 · 보상을 보여 준다
+function pitGo(f) {      // 층에 들어간다 (창 · 결과 창의 단추가 함께 쓴다)
+  var sv = G.save, sc = DS.pit(f), seenK = 'pit' + f, skip = !sc.intro || !!sv.seen[seenK];
+  sv.pitCur = f; sv.pitN = (sv.pitN || 0) + 1; if (sc.intro) sv.seen[seenK] = 1;
+  story(skip ? null : sc.intro, function () { takeSnap(sc); DS.startScenario(sc); }, sc.name);
+}
+DS.pitGo = pitGo;
+DS.openPit = function (lock) {
+  var sv = G.save, best = sv.pitBest || 0, nx = DS.pitNext(sv), same = Math.min(nx, Math.max(1, sv.pitCur || 1)), hasSame = (sv.pitN || 0) > 0 || best > 0, sel = nx;
+  var o = overlay('<header class="sh"><h3>바닥 없는 갱도</h3></header><div class="sb gate pitw">' +
+    '<div class="gate-head">' + sprTag(DS.BOSSES.keeper.sprite, DS.BOSSES.keeper.pal, 3) + '<div><h2>' + (best ? '최고 <b class="num">' + best + '</b>층' : '아직 깬 층이 없다') + '</h2><p>층마다 갱도지기. 바닥은 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다</p></div></div>' +
+    '<div class="pitq">' + (hasSame ? '<button class="btn pitb" data-pf="' + same + '"><b>같은 층 다시</b><small class="num">' + same + '층</small></button>' : '') +
+    '<button class="btn gold pitb" data-pf="' + nx + '"><b>다음 층 도전</b><small class="num">' + nx + '층</small></button></div>' +
+    '<div class="pitst" role="group" aria-label="층 고르기"><button class="btn small" data-pstep="-10" aria-label="10층 위로">-10</button><button class="btn small" data-pstep="-1" aria-label="한 층 위로">-1</button><b class="num pitsel"></b><button class="btn small" data-pstep="1" aria-label="한 층 아래로">+1</button><button class="btn small" data-pstep="10" aria-label="10층 아래로">+10</button></div>' +
+    '<dl class="facts pitf"></dl>' + (lock ? '<p class="lock">' + esc(lock) + '</p>' : '') +
+    '</div><div class="sfoot two"><button class="btn" data-close>닫기</button><button class="btn gold" id="goPit"' + (lock ? ' disabled' : '') + '></button></div>');
+  function draw() {
+    var sc = DS.pit(sel), pl = DS.partyL(sv), tg = DS.recTag(sv, sc), k = sc.pitKind, hp = partyHp();
+    o.querySelector('.pitsel').textContent = sel + '층';
+    o.querySelector('#goPit').textContent = sel + '층 들어가기';
+    Array.prototype.forEach.call(o.querySelectorAll('[data-pstep]'), function (b) { var v = sel + (+b.dataset.pstep); b.disabled = v < 1 || v > nx; });
+    o.querySelector('.pitf').innerHTML = '<dt>층</dt><dd>' + esc(sc.name) + (k === 10 ? ' <i class="tg pk10">밑바닥 층</i>' : k === 5 ? ' <i class="tg pk5">수문장 층</i>' : '') + (sel <= best ? ' <small class="dim">깬 층</small>' : '') + '</dd>' +
+      '<dt>권장</dt><dd>' + esc(DS.recText(sc)) + ' <small class="dim">적 ' + lv(sc.L) + (DS.pitK(sel) > 1 ? ', 힘 ×' + DS.pitK(sel).toFixed(2) : '') + '</small></dd>' +
+      '<dt>우리 부대</dt><dd class="' + tg.cls + '">' + DS.partySpecs(sv).length + '명, 평균 ' + lv(pl) + (tg.tag ? ' <i class="tagw ' + tg.tc + '">' + esc(tg.tag) + '</i>' : '') + '</dd>' +
+      '<dt>보상</dt><dd>' + esc(fmtN(DS.scnGold(sc)) + ' 골드' + (sel > best ? ', 첫 돌파 +' + fmtN(DS.scnGold(sc)) + (sel % DS.PIT.ticketEvery === 0 ? ', 영웅 모집권 ×1' : '') : '') + ', 적 경험치') + '</dd>' +
+      (hp < 0.6 ? '<dt></dt><dd class="warn">부대 체력 ' + Math.round(hp * 100) + '% (자동 회복 안 됨)</dd>' : '');
+  }
+  draw();
+  o.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-pstep]'); if (b && !b.disabled) { A('tap'); sel = Math.max(1, Math.min(nx, sel + (+b.dataset.pstep))); draw(); return; }
+    var q = e.target.closest('[data-pf]'); if (q) { if (lock) { deny(q, '잠김', lock); return; } A('ok'); o.close(); pitGo(+q.dataset.pf); }
+  });
+  o.querySelector('#goPit').addEventListener('click', function () { if (lock) return; A('ok'); o.close(); pitGo(sel); });
+  return o;
+};
 // ───────── 결과·승급 ─────────
 // 출전 지휘관 가운데 가방의 장비로 더 좋아질 수 있는 사람 수 (DS.autoEquip 과 같은 셈)
 function upgradable() {
@@ -1157,8 +1193,9 @@ DS.showResult = function (s, out, cb) {
     html += '</ul>';
   }
   // r8 menus (trim 7): 결과 창의 「가문」 줄(lgResultRows)은 뺐다 — 지휘관의 죽음은 제목 아래에, 출생·성년은 창을 닫은 뒤의 소식 창 한 곳에서만 (같은 소식을 두 번 듣지 않게)
-  if (s.pit && s.pit < 10) html += '<p class="dim">갱도 ' + (s.pit + 1) + '층 열림</p>';
-  html += '<div class="rfoot"><p class="nextl"><i>다음</i>' + esc(nextLine()) + '</p><button class="btn gold wide" data-close>계속' + (U.svg ? U.svg('chev', 16) : '') + '</button></div></div>';      // 「다음」과 「계속」은 늘 보이게 아래에 붙여 둔다
+  if (s.pit) html += '<p class="dim pitnote">' + (out.pitFirst ? '갱도 ' + s.pit + '층 첫 돌파' + (out.bonus ? ', 보너스 ' + fmtN(out.bonus) + ' 골드' : '') + '. ' : '') + '최고 ' + (sv.pitBest || s.pit) + '층</p>';
+  if (s.pit) html += '<div class="rfoot pitrf"><p class="nextl"><i>다음</i>' + esc((s.pit + 1) + '층, ' + DS.recText(DS.pit(s.pit + 1))) + '</p><div class="pitrb"><button class="btn gold" data-pitgo="' + (s.pit + 1) + '">다음 층<small class="num">' + (s.pit + 1) + '층</small></button><button class="btn" data-pitgo="' + s.pit + '">같은 층 다시<small class="num">' + s.pit + '층</small></button><button class="btn" data-close>나가기</button></div></div></div>';      // 2.2.3: 갱도는 곧장 다음 층 · 같은 층 · 나가기
+  else html += '<div class="rfoot"><p class="nextl"><i>다음</i>' + esc(nextLine()) + '</p><button class="btn gold wide" data-close>계속' + (U.svg ? U.svg('chev', 16) : '') + '</button></div></div>';      // 「다음」과 「계속」은 늘 보이게 아래에 붙여 둔다
   var rareD = (out.drops || []).filter(function (d) { return d && d.kind === 'gear' && (d.grade || 0) >= 4; });      // 2.1.1: 승리 보상의 귀한 장비는 결과 창 위에 크게 (소리도 거기서)
   if (gotR.length && !(rareD.length && DS.lootCall)) A2('rare', 'star');
   var o = overlay(html, 'modal center res26');
@@ -1169,6 +1206,7 @@ DS.showResult = function (s, out, cb) {
   setTimeout(function () { $$('[data-cu]', o).forEach(function (el, i) { setTimeout(function () { U.countUp(el, +el.dataset.cu, 650, el.dataset.pre || ''); }, i * 120); }); }, U.calm && U.calm() ? 0 : 420);
   if (!(U.calm && U.calm())) $$('.rstars .st:not(.off)', o).forEach(function (el, i) { setTimeout(function () { A('star'); }, 160 + i * 140); });
   o.addEventListener('click', function (e) {
+    var pg = e.target.closest('[data-pitgo]'); if (pg) { A('ok'); G.pitGo = +pg.dataset.pitgo; o.close(); return; }      // 2.2.3: 창을 닫으면 그 층으로 (game.js onWin 의 끝 → pitChain)
     var ub = e.target.closest('[data-upg]'); if (!ub) return;
     var sv2 = G.save, names = [];
     sv2.party.forEach(function (id) { var c = sv2.chars[id]; if (c && DS.autoEquip(sv2, c)) names.push(DS.charName(c)); });
@@ -1200,7 +1238,7 @@ DS.showRecord = function (cb, ending) {
   var fz = DS.fuseProg ? DS.fuseProg(sv).fused : 0;      // r42: 합일한 사람 수
   var html = '<div class="result record"><p class="eyebrow">' + (ending ? '엔딩' : '기록') + '</p>' + (ending ? scene('ending') : '') + '<h2>' + esc(sv.name) + '의 가문</h2><dl class="rec">' +
     (t >= 60 ? '<dt>플레이 시간</dt><dd><b class="num">' + (t >= 3600 ? Math.floor(t / 3600) + '</b>시간 <b class="num">' : '') + Math.floor(t % 3600 / 60) + '</b>분</dd>' : '') +
-    '<dt>끝낸 시나리오</dt><dd><b class="num">' + cleared + '</b> / ' + DS.SCENARIOS.length + (sv.pit > 1 ? ', 갱도 ' + sv.pit + '층까지 열림' : '') + '</dd>' +
+    '<dt>끝낸 시나리오</dt><dd><b class="num">' + cleared + '</b> / ' + DS.SCENARIOS.length + (sv.pitBest > 0 ? ', 갱도 최고 ' + sv.pitBest + '층' : '') + '</dd>' +
     '<dt>쓰러뜨린 적</dt><dd><b class="num">' + (sv.kills || 0) + '</b></dd>' +
     '<dt>합일한 사람</dt><dd>' + (fz ? '<b class="num">' + fz + '</b>명' : '아직 없음') + '</dd>' +
     '<dt>최고 강화</dt><dd>' + (be ? '<span class="' + enhCls(be.enh) + '">' + esc(be.name) + '</span>' : '아직 없음') + '</dd></dl>';
@@ -1661,6 +1699,7 @@ function tabBag() {      // r12: 줄 문법 = 그림 · 이름 ×n · 풀이 한
 // r4 map: 지도 탭 — 가 본 지역·시나리오 입구를 누르면 바로 이동 (game.js DS.warpTo). 칸: 이름·권장 단·여기·현상 수배·다음 시나리오
 function mapPitZone() { for (var id in DS.ZONES) if ((DS.ZONES[id].gates || []).some(function (g) { return g.dungeon; })) return id; return null; }
 function mapRecT(L) { var v = DS.recOfL ? DS.recOfL(L) : L; return DS.tierOfL(v > 0 ? Math.round(v) : L); }
+function mapZoneT(id) { var r = DS.zoneRec ? DS.zoneRec(id) : [1, 1]; return [DS.tierOfL(r[0]), DS.tierOfL(r[1])]; }      // 2.2.3: 들판의 권장 단 (잰 표)
 function mapNear(id) {      // 안 가 본 곳: 이웃한 가 본 지역 (어디서 걸어 들어가는지)
   var s = G.save, n = null;
   (DS.ZONES[id].exits || []).forEach(function (e) { if (!n && s.visited[e.to]) n = e.to; });
@@ -1685,7 +1724,7 @@ function tabMap() {
     (Z.exits || []).forEach(function (e) { var o = DS.ZONE_POS[e.to], d = !o ? '' : o[0] === p[0] + 1 && o[1] === p[1] ? 'E' : o[1] === p[1] + 1 && o[0] === p[0] ? 'S' : ''; if (d) link += ' l' + d + (seen && s.visited[e.to] ? '' : ' ld' + d); });      // 이웃 지역으로 이어진 길 (둘 다 가 봤으면 밝게)
     if (!seen) cls += ' unseen';      // 4.0.6: 안 가 본 곳도 이름과 단을 보이고 바로 갈 수 있다
     if (Z.town) sub = '마을';
-    else { var a = mapRecT(Z.L[0]), b = mapRecT(Z.L[1]); sub = (a === b ? '' : a + '~') + b + '단'; if (tier < a) cls += ' hard'; else if (tier > b) cls += ' easy'; }
+    else { var zt = mapZoneT(id), a = zt[0], b = zt[1]; sub = (a === b ? '' : a + '~') + b + '단'; if (tier < a) cls += ' hard'; else if (tier > b) cls += ' easy'; }
     if (id === here) cls += ' here';
     if (next && next.zone === id) cls += ' goal';
     cells += '<button class="' + cls + link + '" style="grid-column:' + (p[0] + 1) + ';grid-row:' + (p[1] + 1) + '" data-z="' + id + '"' + (id === here ? ' aria-current="location"' : '') + ' aria-label="' + esc(Z.name) + '">' +
@@ -1695,7 +1734,7 @@ function tabMap() {
   // 빈 왼쪽 위(지역이 없는 칸들)에 지금 위치·다음 목표 카드 — 칸 배치가 바뀌어 자리가 없으면 지도 위에 따로 둔다
   var fit = true, x, y; for (y = 0; y < 3; y++) for (x = 0; x < 4; x++) if (used[x + ',' + y]) fit = false;
   var nowT = G.scn ? (G.scn.pit ? esc(G.scn.name) : '시나리오 ' + G.scn.id + ' 진행 중') : G.zone ? esc(G.zone.name) : '',
-    nowS = G.scn ? '끝내거나 물러나면 지도로 간다' : G.zone ? (G.zone.town ? '마을' : '필드, 권장 ' + mapRecT(G.zone.def.L[0]) + '~' + mapRecT(G.zone.def.L[1]) + '단') + ', 지금 부대 ' + tier + '단' : '',
+    nowS = G.scn ? '끝내거나 물러나면 지도로 간다' : G.zone ? (G.zone.town ? '마을' : '필드, 권장 ' + mapZoneT(G.zone.id)[0] + '~' + mapZoneT(G.zone.id)[1] + '단') + ', 지금 부대 ' + tier + '단' : '',
     nb = Object.keys(bty).reduce(function (n, k) { return n + bty[k]; }, 0);
   var card = '<div class="mapnow' + (fit ? ' infit' : '') + '"><small class="mnowk">지금 있는 곳</small><b>' + nowT + '</b><small>' + nowS + '</small>' +
     (next ? '<small class="mnext">다음 <b>' + next.id + '. ' + esc(next.name) + '</b>, ' + esc(DS.ZONES[next.zone].name) + '</small>' : '') +
@@ -1715,7 +1754,7 @@ function tabMap() {
   if (next) rows += scRow(next, true);
   else rows += '<p class="hint">모든 시나리오를 마쳤다.</p>';
   var pz = mapPitZone();
-  if (pz && s.visited[pz]) { var pf = Math.min(10, s.pit || 1), pw = tier < 5 ? '5단부터 입장 가능' : (DS.warpWhy ? DS.warpWhy(pz) : ''); rows += '<button class="msl pit' + (pw ? ' off' : '') + '" data-wpit="1"><i class="num">' + pf + '층</i><span class="tx"><b>바닥 없는 갱도</b><small>' + esc(DS.ZONES[pz].name) + ', 층마다 보스' + (pw && tier < 5 ? '<em>' + pw + '</em>' : '') + '</small></span><span class="go">' + (tier < 5 ? '잠김' : pw ? '잠김' : '바로 가기') + '</span></button>'; }
+  if (pz && s.visited[pz]) { var pf = s.pitBest || 0, pw = tier < 5 ? '5단부터 입장 가능' : (DS.warpWhy ? DS.warpWhy(pz) : ''); rows += '<button class="msl pit' + (pw ? ' off' : '') + '" data-wpit="1"><i class="num">' + (pf || 1) + '층</i><span class="tx"><b>바닥 없는 갱도</b><small>' + esc(DS.ZONES[pz].name) + ', ' + (pf ? '최고 ' + pf + '층, 끝없는 층' : '끝없는 층') + (pw && tier < 5 ? '<em>' + pw + '</em>' : '') + '</small></span><span class="go">' + (tier < 5 ? '잠김' : pw ? '잠김' : '바로 가기') + '</span></button>'; }
   if (done.length) { rows += '<p class="mshd">끝낸 시나리오 ' + done.length + (done.length > 1 ? ', 최근 것부터' : '') + '</p>'; done.slice().reverse().forEach(function (sc) { rows += scRow(sc, false); }); }
   if (lockN) rows += '<p class="mslock">아직 열리지 않은 시나리오 ' + lockN + '개. 앞 시나리오를 끝내면 하나씩 열린다' + Object.keys(lockT).map(function (t) { return ', ' + t + '단 전용 ' + lockT[t]; }).join('') + '</p>';
   return html + rows + '</div>';
@@ -1797,6 +1836,7 @@ function tabHelp() {
       '설정의 <b>이동 방식</b>에서 예전처럼 땅을 눌러 이동하는 <b>터치</b>로 바꿀 수 있다. 조이스틱을 늘 같은 자리에 두는 고정도 있다.',
       '위쪽 초상화를 눌러 가문을 고른다. 고른 가문은 아래 정보 줄 왼쪽에 문장과 이름으로 보이고, 맨 아래 줄 <b>조작·태세</b> 칸은 그 가문 하나만 바꾼다.',
       '<b>조작 자동/수동</b>: 자동이면 알아서 싸우고 기술도 쓴다. 필살기만은 직접 눌러야 한다. 수동이면 내가 누른 대로 움직인다.',
+      '<b>기술 예약</b>: 자동 전투 중 쓸 수 없는 기술을 누르면 예약된다. 쓸 수 있게 되면 가장 먼저 쓴다. 다시 누르면 취소. 예약한 기술은 단추에 「예약」, 위쪽 초상에 「예」가 붙는다. 필살기도 덜 찼으면 예약된다.',
       '<b>필살기</b>는 누구나 하나씩 타고나고 개인 5단에 깨어난다. 기술 줄 왼쪽 끝 ✦ 칸은 지금 조작하는 가문의 가주 것이다. 누르면 겨누지 않고 바로 쓴다. 조작하지 않는 사람과 전체 자동은 필살기를 쓰지 않는다. 조작하던 사람이 쓰러지면 맹주의 것으로 바뀐다.',
       '<b>태세 돌격/호위</b>: 맹주를 따르는 가문원에게만 있다. 돌격은 먼저 달려들고, 호위는 맹주 곁의 적만 상대한다.',
       '<b>전체 자동</b>을 켜면 모든 가문이 자동이 되어 적을 찾아 싸운다. 오른쪽 끝은 속도와 멈춤.',

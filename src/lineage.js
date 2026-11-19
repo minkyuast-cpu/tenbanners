@@ -641,6 +641,7 @@ function seatMove(s, from, to) {
   delete from.Ls; delete to.Ls;
   s.hero = to.id;
   if (s.party.indexOf(to.id) < 0) s.party.push(to.id);      // 2.2.0: 출전 목록은 DS.partySync 가 다시 맞춘다
+  if (DS.partyOrder) s.party = DS.partyOrder(s, s.party);      // 2.2.3: 새 맹주가 곧바로 맨 앞 (칩 줄이 낡은 차례를 보이지 않게)
   if (to.manual) delete to.manual;
 }
 DS.linSeatMove = seatMove;

@@ -68,7 +68,7 @@ var KEEPER = {
 };
 ['say', 'last'].forEach(function (k) {
   var base = BOSS.keeper[k];
-  Object.defineProperty(BOSS.keeper, k, { enumerable: true, get: function () { var f = DS.G && DS.G.scn && DS.G.scn.pit; return (f && KEEPER[k][f - 1]) || base; } });
+  Object.defineProperty(BOSS.keeper, k, { enumerable: true, get: function () { var f = DS.G && DS.G.scn && DS.G.scn.pit; return (f && KEEPER[k][(f - 1) % KEEPER[k].length]) || base; } });      // 2.2.3: 열 층마다 돈다
 });
 
 // ───────── 합일 장면 (교회에서 세 집의 문장 띠를 묶을 때) ─────────
@@ -200,7 +200,7 @@ function fuseTalk(save) {
     else out.push('누구든 셋을 7단 Lv10으로 키우게. 교회에서 함께 오른다네.');
   } else out.push(RUMOR.fuse);
   out.push('쉬는 사람도 조금은 큰다네. 그래도 키우려면 데리고 나가야지.');
-  out.push(save.pit > 1 ? '갱도 ' + Math.min(10, save.pit) + '층까지 열었다지. 밑으로 갈수록 보수도 오르고 파수꾼도 세진다네.' : '돌마루 고원 동남쪽 갱도에 가 보게. 몇 번이고 다시 들어가 키를 다질 수 있네.');
+  out.push(save.pitBest > 0 ? '갱도 ' + save.pitBest + '층까지 내려갔다지. 바닥은 없다네. 밑으로 갈수록 보수도 오르고 파수꾼도 세진다네.' : '돌마루 고원 동남쪽 갱도에 가 보게. 몇 번이고 다시 들어가 키를 다질 수 있네.');
   out.push('옛 열 가문은 서두르다 맹주를 잃었지. 천천히 가게. 그래도 늦지는 말고.');
   if (DS.LORE && DS.LORE.bountyTalk) { try { var b = DS.LORE.bountyTalk(save); if (b) out.splice(1, 0, b); } catch (x) {} }      // plan 팀의 현상금·정예가 있으면 그 소문
   return out;

@@ -1,4 +1,4 @@
-// 머리 없는 시험: 모든 시나리오(1~30 · 갱도 1~10)의 출발 칸과 모든 들판·마을 입구에 아군 16명이 다 서는가. node tools/t_spawn.js
+// 머리 없는 시험: 모든 시나리오(1~30 · 갱도 1~14 · 25 · 50 · 500 — 2.2.3 끝없는 층은 네 틀을 돌려 쓴다)의 출발 칸과 모든 들판·마을 입구에 아군 16명이 다 서는가. node tools/t_spawn.js
 'use strict';
 const D = require('./load.js')();
 const s = D.newSave('칸', 'inf');
@@ -8,7 +8,7 @@ for (let i = 0; i < 6; i++) { const m = D.addMerc(s, 'm_sword', 3, s.hero); m.kn
 D.mercTidy(s); D.pSync(s);
 const specs = () => D.partySpecs(s).map(u => Object.assign({}, u));
 let bad = 0, n0 = specs().length;
-const list = D.SCENARIOS.slice().concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(f => D.pit(f)));
+const list = D.SCENARIOS.slice().concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 25, 50, 500].map(f => D.pit(f)));
 list.forEach(sc => {
   const b = D.buildScenario(sc, n0, 'inf'), sim = new D.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: 3, inv: {}, mode: 'scn' });
   const sp = specs(), pos = D.formation(sp, b.start); let ok = 0, far = 0;

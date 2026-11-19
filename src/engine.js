@@ -348,6 +348,7 @@ P.kill = function (v, by) {
   if (v.dead) return;
   var self = this;
   v.dead = true; v.deadT = this.t; v.hp = 0; this.occ[v.y * this.w + v.x] = null; this._ver++;
+  if (v.rsv || v.rsvU) { v.rsv = null; v.rsvU = false; }      // 2.2.3: 쓰러지면 예약도 거둔다
   var de = { t: 'die', id: v.id, by: by ? by.id : null }; if (this._erK) de.erase = 1;
   this.emit(de);
   if (by && by.fx && !by.dead && by.side !== v.side) {
@@ -838,6 +839,7 @@ P.bestSkill = function (u, foes, ord, keep) {
     var id = ord[n], S = SK[id];
     if (!S || !isOff(S) || (u.mp || 0) < S.mp || u.cd[id] > 0) continue;
     if (keep && S.mp && u.mp - S.mp < keep) continue;
+    if (u.rsv && this.rsvBlocks(u, id)) continue;      // 2.2.3: 예약한 기술의 마나 · 틱을 쓰지 않는다
     if (S.item && !(this.inv[id.slice(2)] > 0)) continue;
     var e0 = S.eff[0], r1 = S.rng ? S.rng[1] : 0, r0 = S.rng ? S.rng[0] : 0, holy = e0.type === 'holy', tgt = null, val = 0, tp = 0;
     if (S.tg === 'enemy') {
@@ -912,6 +914,7 @@ P.aiSkill = function (u, foes, dry) {
       continue;
     }
     if (!S || (u.mp || 0) < S.mp || u.cd[id] > 0 || (!dry && u.gauge < S.tick * q)) continue;
+    if (u.rsv && this.rsvBlocks(u, id)) continue;      // 2.2.3: 예약
     if (keep && S.mp && S.eff[0].t !== 'heal' && S.eff[0].t !== 'cleanse' && u.mp - S.mp < keep) continue;
     if (dry && S.item && !(this.inv[id.slice(2)] > 0)) continue;
     var e0 = S.eff[0], r1 = S.rng ? S.rng[1] : 0, r0 = S.rng ? S.rng[0] : 0, tgt = null, i, v, cnt;
@@ -1003,6 +1006,78 @@ P.cmdFire = function (u, v, foes) {
   if (u.gauge >= this.atkCost(u)) { u.owe = true; u.actT = this.t; }
   return this.attack(u, v);
 };
+// ───────── 2.2.3 기술 예약 ─────────
+// 화면에서 지금 못 쓰는 기술을 누르면 그 사람에게 예약된다 (u.rsv = 기술 · 필살기는 u.rsvU). 쓸 수 있게 되면(마나 · 재사용 · 틱 · 대상) 무엇보다 먼저 쓴다.
+//   기다리는 동안: 마나가 모자라면 마나 드는 다른 기술은 쓰지 않는다(평타 · 이동 · 마나 없는 기술은 된다). 마나가 있고 대상도 있는데 틱만 모자라면 틱을 아껴 기다린다(평타도 참는다).
+//   대상이 닿는 곳에 없으면 평소처럼 움직이고 평타를 친다 (대상이 생기면 그때 틱을 모은다). 숨이 넘어가는 제 약초(체력 30% 아래)는 예약보다 먼저다.
+//   거두는 때: 썼을 때 · 같은 단추를 다시 누를 때 · 들판 싸움이 끝날 때(시나리오는 판이 끝날 때) · 쓰러질 때. 한 사람에 하나 (다른 기술을 누르면 바뀐다)
+P.reserve = function (id, sk) { var u = this.byId[id]; if (!u || u.dead) return false; u.rsv = sk && SK[sk] ? sk : null; return true; };
+P.reserveUlt = function (id, on) { var u = this.byId[id]; if (!u || u.dead) return false; u.rsvU = !!on; return true; };
+P.rsvClear = function () { this.units.forEach(function (u) { if (u.rsv || u.rsvU) { u.rsv = null; u.rsvU = false; } }); };
+// 영영 쓸 수 없는가 (예약하지 않는다): 봉인 · 최대 마나보다 비싸다 · 그 사람의 기술이 아니다. 돌려주는 것: 까닭 글 또는 ''
+P.rsvNever = function (u, sk) {
+  var S = SK[sk]; if (!u || u.dead || !S) return '쓸 수 없다';
+  if (u.fx && u.fx.seal && !S.item) return '기술 봉인 중';
+  if ((S.mp || 0) > (u.mmp || 0)) return '마나가 최대치(' + Math.round(u.mmp || 0) + ')보다 많이 든다';
+  if (!S.ult && (u.skills || []).indexOf(sk) < 0) return '배우지 않은 기술';
+  return '';
+};
+// 기술의 보통 자동 겨눔 (닿는 곳 안에서만). 돌려주는 것: { t: cast 에 넘길 대상(null = 제자리) } 또는 null
+P.rsvTarget = function (u, S, foes) {
+  var self = this, e0 = S.eff[0], r0 = S.rng ? S.rng[0] : 0, r1 = S.rng ? S.rng[1] : 0, i, v, d, best = null, bs = -1e9, fr;
+  function n(vs) { return vs.reduce(function (a, x) { return a + (x.role === 'boss' ? 2 : 1); }, 0); }
+  if (e0.t === 'summon') { var cnt = this.units.filter(function (m) { return !m.dead && m.owner === u.id && m.role === 'summon'; }).length; return cnt < (S.cap || 2) && foes.length ? { t: null } : null; }
+  if (S.tg === 'ally') {
+    fr = this.friends(u);
+    fr.forEach(function (f) {
+      d = dist(u, f); if (d > r1 || d < r0) return;
+      var sc = e0.t === 'heal' ? (f.hp < f.mhp ? 1 - f.hp / f.mhp + (f.role === 'cmd' ? 0.1 : 0) : -1) : e0.t === 'cleanse' ? (f.st.poison || f.st.slow ? 1 : -1) : (f.role === 'cmd' && !(f.buffs[e0.s] && f.buffs[e0.s].t > 3) ? Math.max(f.atk, f.mag) : -1);
+      if (sc > 0 && sc > bs) { bs = sc; best = f; }
+    });
+    return best ? { t: best } : null;
+  }
+  if (S.tg === 'self' || S.tg === 'multi') {
+    if (e0.t === 'heal' || e0.t === 'cleanse') { fr = this.victims(u, S, this.areaTiles(u, S, u.x, u.y)); return fr.some(function (f) { return f.side === u.side && f.hp < f.mhp; }) ? { t: null } : null; }
+    if (e0.t === 'buff' && e0.p > 0) return foes.length ? { t: null } : null;
+    if (S.tg === 'multi') return foes.length ? { t: null } : null;
+    return n(this.victims(u, S, this.areaTiles(u, S, u.x, u.y))) >= 1 ? { t: null } : null;
+  }
+  if (S.tg === 'enemy') {
+    for (i = 0; i < foes.length; i++) { v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue; var sc2 = (v.role === 'boss' ? 50 : 0) + v.hp / v.mhp * 10; if (sc2 > bs) { bs = sc2; best = v; } }
+    return best ? { t: best } : null;
+  }
+  if (S.tg === 'tile') {
+    for (i = 0; i < foes.length; i++) { v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue; var c = n(this.victims(u, S, this.areaTiles(u, S, v.x, v.y))); if (c > bs) { bs = c; best = { x: v.x, y: v.y }; } }
+    return best && bs >= 1 ? { t: best } : null;
+  }
+  if (S.tg === 'dir') {
+    DIR.forEach(function (dd) { var t = { x: u.x + dd[0], y: u.y + dd[1] }, c2 = n(self.victims(u, S, self.areaTiles(u, S, t.x, t.y))); if (c2 > bs) { bs = c2; best = t; } });
+    return best && bs >= 1 ? { t: best } : null;
+  }
+  return null;
+};
+// 예약을 살핀다. true = 이번 생각은 예약이 썼다(쓰거나 틱을 모으며 기다림)
+P.rsvTry = function (u, foes) {
+  if (u.rsvU && u.ult && (u.uc || 0) >= 100 && foes.length && !(u.fx && u.fx.seal)) {      // 필살기: 가득 차면 보통 자동 겨눔으로 (틱이 모자라면 모은다)
+    if (u.gauge < SK[u.ult].tick * this.q(u)) { u.saving = true; this.wait(u, 0.2); return true; }
+    if (this.aiUlt(u, foes)) { u.rsvU = false; u.saving = false; this.emit({ t: 'rsvCast', id: u.id, sk: u.ult }); return true; }
+  }
+  var id = u.rsv, S = id && SK[id]; if (!S) { if (id) u.rsv = null; return false; }
+  if (u.fx && u.fx.seal) return false;
+  if ((u.mp || 0) < (S.mp || 0) || u.cd[id] > 0) return false;      // 마나 · 재사용을 기다린다 (그동안 aiSkill 이 마나 드는 다른 기술을 막는다)
+  if (u.hp < u.mhp * 0.3 && this.inv.herb > 0 && u.gauge >= TK.item) return false;      // 숨이 넘어가면 제 약초가 먼저
+  var tg = this.rsvTarget(u, S, foes); if (!tg) return false;
+  if (u.gauge < S.tick * this.q(u)) { u.saving = true; this.wait(u, 0.2); return true; }
+  if (this.cast(u, id, tg.t)) { u.rsv = null; u.saving = false; u.actT = this.t; u.owe = false; this.emit({ t: 'rsvCast', id: u.id, sk: id }); return true; }
+  return false;
+};
+// aiSkill 이 예약 때문에 이 기술을 건너뛰는가: 예약한 기술이 마나만 기다리면 마나 드는 기술 모두, 마나가 있으면(틱 · 대상만 기다리면) 다른 기술 모두
+P.rsvBlocks = function (u, id) {
+  var R = u.rsv && SK[u.rsv]; if (!R || id === u.rsv) return false;
+  var S = SK[id]; if (!S) return false;
+  if ((u.mp || 0) >= (R.mp || 0) && !(u.cd[u.rsv] > 0)) return true;
+  return (S.mp || 0) > 0;
+};
 P.aiCmd = function (u) {
   var self = this, cc = DS.BAL && DS.BAL.cmdCast;
   if (this.dodge(u)) return;
@@ -1018,6 +1093,7 @@ P.aiCmd = function (u) {
   // 자동 사냥의 선두는 닿지 못해 제쳐 둔 적에게 매달리지 않는다 (닿는 거리에 있거나 우리를 때린 적은 상대한다)
   if (zseek && foes.length) foes = foes.filter(function (f) { return !(f.skipT > self.t) || f.prov > self.t || dist(u, f) <= self.reach(u); });
   if (lead && u !== lead && u.auto && dist(u, lead) > 5 && lead.order && lead.order.t === 'move') { if (this.goNear(u, lead.x, lead.y, 2, 60) !== 'here') return; }
+  if ((u.rsv || u.rsvU) && this.rsvTry(u, foes)) return;      // 2.2.3: 예약한 기술이 무엇보다 먼저
   if (!u.auto) {   // 수동: 닿는 적만 때린다
     if (u.saving) u.saving = false;      // 자동에서 「기술 준비」 중에 수동으로 바꾸면 표시가 남던 것
     if (DS.BAL.manHerb && foes.length && u.hp < u.mhp * 0.3 && this.inv.herb > 0 && u.gauge >= TK.item && this.useItem(u, 'herb', u)) return;      // 수동이어도 숨이 넘어가면 제 약초는 먹는다
@@ -1404,6 +1480,8 @@ P.tick = function (dt) {
   if (this.chk <= 0) {
     this.chk = 0.25;
     this.combat = this.mode !== 'town' && us.some(function (e) { return !e.dead && e.side === 'enemy' && e.aggro; });
+    if (this._wasC && !this.combat && this.mode !== 'scn') this.rsvClear();      // 2.2.3: 들판 싸움이 끝나면 예약을 거둔다 (시나리오는 판이 끝날 때까지)
+    this._wasC = this.combat;
     if (!this.combat) this.lastHit = this.t;
     else if (this.mode === 'zone' && this.t - (this.lastHit || 0) > 25) {      // 서로 닿지 못한 채 오래 끌면 적이 물러난다
       us.forEach(function (e) { if (!e.dead && e.side === 'enemy' && e.aggro) { e.aggro = false; e.calmT = self.t + 12; e.stuck = 0; self.emit({ t: 'calm', id: e.id }); } });

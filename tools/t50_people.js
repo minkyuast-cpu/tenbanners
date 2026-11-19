@@ -136,15 +136,21 @@ module.exports = async (page, shot, L) => {
     var s = DS.G.save, sim = DS.G.sim, out = {};
     var arc = DS.charList(s).filter(ch => ch.cls === 'arc')[0], cle = DS.charList(s).filter(ch => ch.cls === 'cle')[0];
     out.arcB = DS.bearer(s, arc).id; out.arcSb = DS.sbOf(s, arc.id).length; out.cleSb = DS.sbOf(s, cle.id).length;
-    out.arc = arc.id; out.cle = cle.id;
+    out.arc = arc.id; out.cle = cle.id; out.chips0 = Object.keys(DS.G.chipEls);
     sim.kill(sim.byId['c' + arc.id]); sim.kill(sim.byId['c' + cle.id]);
     return out;
   });
+  const c0chips = c;
   await L.sleep(1500);
   await ev(() => { DS.G.sim.win(); }); await L.sleep(500);
   await L.settle(page, 30000); await L.sleep(2500);
   c = await ev((o) => { var s = DS.G.save, arc = s.chars[o.arc], cle = s.chars[o.cle], b = DS.bearer(s, arc); return { arcB: b ? b.id : 0, was: o.arcB, arcL: arc.L, bL: b ? b.L : 0, cleVac: DS.vacant(s, cle), cleL: cle.L, cleFight: s.party.indexOf(cle.id) >= 0, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.ch === cle.id && u.role === 'cmd').length, fallen: (s.fallen || []).length }; }, c);
   A(c.arcB && c.arcB !== c.was && c.arcL === c.bL && c.bL === 25, '가주 died in battle → same-class 막사 person took the seat at own level (L ' + c.bL + ')');
+  {      // 2.2.3: 칩 차례 — 자리를 이은 가문은 제자리, 맹주가 맨 앞
+    const k1 = await ev(() => Object.keys(DS.G.chipEls)), k0 = c0chips.chips0;
+    const a = k0.filter(k => k1.indexOf(k) >= 0), b = k1.filter(k => k0.indexOf(k) >= 0);
+    A(JSON.stringify(a) === JSON.stringify(b) && a.indexOf('c' + c0chips.arc) === b.indexOf('c' + c0chips.arc) && b.indexOf('c' + c0chips.arc) >= 0 && k1[0] === await ev(() => 'c' + DS.G.save.hero), 'chip order: the seat-filled house keeps its slot, 맹주 first (' + k1.join(' ') + ')');
+  }
   A(c.cleVac && !c.cleFight && c.units === 0 && c.cleL === 1, '가주 died with no same-class 막사 person → vacant (L 1), not fighting');
   await ev(() => DS.openMenu('party')); await L.sleep(500); await shot('party_vacant');
   A((await L.badText(page, '.ov')).length === 0, '부대 tab has no NaN/undefined');
@@ -268,6 +274,13 @@ module.exports = async (page, shot, L) => {
   A(/보통 가문이 된다/.test(conf) && /작은별/.test(conf), 'option 3 confirm tells what happens to the old 맹주 house (' + conf.replace(/\s+/g, ' ').slice(0, 90) + ')');
   A(c.moved && c.ps && c.hx && c.w && c.oldHero, 'option 3: s.hero moves to that house; it keeps its gear and 공훈; the old house holds no 맹주 data');
   A(c.oldBear && c.oldL === 15 && c.nc && c.party && c.kinOk && c.units === c.specs && c.sel, 'option 3: old 맹주 house → its adult blood kin is 가주 at own level (L ' + c.oldL + '), takes the house class, both houses fight');
+  {      // 2.2.3: 맹주가 바뀌면 칩 줄의 맨 앞은 새 맹주, 나머지는 부대 탭 격자 차례 (DS.houseCmp)
+    await ev(() => { DS.ui.closeAll(); }); await L.sleep(300);
+    const o = await ev(() => { var s = DS.G.save, ks = Object.keys(DS.G.chipEls), want = DS.houseSort(s, DS.partyIds(s).filter(function (id) { return id !== s.hero; }).map(function (id) { return s.chars[id]; })).map(function (ch) { return 'c' + ch.id; }); return { ks: ks, hero: 'c' + s.hero, rest: ks.slice(1).join(' ') === want.join(' '), sp: DS.partySpecs(s).map(function (u) { return u.role; }).join(','), u0: DS.G.sim.units.filter(function (u) { return u.side === 'ally' && u.role === 'cmd'; })[0].id }; });
+    A(o.ks[0] === o.hero && o.rest && o.u0 === o.hero, 'chip order after option 3: new 맹주 first, then the 부대 grid order (' + o.ks.join(' ') + ')');
+    A(/^cmd(,cmd)*(,merc)*$/.test(o.sp), 'unit order: 맹주, 가주, then kin (' + o.sp + ')');
+    if (process.env.V223) { try { fs.mkdirSync(process.env.V223, { recursive: true }); await page.screenshot({ path: path.join(process.env.V223, 'chips_after_lord_change.png') }); } catch (e) {} }
+  }
   // 2.2.1 ③ 옛 맹주의 가족: 어른 핏줄 셋 + 막사에서 온 배우자(가문원) + 미성년 하나 → 다른 가문의 가주를 고르면 새 가주 하나 말고 모두 막사로 (옛 가문의 병과 · 제 레벨)
   const INV = fs.readFileSync(path.join(__dirname, 'inv.js'), 'utf8');
   const invIn = () => ev((src) => { var module = {}; (new Function('module', src))(module); return module.exports(DS, DS.G.save, true); }, INV);

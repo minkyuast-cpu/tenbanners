@@ -12,6 +12,19 @@ DS.spdOf = function (v) { v = +v || 1; return v >= 1.75 ? 2 : v >= 1.25 ? 1.5 : 
 //   옛 저장(tenbanners_v2 · tenbanners_v1 과 그 _bak, 클라우드 saves2 · saves 문서)은 지우지도 바꾸지도 않는다 — 처음 한 번 「새 시대가 열렸다」 안내만.
 var KEY = 'tenbanners_v4', OLD = 'tenbanners_v3', OLD1 = 'tenbanners_v2', META = 'tenbanners_meta', LEGACY = 'darksaver_muta_v1';
 DS.SAVE_V = 13;      // 2.2.0 「한 사람 한 사람」: v12 → v13 판 올림 (가솔·막사가 없어졌다 — MIGRATE[12]). 키·클라우드 문서(tenbanners_v4 · saves4)는 그대로
+// 2.2.3 끝없는 갱도: s.pitBest = 깬 가장 깊은 층(0 = 아직) · s.pitCur = 마지막으로 들어간 층 · s.pit = 열린 다음 층(옛 칸, pitBest + 1) · s.pitV = 2 (새 셈).
+//   옛 저장(10층까지, 층마다 적 레벨 +6)은 깬 가장 깊은 층의 적 레벨로 옮긴다: 옛 9층(적 Lv90)을 깼으면 새 24층(적 Lv89)까지 깬 것으로. 처음 돌파 보상(lootPit)도 같은 층까지 받은 것으로 친다
+function pitFix(s) {
+  var M = DS.PIT ? DS.PIT.max : 99999, cl = function (v, lo, hi) { v = Math.round(+v); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
+  if (s.pitV !== 2) {
+    var c = Math.max(cl(s.pit || 1, 1, 10) - 1, cl(s.lootPit || 0, 0, 10)), oL = 42 + (c - 1) * 6;
+    var nb = c ? Math.max(c, DS.PIT ? Math.floor((oL - DS.PIT.L0) / DS.PIT.dL) : c) : 0;
+    s.pitBest = nb; s.pitCur = Math.max(1, nb); s.lootPit = nb; s.pitV = 2;
+  }
+  s.pitBest = cl(s.pitBest || 0, 0, M); s.lootPit = cl(s.lootPit || 0, 0, M);
+  s.pitCur = cl(s.pitCur || 1, 1, Math.min(M, s.pitBest + 1)); s.pit = Math.min(M, s.pitBest + 1);
+}
+DS.pitFix = pitFix;
 DS.SAVE_MIN = 12;    // 이어 할 수 있는 가장 옛 판 (2.1: 다시 새로 시작한 v12)
 //      // 저장 구조 번호. 2 = 2.0.0, 3 = 2.1.0, 4 = 2.2.0, 5 = 2.3.0, 6 = 2.4.0, 7 = 2.5.0, 8 = 2.6.0, 9 = 2.7.0, 10 = 4.0.0 (부대원 + 깃발)
 function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -178,7 +191,7 @@ DS.curse = function (s, top) {
   // 이야기도 그 무렵으로 되감긴다
   for (k in s.cleared) { var sc = DS.SCENARIOS[+k - 1]; if (sc && sc.L > DS.CURSE_L + 2) delete s.cleared[k]; }
   if (!s.cleared[20]) s.crest = false;
-  s.pit = 1;
+  s.pit = 1; s.pitBest = 0; s.pitCur = 1; s.pitV = 2;      // 2.2.3 끝없는 갱도
   s.town = s.visited && s.visited.dodam ? 'dodam' : 'haemil'; s.zone = s.town; s.pos = null;
   // 미안한 마음으로: 전설 용병 하나
   var hero = s.chars[s.hero] || DS.charList(s)[0];
@@ -271,7 +284,7 @@ DS.fixSave = function (s) {
   if (!s.pos || typeof s.pos !== 'object' || !int(s.pos.x) || !int(s.pos.y) || s.pos.x < 0 || s.pos.y < 0) s.pos = null;      // 자리가 숫자 칸이 아니면 지역 입구에서 다시 선다 (그대로 두면 이어하기에서 넘어진다)
   else s.pos = { x: s.pos.x, y: s.pos.y };
   s.visited[s.town] = true; s.visited[s.zone] = true;
-  s.gold = Math.max(0, Math.round(+s.gold || 0)); s.pit = Math.max(1, Math.min(10, Math.round(+s.pit || 1)));
+  s.gold = Math.max(0, Math.round(+s.gold || 0)); pitFix(s);
   s.kills = Math.max(0, Math.round(+s.kills || 0)); s.time = Math.max(0, +s.time || 0); s.crest = !!s.crest;
   s.opt.speed = DS.spdOf(s.opt.speed);      // r36: 배속은 1 · 1.5 · 2 (옛 3배속은 2배속으로)
   s.v = Math.max(+s.v || 2, 2);

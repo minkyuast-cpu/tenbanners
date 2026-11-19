@@ -354,18 +354,35 @@ DS.nextScn = function (save) { for (var i = 0; i < DS.SCENARIOS.length; i++) if 
     return C && J && s.reward.alt && (h.cls === s.reward.join || (C.master && C.fam === J.fam)) ? s.outroAlt : base;
   } });
 })(DS.SCENARIOS[4]);
-// 바닥 없는 갱도 (반복 가능). 층마다 벽에 옛 광부의 글이 있다 (DS.LORE.pit)
+// 바닥 없는 갱도 (2.2.3: 끝없는 층 — 반복해 키를 다지는 곳). 층마다 벽에 옛 광부의 글이 있다 (DS.LORE.pit — 1~10층)
+//   적 레벨 = PIT.L0 + PIT.dL × 층 (100 에서 멈춘다), 그 위로는 층마다 힘 배율이 곧게 오른다 (1 + over × 넘은 층 — 지수가 아니다. 500층도 유한).
+//   5층마다 「수문장 층」(갱도지기가 더 질기고 무리가 하나 더), 10층마다 「밑바닥 층」(더 질기고 세다 · 첫 돌파에 높은 굴림 유니크).
+//   지도는 네 틀(hall · fort · gate · hall)을 돌려 쓰고, 층 번호로 씨앗이 달라 기둥·벽 자리가 바뀐다. 적 구성도 층 번호로 (세 묶음씩 돌고, 깊을수록 섞인다)
+DS.PIT = { L0: 41, dL: 2, cap: 100, over: 0.03, xp: 0.02, gold: [500, 85], boss5: { hp: 1.3, atk: 1.1 }, boss10: { hp: 1.6, atk: 1.2 }, ticketEvery: 25, max: 99999 };
+var PIT_MOBS = [['skeleton', 'golem', 'darkMage'], ['ghost', 'darkKnight', 'darkPriest'], ['demon', 'gargoyle', 'imp'], ['lizard', 'golem', 'skelArcher'], ['mummy', 'scorpion', 'darkMage'], ['iceGolem', 'salamander', 'demon']];
+var PIT_LAY = ['hall', 'fort', 'gate', 'hall'], PIT_TH = ['ruins', 'nether', 'blood'];
+DS.pitFloor = function (f) { f = Math.round(+f || 1); return Math.max(1, Math.min(DS.PIT.max, isFinite(f) ? f : 1)); };
+DS.pitL = function (f) { var P = DS.PIT; f = DS.pitFloor(f); return Math.min(P.cap, P.L0 + P.dL * f); };      // 적 레벨
+DS.pitOver = function (f) { var P = DS.PIT; f = DS.pitFloor(f); return Math.max(0, f - Math.ceil((P.cap - P.L0) / P.dL)); };      // 레벨 100 을 넘어선 층 수
+DS.pitK = function (f) { return 1 + DS.PIT.over * DS.pitOver(f); };      // 힘 배율 (100 넘은 층)
+DS.pitKind = function (f) { f = DS.pitFloor(f); return f % 10 === 0 ? 10 : f % 5 === 0 ? 5 : 0; };      // 0 보통 · 5 수문장 층 · 10 밑바닥 층
 DS.pit = function (f) {
-  var mobs = [['skeleton', 'golem', 'darkMage'], ['ghost', 'darkKnight', 'darkPriest'], ['demon', 'gargoyle', 'imp']][Math.min(2, Math.floor((f - 1) / 3))];
-  var wall = DS.LORE && DS.LORE.pit && DS.LORE.pit[f];
-  var s = T(100 + f, '바닥 없는 갱도 ' + f + '층', 'stone', 'keeper', 42 + (f - 1) * 6, 'hall', ['ruins', 'nether', 'blood'][Math.min(2, Math.floor((f - 1) / 3))], mobs, {},
-    wall || ['바닥 없는 갱도 ' + f + '층. 갱도지기를 쓰러뜨리면 다음 층이 열린다.'], ['갱도지기가 무너졌다. 아래로 가는 길이 드러났다.']);
-  s.pit = f; s.tier = 5; s.diff = (DS.TUNE && DS.TUNE[100 + f]) || 0.95;
+  f = DS.pitFloor(f);
+  var P = DS.PIT, k = Math.floor((f - 1) / 3), mobs = PIT_MOBS[k % PIT_MOBS.length].slice(), kind = DS.pitKind(f);
+  if (f > 18) { var ex = PIT_MOBS[(k + 2) % PIT_MOBS.length].filter(function (m) { return mobs.indexOf(m) < 0; }); if (ex.length) mobs.push(ex[f % ex.length]); }      // 깊을수록 다른 묶음의 하나가 섞인다
+  var wall = f <= 10 && DS.LORE && DS.LORE.pit && DS.LORE.pit[f];
+  var s = T(100 + f, '바닥 없는 갱도 ' + f + '층', 'stone', 'keeper', DS.pitL(f), PIT_LAY[(f - 1) % PIT_LAY.length], PIT_TH[Math.floor((f - 1) / 3) % PIT_TH.length], mobs, {},
+    wall || null, ['갱도지기가 무너졌다. 아래로 가는 길이 드러났다.']);
+  s.pit = f; s.tier = 5; s.pitKind = kind;
+  s.diff = 0.95 * DS.pitK(f);
+  var B = kind === 10 ? P.boss10 : kind === 5 ? P.boss5 : null;
+  s.bossK = B ? [B.hp, B.atk] : null;      // 갱도지기만 (buildScenario)
+  s.xk = 1 + P.xp * DS.pitOver(f);      // 100 넘은 층: 경험치·골드도 조금씩 (곧게)
   return s;
 };
 // 시나리오 보상 골드: 15번까지는 옛 곡선, 그 뒤로는 판마다 SCN_GOLD.step 씩만 오른다 (r12 경제 — 15판 뒤 증가율을 눕힌다)
 DS.SCN_GOLD = { knee: 15, step: 200 };
-DS.scnGold = function (s) { if (s.pit) return 300 + s.pit * 250; var K = DS.SCN_GOLD, n = Math.min(s.id, K.knee); return Math.round(150 + 60 * Math.pow(n, 1.55)) + Math.max(0, s.id - K.knee) * K.step; };
+DS.scnGold = function (s) { if (s.pit) return Math.round(DS.PIT.gold[0] + DS.PIT.gold[1] * s.pit); var K = DS.SCN_GOLD, n = Math.min(s.id, K.knee); return Math.round(150 + 60 * Math.pow(n, 1.55)) + Math.max(0, s.id - K.knee) * K.step; };
 
 var SW = 13, SH = 20;
 function buildMap(s) {
@@ -475,7 +492,8 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
   if (!connect(g, 6, 18, 6, 2)) for (y = 2; y <= 18; y++) if (BLOCK[g[y][6]]) g[y][6] = g[y][6] === 'w' ? '=' : base;
   var size = n <= 2 ? 2 : n <= 20 ? 3 : 4, nPost = n <= 2 ? 2 : 3, units = [], diff = forceDiff || DS.tuneFor(heroCls, s.id) || s.diff || 1, gi = 0;
   var TE = !s.pit && !s.gen && DS.TUNE_E && DS.TUNE_E[s.id];      // 4.0 (⑫-3): 판마다 적의 체력·공격을 따로 (1~10 은 덜 아프게·조금 더 길게)
-  var mk = function (type, o) { o = o || {}; o.diff = diff; if (TE) { o.hm = TE[0]; o.am = TE[1]; } return DS.enemySpec(type, o.L || s.L, o); };
+  var mk = function (type, o) { o = o || {}; o.diff = diff; if (TE) { o.hm = TE[0]; o.am = TE[1]; } if (s.xk && s.xk !== 1) o.expMul = (o.expMul == null ? 1 : o.expMul) * s.xk; return DS.enemySpec(type, o.L || s.L, o); };
+  if (s.pitKind) size = 4;      // 2.2.3: 갱도 수문장 · 밑바닥 층은 무리마다 하나 더
   function put(type, x, y, grp, o) { o = o || {}; o.x = x; o.y = y; o.grp = grp; var u = mk(type, o); units.push(u); return u; }
   var posts = [[rnd() < 0.5 ? 4 : 8, 13], [0, 9], [6, 7]]; posts[1][0] = posts[0][0] === 4 ? 8 : 4;
   if (s.layout === 'deck') posts = [[6, 12], [6, 9], [6, 6]];
@@ -492,8 +510,8 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
       var grp = 'g' + (gi++);
       for (var k = 0; k < size; k++) put(s.mobs[Math.floor(rnd() * s.mobs.length)], p[0] + (k % 2 ? 1 : -1) * Math.ceil(k / 2), p[1] + (k > 1 ? 1 : 0), grp, { L: Math.max(1, s.L - 1) });
     });
-    var B = DS.BOSSES[s.boss], guard = Math.min(B.guard, n <= 1 ? 2 : n <= 4 ? 3 : 9);
-    var boss = put(null, 6, 2, 'boss', { boss: s.boss, L: s.L + 1 }); boss.obj = true;
+    var B = DS.BOSSES[s.boss], guard = Math.min(B.guard, n <= 1 ? 2 : n <= 4 ? 3 : 9) + (s.pitKind === 10 ? 2 : s.pitKind === 5 ? 1 : 0);
+    var boss = put(null, 6, 2, 'boss', s.bossK ? { boss: s.boss, L: Math.min(100, s.L + 1), hm: s.bossK[0], am: s.bossK[1] } : { boss: s.boss, L: s.L + 1 }); boss.obj = true;      // 2.2.3: 갱도 수문장 · 밑바닥 층의 갱도지기
     for (var q = 0; q < guard; q++) put(s.mobs[q % s.mobs.length], 6 + (q % 2 ? 1 : -1) * (1 + Math.floor(q / 2)), 3 + (q % 3 === 2 ? 1 : 0), 'boss', { L: s.L });
   }
   var start = [[6, 17], [4, 17], [8, 17], [6, 18], [5, 18], [7, 18], [4, 18], [8, 18], [5, 19], [7, 19], [6, 19], [3, 18], [9, 18], [5, 17], [7, 17], [3, 17], [9, 17], [4, 19], [8, 19], [3, 19], [9, 19], [6, 16], [5, 16], [7, 16]];      // 2.2.0: 모두 싸운다 — 열 가문 + 가문원까지 (출발 칸 y16~19 · x3~9 는 늘 비워 둔다)
@@ -535,10 +553,22 @@ DS.joinPlan = function (save) {
   });
   return out;
 };
+// 2.2.3 갱도 층을 깼다: 최고 층(save.pitBest) · 지금 층(save.pitCur) · 처음 깬 층이면 보너스 골드(층 골드만큼 한 번 더), PIT.ticketEvery 층마다 처음 깰 때 모집권 한 장
+DS.pitClear = function (save, s, out) {
+  var f = s.pit, first = f > (+save.pitBest || 0);
+  out.first = first; out.pitFirst = first;
+  if (first) {
+    var bonus = Math.round(DS.scnGold(s) * DS.BAL.gold); save.gold += bonus; out.gold += bonus; out.bonus = bonus;
+    if (f % DS.PIT.ticketEvery === 0) { save.tickets = (save.tickets || 0) + 1; out.tickets = 1; }
+    save.pitBest = f;
+  }
+  save.pitCur = f; save.pit = (+save.pitBest || 0) + 1;      // save.pit = 열린 다음 층 (옛 칸 — 글·지도가 읽는다)
+  return out;
+};
 DS.applyClear = function (save, s) {
   var first = !save.cleared[s.id], out = { gold: Math.round(DS.scnGold(s) * (first ? 1 : 0.35) * DS.BAL.gold), joins: [], items: {}, gear: null, first: first, crest: false, tickets: 0 };
   save.gold += out.gold;
-  if (s.pit) { if (s.pit >= save.pit && save.pit < 10) save.pit = s.pit + 1; return out; }
+  if (s.pit) return DS.pitClear(save, s, out);
   save.cleared[s.id] = (save.cleared[s.id] || 0) + 1;
   if (!first) return out;
   var r = s.reward;
