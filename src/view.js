@@ -443,11 +443,14 @@ V.fx = function (name, tiles, from) {
         self.burst(x, y, cols, 5, { spd: 36, life: 0.22 });
     }
     // 2.2.5: 보통 기술도 조금 더 — 맞는 칸마다 짧은 충격 빛과 불티 둘 (가볍게 · 느린 기기면 생략)
-    if (!self.lite && HOSTILE_FX[name] && n <= 6) { self.shape({ k: 'impact', x: x, y: y, dur: 0.18, c: cols[1] || cols[0], r: 6, d: 0.03 }); self.burst(x, y, ['#ffffff', cols[0]], 2, { spd: 34, up: 8, life: 0.3 }); }
+    if (!self.lite && HOSTILE_FX[name] && n <= 6) {
+      self.shape({ k: 'impact', x: x, y: y, dur: 0.24, c: cols[1] || cols[0], r: 9, d: 0.02 }); self.burst(x, y, ['#ffffff', cols[0]], 3, { spd: 38, up: 10, life: 0.32, size: 2 });
+      if (n <= 3) self.rings.push({ x: x, y: y, t: -0.03, dur: 0.3, c: cols[0], r: 10 });
+    }
   });
   // 2.2.5: 한 대상을 노린 기술은 쓰는 이에게서 대상까지 짧은 빛줄기
   if (!this.lite && from && tiles && tiles.length === 1 && HOSTILE_FX[name] && name !== 'palm' && name !== 'arrow' && (Math.abs(tiles[0][0] - from[0]) + Math.abs(tiles[0][1] - from[1])) >= 1 && this.onScreen(tiles[0][0], tiles[0][1]))
-    this.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: tiles[0][0] * 16 + 8, y1: tiles[0][1] * 16 + 7, c: cols[0], life: 0.12, t: 0, w: 1 });
+    this.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: tiles[0][0] * 16 + 8, y1: tiles[0][1] * 16 + 7, c: cols[0], life: 0.14, t: 0, w: 2 });
 };
 // ── 2.2.5 필살기: 쓰는 이 둘레만 밝게 (나머지는 잠깐 어둡게) · 병과 빛깔의 큰 고리와 불티 · 맞는 칸마다 충격 · 병과마다 다른 꼴 ──
 //   멈춤은 짧게 (화면만, 0.06초) · 움직임 줄이기면 흔들림 · 멈춤 없이 빛만 · 「효과: 가볍게」 · 느린 기기면 알갱이를 줄인다
@@ -1680,7 +1683,7 @@ V.drawText = function (g, dt) {
   var mt = this.mtag || 'sel';
   if (mt !== 'off' && (this.sel || mt === 'all')) {
     g.font = cvFont(9);
-    var mtags = [];
+    var mtags = [], tg2 = 0;
     for (var mid in this.vu) {
       var mv = this.vu[mid], mu = mv.u;
       var mname = mu.mn || mu.name;
@@ -1690,7 +1693,7 @@ V.drawText = function (g, dt) {
       mtags.push({ t: mname, x: ms.x, y: ms.y + 8 * k + (mu.big ? 7 : 5), w: g.measureText(mname).width, col: mu.grade ? DS.GRADES[mu.grade].col : '#cdd5e3' });
     }
     for (ti = 0; ti < mtags.length; ti++) {      // 둘이 붙어 서면 나중 것을 한 줄 아래로
-      for (tj = 0; tj < ti; tj++) if (Math.abs(mtags[tj].x - mtags[ti].x) < (mtags[tj].w + mtags[ti].w) / 2 + 2 && Math.abs(mtags[tj].y - mtags[ti].y) < 10) { mtags[ti].y = mtags[tj].y + 10; tj = -1; }
+      for (tj = 0, tg2 = 0; tj < ti && tg2 < 40; tj++) if (Math.abs(mtags[tj].x - mtags[ti].x) < (mtags[tj].w + mtags[ti].w) / 2 + 2 && Math.abs(mtags[tj].y - mtags[ti].y) < 9.5) { mtags[ti].y = mtags[tj].y + 10; tj = -1; tg2++; }      // 2.2.5: (y + 10) − y 가 부동소수로 10 에 못 미치면 같은 자리를 끝없이 되풀이해 화면이 멈췄다 — 9.5 로 견주고 40번에서 멈춘다
     }
     g.globalAlpha = this.sim && this.sim.combat ? 0.8 : 0.95;
     for (ti = 0; ti < mtags.length; ti++) label(g, mtags[ti].t, mtags[ti].x, mtags[ti].y, mtags[ti].col, 9);
