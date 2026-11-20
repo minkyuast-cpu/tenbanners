@@ -48,8 +48,8 @@ function fwOf(u) { return u.fw || 1; }
 function fhOf(u) { return u.fh || 1; }
 function isBig(u) { return !!u && ((u.fw || 1) > 1 || (u.fh || 1) > 1); }
 function dist(a, b) {
+  if (!(a.fw || a.fh || b.fw || b.fh)) return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);      // 한 칸끼리 (거의 모든 경우)
   var aw = a.fw || 1, ah = a.fh || 1, bw = b.fw || 1, bh = b.fh || 1;
-  if (aw === 1 && ah === 1 && bw === 1 && bh === 1) return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   return Math.max(0, a.x - (b.x + bw - 1), b.x - (a.x + aw - 1)) + Math.max(0, a.y - (b.y + bh - 1), b.y - (a.y + ah - 1));
 }
 // 칸 (x, y) 에서 v 의 몸까지

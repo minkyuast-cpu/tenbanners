@@ -1582,7 +1582,7 @@ V.drawBig = function (g, v) {
     dx0 = Math.round(ax + lx) - cv.ox; dy0 = Math.round(ay + ly + bob) - cv.oy; cw = cv.lw; ch = cv.lh; top = dy0 + (cv.pad || 0);
     if (u.enraged && !white && dq < 0) {      // 격노: 붉은 윤곽이 숨 쉰다 (가볍게: 한 겹)
       var rc = DS.bigCanvas(u, { pose: pose, flip: flip, tint: '#ff3a4a' });
-      if (rc) { g.globalAlpha = v.alpha * (0.38 + 0.22 * Math.sin(t * 6)); if (lite) g.drawImage(rc, dx0 - 1, dy0 - 1, cw + 2, ch + 1); else { g.drawImage(rc, dx0 - 1, dy0, cw, ch); g.drawImage(rc, dx0 + 1, dy0, cw, ch); g.drawImage(rc, dx0, dy0 - 1, cw, ch); g.drawImage(rc, dx0, dy0 + 1, cw, ch); } }
+      if (rc) { g.globalAlpha = v.alpha * (0.45 + 0.25 * Math.sin(t * 6)); g.drawImage(rc, dx0 - 1.5, dy0 - 1.5, cw + 3, ch + 2); if (!lite) { g.globalAlpha *= 0.5; g.drawImage(rc, dx0 - 2.5, dy0 - 2.5, cw + 5, ch + 3); } }      // 한두 겹 (큰 그림을 네 번 그리면 느린 폰에서 무겁다)
     }
     g.globalAlpha = v.alpha;
     var sq = dq >= 0.35 ? 1 - (dq - 0.35) / 0.65 * 0.5 : 1;
