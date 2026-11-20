@@ -158,6 +158,7 @@ function prep() {
   check('prep');
 }
 // 한 싸움: specs 를 starts(또는 x,y 근처)에 세우고 끝날 때까지. 돌려주는 것: 'win' | 'lose' | 'end'
+let curTries = 0; const RETREAT_TRIES = +(process.env.BOTRETTRIES || 3);      // 2.2.9: 한 판에서 처음 몇 번만 물러난다 (그 뒤로는 끝까지 — 물러나기만 하면 나아가지 못한다)
 const RETREAT = process.env.BOTRETREAT !== '0', RETREAT_AT = +(process.env.BOTRETREAT || 2), RETREAT_HP = +(process.env.BOTRETHP || 0.15);      // 2.2.9: BOTRETREAT=0 이면 예전처럼 끝까지 싸운다 (수 = 몇째로 쓰러질 때 물러나는가)
 function run(sim, mode, zid, maxT) {
   let res = null, quiet = 0, fell = 0;
@@ -206,8 +207,9 @@ function run(sim, mode, zid, maxT) {
       else if (e.t === 'lose') res = 'lose';
     }
     if (sim.result) res = sim.result;
-    if (fell >= RETREAT_AT && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd')) { res = 'retreat'; st.retreats = (st.retreats || 0) + 1; }
-    if (RETREAT && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd' && u.tier >= 8 && u.hp < u.mhp * RETREAT_HP * (u.hero ? 2 : 1))) {      // 합일한 맹주는 더 일찍 (맹주가 쓰러지면 퇴각해도 떠난다)      // 2.2.9: 합일한 가주(8단~)가 위태로우면 물러난다 — 시나리오는 퇴각(진 판), 들판은 싸움을 버리고 떠난다 (8단은 다시 얻기 어렵다)
+    const mayRet = mode !== 'scn' || curTries <= RETREAT_TRIES;
+    if (mayRet && fell >= RETREAT_AT && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd')) { res = 'retreat'; st.retreats = (st.retreats || 0) + 1; }
+    if (RETREAT && mayRet && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd' && u.tier >= 8 && u.hp < u.mhp * RETREAT_HP * (u.hero ? 2 : 1))) {      // 합일한 맹주는 더 일찍 (맹주가 쓰러지면 퇴각해도 떠난다)      // 2.2.9: 합일한 가주(8단~)가 위태로우면 물러난다 — 시나리오는 퇴각(진 판), 들판은 싸움을 버리고 떠난다 (8단은 다시 얻기 어렵다)
       if (mode === 'scn') { res = 'retreat'; st.retreats = (st.retreats || 0) + 1; st.retX = (st.retX || 0) + 1; } else { res = 'end'; st.fieldRet = (st.fieldRet || 0) + 1; }
     }
     if (mode === 'zone' && !res) {
@@ -339,7 +341,7 @@ for (let n = 1; n <= 30 && !stuck; n++) {
     if (NOFIELD && tries >= 3 && tries % 3 === 0 && fields < tries * 4 + 6) { farm(); fields++; continue; }      // 시나리오만: 세 번 지면 앞 시나리오를 몇 번 다시
     const learn = process.env.BOTNOLEARN ? 0 : 2 * Math.min(n >= 21 ? 6 : 3, tries);      // 2.2.9: 21번부터는 여섯째 패배까지 (합일한 이는 100 까지 자란다 — 물러난 판은 더 다지고)      // 2.2.8: 지면 두 레벨 더 다지고 다시 (셋째 패배까지 — 사람이 하듯. BOTNOLEARN=1 이면 예전처럼 곧장 다시)
     if (!NOFIELD && D.partyL(s) < Math.min(target(sc) + (D.partySpecs(s).length < 3 ? 3 : 0) + learn, capL()) && fields < MAX_FIELD) { farm(); fields++; continue; }      // 2.2.9: 출전한 이가 모두 제 상한(합일 전 70)이면 더 다지지 못한다 — 그 자리에서 들어간다      // 싸우는 이가 셋보다 적으면 권장보다 세 레벨 더 (사람이 하듯 조심스럽게)
-    tries++; if (tries === 1) st.eL[n] = D.partyL(s);
+    tries++; curTries = tries; if (tries === 1) st.eL[n] = D.partyL(s);
     if (process.env.BOTSNAP && tries === 1 && !tag && (!FOCUS || FOCUS === n)) { require('fs').writeFileSync(require('path').join(process.env.BOTSNAP, cls + '_' + seed + '_' + n + '.json'), JSON.stringify(s)); if (FOCUS) process.exit(0); }      // 조율용(tools/calib.js): 시나리오 N 에 처음 들어가기 직전의 판
     const d0 = st.deaths, ok = scenario(sc);
     if (tries === 1) st.ft[n] = [ok ? 1 : 0, st.deaths - d0, D.partyL(s) >= 0 ? st.eL[n] : 0];      // 2.2.7: 처음 싸움 [이김, 쓰러진 수, 들어간 레벨]
