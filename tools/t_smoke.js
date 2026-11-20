@@ -260,11 +260,15 @@ module.exports = async (page, shot, L) => {
     var f = sim.units.filter(function (x) { return x.side === 'enemy' && !x.dead; })[0];
     u.ult = 'u_ram'; u.uc = 100; u.gauge = 100; u.casting = null; u.order = null; u.busy = 0; u.hp = u.mhp; u.holdT = 0; u.rsv = u.rsvU = null; u.dodgeT = 0; u.hero && (sim.leader = u.id);      // 약초 · 자리 지키기 · 예약 · 선두 따라가기가 앞서지 않게
     u.fx = u.fx || {}; delete u.fx.seal; sim._ultT = null;
+    var D4s = [[1, 0], [-1, 0], [0, 1], [0, -1]], nb = function (x, y) { return D4s.some(function (d) { return sim.pass(f.mt || 'foot', x + d[0], y + d[1]) && !sim.at(x + d[0], y + d[1]); }); };
+    if (f && !nb(u.x, u.y)) { var mvU = null; for (var r9 = 1; r9 <= 8 && !mvU; r9++) for (var y9 = u.y - r9; y9 <= u.y + r9 && !mvU; y9++) for (var x9 = u.x - r9; x9 <= u.x + r9 && !mvU; x9++) if (sim.pass(u.mt || 'foot', x9, y9) && !sim.at(x9, y9) && nb(x9, y9)) mvU = [x9, y9]; if (mvU) sim.moveTo(u, mvU[0], mvU[1]); }      // 2.3.0: 곁이 꽉 막힌 자리면 트인 곳으로 옮긴다
+    if (f) D4s.some(function (d) { var x = u.x + d[0], y = u.y + d[1], o = sim.at(x, y); if (!sim.pass(f.mt || 'foot', x, y) || o === f) return false; if (!o) return true; if (o.side === 'ally' && o !== u && !o.fw) { var q = sim.freeNear(x, y, o.mt || 'foot', 6); if (q && (q.x !== x || q.y !== y)) { sim.moveTo(o, q.x, q.y); return true; } } return false; });      // 2.3.0: 곁 네 칸이 모두 찼으면 하나를 비운다 (들판 무리가 붐벼 곁에 세우지 못하던 흔들림)
     if (f) { sim.occ[f.y * sim.w + f.x] = null; var p = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(function (d) { return [u.x + d[0], u.y + d[1]]; }).filter(function (q) { return sim.pass(f.mt || 'foot', q[0], q[1]) && !sim.at(q[0], q[1]); })[0]; if (p) { f.x = p[0]; f.y = p[1]; } sim.occ[f.y * sim.w + f.x] = f; f.hp = f.mhp = 999999; f.aggro = true; var fr = f.role; f.role = 'boss'; }      // 보스 한 명이면 쓸 자리(둘 몫)가 된다 — 곁에 다른 적이 우연히 있느냐에 따라 갈리던 것
     u.auto = false; o.manual = sim.ultSelf(u);
     u.auto = true; o.auto = sim.ultSelf(u);
     sim.tele = []; sim.hz = []; if (sim.reDanger) sim.reDanger(); u.st = {}; u.buffs = u.buffs || {}; sim.units.forEach(function (m) { if (m.side === 'ally' && !m.dead) m.hp = m.mhp; });      // 2.3.0: 다친 가문원에게 약초를 먼저 건네지 않게 (들판에 터지는 도깨비가 생겼다)      // 2.2.8: 붉은 칸 피하기 · 상태 이상이 앞서지 않게 (셋이 나가 판의 모양이 달라졌다)
     o.foes = sim.foes(u).length; o.dodge = !!(sim.dz && sim.dz[u.y * sim.w + u.x]);
+    o.fd = f ? DS.fpDist(u, f) : -1; o.ft = f ? f.type : ''; o.hold = u.holdT > sim.t; o.cast0 = !!u.casting; o.busy = u.busy; o.rsv = !!(u.rsv || u.rsvU); o.lead = sim.leader === u.id;
     var n0 = u.ultN || 0; sim.aiCmd(u); o.fired = (u.ultN || 0) > n0; o.uc = u.uc; o.cast = u.casting ? u.casting.sk || 1 : 0; o.ord = u.order ? u.order.t : '';
     u.uc = 100; u.gauge = 100; u.busy = 0; o.gap = sim.ultSelf(u);
     if (f) f.role = fr; DS.BAL.ultAuto = ua; DS.G.pause = false; return o;
