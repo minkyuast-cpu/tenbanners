@@ -372,7 +372,7 @@ function enterZone(id, from, pos) {
   var block = new Uint8Array(z.w * z.h), decor = [];
   z.pois.forEach(function (p) { if (p.t === 'npc' || p.t === 'arena') { block[p.y * z.w + p.x] = 1; decor.push({ x: p.x, y: p.y, sprite: p.sprite || 'npc_' + (p.look % 4), flip: p.look % 2 === 1 }); } });      // r39: 연무장 교관(arena.js)도 마을 사람처럼 선다
   var sim = new DS.Sim({ map: z.rows, mode: z.town ? 'town' : 'zone', spawns: spawns, seed: (Date.now() & 0xffff) + 1, inv: s.items, block: block,
-    mk: function (type, o) { return DS.enemySpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, diff: 0.72, zone: id, save: s }); } });      // zone: 기획팀 정예 무리가 어느 지역인지 안다
+    mk: function (type, o) { return DS.fieldSpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, zone: id, save: s }); } });      // 2.2.7: DS.fieldSpec (tune.js — 세기 0.72 · 체력 · 공격 손잡이) · zone: 기획팀 정예 무리가 어느 지역인지 안다
   G.sim = sim; G.lost = [];
   var sbS = [];
   if (!(DS.egPassOn && DS.egPassOn(s))) { if (DS.sbTick) sbS = DS.sbTick(s); if (DS.mercTidy) DS.mercTidy(s); }      // 2.2.0: 가주가 떠난 가문은 막사의 같은 병과가 잇는다 · 3.3.0: 스무 해 창 동안은 편성을 건드리지 않는다
@@ -1065,7 +1065,7 @@ function renderSys() {
   // r20 house: 왼쪽 묶음(#selSeg) = 고른 가문 하나(문장 + 조작 자동/수동 + 가문원 돌격/호위), 오른쪽 = 부대 전체(전체 자동 켜짐/꺼짐 · 속도 · 멈춤). 글자는 「지금 상태」를 쓴다
   var sch = me && sv.chars[me.ch], hn = sch ? DS.flagName(sch.cls) : '', seg = $('#selSeg');
   var au = !!(me && me.auto), ba = $('#bAutoU');
-  ba.classList.toggle('on', au); $('b', ba).textContent = au ? '자동' : '수동'; $('small', ba).textContent = au ? '알아서 싸운다. 필살기는 직접' : '누른 곳으로 가고, 닿는 적만 친다';
+  ba.classList.toggle('on', au); $('b', ba).textContent = au ? '자동' : '수동'; $('small', ba).textContent = au ? '알아서 싸운다. 필살기도 쓴다' : '누른 곳으로 가고, 닿는 적만 친다';
   ba.setAttribute('aria-label', hn + ' 조작: ' + (au ? '자동' : '수동'));
   var bs = $('#bStance'), side = !!(sch && sch.st === 'side');
   var hasF = !!(sch && DS.mercsOf(sv, sch.id).length);      // 2.2.0: 태세는 따르는 이(맹주 가문의 가문원)가 있을 때만

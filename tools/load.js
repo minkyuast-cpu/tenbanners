@@ -27,6 +27,13 @@ module.exports = function load(opt) {
   DS.HEADLESS = true;
   if (process.env.HARDK && DS.HARD) DS.HARD.k = +process.env.HARDK;      // 조율용: 시나리오 세기 (tune.js DS.HARD)
   if (process.env.HARDL && DS.HARD) DS.HARD.late = +process.env.HARDL;
+  if (process.env.H7S && DS.HARD7) DS.HARD7.pts.forEach(p => { p[1] = 1 + (p[1] - 1) * +process.env.H7S; });      // 2.2.7 조율용: DS.HARD7 의 더한 몫 배율
+  if (process.env.B7S && DS.BOSS7) { const f = q => [1 + (q[0] - 1) * +process.env.B7S, 1 + (q[1] - 1) * +process.env.B7S]; DS.BOSS7.base = f(DS.BOSS7.base); for (const k in DS.BOSS7.key) DS.BOSS7.key[k] = f(DS.BOSS7.key[k]); }
+  if (process.env.MORE && DS.HARD7) DS.HARD7.more = +process.env.MORE;
+  if (process.env.FHM && DS.FIELD_EN) DS.FIELD_EN.hm = +process.env.FHM;      // 2.2.7 조율용: 들판 무리 체력 · 공격
+  if (process.env.FAM && DS.FIELD_EN) DS.FIELD_EN.am = +process.env.FAM;
+  if (process.env.PACKCAP && DS.PACK) DS.PACK.cap = +process.env.PACKCAP;      // 2.2.7 조율용: 들판 무리 크기
+  if (process.env.PACKPER && DS.PACK) DS.PACK.per = +process.env.PACKPER;
   DS0 = DS;
   return DS;
 };

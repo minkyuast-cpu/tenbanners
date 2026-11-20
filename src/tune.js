@@ -12,3 +12,24 @@ DS.TUNE_C = { mag: DS.TUNE_M };
 //   갱도 · 다음 세대의 장은 그대로 (갱도는 제 식이 있다). DS.REC(권장 표)는 이 세기로 다시 잰 값이다 (tools/calib.js · tools/calsum.py)
 DS.HARD = { k: 0.15, a: 6, b: 14, late: -0.1 };
 DS.scnHard = function (id) { var H = DS.HARD, x = Math.max(0, Math.min(1, (id - H.a) / Math.max(1, H.b - H.a))), s = x * x * (3 - 2 * x); return 1 + H.k * s + (H.late || 0) * Math.max(0, Math.min(1, (id - 20) / 10)); };
+// 2.2.7: 한 번 더 세게 — 2.2.6 의 새 병과 기술(보호막 · 도발)과 자동 필살기로 쉬워진 몫을 되돌리고 조금 더 (주인 「조금 세도 돼」). 1~3 은 그대로 (배우는 판).
+//   ① 시나리오 적의 체력 · 공격 × DS.scnHard7(번호), 방어 · 마방 × √ — pts 사이를 곧게 (위의 DS.HARD 에 곱한다)
+//   ② 보스는 따로 체력 × hp · 공격 × atk (DS.BOSS7 — 장의 끝 보스는 더). 보스 싸움이 길어져 필살기가 찰 틈이 생긴다
+//   ③ more ~ last 번은 초소 무리마다 한 마리 더 (부대가 열 가문으로 커진 뒤 — 가만히 서서 받아 내기만 해서는 버겁게)
+//   갱도 · 다음 세대의 장은 그대로. DS.REC(권장 표)는 이 세기로 다시 잰 값이다 (tools/calib.js 로 2.2.5 · 2.2.7 을 같은 판으로 재어 차이를 더했다)
+DS.HARD7 = { pts: [[3, 1], [6, 1.03], [10, 1.08], [15, 1.14], [20, 1.18], [27, 1.2], [30, 1.1]], more: 8, last: 30 };
+DS.BOSS7 = { from: 6, base: [1.2, 1.05], key: { 10: [1.4, 1.1], 13: [1.4, 1.1], 15: [1.3, 1.08], 20: [1.5, 1.12], 25: [1.5, 1.12], 29: [1.5, 1.12], 30: [1.1, 1] } };      // 30번은 이름 지우기가 이미 세다 — 조금만
+DS.scnHard7 = function (id) {
+  var P = DS.HARD7.pts, i; if (id <= P[0][0]) return P[0][1];
+  for (i = 1; i < P.length; i++) if (id <= P[i][0]) { var a = P[i - 1], b = P[i]; return a[1] + (b[1] - a[1]) * (id - a[0]) / (b[0] - a[0]); }
+  return P[P.length - 1][1];
+};
+DS.bossK7 = function (id) { var B = DS.BOSS7; return id < B.from ? null : B.key[id] || B.base; };
+// 2.2.7: 들판 무리 — 세기 0.72(예전 그대로)에 체력 × hm · 공격 × am. 싸움은 조금만 길어지고, 맞으면 더 아프다 (거저 주는 경험치가 아니게). 들판 보스(field.js)는 그대로.
+//   무리도 조금 더 불어난다 (world.js DS.PACK — 열 가문이면 세 마리 무리가 아홉)
+//   zk: 지역마다 그 몫의 배율 — 처음 나가는 새벽 들판은 예전 그대로, 바람 언덕은 반만 (배우는 곳)
+DS.FIELD_EN = { diff: 0.72, hm: 1.08, am: 1.35, zk: { dawn: 0, windy: 0.5 } };
+DS.fieldSpec = function (type, L, o) {
+  var F = DS.FIELD_EN; o = o || {}; var k = F.zk && o.zone in F.zk ? F.zk[o.zone] : 1;
+  o.diff = F.diff; o.hm = (o.hm || 1) * (1 + (F.hm - 1) * k); o.am = (o.am || 1) * (1 + (F.am - 1) * k); return DS.enemySpec(type, L, o);
+};

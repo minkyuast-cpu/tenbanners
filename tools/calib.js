@@ -69,7 +69,7 @@ function fightZone(s, zid, side, seed) {
   const two = [D.packOf(g, n)];      // 두 무리를 한꺼번에 (자동 사냥이 이웃 무리를 함께 끌어오는 들판의 실제 위험) — 둘째 무리는 첫 무리 곁에 세운다
   if (PACKS > 1) { const g2 = z.spawns.filter(q => q !== g).sort((a, b) => Math.abs(a.L - tgt) - Math.abs(b.L - tgt) || (Math.abs(a.x - g.x) + Math.abs(a.y - g.y)) - (Math.abs(b.x - g.x) + Math.abs(b.y - g.y)))[0]; if (g2) { const q = D.packOf(g2, n); q.id = g2.id + '_b'; q.x = g.x; q.y = g.y; q.L = g2.L; two.push(q); } }
   const sim = new D.Sim({ map: z.rows, mode: 'zone', spawns: two, seed: seed * 977 + 1, inv: s.items,
-    mk: (type, o) => D.enemySpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, diff: 0.72, zone: zid, save: s }) });
+    mk: (type, o) => (D.fieldSpec ? D.fieldSpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, zone: zid, save: s }) : D.enemySpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, diff: 0.72, zone: zid, save: s })) });
   const p = sim.freeNear(g.x, Math.min(z.h - 2, g.y + 5), 'foot', 8) || sim.freeNear(g.x, g.y, 'foot', 10) || { x: g.x, y: g.y };
   place(sim, D.partySpecs(s), null, p.x, p.y);
   const r = run(sim, 'zone', 150); r.packL = g.L; return r;

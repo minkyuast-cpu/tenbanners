@@ -300,6 +300,14 @@ P.paired = function (u) {
 // 흡혈: 장비의 처치 흡혈(killDrain — 이번 싸움에 쓰러뜨린 수만큼, 6번까지)을 얹는다
 P.drainOf = function (u) { return (u.drain || 0) + (u.fx && u.fx.killDrain ? u.fx.killDrain * (u.fxK || 0) : 0); };
 P.ultCtl = function (u) { return this.ctl ? u.id === this.ctl : !!u.hero; };      // 2.1.0: 스스로 누르는 봇(DS.BAL.ultAuto)도 조작하는 한 사람만 — 지정이 없으면 맹주
+// 2.2.7: 자동 전투는 필살기를 스스로 쓴다 — 조작이 「자동」인 우리 가문의 가주(u.auto)는 게이지가 차고 쓸 자리가 나면(P.aiUlt) 쓴다. 「수동」이면 예전처럼 단추로만.
+//   한꺼번에 몰아 쓰지 않게, 스스로 쓰는 필살기는 우리 편 전체에서 DS.ULT.autoGap 초에 하나 (누른 것 · 예약은 그대로). 무술대회(u.arena)는 제 규칙(arena.js ultTry)
+//   DS.BAL.ultAuto(검사 도구)는 조작하는 한 사람도 수동이든 아니든 누른다고 친다. DS.BAL.ultSelf = false 면 2.2.6 처럼 자동도 쓰지 않는다
+P.ultSelf = function (u) {
+  if (DS.BAL.ultAuto && this.ultCtl(u)) return true;
+  if (DS.BAL.ultSelf === false || !u.auto || u.arena || u.side !== 'ally' || u.role !== 'cmd') return false;
+  return !(this.t - (this._ultT == null ? -1e9 : this._ultT) < (DS.ULT.autoGap || 0));
+};
 P.ultUp = function (u) { return (u.ultR || 1) * (u.fx && u.fx.ultUp ? 1 + u.fx.ultUp : 1); };      // 필살 게이지가 차는 빠르기 (별빛 로브 등)
 // 기본 공격이 맞힌 자리에서 번지는 피해: pierce = 맞힌 적 뒤 두 칸 안의 첫 적 · splash = 맞힌 적의 둘레 네 칸
 P.fxSpread = function (u, v, dmg) {
@@ -1299,7 +1307,7 @@ P.aiCmd = function (u) {
     this.units.forEach(function (m) { if (!m.dead && m.role === 'merc' && m.owner === u.id && dist(u, m) <= 2 && m.hp / m.mhp < hr) { hr = m.hp / m.mhp; hm = m; } });
     if (hm && this.useItem(u, 'herb', hm)) return;
   }
-  if (u.ult && DS.BAL.ultAuto && this.ultCtl(u) && this.aiUlt(u, foes)) return;      // r32: 필살기가 가득하고 쓸 자리가 있으면 먼저 (r36: 봇만 — 사람은 단추로)
+  if (u.ult && this.ultSelf(u) && this.aiUlt(u, foes)) { this._ultT = this.t; return; }      // r32: 필살기가 가득하고 쓸 자리가 있으면 먼저 (2.2.7: 자동인 가문은 스스로 — 수동이면 단추로)
   if (this.aiSkill(u, foes)) {
     // cmdBest: 치유를 맡은 지휘관은 치유·가호·소환 뒤에 평타를 빚지지 않는다 — 다음 차례는 공격 기술 (치유에 바쁜 매직마스터가 "치유 → 평타 → 치유"로 게이지를 다 써서 큰 주문을 한 번도 못 쓰던 것). 쓸 공격 기술이 없으면 cmdFire 가 바로 평타를 친다.
     if (cc) { u.owe = !!(DS.BAL.cmdBest && u.lastOff === false && (this.bestNoOwe > 1 || (this.bestNoOwe && u.healer))); u.actT = this.t; u.saving = false; }
@@ -1479,7 +1487,7 @@ P.aiMerc = function (u) {
     }
   }
   if (foes.length) {
-    if (u.ult && DS.BAL.ultAuto && this.ultCtl(u) && this.aiUlt(u, foes)) return;      // r32: 필살기 (용사 이상) (r36: 봇만 — 사람은 단추로)
+    if (u.ult && this.ultSelf(u) && this.aiUlt(u, foes)) { this._ultT = this.t; return; }      // r32: 필살기 (용사 이상) (2.2.7: 자동이면 스스로)
     if (u.skills.length && this.aiSkill(u, foes)) { if (MA) { u.owe = false; u.actT = this.t; } return; }      // 고유 기술을 가진 용병(영웅·전설)은 기술부터 살핀다
     if (MA && this.taunt(u, foes)) return;
     if (u.heal) {      // 치유를 맡은 용병(시스터)은 싸움 한복판으로 걸어 들어가지 않는다: 닿는 적만 때린다

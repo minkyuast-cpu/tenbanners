@@ -53,3 +53,26 @@ if rows:
         by_c = {}
         for k, v in ds.items(): c, h = k.split(':'); by_c.setdefault(c, []).append((h, v))
         print('damage by source (share of all, per run): ' + ' | '.join(c + ' ' + ' '.join('%s %.1f%%' % (h, 100 * v) for h, v in sorted(L, key=lambda x: -x[1])[:5]) for c, L in sorted(by_c.items(), key=lambda x: -sum(v for h, v in x[1]))))
+    # 2.2.7: 어디서 쓰러지는가 (시나리오마다 · 들판 지역마다, 판마다 평균) · 전멸한 시나리오 · 필살기 쓴 수 · 시나리오를 처음 싸운 길이(초)
+    da = {}
+    for d in rows:
+        for k, v in (d.get('dAt') or {}).items(): da[k] = da.get(k, 0) + v
+    if da:
+        sc = sorted([(int(k[1:]), v) for k, v in da.items() if k.startswith('s')])
+        fz = sorted([(k[2:], v) for k, v in da.items() if k.startswith('f:')], key=lambda x: -x[1])
+        tot = sum(da.values())
+        print('deaths in scenarios %.2f/run · fields %.2f/run · pit %.2f/run' % (sum(v for k, v in sc) / n, sum(v for k, v in fz) / n, sum(v for k, v in da.items() if k.startswith('p')) / n))
+        print('  by scenario (total over batch): ' + ' '.join('%d:%d' % (k, v) for k, v in sc))
+        print('  by field zone (total): ' + ' '.join('%s:%d' % (k, v) for k, v in fz))
+    wa = {}
+    for d in rows:
+        for k, v in (d.get('wAt') or {}).items(): wa[k] = wa.get(k, 0) + v
+    if wa: print('wipes by scenario: ' + ' '.join('%s:%d' % (k, v) for k, v in sorted(wa.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 999)))
+    ua = {}
+    for d in rows:
+        for k, v in (d.get('uAt') or {}).items(): ua['scn' if k.startswith('s') else 'field' if k.startswith('f') else 'pit'] = ua.get('scn' if k.startswith('s') else 'field' if k.startswith('f') else 'pit', 0) + v
+    print('ults fired: total %d (%.1f/run) %s' % (sum(ua.values()), sum(ua.values()) / n, ' '.join('%s:%d' % kv for kv in sorted(ua.items()))))
+    ta = {}
+    for d in rows:
+        for k, v in (d.get('tAt') or {}).items(): ta.setdefault(int(k), []).append(v)
+    if ta: print('first-try fight length (s), scenario 1..30: ' + ' '.join('%d:%.0f' % (k, sum(v) / len(v)) for k, v in sorted(ta.items())))

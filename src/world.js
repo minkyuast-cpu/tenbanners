@@ -74,7 +74,7 @@ var zcache = {};
 // 2.2.2 들판 무리의 크기: 무리 수는 셋이 싸우던 때에 맞춰져 있다 — 싸우는 유닛(가주 + 가문원) 수에 따라 불린다.
 //   배율 k = 1 + per × (유닛 − base), 1 ~ cap. 무리 목록을 되풀이해 늘린다 (3마리 → 열 유닛 6 · 열여섯 유닛 7).
 //   불어난 만큼 하나하나의 경험치·골드·드랍은 (늘어난 배수)^-0.9 — 무리 전체로는 조금 더 준다 (싸움이 길어진 몫. 봇 12판: 캠페인 6.68 → 6.58시간, 0.8 이면 6.27 · 1.0 이면 6.96)
-DS.PACK = { per: 0.15, base: 3, cap: 2.4, exp: 0.9, gold: 0.9, drop: 0.9 };
+DS.PACK = { per: 0.2, base: 3, cap: 3, exp: 0.9, gold: 0.9, drop: 0.9 };      // 2.2.7: per 0.15 → 0.2 · cap 2.4 → 3 (들판이 진짜 싸움이게 — tune.js DS.FIELD_EN)
 DS.packK = function (n) { var P = DS.PACK; return Math.max(1, Math.min(P.cap, 1 + P.per * ((+n || 0) - P.base))); };
 DS.packOf = function (g, n) {
   var P = DS.PACK, len = g.list.length, m = len ? Math.max(len, Math.round(len * DS.packK(n))) : 0, list = [];
@@ -493,8 +493,10 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
   if (!connect(g, 6, 18, 6, 2)) for (y = 2; y <= 18; y++) if (BLOCK[g[y][6]]) g[y][6] = g[y][6] === 'w' ? '=' : base;
   var size = n <= 2 ? 2 : n <= 20 ? 3 : 4, nPost = n <= 2 ? 2 : 3, units = [], diff = forceDiff || DS.tuneFor(heroCls, s.id) || s.diff || 1, gi = 0;
   if (!forceDiff && !s.pit && !s.gen && DS.scnHard) diff *= DS.scnHard(s.id);      // 2.2.4: 시나리오는 조금 더 세게 (tune.js DS.HARD)
+  var H7 = !forceDiff && !s.pit && !s.gen && DS.scnHard7, BK7 = H7 && DS.bossK7 ? DS.bossK7(s.id) : null;      // 2.2.7: 한 번 더 세게 (tune.js DS.HARD7 · DS.BOSS7)
+  if (H7) { diff *= DS.scnHard7(s.id); if (n >= DS.HARD7.more && n <= (DS.HARD7.last || 99)) size++; }
   var TE = !s.pit && !s.gen && DS.TUNE_E && DS.TUNE_E[s.id];      // 4.0 (⑫-3): 판마다 적의 체력·공격을 따로 (1~10 은 덜 아프게·조금 더 길게)
-  var mk = function (type, o) { o = o || {}; o.diff = diff; if (TE) { o.hm = TE[0]; o.am = TE[1]; } if (s.xk && s.xk !== 1) o.expMul = (o.expMul == null ? 1 : o.expMul) * s.xk; if (s.pit) o.xpK = DS.PIT.xpK; return DS.enemySpec(type, o.L || s.L, o); };      // 2.2.3 갱도: 경험치만 PIT.xpK 배 (키 다지는 곳)
+  var mk = function (type, o) { o = o || {}; o.diff = diff; if (TE) { o.hm = (o.hm || 1) * TE[0]; o.am = (o.am || 1) * TE[1]; } if (s.xk && s.xk !== 1) o.expMul = (o.expMul == null ? 1 : o.expMul) * s.xk; if (s.pit) o.xpK = DS.PIT.xpK; return DS.enemySpec(type, o.L || s.L, o); };      // 2.2.3 갱도: 경험치만 PIT.xpK 배 (키 다지는 곳)
   if (s.pitKind) size = 4;      // 2.2.3: 갱도 수문장 · 밑바닥 층은 무리마다 하나 더
   function put(type, x, y, grp, o) { o = o || {}; o.x = x; o.y = y; o.grp = grp; var u = mk(type, o); units.push(u); return u; }
   var posts = [[rnd() < 0.5 ? 4 : 8, 13], [0, 9], [6, 7]]; posts[1][0] = posts[0][0] === 4 ? 8 : 4;
@@ -513,7 +515,7 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
       for (var k = 0; k < size; k++) put(s.mobs[Math.floor(rnd() * s.mobs.length)], p[0] + (k % 2 ? 1 : -1) * Math.ceil(k / 2), p[1] + (k > 1 ? 1 : 0), grp, { L: Math.max(1, s.L - 1) });
     });
     var B = DS.BOSSES[s.boss], guard = Math.min(B.guard, n <= 1 ? 2 : n <= 4 ? 3 : 9) + (s.pitKind === 10 ? 2 : s.pitKind === 5 ? 1 : 0);
-    var boss = put(null, 6, 2, 'boss', s.bossK ? { boss: s.boss, L: Math.min(100, s.L + 1), hm: s.bossK[0], am: s.bossK[1] } : { boss: s.boss, L: s.L + 1 }); boss.obj = true;      // 2.2.3: 갱도 수문장 · 밑바닥 층의 갱도지기
+    var boss = put(null, 6, 2, 'boss', s.bossK ? { boss: s.boss, L: Math.min(100, s.L + 1), hm: s.bossK[0], am: s.bossK[1] } : BK7 ? { boss: s.boss, L: s.L + 1, hm: BK7[0], am: BK7[1] } : { boss: s.boss, L: s.L + 1 }); boss.obj = true;      // 2.2.3: 갱도 수문장 · 밑바닥 층의 갱도지기
     for (var q = 0; q < guard; q++) put(s.mobs[q % s.mobs.length], 6 + (q % 2 ? 1 : -1) * (1 + Math.floor(q / 2)), 3 + (q % 3 === 2 ? 1 : 0), 'boss', { L: s.L });
   }
   var start = [[6, 17], [4, 17], [8, 17], [6, 18], [5, 18], [7, 18], [4, 18], [8, 18], [5, 19], [7, 19], [6, 19], [3, 18], [9, 18], [5, 17], [7, 17], [3, 17], [9, 17], [4, 19], [8, 19], [3, 19], [9, 19], [6, 16], [5, 16], [7, 16]];      // 2.2.0: 모두 싸운다 — 열 가문 + 가문원까지 (출발 칸 y16~19 · x3~9 는 늘 비워 둔다)

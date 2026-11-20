@@ -325,6 +325,7 @@ DS.ultRate = function (who) { return 1 + DS.ULT.starR * DS.pStars(who); };
 //   세기: 용사 · 불멸에 +15%씩, 별(공훈 1000·1500·2000)마다 +8% · 충전 +12% (DS.ultPow · DS.ultRate). 가호 「타오르는 기세」도 맹주에게.
 DS.ULT.unlock = 3; DS.ULT.vetP = [[41, 0.15], [71, 0.15]]; DS.ULT.cost = 400;      // r42: 맹주의 개인 5단(L41) · 8단(L71)에 +15%씩
 DS.ULT.at = 41; DS.ULT.stars = [81, 91, 100];      // r42: 별은 9단 · 10단 · L100
+DS.ULT.autoGap = 3;      // 2.2.7: 자동 전투가 스스로 쓰는 필살기는 우리 편 전체에서 3초에 하나 (engine.js P.ultSelf)
 DS.ULT.charge = 40;      // r36: 부대에 필살기가 하나뿐이다 — 맹주의 게이지는 60초 → 40초에 찬다 (봇: 옛 가주·가솔 필살기를 잃은 몫을 일부 메운다)
 DS.ultHeroWho = function (s) { var ch = s && s.chars && s.chars[s.hero]; return ch && !ch.vac && ch.ps ? ch.ps : null; };
 DS.ultOpen = function (s) { return !!(DS.BAL && DS.BAL.ult !== false && s); };      // 2.1.0: 시나리오가 아니라 사람마다 개인 5단에 깨어난다 (DS.ultAwake)

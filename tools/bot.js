@@ -29,7 +29,8 @@ Math.random = rnd;      // 규칙 함수의 난수도 씨앗에 묶는다 (같�
 D.BAL.ultAuto = true;
 if (process.env.CMDK) D.BN.cmdK = +process.env.CMDK;      // 조율용: 깃발 유닛 배율 덮어쓰기
 if (process.env.KINK) D.BN.kinK = +process.env.KINK;
-const st = { eL: {}, fieldT: 0, simT: 0, over: 0, field: 0, scn: 0, wipes: 0, deaths: 0, kinDeaths: 0, bearDeaths: 0, heroDeaths: 0, recruits: 0, recruitGold: 0, tickets: 0, kinSent: 0, sbSeat: 0, births: 0, vacMax: 0, vacSum: 0, vacN: 0, fuse: 0, lapse: 0, perScn: [], log: [], bdc: {}, dmg: {}, sk: {}, ult: {}, atkN: {} };
+const st = { eL: {}, fieldT: 0, simT: 0, over: 0, field: 0, scn: 0, wipes: 0, deaths: 0, kinDeaths: 0, bearDeaths: 0, heroDeaths: 0, recruits: 0, recruitGold: 0, tickets: 0, kinSent: 0, sbSeat: 0, births: 0, vacMax: 0, vacSum: 0, vacN: 0, fuse: 0, lapse: 0, perScn: [], log: [], bdc: {}, dmg: {}, sk: {}, ult: {}, atkN: {}, dAt: {}, wAt: {}, uAt: {}, tAt: {} };
+let where = '';      // 2.2.7: 지금 싸우는 곳 (쓰러짐 · 필살기를 시나리오 · 들판마다 센다) — 's12' · 'f:coast' · 'p40'
 const OLD = D.SAVE_V === 12;      // 2.1.2 규칙 (비교용)
 const s = D.newSave('봇', cls);
 D.allySet && D.allySet(s, '펜드래곤');
@@ -128,10 +129,10 @@ function run(sim, mode, zid, maxT) {
         if (u.side === 'ally' && !e.flee) {
           if (u.role === 'cmd') {
             const ch = s.chars[u.ch]; if (!ch) continue;
-            if (u.ch === s.hero) { ch.down = true; st.heroDeaths++; st.deaths++; st.log.push('hero died ' + mode + (zid ? ' ' + zid : '') + ' L' + D.pL(ch.ps) + ' houses ' + D.partyIds(s).length + ' @h' + ((st.simT + st.over) / 3600).toFixed(2)); }
-            else { const bm = D.bearer(s, ch); if (bm) { if (bm.it) D.giveMercItem(s, bm.id, null); const lost = D.loseMerc(s, bm.id); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.bearDeaths++; st.bdc[ch.cls] = (st.bdc[ch.cls] || 0) + 1; } } }
+            if (u.ch === s.hero) { ch.down = true; st.heroDeaths++; st.deaths++; st.dAt[where] = (st.dAt[where] || 0) + 1; st.log.push('hero died ' + mode + (zid ? ' ' + zid : '') + ' L' + D.pL(ch.ps) + ' houses ' + D.partyIds(s).length + ' @h' + ((st.simT + st.over) / 3600).toFixed(2)); }
+            else { const bm = D.bearer(s, ch); if (bm) { if (bm.it) D.giveMercItem(s, bm.id, null); const lost = D.loseMerc(s, bm.id); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.dAt[where] = (st.dAt[where] || 0) + 1; st.bearDeaths++; st.bdc[ch.cls] = (st.bdc[ch.cls] || 0) + 1; } } }
           } else if (u.role === 'merc' && u.mid) {
-            const lost = D.loseMerc(s, u.mid); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.kinDeaths++; st.log.push('kin died ' + mode + ' L' + D.pL(lost) + ' party L' + D.partyL(s) + ' age ' + D.ageOf(s, lost)); }
+            const lost = D.loseMerc(s, u.mid); if (lost) { s.fallen = D.fallenTrim((s.fallen || []).concat([D.fallenRecord(lost, mode)])); D.linMercDied(s, lost, mode); st.deaths++; st.dAt[where] = (st.dAt[where] || 0) + 1; st.kinDeaths++; st.log.push('kin died ' + mode + ' L' + D.pL(lost) + ' party L' + D.partyL(s) + ' age ' + D.ageOf(s, lost)); }
           }
         } else if (u.side === 'enemy' && e.by) {
           const ku = sim.byId[e.by]; let km = null;
@@ -144,7 +145,7 @@ function run(sim, mode, zid, maxT) {
       } else if (e.t === 'skill') {      // 2.2.6: 기술 · 필살기 쓴 수 (준 피해는 아래 hurt 감싸기)
         const u = sim.byId[e.id]; if (!u || u.side !== 'ally' || u.role !== 'cmd') continue;
         const S = D.SKILLS[e.sk]; if (!S) continue;
-        if (S.ult) { const k = hcls(sim, u) || '?'; st.ult[k + ':' + e.sk] = (st.ult[k + ':' + e.sk] || 0) + 1; } else st.sk[e.sk] = (st.sk[e.sk] || 0) + 1;
+        if (S.ult) { const k = hcls(sim, u) || '?'; st.ult[k + ':' + e.sk] = (st.ult[k + ':' + e.sk] || 0) + 1; st.uAt[where] = (st.uAt[where] || 0) + 1; } else st.sk[e.sk] = (st.sk[e.sk] || 0) + 1;
       } else if (e.t === 'win') res = 'win';
       else if (e.t === 'lose') res = 'lose';
     }
@@ -203,11 +204,11 @@ function farmZone() {
   return best || 'dawn';
 }
 function fieldFight() {
-  const zid = farmZone(), z = zone(zid), L = farmL();
+  const zid = farmZone(), z = zone(zid), L = farmL(); where = 'f:' + zid;
   let gs = z.spawns.filter(g => g.L <= L + 1); if (!gs.length) gs = z.spawns.slice().sort((a, b) => a.L - b.L).slice(0, 2);
   const g = gs[Math.floor(rnd() * gs.length)];
   const sim = new D.Sim({ map: z.rows, mode: 'zone', spawns: [D.packOf ? D.packOf(g, D.partySpecs(s).length) : { id: g.id, x: g.x, y: g.y, L: g.L, list: g.list.slice() }],      // 2.2.2: 무리는 유닛 수만큼 불어난다 (게임과 같다) seed: (rnd() * 1e6 | 0) + 1, inv: s.items,
-    mk: (type, o) => D.enemySpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, diff: 0.72, zone: zid, save: s }) });
+    mk: (type, o) => (D.fieldSpec ? D.fieldSpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, zone: zid, save: s }) : D.enemySpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, diff: 0.72, zone: zid, save: s })) });
   const p = sim.freeNear(g.x, Math.min(z.h - 2, g.y + 5), 'foot', 8) || sim.freeNear(g.x, g.y, 'foot', 10) || { x: g.x, y: g.y };
   place(sim, D.partySpecs(s), null, p.x, p.y);
   const t0f = st.simT, r = run(sim, 'zone', zid, 150);
@@ -218,6 +219,7 @@ function fieldFight() {
 }
 // BOTPIT=1: 5단부터는 들판 대신 갱도에서 키를 다진다 — 부대 평균에 맞는 가장 깊은 층(DS.pitFarm: 권장 ≤ 평균, 열린 층 안에서). 사람이 「같은 층 다시 · 다음 층」으로 하듯
 function pitFight(f) {
+  where = 'p' + f;
   const sc = D.pit(f), b = D.buildScenario(sc, D.partySpecs(s).length, s.chars[s.hero] ? s.chars[s.hero].cls : 'inf');
   const sim = new D.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (rnd() * 1e6 | 0) + 100 + f, inv: s.items, mode: 'scn' });
   sim.heroId = 'c' + s.hero;
@@ -231,13 +233,15 @@ function pitFight(f) {
   return r === 'win';
 }
 function scenario(sc) {
+  where = 's' + sc.id;
   const b = D.buildScenario(sc, D.partySpecs(s).length, s.chars[s.hero] ? s.chars[s.hero].cls : 'inf');
   const sim = new D.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (rnd() * 1e6 | 0) + sc.id, inv: s.items, mode: 'scn' });
   sim.heroId = 'c' + s.hero;
   if (sc.boss === 'herald') sim.erSeed = [s.hero, s.name, 1, (s.erN = (s.erN || 0) + 1)].join(':');
   if (D.linBattleStart) D.linBattleStart(s);
   place(sim, D.partySpecs(s), b.start);
-  const r = run(sim, 'scn', null, 900);
+  const t0s = st.simT, r = run(sim, 'scn', null, 900);
+  if (!st.tAt[sc.id]) st.tAt[sc.id] = Math.round(st.simT - t0s);      // 2.2.7: 처음 싸운 길이 (초)
   st.scn++; st.over += SCN_OVER; s.time += SCN_OVER; D.ageAdvance(s, SCN_OVER);
   if (r === 'win') {
     sim.units.forEach(u => { if (u.dead || u.side !== 'ally') return; const m = u.role === 'merc' && u.mid ? s.mercs.find(x => x.id === u.mid) : u.role === 'cmd' ? D.bearer(s, s.chars[u.ch]) : null; if (m) { D.meritAdd(m, 10 * (u.role === 'cmd' ? (D.BN.meritK || 1) : 1), s); m.b = (m.b || 0) + 1; } });
@@ -275,7 +279,7 @@ for (let n = 1; n <= 30 && !stuck; n++) {
     tries++; if (tries === 1) st.eL[n] = D.partyL(s);
     if (process.env.BOTSNAP && tries === 1 && !tag && (!FOCUS || FOCUS === n)) { require('fs').writeFileSync(require('path').join(process.env.BOTSNAP, cls + '_' + seed + '_' + n + '.json'), JSON.stringify(s)); if (FOCUS) process.exit(0); }      // 조율용(tools/calib.js): 시나리오 N 에 처음 들어가기 직전의 판
     const ok = scenario(sc);
-    if (!ok) { st.wipes++; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + target(sc)); if (tries > 12) { stuck = true; break; } }
+    if (!ok) { st.wipes++; st.wAt[n] = (st.wAt[n] || 0) + 1; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + target(sc)); if (tries > 12) { stuck = true; break; } }
   }
   if (process.env.BOTSAVE && !tag && n === +(process.env.BOTSAVEAT || 15)) { require('fs').writeFileSync(process.env.BOTSAVE, JSON.stringify(s)); console.log('saved', process.env.BOTSAVE); process.exit(0); }      // 화면 시험용: N번을 깬 판을 저장 글로
   st.perScn.push({ n: tag + n, h: +((st.simT + st.over) / 3600).toFixed(2), L: D.partyL(s), units: D.partySpecs(s).length, vac: D.bnEmpty(s).length, tries, houses: D.charList(s).length, fh: +(st.fieldT / 3600).toFixed(2), rec: target(sc), rL: D.recL(sc) });
@@ -295,7 +299,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
   }
 }
 const H = (st.simT + st.over) / 3600;
-const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, hcls: D.charList(s).map(c => c.cls),
+const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
   births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, houses: D.charList(s).length,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
