@@ -342,4 +342,5 @@ DS.artSpec2 = function (name, palKey) {
   return null;
 };
 DS.ART_BOSS = BOSS; DS.ART_MON = MON;
+DS.artKit = { brute: brute, quad: quad, serpent: serpent, wyrm: wyrm, waterSpirit: waterSpirit, specter: specter, scorp: scorp, flyKing: flyKing, ballista: ballista, duskKing: duskKing, impP: impP, slimeP: slimeP, eye: eye, held: held, W: W, hum: hum, toSpec: toSpec };      // 2.3.0: art5 (새 몬스터 · 큰 보스) 가 같은 몸을 다시 쓴다
 })();

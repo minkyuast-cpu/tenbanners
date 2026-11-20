@@ -40,7 +40,26 @@ if (DS.BAL.healAlly == null) DS.BAL.healAlly = 0.5;      // 2.1.1: 우리 편 �
 if (DS.BAL.ultAuto == null) DS.BAL.ultAuto = false;
 DS.ERASE = { th: [2 / 3, 1 / 3], n: [2, 3], cmdMax: 1, dur: 2.2, pull: 2, cover: 0.8, coverHurt: 0.25, call: 50, hpCut: 0.15, atkCut: 0.12, slow: 0.8 };      // dur 2.2 × 화면 slow 0.8 = 실제 2.75초 (배속 무시)
 
-function dist(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+// ── 2.3.0 큰 몸 (여러 칸을 차지하는 유닛): u.fw × u.fh 칸, (u.x, u.y) 는 왼쪽 위 칸. 없으면 한 칸.
+//   거리는 두 몸의 가장 가까운 칸 사이 (맨해튼) — 큰 보스는 어느 칸에 붙어도 붙은 것이고, 사거리도 가장 가까운 칸까지 잰다 (서로 같다).
+//   차지: 모든 칸에 occ 를 둔다 (P.place · P.unplace). 다른 무엇도 그 칸에 서지 못한다. 길 찾기는 왼쪽 위 칸으로 하되 몸 전체가 들어가는 자리만 (P.fits).
+//   밀기 · 끌기 · 자리 바꾸기는 큰 몸에 듣지 않는다 (버틴다). 순간 이동 · 도약 · 돌진은 몸 전체가 들어가는 자리로만 — 겹침은 없다.
+function fwOf(u) { return u.fw || 1; }
+function fhOf(u) { return u.fh || 1; }
+function isBig(u) { return !!u && ((u.fw || 1) > 1 || (u.fh || 1) > 1); }
+function dist(a, b) {
+  var aw = a.fw || 1, ah = a.fh || 1, bw = b.fw || 1, bh = b.fh || 1;
+  if (aw === 1 && ah === 1 && bw === 1 && bh === 1) return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  return Math.max(0, a.x - (b.x + bw - 1), b.x - (a.x + aw - 1)) + Math.max(0, a.y - (b.y + bh - 1), b.y - (a.y + ah - 1));
+}
+// 칸 (x, y) 에서 v 의 몸까지
+function dt(x, y, v) { var bw = v.fw || 1, bh = v.fh || 1; return Math.max(0, v.x - x, x - (v.x + bw - 1)) + Math.max(0, v.y - y, y - (v.y + bh - 1)); }
+// u 의 몸을 (x, y) 에 두었을 때 v 의 몸까지
+function rd(x, y, u, v) { var aw = u.fw || 1, ah = u.fh || 1, bw = v.fw || 1, bh = v.fh || 1; return Math.max(0, x - (v.x + bw - 1), v.x - (x + aw - 1)) + Math.max(0, y - (v.y + bh - 1), v.y - (y + ah - 1)); }
+// v 의 몸에서 (x, y) 에 가장 가까운 칸
+function nearT(v, x, y) { var bw = v.fw || 1, bh = v.fh || 1; return { x: Math.max(v.x, Math.min(v.x + bw - 1, x)), y: Math.max(v.y, Math.min(v.y + bh - 1, y)) }; }
+DS.fpDist = dist; DS.fpBig = isBig; DS.fpNear = nearT; DS.fpTile = dt;
+DS.fpCx = function (u) { return u.x + ((u.fw || 1) - 1) / 2; }; DS.fpCy = function (u) { return u.y + ((u.fh || 1) - 1) / 2; };
 function has(u, tag) { return u.tags && u.tags.indexOf(tag) >= 0; }
 
 function Sim(o) {
@@ -60,7 +79,7 @@ function Sim(o) {
   this.mk = o.mk || function (type, opt) { return DS.enemySpec(type, 1, opt); };
   this._d = new Float64Array(n); this._p = new Int32Array(n); this._st = new Int32Array(n); this.stamp = 0;
   this.dz = { ally: new Uint8Array(n), enemy: new Uint8Array(n) };
-  this.groups = []; this.chk = 0; this.block = o.block || null;
+  this.groups = []; this.chk = 0; this.block = o.block || null; this.hz = []; this._hzC = 0;      // 2.3.0: 땅에 남은 위험 (hazard)
   this.seed0 = o.seed || 7; this.erSeed = o.erSeed; this._ver = 0; this._allyV = -1; this._ally = null; this._us = []; this.swp = 0;      // 명부가 바뀐 횟수, 살아 있는 아군 목록(캐시), 틱마다 쓰는 임시 목록
   var self = this;
   (o.units || []).forEach(function (s) { self.add(s); });
@@ -95,10 +114,47 @@ P.freeNear = function (x, y, mt, maxR) {
   }
   return null;
 };
+// 2.3.0 큰 몸: 차지 · 비우기 · 들어가는가
+P.place = function (u) {
+  var w = this.w, W = u.fw || 1, H = u.fh || 1, dx, dy;
+  if (W === 1 && H === 1) { this.occ[u.y * w + u.x] = u; return; }
+  for (dy = 0; dy < H; dy++) for (dx = 0; dx < W; dx++) this.occ[(u.y + dy) * w + u.x + dx] = u;
+};
+P.unplace = function (u) {
+  var w = this.w, W = u.fw || 1, H = u.fh || 1, dx, dy, j;
+  for (dy = 0; dy < H; dy++) for (dx = 0; dx < W; dx++) { j = (u.y + dy) * w + u.x + dx; if (j >= 0 && j < this.occ.length && this.occ[j] === u) this.occ[j] = null; }
+};
+P.moveTo = function (u, x, y) { this.unplace(u); u.x = x; u.y = y; this.place(u); };
+// u 의 몸이 (x, y) 에 들어가는가 — 모든 칸이 지도 안 · 그 이동 방식으로 지나갈 수 있는 땅 · 다른 이가 없음 (mode 2 면 다른 편이 선 칸도 셈하지 않는다 — 길 찾기의 「막혔는가」 가리기)
+P.fits = function (u, x, y, mt, mode) {
+  var W = u.fw || 1, H = u.fh || 1, w = this.w, c = this.cst[MT[mt || u.mt || 'foot']], blk = this.block, dx, dy, j, o;
+  if (x < 0 || y < 0 || x + W > w || y + H > this.h) return false;
+  for (dy = 0; dy < H; dy++) for (dx = 0; dx < W; dx++) {
+    j = (y + dy) * w + x + dx;
+    if (!(c[j] > 0) || (blk && blk[j])) return false;
+    o = this.occ[j]; if (o && o !== u && !o.dead && !(mode === 2 && o.side !== u.side)) return false;
+  }
+  return true;
+};
+// 몸 전체가 들어가는 가장 가까운 자리 (x, y 는 바라는 왼쪽 위 칸)
+P.freeFit = function (u, x, y, maxR, mt) {
+  for (var r = 0; r <= (maxR || 8); r++) {
+    var best = null, bd = 1e9;
+    for (var dy = -r; dy <= r; dy++) for (var dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      var nx = x + dx, ny = y + dy;
+      if (!this.fits(u, nx, ny, mt)) continue;
+      var d = Math.abs(dx) + Math.abs(dy) + this.rand() * 0.3;
+      if (d < bd) { bd = d; best = { x: nx, y: ny }; }
+    }
+    if (best) return best;
+  }
+  return null;
+};
 P.add = function (s) {
   var u = {}; for (var k in s) u[k] = s[k];
   if (!u.id) u.id = 'u' + (this.nid++);
-  var p = this.freeNear(u.x || 0, u.y || 0, 'foot', 6) || this.freeNear(u.x || 0, u.y || 0, u.mt || 'foot', 12);
+  var p = isBig(u) ? (this.freeFit(u, u.x || 0, u.y || 0, 8, 'foot') || this.freeFit(u, u.x || 0, u.y || 0, 14, u.mt || 'foot')) : (this.freeNear(u.x || 0, u.y || 0, 'foot', 6) || this.freeNear(u.x || 0, u.y || 0, u.mt || 'foot', 12));
   if (!p) return null;
   u.x = p.x; u.y = p.y; u.home = { x: u.hx != null ? u.hx : p.x, y: u.hy != null ? u.hy : p.y };
   if (u.mhp == null) u.mhp = u.hp; if (u.mmp == null) u.mmp = u.mp || 0;
@@ -106,7 +162,7 @@ P.add = function (s) {
   u.gauge = u.gauge == null ? 100 : u.gauge; u.busy = this.rand() * 0.3; u.cd = {}; u.buffs = {}; u.st = {}; u.face = u.side === 'ally' ? 1 : -1;
   u.aggro = false; u.order = null; u.auto = u.auto !== false; u.dead = false; u.tags = u.tags || []; u.skills = u.skills || [];
   u.gcd = 2 + this.rand() * 2; u.seen = 0; u.acc = 0;
-  this.units.push(u); this.byId[u.id] = u; this.occ[u.y * this.w + u.x] = u; this._ver++;
+  this.units.push(u); this.byId[u.id] = u; this.place(u); this._ver++;
   this.emit({ t: 'spawn', id: u.id });
   return u;
 };
@@ -119,14 +175,14 @@ P.spawnGroup = function (g) {
   }
 };
 P.remove = function (u) {
-  if (!u.dead) this.occ[u.y * this.w + u.x] = null;
+  if (!u.dead) this.unplace(u);
   u.dead = true; u.gone = true; delete this.byId[u.id]; this._ver++;
   var i = this.units.indexOf(u); if (i >= 0) this.units.splice(i, 1);
 };
 
 // ───────── 길 찾기 ─────────
 P.canSwap = function (u, o) {
-  return o.side === u.side && !o.dead && !o.casting && (o.busy < 0.06 || o.idle) && !(o.order && o.order.t === 'hold') &&
+  return o.side === u.side && !isBig(u) && !isBig(o) && !o.dead && !o.casting && (o.busy < 0.06 || o.idle) && !(o.order && o.order.t === 'hold') &&
     !(o.swapT > this.t) && !(u.swapT > this.t) && !(o.role === 'cmd' && u.role !== 'cmd') &&
     !(o.id === this.leader && (o.order || this.hunt));      // 길을 가는 선두는 밀어내지 않는다 (뒤따르는 이가 선두를 되돌려 놓아 제자리걸음이 되던 문제)
 };
@@ -135,7 +191,7 @@ P.canSwap = function (u, o) {
 P.flood = function (u, max, mode) {
   var w = this.w, h = this.h, d = this._d, p = this._p, st = this._st, stamp = ++this.stamp, cst = this.cst[MT[u.mt]], blk = this.block;
   if (!this._hk) { this._hk = new Float64Array(w * h * 4 + 8); this._hi = new Int32Array(w * h * 4 + 8); this._out = new Int32Array(w * h); }
-  var hk = this._hk, hi = this._hi, out = this._out, hn = 0, on = 0, s = u.y * w + u.x, n, i, k, par, c;
+  var hk = this._hk, hi = this._hi, out = this._out, hn = 0, on = 0, s = u.y * w + u.x, n, i, k, par, c, big = isBig(u), BW = u.fw || 1, BH = u.fh || 1;
   d[s] = 0; p[s] = -1; st[s] = stamp; hk[0] = 0; hi[0] = s; hn = 1;
   while (hn) {
     // pop
@@ -156,13 +212,17 @@ P.flood = function (u, max, mode) {
     var x = i % w, y = (i - x) / w;
     for (var q = 0; q < 4; q++) {
       var nx = x + DIR[q][0], ny = y + DIR[q][1];
-      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-      var j = ny * w + nx; c = cst[j];
+      if (nx < 0 || ny < 0 || nx + BW > w || ny + BH > h) continue;
+      var j = ny * w + nx;
+      if (big) { c = this.bigCost(u, nx, ny, cst, mode); if (!c) continue; }
+      else {
+      c = cst[j];
       if (!c || (blk && blk[j])) continue;
       var o = this.occ[j];
       if (o && o !== u) {
         if (o.side !== u.side) { if (mode !== 2) continue; c += 8; }
         else { if (!mode && !this.canSwap(u, o)) continue; c += 2; }
+      }
       }
       var nd = k + c; if (nd > max) continue;
       if (st[j] !== stamp || nd < d[j]) {
@@ -175,6 +235,19 @@ P.flood = function (u, max, mode) {
   }
   return out.subarray(0, on);
 };
+// 2.3.0 큰 몸의 한 걸음 값: 몸이 덮는 칸 가운데 가장 비싼 칸 (못 가는 칸 · 다른 이가 선 칸이 하나라도 있으면 0 — mode 2 면 다른 편이 선 칸은 +8 로 셈)
+P.bigCost = function (u, x, y, cst, mode) {
+  var W = u.fw || 1, H = u.fh || 1, w = this.w, blk = this.block, mx = 0, add = 0, dx, dy, j, c, o;
+  cst = cst || this.cst[MT[u.mt]];
+  for (dy = 0; dy < H; dy++) for (dx = 0; dx < W; dx++) {
+    j = (y + dy) * w + x + dx; c = cst[j];
+    if (!c || (blk && blk[j])) return 0;
+    if (c > mx) mx = c;
+    o = this.occ[j];
+    if (o && o !== u && !o.dead) { if (mode === 2 && o.side !== u.side) add = 8; else return 0; }
+  }
+  return mx + add;
+};
 // r38: 걸음에 틱 값을 치르는가 (= 싸움 걸음). 적은 늘 치른다. 아군은 싸움 중이라도 성난 적이 DS.BAL.engR(7)칸 안에 있을 때만 —
 //   시나리오·갱도는 첫 순간부터 어딘가의 적이 성나 있어 맵 전체가 「싸움」이었다: 다음 무리로 걸어가는 내내 1초에 한 칸 남짓 (필드는 6~12칸).
 //   사거리(적 4칸 · 기술 7칸) 안에 들어서면 예전처럼 한 걸음마다 틱을 치른다 — 실제 맞붙음의 속도는 그대로다.
@@ -184,17 +257,28 @@ P.paced = function (u) {
   if (!this.combat) return false;
   if (DS.BAL.engR === 0) return true;      // 예전 규칙 (비교용)
   var R = DS.BAL.engR || 7, a = this.units;
-  for (var i = 0; i < a.length; i++) { var e = a[i]; if (!e.dead && e.side === 'enemy' && (e.aggro || e.role === 'boss') && Math.abs(e.x - u.x) + Math.abs(e.y - u.y) <= R) return true; }
+  for (var i = 0; i < a.length; i++) { var e = a[i]; if (!e.dead && e.side === 'enemy' && (e.aggro || e.role === 'boss') && dist(e, u) <= R) return true; }
   return false;
 };
 P.stepCost = function (u, j) {
-  return this.paced(u) ? TK.step * this.cst[MT[u.mt]][j] * u.mv * this.q(u) : 0;
+  if (!this.paced(u)) return 0;
+  var c = this.cst[MT[u.mt]][j];
+  if (isBig(u)) { var x = j % this.w; c = this.bigCost(u, x, (j - x) / this.w, null, 0) || c; }
+  return TK.step * c * u.mv * this.q(u);
 };
 P.wait = function (u, t) { u.busy = t || 0.12; u.idle = true; };
 P.step = function (u, j) {
   var c = this.stepCost(u, j);
   if (u.gauge < c) { this.wait(u); return false; }
   var o = this.occ[j], w = this.w, fx = u.x, fy = u.y, x = j % w, y = (j - x) / w;
+  if (isBig(u)) {      // 2.3.0 큰 몸: 몸 전체가 들어갈 때만 (자리 바꾸기 없음)
+    if (!this.fits(u, x, y)) { this.wait(u, 0.2); return false; }
+    this.moveTo(u, x, y); if (x !== fx) u.face = x > fx ? 1 : -1;
+    u.gauge -= c;
+    var bdur = 0.26 * Math.max(0.8, Math.min(1.5, (this.bigCost(u, x, y, null, 0) || 1) * u.mv));
+    u.busy = bdur; this.emit({ t: 'move', id: u.id, x: x, y: y, dur: bdur });
+    return true;
+  }
   if (o && o !== u) {
     if (!this.canSwap(u, o)) { this.wait(u, 0.2); return false; }
     this.occ[fy * w + fx] = o; o.x = fx; o.y = fy; o.swapT = this.t + 0.8; o.busy = Math.max(o.busy, 0.16); o.idle = false;
@@ -212,7 +296,7 @@ P.step = function (u, j) {
 P.go = function (u, score, max) {
   // fix28: 전투 중 게이지가 어느 한 걸음 값에도 못 미치면 길을 찾지 않고 기다린다 (걸을 수도 없는데 0.12초마다 30칸짜리 길 찾기를 하던 것 — 지역 한 틱 비용의 절반이 이것이었다)
   if (DS.BAL.fix28 && u.gauge < 100 && this.paced(u) && !this.canStep(u)) { this.wait(u); return 'wait'; }
-  var list = this.flood(u, max || 30), w = this.w, best = -1, bs = Infinity, hs = Infinity, self = u.y * w + u.x, dz = this.dz[u.side], safe = !dz[self];
+  var list = this.flood(u, max || 30), w = this.w, best = -1, bs = Infinity, hs = Infinity, self = u.y * w + u.x, dz = this.dz[u.side], safe = !dz[self] && !isBig(u);      // 2.3.0: 큰 몸은 붉은 칸을 가리지 않는다 (피하지 않는다)
   for (var n = 0; n < list.length; n++) {
     var i = list[n]; if (this.occ[i] && this.occ[i] !== u) continue;
     var x = i % w, s = score(x, (i - x) / w, this._d[i], i);
@@ -236,8 +320,9 @@ P.adj = function (u, j) { var x = j % this.w; return Math.abs(x - u.x) + Math.ab
 P.burns = function (u) { return !has(u, 'fly') && u.passive !== 'fireborn'; };
 P.goNear = function (u, tx, ty, r, max) {
   var dz = this.dz[u.side], kind = this.kind, hot = this.burns(u);
+  var bg = isBig(u), pt = { x: tx, y: ty };
   return this.go(u, function (x, y, c, i) {
-    var d = Math.abs(x - tx) + Math.abs(y - ty);
+    var d = bg ? rd(x, y, u, pt) : Math.abs(x - tx) + Math.abs(y - ty);
     return (d <= r ? c * 0.2 : d * 100 + c) + (dz[i] ? 400 : 0) + (hot && kind[i] === 'lava' ? 3 : 0);      // 같은 값이면 용암 위에 서지 않는다
   }, max);
 };
@@ -313,11 +398,11 @@ P.ultUp = function (u) { return (u.ultR || 1) * (u.fx && u.fx.ultUp ? 1 + u.fx.u
 P.fxSpread = function (u, v, dmg) {
   var self = this, hit = function (x, y, k) {
     if (!self.inb(x, y)) return; var w = self.occ[y * self.w + x];
-    if (w && !w.dead && w.side !== u.side && w !== v) { self.hurt(w, Math.max(1, Math.round(dmg * k)), u, { type: u.dtype }); if (self.drainOf(u)) self.leech(u, dmg * k * self.drainOf(u)); }
+    if (w && !w.dead && w.side !== u.side && w !== v && w !== v.me) { self.hurt(w, Math.max(1, Math.round(dmg * k)), u, { type: u.dtype }); if (self.drainOf(u)) self.leech(u, dmg * k * self.drainOf(u)); }
   };
   if (u.fx.pierce) {      // 맞힌 적 뒤로 두 칸 안의 첫 적 하나
     var ax = v.x - u.x, ay = v.y - u.y, sx = Math.abs(ax) >= Math.abs(ay) ? (ax > 0 ? 1 : -1) : 0, sy = sx ? 0 : (ay > 0 ? 1 : -1);
-    for (var k = 1; k <= 2; k++) { var px = v.x + sx * k, py = v.y + sy * k, pw = this.inb(px, py) ? this.occ[py * this.w + px] : null; if (pw && !pw.dead && pw.side !== u.side) { hit(px, py, Math.min(1, u.fx.pierce)); break; } }
+    for (var k = 1; k <= 2; k++) { var px = v.x + sx * k, py = v.y + sy * k, pw = this.inb(px, py) ? this.occ[py * this.w + px] : null; if (pw && !pw.dead && pw.side !== u.side && pw !== v.me) { hit(px, py, Math.min(1, u.fx.pierce)); break; } }
   }
   if (u.fx.splash) DIR.forEach(function (d) { hit(v.x + d[0], v.y + d[1], Math.min(0.8, u.fx.splash)); });
 };
@@ -342,6 +427,7 @@ P.hurt = function (v, dmg, src, o) {
     if (dmg <= 0) { if (src && src.ult && src !== v && o.type !== 'reflect') src.uc = Math.min(100, (src.uc || 0) + DS.ULT.hitGain * this.ultUp(src)); return; }
   }
   v.hp -= dmg; this.lastHit = this.t;
+  if (v.enr && !v.enraged && v.hp > 0 && v.hp <= v.mhp * v.enr.th) this.enrage(v);      // 2.3.0 격노
   if (v.er && dmg < v.mhp) this.erHit(v);      // r17: 이름 지우기 문턱 (왕만). 최대 체력 이상 한 방(시험·연출의 즉사)은 건너뛴다 — 실제 싸움에는 없는 값
   if (src && src.side === 'enemy' && v.side === 'ally') src.prov = this.t + 6;      // 우리를 때린 적은 멀어도 내버려 두지 않는다
   if (v.ult && dmg > 0) v.uc = Math.min(100, (v.uc || 0) + dmg / (v.mhp || 1) * DS.ULT.hurtGain * this.ultUp(v));      // r32: 맞으면 필살 게이지가 조금 더 찬다
@@ -370,7 +456,7 @@ P.heal = function (v, amt, quiet) {
 P.kill = function (v, by) {
   if (v.dead) return;
   var self = this;
-  v.dead = true; v.deadT = this.t; v.hp = 0; this.occ[v.y * this.w + v.x] = null; this._ver++;
+  v.dead = true; v.deadT = this.t; v.hp = 0; this.unplace(v); this._ver++;
   if (v.rsv || v.rsvU) { v.rsv = null; v.rsvU = false; }      // 2.2.3: 쓰러지면 예약도 거둔다
   var de = { t: 'die', id: v.id, by: by ? by.id : null }; if (this._erK) de.erase = 1;
   this.emit(de);
@@ -388,6 +474,7 @@ P.kill = function (v, by) {
   }
   if (v.side === 'enemy') {
     if (v.exp || v.gold) { var re = { t: 'reward', exp: v.ek ? Math.max(1, Math.round((v.exp || 0) * v.ek)) : v.exp || 0, gold: Math.round((v.gold || 0) * (v.gk || 1) * (by && by.side === 'ally' && by.fx && by.fx.goldUp ? 1 + by.fx.goldUp : 1)), L: v.L, x: v.x, y: v.y, boss: v.role === 'boss', type: v.type }; if (v.ek) { re.ek = v.ek; re.dk = v.dk; } if (v.summoned) re.sum = true; if (v.elite != null) re.elite = v.elite; if (v.eliteCrew != null) re.eliteCrew = v.eliteCrew; if (this.mode === 'scn') re.mode = 'scn'; this.emit(re); }      // elite·eliteCrew: 현상 수배 정예(plan), mode: 시나리오 안의 처치(현상금이 거른다)      // sum: 불려 나온 적 (전리품을 떨어뜨리지 않게 가릴 때)      // 2.2.2 ek·gk·dk: 큰 부대에 맞춰 불어난 들판 무리 — 하나하나의 경험치·골드·드랍은 조금 덜 (DS.packOf)
+    if (v.split && !this.result && !v.boomed) this.splitOf(v);      // 2.3.0: 쓰러지며 갈라진다 (갈라진 것은 다시 갈라지지 않는다)
     var g = this.groups.filter(function (g) { return g.id === v.grp; })[0];
     if (g && g.alive > 0 && !v.summoned) { g.alive--; if (!g.alive) g.deadAt = this.t; }
     if (v.obj) {
@@ -398,10 +485,19 @@ P.kill = function (v, by) {
     } else if (this.objective === 'all') this.checkAll();
   }
 };
+P.splitOf = function (v) {
+  var S = v.split, n = S.n || 2, made = 0;
+  for (var i = 0; i < n; i++) {
+    var s = this.mk(S.type, { x: v.x, y: v.y, grp: v.grp, L: Math.max(1, v.L - (S.dL || 1)), expMul: S.exp == null ? 0.3 : S.exp });
+    s.summoned = true; s.owner = v.id; delete s.split; if (S.hp) { s.hp = s.mhp = Math.max(1, Math.round(s.hp * S.hp)); }
+    var nu = this.add(s); if (nu) { nu.aggro = true; nu.gauge = 50; nu.busy = 0.35; made++; }
+  }
+  if (made) this.emit({ t: 'split', id: v.id, n: made, x: v.x, y: v.y });
+};
 // 전장을 떠난다 (쓰러진 것이 아니다)
 P.flee = function (m) {
   if (m.dead) return;
-  m.dead = true; m.fled = true; m.deadT = this.t; this.occ[m.y * this.w + m.x] = null; this._ver++;
+  m.dead = true; m.fled = true; m.deadT = this.t; this.unplace(m); this._ver++;
   this.emit({ t: 'die', id: m.id, flee: true });
 };
 P.checkAll = function () {
@@ -418,8 +514,8 @@ P.win = function () {
   if (this.result) return;
   var self = this;
   this.result = 'win'; this.rsvClear();      // 2.2.3: 싸움이 끝나면 예약도 끝
-  this.units.forEach(function (e) { if (!e.dead && e.side === 'enemy') { e.dead = true; e.deadT = self.t; self._ver++; self.occ[e.y * self.w + e.x] = null; self.emit({ t: 'die', id: e.id, flee: true }); } });
-  this.tele = []; this.reDanger(); this.combat = false;
+  this.units.forEach(function (e) { if (!e.dead && e.side === 'enemy') { e.dead = true; e.deadT = self.t; self._ver++; self.unplace(e); self.emit({ t: 'die', id: e.id, flee: true }); } });
+  this.tele = []; this.hz = []; this.reDanger(); this.combat = false;
   this.emit({ t: 'win' });
 };
 
@@ -431,8 +527,36 @@ P.diamond = function (cx, cy, r) {
   return out;
 };
 // 기술이 닿는 칸 (tx,ty: 겨눈 칸 또는 대상의 칸)
+// 2.3.0: 큰 몸 둘레의 칸 — r: 몸에서 r 칸 안(마름모처럼) · adj: 몸에 닿는 여덟 방향 한 겹 · cross: 몸의 네 변에서 곧게 3칸 · ring: r0 ~ r 칸 띠
+P.rectArea = function (u, area, r0) {
+  var out = [], W = u.fw || 1, H = u.fh || 1, x, y, d, r = area === 'r1' ? 1 : area === 'r2' ? 2 : area === 'r3' ? 3 : area === 'r4' ? 4 : area === 'ring' ? 3 : area === 'adj' ? 1 : 0;
+  if (area === 'cross') {
+    for (x = u.x; x < u.x + W; x++) for (var i = 1; i <= 3; i++) { if (this.inb(x, u.y - i)) out.push([x, u.y - i]); if (this.inb(x, u.y + H - 1 + i)) out.push([x, u.y + H - 1 + i]); }
+    for (y = u.y; y < u.y + H; y++) for (var k = 1; k <= 3; k++) { if (this.inb(u.x - k, y)) out.push([u.x - k, y]); if (this.inb(u.x + W - 1 + k, y)) out.push([u.x + W - 1 + k, y]); }
+    return out;
+  }
+  for (y = u.y - r; y < u.y + H + r; y++) for (x = u.x - r; x < u.x + W + r; x++) {
+    if (!this.inb(x, y)) continue;
+    if (area === 'adj') { if (x >= u.x && x < u.x + W && y >= u.y && y < u.y + H) continue; out.push([x, y]); continue; }
+    d = dt(x, y, u);
+    if (d > r || (area === 'ring' && d < (r0 || 2))) continue;
+    out.push([x, y]);
+  }
+  return out;
+};
 P.areaTiles = function (u, S, tx, ty) {
   var out = [], i, self = this;
+  if (S.tg === 'dir' && isBig(u)) {      // 2.3.0 큰 몸의 곧은 길: 몸 폭만큼 넓은 띠 (cone 이면 나아갈수록 넓어진다), 몸의 변에서 시작
+    var W = u.fw || 1, H = u.fh || 1, ddx = tx - nearT(u, tx, ty).x, ddy = ty - nearT(u, tx, ty).y, bx = 0, by = 0;
+    if (!ddx && !ddy) { ddx = tx - (u.x + (W - 1) / 2); ddy = ty - (u.y + (H - 1) / 2); }
+    if (Math.abs(ddx) >= Math.abs(ddy)) bx = ddx >= 0 ? 1 : -1; else by = ddy > 0 ? 1 : -1;
+    for (i = 1; i <= S.len; i++) {
+      var sp = S.cone ? Math.floor(i / 2) : 0, a0, a1, k;
+      if (bx) { var cx = bx > 0 ? u.x + W - 1 + i : u.x - i; a0 = u.y - sp; a1 = u.y + H - 1 + sp; for (k = a0; k <= a1; k++) if (this.inb(cx, k)) out.push([cx, k]); }
+      else { var cy = by > 0 ? u.y + H - 1 + i : u.y - i; a0 = u.x - sp; a1 = u.x + W - 1 + sp; for (k = a0; k <= a1; k++) if (this.inb(k, cy)) out.push([k, cy]); }
+    }
+    return out;
+  }
   if (S.tg === 'dir') {
     var dx = tx - u.x, dy = ty - u.y, sx = 0, sy = 0;
     if (Math.abs(dx) >= Math.abs(dy)) sx = dx >= 0 ? 1 : -1; else sy = dy > 0 ? 1 : -1;
@@ -440,10 +564,13 @@ P.areaTiles = function (u, S, tx, ty) {
     return out;
   }
   if (S.tg === 'row') { for (i = 0; i < this.w; i++) out.push([i, ty]); return out; }
+  if (S.tg === 'self' && isBig(u) && S.area && S.area !== 'all' && S.area !== 'single') return this.rectArea(u, S.area, S.r0);
   if (S.tg === 'self') { tx = u.x; ty = u.y; }
   switch (S.area) {
     case 'r1': return this.diamond(tx, ty, 1);
     case 'r2': return this.diamond(tx, ty, 2);
+    case 'r3': return this.diamond(tx, ty, 3);
+    case 'ring': return this.diamond(tx, ty, 3).filter(function (t) { return Math.abs(t[0] - tx) + Math.abs(t[1] - ty) >= (S.r0 || 2); });
     case 'adj':
       for (var ay = -1; ay <= 1; ay++) for (var ax = -1; ax <= 1; ax++) if ((ax || ay) && this.inb(tx + ax, ty + ay)) out.push([tx + ax, ty + ay]);
       return out;
@@ -480,6 +607,7 @@ P.cast = function (u, id, tgt, free) {
   if (S.ult) { u.uc = 0; u.ultN = (u.ultN || 0) + 1; this.emit({ t: 'ult', id: u.id, sk: id }); }      // r32: 화면이 컷인을 띄운다
   u.gcd = 2.2 + this.rand() * 1.5;
   var tx = tgt ? tgt.x : u.x, ty = tgt ? tgt.y : u.y, tiles;
+  if (tgt && isBig(tgt)) { var nt0 = nearT(tgt, u.x, u.y); tx = nt0.x; ty = nt0.y; }      // 2.3.0: 큰 몸은 가장 가까운 칸을 겨눈다
   if (tgt && (tgt.x !== u.x)) u.face = tgt.x > u.x ? 1 : -1;
   if (S.tg === 'multi') {
     var foes = this.units.filter(function (v) { return !v.dead && v.side !== u.side; }), pick = [];
@@ -492,23 +620,32 @@ P.cast = function (u, id, tgt, free) {
     });
   } else if (S.leap && tgt) {
     var p = null, bd = 1e9;
-    DIR.forEach(function (d) {
+    if (isBig(u) || isBig(tgt)) {      // 2.3.0: 몸 전체가 들어가는, 대상에 붙은 자리
+      var LW = u.fw || 1, LH = u.fh || 1, TW = tgt.fw || 1, TH = tgt.fh || 1;
+      for (var ly = tgt.y - LH; ly <= tgt.y + TH; ly++) for (var lx = tgt.x - LW; lx <= tgt.x + TW; lx++) {
+        if (rd(lx, ly, u, tgt) !== 1 || !this.fits(u, lx, ly)) continue;
+        var ld = Math.abs(lx - u.x) + Math.abs(ly - u.y); if (ld < bd) { bd = ld; p = [lx, ly]; }
+      }
+    } else DIR.forEach(function (d) {
       var nx = tgt.x + d[0], ny = tgt.y + d[1];
       if (!self.pass(u.mt, nx, ny) || (self.occ[ny * self.w + nx] && self.occ[ny * self.w + nx] !== u)) return;
       var dd = Math.abs(nx - u.x) + Math.abs(ny - u.y); if (dd < bd) { bd = dd; p = [nx, ny]; }
     });
-    if (p) { this.occ[u.y * this.w + u.x] = null; u.x = p[0]; u.y = p[1]; this.occ[u.y * this.w + u.x] = u; this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y }); }
-    tiles = [[tgt.x, tgt.y]];
+    if (p) { this.moveTo(u, p[0], p[1]); this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y }); }
+    var lt0 = nearT(tgt, u.x, u.y); tiles = [[lt0.x, lt0.y]];
   } else tiles = this.areaTiles(u, S, tx, ty);
   this.say(u, S.name);
+  if (S.bult && u.side === 'enemy') this.emit({ t: 'bossUlt', id: u.id, sk: id });      // 2.3.0: 큰 보스의 비기 — 화면이 보스 컷인을 띄운다
   if (S.cast) {
-    var T = { id: this.nid++, u: u, sk: id, tiles: tiles, t: S.cast, dur: S.cast };
+    var T = { id: this.nid++, u: u, sk: id, tiles: tiles, t: S.cast, dur: S.cast, c: [tx, ty] };
     this.tele.push(T); u.casting = T; u.busy = S.cast + 0.35;
     this.emit({ t: 'cast', id: u.id, sk: id, tid: T.id, tiles: tiles, dur: S.cast, side: u.side });
     this.reDanger();
     return true;
   }
+  this._at = [tx, ty];
   this.resolve(u, id, tiles, tgt && tgt.id ? tgt : null);
+  this._at = null;
   if (S.dash && tiles && !u.dead) this.dashTo(u, tiles);      // 2.2.6 돌파 (기병): 길 위를 치고 그 끝까지 달려 나간다
   if (S.back && !u.dead && !this.result) this.hopBack(u, S.back, tgt && tgt.id ? tgt : null);      // 2.2.6 치고 빠지기 (비병 · 궁병)
   u.busy = 0.55;
@@ -516,18 +653,33 @@ P.cast = function (u, id, tgt, free) {
 };
 // 2.2.6 돌파: 직선의 칸을 차례로 보며 지나갈 수 있는(땅) 데까지, 그 가운데 비어 있는 가장 먼 칸에 선다 (사람 위로는 지나간다)
 P.dashTo = function (u, tiles) {
+  if (isBig(u)) return this.bigDash(u, tiles);
   var dest = null, i, t, oc;
   for (i = 0; i < tiles.length; i++) { t = tiles[i]; if (!this.pass(u.mt, t[0], t[1])) break; oc = this.occ[t[1] * this.w + t[0]]; if (!oc || oc.dead) dest = t; }
   if (!dest || (dest[0] === u.x && dest[1] === u.y)) return false;
-  this.occ[u.y * this.w + u.x] = null; u.x = dest[0]; u.y = dest[1]; this.occ[u.y * this.w + u.x] = u;
+  this.moveTo(u, dest[0], dest[1]);
   this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y, dash: 1 });
+  return true;
+};
+// 2.3.0 큰 몸의 돌진: 길(tiles — 몸 폭만큼 넓은 띠)의 방향으로 한 칸씩, 몸 전체가 들어가는 데까지 (길 위의 사람은 먼저 옆으로 밀려난다 — 못 밀린 사람 앞에서 멈춘다)
+P.bigDash = function (u, tiles) {
+  if (!tiles || !tiles.length) return false;
+  var W = u.fw || 1, H = u.fh || 1, t = tiles[tiles.length - 1], sx = 0, sy = 0;
+  if (t[0] >= u.x + W) sx = 1; else if (t[0] < u.x) sx = -1; else if (t[1] >= u.y + H) sy = 1; else if (t[1] < u.y) sy = -1;
+  if (!sx && !sy) return false;
+  var n = 0, x = u.x, y = u.y, max = Math.max(Math.abs(t[0] - u.x), Math.abs(t[1] - u.y));
+  while (n < max && this.fits(u, x + sx, y + sy)) { x += sx; y += sy; n++; }
+  if (!n) return false;
+  this.moveTo(u, x, y); if (sx) u.face = sx;
+  this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y, dash: 1, big: 1 });
   return true;
 };
 // 2.2.6 물러서기: 한 칸씩 n 번, 가장 가까운 적과 더 멀어지는 이웃 칸으로 (붉은 칸 · 용암은 피한다). 더 멀어질 데가 없으면 멈춘다
 P.hopBack = function (u, n, ref) {
   var self = this, foes = this.units.filter(function (v) { return !v.dead && v.side !== u.side && v.side !== 'neutral' && dist(u, v) <= 8; }), moved = false, dz = this.dz[u.side], hot = this.burns(u);
   if (!foes.length) return false;
-  function md(x, y) { var m = 99; for (var i = 0; i < foes.length; i++) { var d = Math.abs(foes[i].x - x) + Math.abs(foes[i].y - y); if (d < m) m = d; } return m; }
+  function md(x, y) { var m = 99; for (var i = 0; i < foes.length; i++) { var d = dt(x, y, foes[i]); if (d < m) m = d; } return m; }
+  if (isBig(u)) return false;
   for (var k = 0; k < n; k++) {
     var cur = md(u.x, u.y), best = null, bs = cur;
     DIR.forEach(function (d) {
@@ -535,7 +687,7 @@ P.hopBack = function (u, n, ref) {
       var sc = md(x, y) + (ref ? 0.01 * (Math.abs(ref.x - x) + Math.abs(ref.y - y)) : 0); if (sc > bs + 0.001) { bs = sc; best = [x, y]; }
     });
     if (!best) break;
-    this.occ[u.y * this.w + u.x] = null; u.x = best[0]; u.y = best[1]; this.occ[u.y * this.w + u.x] = u; moved = true;
+    this.moveTo(u, best[0], best[1]); moved = true;
   }
   if (moved) this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y, back: 1 });
   return moved;
@@ -571,6 +723,8 @@ P.resolve = function (u, id, tiles, unitTgt) {
     return out;
   }
   function vsk(e, v) { return e.vs && vsHit(v, e.vs) ? (self.emit({ t: 'weak', id: v.id, k: e.vs }), e.vx || 1.5) : 1; }
+  var dashD0 = this._dashD;
+  if (S.dash && tiles && tiles.length) { var dl = tiles[tiles.length - 1], dn = nearT(u, dl[0], dl[1]), ddx0 = dl[0] - dn.x, ddy0 = dl[1] - dn.y; this._dashD = Math.abs(ddx0) >= Math.abs(ddy0) ? [ddx0 >= 0 ? 1 : -1, 0] : [0, ddy0 > 0 ? 1 : -1]; }
   S.eff.forEach(function (e) {
     var T = grp(e);
     switch (e.t) {
@@ -614,15 +768,15 @@ P.resolve = function (u, id, tiles, unitTgt) {
         tl.forEach(function (v) { v.hate = u.id; v.hateT = self.t + (v.role === 'boss' ? e.dur / 2 : e.dur); v.hateP = e.p || 40; });
         if (tl.length) self.emit({ t: 'taunt', id: u.id, n: tl.length, ids: tl.map(function (x) { return x.id; }), sk: 1 });
         break;
-      case 'pull': T.forEach(function (v) {      // 2.2.6 끌어오기 (해병의 작살): 쓰는 이 쪽으로 n 칸 (붙으면 멈춘다 · 보스는 끌리지 않는다)
-        if (v.dead || v.role === 'boss' || v.side === u.side) return;
+      case 'pull': T.forEach(function (v) {      // 2.2.6 끌어오기 (해병의 작살): 쓰는 이 쪽으로 n 칸 (붙으면 멈춘다 · 보스는 끌리지 않는다 · 2.3.0 큰 몸도)
+        if (v.dead || v.role === 'boss' || v.side === u.side || isBig(v)) return;
         for (var n = 0; n < e.n; n++) {
           if (dist(u, v) <= 1) break;
-          var dx = 0, dy = 0, ax = u.x - v.x, ay = u.y - v.y;
+          var un = nearT(u, v.x, v.y), dx = 0, dy = 0, ax = un.x - v.x, ay = un.y - v.y;
           if (Math.abs(ax) >= Math.abs(ay)) dx = ax > 0 ? 1 : -1; else dy = ay > 0 ? 1 : -1;
           var px = v.x + dx, py = v.y + dy;
           if (!self.pass(v.mt, px, py) || self.occ[py * self.w + px]) { if (dx && ay) { dx = 0; dy = ay > 0 ? 1 : -1; } else if (dy && ax) { dy = 0; dx = ax > 0 ? 1 : -1; } else break; px = v.x + dx; py = v.y + dy; if (!self.pass(v.mt, px, py) || self.occ[py * self.w + px]) break; }
-          self.occ[v.y * self.w + v.x] = null; v.x = px; v.y = py; self.occ[py * self.w + px] = v;
+          self.moveTo(v, px, py);
         }
         self.emit({ t: 'knock', id: v.id, x: v.x, y: v.y, pull: 1 });
       }); break;
@@ -643,13 +797,19 @@ P.resolve = function (u, id, tiles, unitTgt) {
         if (mt) { self.emit({ t: 'mend', id: u.id, tid: mt.id }); self.heal(mt, (u.mag * e.m * pw + 8) * mk); }
         break;
       case 'knock': T.forEach(function (v) {
-        if (v.dead || v.role === 'boss') return;
-        var dx = 0, dy = 0;
-        if (e.dir === 'down') dy = 1; else if (Math.abs(v.x - u.x) >= Math.abs(v.y - u.y)) dx = v.x >= u.x ? 1 : -1; else dy = v.y > u.y ? 1 : -1;
+        if (v.dead || v.role === 'boss' || isBig(v) || v.side === u.side) return;      // 2.3.0: 큰 몸은 밀리지 않는다
+        var dx = 0, dy = 0, un = nearT(u, v.x, v.y), kx = 0;
+        if (e.dir === 'down') dy = 1;
+        else if (e.dir === 'side' && self._dashD) {      // 2.3.0 돌진: 길에서 옆으로 비켜나게 (길이 가로면 위아래, 세로면 좌우 — 쓰는 이 몸의 가운데에서 먼 쪽)
+          var cx2 = u.x + ((u.fw || 1) - 1) / 2, cy2 = u.y + ((u.fh || 1) - 1) / 2;
+          if (self._dashD[0]) dy = v.y >= cy2 ? 1 : -1; else dx = v.x >= cx2 ? 1 : -1;
+          kx = 1;
+        }
+        else if (Math.abs(v.x - un.x) >= Math.abs(v.y - un.y) && (v.x !== un.x || v.y !== un.y)) dx = v.x >= un.x ? 1 : -1; else dy = v.y >= un.y ? 1 : -1;
         for (var n = 0; n < e.n; n++) {
           var nx = v.x + dx, ny = v.y + dy;
-          if (!self.pass(v.mt, nx, ny) || self.occ[ny * self.w + nx]) break;
-          self.occ[v.y * self.w + v.x] = null; v.x = nx; v.y = ny; self.occ[ny * self.w + nx] = v;
+          if (!self.pass(v.mt, nx, ny) || self.occ[ny * self.w + nx]) { if (kx && n === 0) { dx = -dx; dy = -dy; nx = v.x + dx; ny = v.y + dy; if (!self.pass(v.mt, nx, ny) || self.occ[ny * self.w + nx]) break; } else break; }
+          self.moveTo(v, nx, ny);
         }
         self.emit({ t: 'knock', id: v.id, x: v.x, y: v.y });
       }); break;
@@ -667,18 +827,33 @@ P.resolve = function (u, id, tiles, unitTgt) {
         }
         break;
       case 'blink':
-        var best = null, bs = -1e9, foes = self.units.filter(function (v) { return !v.dead && v.side !== u.side; });
+        var best = null, bs = -1e9, foes = self.units.filter(function (v) { return !v.dead && v.side !== u.side; }), bgB = isBig(u);
         for (var k = 0; k < 24; k++) {
           var bx = u.x + Math.floor(self.rand() * 11) - 5, by2 = u.y + Math.floor(self.rand() * 11) - 5;
-          if (!self.pass('foot', bx, by2) || self.occ[by2 * self.w + bx]) continue;
-          var md = 99; foes.forEach(function (f) { md = Math.min(md, Math.abs(f.x - bx) + Math.abs(f.y - by2)); });
+          if (bgB ? !self.fits(u, bx, by2, 'foot') : (!self.pass('foot', bx, by2) || self.occ[by2 * self.w + bx])) continue;
+          var md = 99; foes.forEach(function (f) { md = Math.min(md, bgB ? rd(bx, by2, u, f) : Math.abs(f.x - bx) + Math.abs(f.y - by2)); });
           var sc = -Math.abs(md - 3) + self.rand() * 0.5 - (Math.abs(bx - u.home.x) + Math.abs(by2 - u.home.y) > 7 ? 5 : 0);
           if (sc > bs) { bs = sc; best = [bx, by2]; }
         }
-        if (best) { self.occ[u.y * self.w + u.x] = null; u.x = best[0]; u.y = best[1]; self.occ[u.y * self.w + u.x] = u; self.emit({ t: 'blink', id: u.id, x: u.x, y: u.y }); }
+        if (best) { self.moveTo(u, best[0], best[1]); self.emit({ t: 'blink', id: u.id, x: u.x, y: u.y }); }
+        break;
+      case 'hazard':      // 2.3.0 땅에 남는 위험 (불길 · 독웅덩이 · 서리 · 어둠): 맞은 칸에 dur 초 — 그 위에 선 다른 편이 1초마다 다친다 (예고 칸처럼 붉게 보이고, 자동 전투는 비켜 선다)
+        if (!tiles) break;
+        var hk = e.k || 'fire', hn = 0;
+        tiles.forEach(function (t, i) { if (e.every && i % e.every) return; if (!self.pass('foot', t[0], t[1]) && !self.pass('fly', t[0], t[1])) return; self.hazAt(t[0], t[1], hk, e.dur || 6, e.p || 3, e.s || null, u); hn++; });
+        if (hn) { self.emit({ t: 'hazard', id: u.id, k: hk, tiles: self.hz.filter(function (h) { return h.by === u.id && h.t0 === self.t; }).map(function (h) { return [h.x, h.y]; }), dur: e.dur || 6 }); self.reDanger(); }
+        break;
+      case 'emerge':      // 2.3.0 땅굴: 겨눈 자리(예고의 가운데) 곁 빈 칸으로 솟아오른다 — 몸이 들어가는 자리만
+        if (u.dead || !self._at) break;
+        var ex = self._at[0], ey = self._at[1], ep = isBig(u) ? self.freeFit(u, ex - ((u.fw || 1) >> 1), ey - ((u.fh || 1) >> 1), 3) : self.freeNear(ex, ey, u.mt, 3);
+        if (ep) { self.moveTo(u, ep.x, ep.y); self.emit({ t: 'blink', id: u.id, x: u.x, y: u.y, burrow: 1 }); }
+        break;
+      case 'boom':      // 2.3.0 터지는 몸 (불똥 도깨비): 효과를 다 준 뒤 스스로 쓰러진다
+        if (!u.dead) { u.boomed = true; self.kill(u, null); }
         break;
     }
   });
+  this._dashD = dashD0;
   // 2.1.0 메아리(fx.echo): 필살기·아이템·부르기·순간 이동이 아닌 기술이 확률로 한 번 더 (메아리는 다시 메아리치지 않는다)
   if (u.fx && u.fx.echo && !u._echo && !u.dead && !S.ult && !S.item && !this.result && !S.eff.some(function (e) { return e.t === 'summon' || e.t === 'blink'; }) && this.rand() < Math.min(0.4, u.fx.echo)) {
     u._echo = true; this.say(u, '메아리'); this.emit({ t: 'gearfx', id: u.id, k: 'echo', sk: id });
@@ -689,6 +864,56 @@ P.reDanger = function () {
   var a = this.dz.ally, e = this.dz.enemy, w = this.w;
   a.fill(0); e.fill(0);
   this.tele.forEach(function (T) { var z = T.u.side === 'enemy' ? a : e; T.tiles.forEach(function (t) { z[t[1] * w + t[0]] = 1; }); });
+  for (var i = 0; i < this.hz.length; i++) { var h = this.hz[i]; (h.side === 'enemy' ? a : e)[h.y * w + h.x] = 1; }      // 2.3.0: 땅의 위험도 비켜 선다
+};
+// 2.3.0 땅의 위험 하나 (같은 편이 같은 칸에 또 깔면 더 긴 쪽으로)
+P.HZ = { max: 72, boss: 0.25 };
+P.hazAt = function (x, y, k, dur, p, s, u) {
+  var hz = this.hz, i, h;
+  for (i = 0; i < hz.length; i++) { h = hz[i]; if (h.x === x && h.y === y && h.side === u.side) { h.t = Math.max(h.t, dur); h.dur = Math.max(h.dur, dur); h.k = k; h.p = Math.max(h.p, p); h.s = s || h.s; h.by = u.id; h.t0 = this.t; return h; } }
+  if (hz.length >= this.HZ.max) hz.shift();
+  h = { x: x, y: y, k: k, t: dur, dur: dur, p: p, s: s, side: u.side, by: u.id, t0: this.t, acc: 0.4, id: ++this._hzC };
+  hz.push(h); return h;
+};
+P.hazTick = function (dt) {
+  var hz = this.hz, gone = false, i, h, v, n = 0;
+  for (i = 0; i < hz.length; i++) {
+    h = hz[i]; h.t -= dt;
+    if (h.t <= 0) { gone = true; continue; }
+    hz[n++] = h;
+    h.acc -= dt; if (h.acc > 0) continue;
+    h.acc += 1;
+    v = this.occ[h.y * this.w + h.x];
+    if (!v || v.dead || v.side === h.side || v.side === 'neutral' || v._hzT === this.t) continue;
+    if (h.k === 'fire' && v.passive === 'fireborn') continue;
+    v._hzT = this.t;
+    var src = this.byId[h.by], d = Math.max(1, Math.round(v.mhp * h.p / 100 * (v.role === 'boss' ? this.HZ.boss : 1)));
+    this.hurt(v, d, src && !src.dead ? src : null, { type: h.k === 'fire' ? 'burn' : h.k === 'poison' ? 'poison' : 'magic', refl: true, hz: 1 });
+    if (!v.dead && h.s && !v.st[h.s]) this.addStatus(v, h.s, h.s === 'slow' ? 3 : 4, h.s === 'burn' || h.s === 'poison' ? 2 : 0, null);
+  }
+  hz.length = n;
+  if (gone) this.reDanger();
+};
+// 2.3.0 둘레를 물들이는 몸 (u.aura = { s: 'poison' | 'slow' | 'burn', r, p, dur }) — 1초마다 r 칸 안의 다른 편에게 그 상태 (이미 걸려 있으면 시간만 채운다)
+P.auraTick = function (u) {
+  var A = u.aura, us = this.units, i, v, n = 0;
+  for (i = 0; i < us.length; i++) {
+    v = us[i]; if (v.dead || v.side === u.side || v.side === 'neutral' || dist(u, v) > (A.r || 1)) continue;
+    if (v.st[A.s] && v.st[A.s].t > 1) continue;
+    this.addStatus(v, A.s, A.dur || 3, A.p || 0, null); n++;
+  }
+  if (n) this.emit({ t: 'auraFx', id: u.id, s: A.s, r: A.r || 1 });
+};
+// 2.3.0 격노: 체력이 u.enr.th 아래로 떨어지는 순간 한 번 — 공격 · 빠르기가 오르고, 새 기술(비기)을 얻고, 게이지가 찬다
+P.enrage = function (u) {
+  var E = u.enr; if (!E || u.enraged || u.dead) return;
+  u.enraged = true;
+  u.atk = Math.round(u.atk * (1 + (E.atk || 0))); u.mag = Math.round(u.mag * (1 + (E.atk || 0))); u.spd = u.spd * (1 + (E.spd || 0));
+  (E.add || []).forEach(function (k) { if (SK[k] && u.skills.indexOf(k) < 0) { u.skills.push(k); u.cd[k] = SK[k].cd0 || 0; } });
+  u.gauge = Math.max(u.gauge, 80); u.gcd = Math.min(u.gcd, 0.6); u.rot = 0;
+  if (u.casting) { var T0 = u.casting; this.tele = this.tele.filter(function (T) { return T !== T0; }); u.casting = null; this.emit({ t: 'castEnd', tid: T0.id, cancel: true }); this.reDanger(); u.busy = 0.2; }
+  this.say(u, E.say || '격노');
+  this.emit({ t: 'enrage', id: u.id });
 };
 // 아이템 (약초·마나초·기운초). 폭탄은 기술 i_bomb 으로 처리.
 var ITEM_FX = { herb: 1, mana: 1, endo: 1 };      // 엔진이 효과를 아는 소모품 (나머지는 기술 i_키 로, 귀환·모닥불은 화면 쪽 DS.useFieldItem 으로)
@@ -712,14 +937,15 @@ P.attack = function (u, v) {
   if (u.gauge < c) { this.wait(u); return true; }
   u.gauge -= c; if (v.x !== u.x) u.face = v.x > u.x ? 1 : -1;
   var d = dist(u, v), m = (u.basic || 1) * (d < u.rng[0] ? 0.7 : 1), n = (u.passive === 'twin' || u.twin) ? 2 : 1;
-  this.emit({ t: 'atk', id: u.id, tid: v.id, kind: u.atkKind, tx: v.x, ty: v.y });
+  var vt = isBig(v) ? nearT(v, u.x, u.y) : v;
+  this.emit({ t: 'atk', id: u.id, tid: v.id, kind: u.atkKind, tx: vt.x, ty: vt.y });
   for (var k = 0; k < n && !v.dead; k++) {
     if (v.fx && v.fx.eva && this.rand() < Math.min(0.35, v.fx.eva)) { this.emit({ t: 'miss', id: v.id, by: u.id }); continue; }      // 회피 (회피 칸이 없는 상대에게는 주사위를 굴리지 않는다)
     var crit = this.rand() < (u.crit || 0.06), dmg = this.calc(u, v, m * (n > 1 ? 0.65 : 1) * (crit ? 1.5 + (u.fx && u.fx.critX || 0) : 1));      // critX: 치명타 피해 덤 (장비)
     var vx = v.x, vy = v.y;
     this.hurt(v, dmg, u, { crit: crit, type: u.dtype });
     if (this.drainOf(u)) this.leech(u, dmg * this.drainOf(u));
-    if (u.fx && (u.fx.pierce || u.fx.splash) && !this.result) this.fxSpread(u, { x: vx, y: vy, id: v.id }, dmg);      // 2.1.0: 꿰뚫기·튀기기 (맞힌 적이 쓰러져도 그 자리에서)
+    if (u.fx && (u.fx.pierce || u.fx.splash) && !this.result) this.fxSpread(u, { x: vt.x, y: vt.y, id: v.id, me: v }, dmg);      // 2.1.0: 꿰뚫기·튀기기 (맞힌 적이 쓰러져도 그 자리에서)
     if (u.fx && u.fx.hitSt && !v.dead) for (var sk in u.fx.hitSt) if (this.rand() < Math.min(0.6, u.fx.hitSt[sk])) this.addStatus(v, sk, sk === 'poison' ? 8 : 6, sk === 'poison' ? 3 : 0);      // 적중 시 상태
   }
   u.busy = 0.5;
@@ -738,9 +964,9 @@ P.reach = function (u) { return u.rng[1] + (u.atkKind === 'arrow' && this.kind[u
 P.engage = function (u, v, r0, r1, fire, max) {
   var d = dist(u, v);
   if (d <= r1 && d >= r0) return fire.call(this);
-  var dz = this.dz[u.side], foe = u.side === 'enemy', land = this.cst[0], kind = this.kind, hot = this.burns(u);
+  var dz = this.dz[u.side], foe = u.side === 'enemy', land = this.cst[0], kind = this.kind, hot = this.burns(u), bg = isBig(u) || isBig(v);
   var r = this.go(u, function (x, y, c, i) {
-    var dd = Math.abs(x - v.x) + Math.abs(y - v.y);
+    var dd = bg ? rd(x, y, u, v) : Math.abs(x - v.x) + Math.abs(y - v.y);
     if (dd === 0) return null;
     var s = (dd <= r1 && dd >= r0) ? c - (r1 > 1 ? Math.min(dd, r1) * 0.4 : 0) : 500 + dd * 20 + c;
     if (foe && !land[i]) s += 40;
@@ -778,7 +1004,7 @@ P.pickTarget = function (u, foes, anchor, maxD) {
     if (DS.COUNTER[u.kind] === v.kind) s -= 8;
     if (u.atkKind === 'arrow' && has(v, 'fly')) s -= 8;
     if (u.side === 'enemy') { s += v.def * 0.05; if (v.role !== 'cmd') s += 3; if (u.hate === v.id && !(u.hateT <= this.t)) s -= u.hateP || 12; if (v.back) s += 30; }      // hate: 도발한 용병 (hateT 까지, hateP 만큼 더 노린다)      // 물러나는 용병은 덜 노린다 (아예 안 노리지는 않는다 — 곁에 남은 상대가 없으면 쫓는다)
-    else if (v.skills && v.skills.indexOf('e_heal') >= 0) s -= 10;
+    else { if (v.skills && v.skills.indexOf('e_heal') >= 0) s -= 10; if (u.hate === v.id && !(u.hateT <= this.t)) s -= u.hateP || 12; if (v.pri) s -= v.pri; }      // 2.3.0: 적의 도발(방패병)도 우리 편을 끌어당긴다 · pri = 먼저 쳐야 할 적(주술사 · 터지는 몸)
     if (s < bs) { bs = s; best = v; }
   }
   return best;
@@ -792,6 +1018,7 @@ P.dodgeRoll = function (u) {
   return this.rand() < p ? this.t + D.d0 + this.rand() * (D.d1 - D.d0) : Infinity;
 };
 P.dodge = function (u) {
+  if (isBig(u)) return false;      // 2.3.0: 큰 몸은 예고를 맞받는다
   var dz = this.dz[u.side], w = this.w;
   if (!dz[u.y * w + u.x]) { u._dzAt = null; return false; }
   if (u.casting) return false;
@@ -966,7 +1193,7 @@ P._mendScan = function (u, r) {
   return best;
 };
 P.bestSkill = function (u, foes, ord, keep) {
-  var self = this, best = null, bs = 0, bv = 0, mmp = u.mmp || 1, scarce = Math.max(0, 1 - (u.mp || 0) / mmp / this.bestFree), n, i, v, d;
+  var nt, self = this, best = null, bs = 0, bv = 0, mmp = u.mmp || 1, scarce = Math.max(0, 1 - (u.mp || 0) / mmp / this.bestFree), n, i, v, d;
   var BE = { m: u.basic || 1 }, ac = TK.attack * (u.fx && u.fx.atkTick ? Math.max(0.6, u.fx.atkTick) : 1), raw = 0, top = 0;
   function sumVal(S, vs) {      // 맞는 대상들의 값 합. raw 에는 지금 규칙의 머릿수(보스 2), top 에는 그 가운데 평타가 가장 잘 듣는 대상의 평타 값
     var s = 0, k, q, x, e, w, b, one, dm = S.eff[0].t === 'dmg';
@@ -1012,8 +1239,8 @@ P.bestSkill = function (u, foes, ord, keep) {
       var w1;
       for (i = 0; i < foes.length; i++) {
         v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue;
-        w1 = sumVal(S, this.victims(u, S, this.areaTiles(u, S, v.x, v.y)));
-        if (raw >= 2 && w1 > val) { val = w1; tp = top; tgt = { x: v.x, y: v.y }; }
+        w1 = sumVal(S, this.victims(u, S, this.areaTiles(u, S, (nt = nearT(v, u.x, u.y)).x, nt.y)));
+        if (raw >= 2 && w1 > val) { val = w1; tp = top; tgt = { x: nt.x, y: nt.y }; }
       }
       if (!tgt) continue;
     } else if (S.tg === 'self') {
@@ -1044,7 +1271,7 @@ P.bestSkill = function (u, foes, ord, keep) {
 // dry: 마른 실행 — 게이지가 가득하다고 치고 고를 기술의 틱 값을 돌려준다 (시전하지 않고 난수도 부르지 않는다. 없으면 0). DS.BAL.cmdCast 가 "평타를 참고 기술을 기다릴까"를 정할 때 쓴다.
 P.aiSkill = function (u, foes, dry) {
   if (u.fx && u.fx.seal) return dry ? 0 : false;
-  var self = this, fr = this.friends(u), boss = foes.some(function (f) { return f.role === 'boss'; }), big = boss || foes.length >= 3, q = this.q(u), dn = 0;
+  var nt, self = this, fr = this.friends(u), boss = foes.some(function (f) { return f.role === 'boss'; }), big = boss || foes.length >= 3, q = this.q(u), dn = 0;
   // cmdBest: 공격 기술은 한 묶음으로 보고 가장 좋은 후보 하나(B)만 쓴다. 가호를 하나 걸었으면(u.supT) 다음 기술 차례는 공격 후보에게 준다 — 값싼 가호가 줄줄이 먼저 나가 큰 기술의 차례가 오지 않던 것.
   var bestOn = DS.BAL.cmdBest && u.role === 'cmd', B, bGot = false, bSeen = false;
   function getB() {      // 같은 틱 안에서는 한 번만 고른다 (aiCmd 의 실제 실행과 cmdFire 의 마른 실행이 한 생각에 잇달아 부른다)
@@ -1148,8 +1375,8 @@ P.aiSkill = function (u, foes, dry) {
       var bc = 0;
       for (i = 0; i < foes.length; i++) {
         v = foes[i]; if (dist(u, v) > r1 || dist(u, v) < r0) continue;
-        cnt = this.victims(u, S, this.areaTiles(u, S, v.x, v.y)).reduce(function (a, x) { return a + (x.role === 'boss' ? 2 : 1); }, 0);
-        if (cnt > bc) { bc = cnt; tgt = v; }
+        cnt = this.victims(u, S, this.areaTiles(u, S, (nt = nearT(v, u.x, u.y)).x, nt.y)).reduce(function (a, x) { return a + (x.role === 'boss' ? 2 : 1); }, 0);
+        if (cnt > bc) { bc = cnt; tgt = nt; }
       }
       if (bc >= 2 && cast(id, { x: tgt.x, y: tgt.y })) return dry ? dn : true;
       continue;
@@ -1204,7 +1431,7 @@ P.rsvNever = function (u, sk) {
 };
 // 기술의 보통 자동 겨눔 (닿는 곳 안에서만). 돌려주는 것: { t: cast 에 넘길 대상(null = 제자리) } 또는 null
 P.rsvTarget = function (u, S, foes) {
-  var self = this, e0 = S.eff[0], r0 = S.rng ? S.rng[0] : 0, r1 = S.rng ? S.rng[1] : 0, i, v, d, best = null, bs = -1e9, fr;
+  var nt, self = this, e0 = S.eff[0], r0 = S.rng ? S.rng[0] : 0, r1 = S.rng ? S.rng[1] : 0, i, v, d, best = null, bs = -1e9, fr;
   function n(vs) { return vs.reduce(function (a, x) { return a + (x.role === 'boss' ? 2 : 1); }, 0); }
   if (e0.t === 'summon') { var cnt = this.units.filter(function (m) { return !m.dead && m.owner === u.id && m.role === 'summon'; }).length; return cnt < (S.cap || 2) && foes.length ? { t: null } : null; }
   if (S.tg === 'ally') {
@@ -1227,7 +1454,7 @@ P.rsvTarget = function (u, S, foes) {
     return best ? { t: best } : null;
   }
   if (S.tg === 'tile') {
-    for (i = 0; i < foes.length; i++) { v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue; var c = n(this.victims(u, S, this.areaTiles(u, S, v.x, v.y))); if (c > bs) { bs = c; best = { x: v.x, y: v.y }; } }
+    for (i = 0; i < foes.length; i++) { v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue; var c = n(this.victims(u, S, this.areaTiles(u, S, (nt = nearT(v, u.x, u.y)).x, nt.y))); if (c > bs) { bs = c; best = { x: nt.x, y: nt.y }; } }
     return best && bs >= 1 ? { t: best } : null;
   }
   if (S.tg === 'dir') {
@@ -1333,10 +1560,10 @@ P.huntPick = function (u) {
   var stamp = this.stamp;
   this.units.forEach(function (v) {
     if (v.dead || v.side !== 'enemy' || v.skipT > t || v.calmT > t) return;
-    var c = 1e9, ci = -1, dx, dy, dd, x, y, j;
-    for (dy = -r1; dy <= r1; dy++) for (dx = -r1; dx <= r1; dx++) {      // 그 적을 때릴 수 있는 칸 가운데 가장 가까운 칸
-      dd = Math.abs(dx) + Math.abs(dy); if (dd < 1 || dd > r1) continue;
-      x = v.x + dx; y = v.y + dy; if (x < 0 || y < 0 || x >= w || y >= h) continue;
+    var c = 1e9, ci = -1, dx, dy, dd, x, y, j, vw = (v.fw || 1) - 1, vh = (v.fh || 1) - 1;
+    for (dy = -r1; dy <= r1 + vh; dy++) for (dx = -r1; dx <= r1 + vw; dx++) {      // 그 적을 때릴 수 있는 칸 가운데 가장 가까운 칸 (2.3.0: 큰 몸은 가장 가까운 칸까지)
+      x = v.x + dx; y = v.y + dy; dd = vw || vh ? dt(x, y, v) : Math.abs(dx) + Math.abs(dy); if (dd < 1 || dd > r1) continue;
+      if (x < 0 || y < 0 || x >= w || y >= h) continue;
       j = y * w + x; if (st[j] !== stamp || (self.occ[j] && self.occ[j] !== u)) continue;
       if (d[j] < c) { c = d[j]; ci = j; }
     }
@@ -1419,7 +1646,7 @@ P.kite = function (u, foes, own) {
   var r0 = u.rng[0], r1 = this.reach(u), dz = this.dz[u.side], kind = this.kind, hot = this.burns(u);
   var r = this.go(u, function (x, y, c, j) {
     var md = 99, inR = false, q, d;
-    for (q = 0; q < foes.length; q++) { d = Math.abs(x - foes[q].x) + Math.abs(y - foes[q].y); if (d < md) md = d; if (d >= r0 && d <= r1) inR = true; }
+    for (q = 0; q < foes.length; q++) { d = dt(x, y, foes[q]); if (d < md) md = d; if (d >= r0 && d <= r1) inR = true; }
     if (md < K || !inR || c > 2.5 || Math.abs(x - own.x) + Math.abs(y - own.y) > 5 || dz[j] || (hot && kind[j] === 'lava')) return null;
     return c - Math.min(md, 3);
   }, 6);
@@ -1459,7 +1686,7 @@ P.aiMerc = function (u) {
   if (dOwn > leash || (u.rejoin && dOwn > leash - this.mercRejoin)) {
     if (dOwn <= 16 && this.goNear(u, own.x, own.y, 2, 90) !== 'here') return;
     var np = dOwn > leash ? this.freeNear(own.x, own.y, u.mt, 4) : null;
-    if (np) { this.occ[u.y * this.w + u.x] = null; u.x = np.x; u.y = np.y; this.occ[u.y * this.w + u.x] = u; this.emit({ t: 'blink', id: u.id, x: u.x, y: u.y }); this.wait(u, 0.3); return; }
+    if (np) { this.moveTo(u, np.x, np.y); this.emit({ t: 'blink', id: u.id, x: u.x, y: u.y }); this.wait(u, 0.3); return; }
   }
   if (this.dodge(u)) return;
   if (u.heal && !(u.cd.heal > 0) && u.gauge >= 40) {
@@ -1479,7 +1706,7 @@ P.aiMerc = function (u) {
       var dz = this.dz[u.side], kind = this.kind, hot = this.burns(u), an = MA ? this.healerNear(u, own) || own : own;      // mercAI: 고쳐 줄 이(치유 기술이 있는 지휘관·시스터)가 주인 곁에 있으면 그 곁으로
       var rr = this.go(u, function (x, y, c, i) {
         var dO = Math.abs(x - an.x) + Math.abs(y - an.y), md = 9;
-        for (var q = 0; q < foes.length; q++) md = Math.min(md, Math.abs(x - foes[q].x) + Math.abs(y - foes[q].y));
+        for (var q = 0; q < foes.length; q++) md = Math.min(md, dt(x, y, foes[q]));
         return (dO > 3 ? 60 + dO * 10 : 0) - md * 4 + c * 0.5 + (dz[i] ? 300 : 0) + (hot && kind[i] === 'lava' ? 20 : 0);      // 용암 위로 물러나지 않는다
       }, 14);
       if (rr === 'here') this.wait(u, 0.25);
@@ -1510,7 +1737,7 @@ P.aiUlt = function (u, foes) {
   var id = u.ult, S = SK[id]; if (!S || !((u.uc || 0) >= 100) || !foes.length) return false;
   if (u.fx && u.fx.seal) return false;
   if (u.gauge < S.tick * this.q(u)) return false;
-  var self = this, e0 = S.eff[0], boss = foes.some(function (f) { return f.role === 'boss'; }), big = boss || foes.length >= 3, r0 = S.rng ? S.rng[0] : 0, r1 = S.rng ? S.rng[1] : 0, i, v, d;
+  var nt, self = this, e0 = S.eff[0], boss = foes.some(function (f) { return f.role === 'boss'; }), big = boss || foes.length >= 3, r0 = S.rng ? S.rng[0] : 0, r1 = S.rng ? S.rng[1] : 0, i, v, d;
   function cnt(vs) { var n = 0, b = false; vs.forEach(function (x) { n += x.role === 'boss' ? 2 : 1; if (x.role === 'boss') b = true; }); return { n: n, b: b }; }
   function good(c) { return c.n >= 2; }
   if (e0.t === 'summon') {
@@ -1539,7 +1766,7 @@ P.aiUlt = function (u, foes) {
   }
   if (S.tg === 'tile') {
     var bt = null, bc = { n: 0, b: false };
-    for (i = 0; i < foes.length; i++) { v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue; var c = cnt(this.victims(u, S, this.areaTiles(u, S, v.x, v.y))); if (c.n > bc.n) { bc = c; bt = v; } }
+    for (i = 0; i < foes.length; i++) { v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue; var c = cnt(this.victims(u, S, this.areaTiles(u, S, (nt = nearT(v, u.x, u.y)).x, nt.y))); if (c.n > bc.n) { bc = c; bt = nt; } }
     return !!bt && (bc.n >= 3 || (bc.b && bc.n >= 2)) && this.cast(u, id, { x: bt.x, y: bt.y });
   }
   if (S.tg === 'self') { var cs = cnt(this.victims(u, S, this.areaTiles(u, S, u.x, u.y))); return good(cs) && this.cast(u, id, null); }
@@ -1563,7 +1790,7 @@ P.aiEnemy = function (u) {
       if (dist(u, u.home) > 3) { this.goNear(u, u.home.x, u.home.y, 2, 40); return; }
       if (this.rand() < 0.12) {
         var d = DIR[Math.floor(this.rand() * 4)], nx = u.x + d[0], ny = u.y + d[1];
-        if (this.pass(u.mt, nx, ny) && !this.occ[ny * this.w + nx] && Math.abs(nx - u.home.x) + Math.abs(ny - u.home.y) <= 3) { u.gauge = 100; this.step(u, ny * this.w + nx); u.busy = 0.5; return; }
+        if ((isBig(u) ? this.fits(u, nx, ny) : this.pass(u.mt, nx, ny) && !this.occ[ny * this.w + nx]) && Math.abs(nx - u.home.x) + Math.abs(ny - u.home.y) <= 3) { u.gauge = 100; this.step(u, ny * this.w + nx); u.busy = 0.5; return; }
       }
     }
     this.wait(u, 0.4); return;
@@ -1587,16 +1814,29 @@ P.bossSave = function (u) {
   if (!u.owe || this.t - (u.actT || 0) > (DS.BAL.bossHold || this.bossHold)) return false;
   var need = 0, n, S;
   for (n = 0; n < u.skills.length; n++) { S = SK[u.skills[n]]; if (S && !(u.cd[u.skills[n]] > 1) && (!need || S.tick < need)) need = S.tick; }
+  if (u.wantSk) need = u.wantSk;      // 2.3.0 큰 보스: 차례가 온 기술의 틱
   return need > 0 && u.gauge < Math.min(100, need + TK.attack);
 };
 P.enemySkill = function (u, allies) {
   if (u.fx && u.fx.seal) return false;
-  var self = this, fr = this.friends(u);
-  for (var n = 0; n < u.skills.length; n++) {
-    var id = u.skills[(n + (u.rot || 0)) % u.skills.length], S = SK[id];
-    if (u.cd[id] > 0 || u.gauge < S.tick) continue;
+  var self = this, fr = this.friends(u), big = isBig(u), ord = [], n;
+  // 2.3.0 큰 보스: 차례를 지킨다 — 차례가 온 기술(대상이 있는)의 틱이 모자라면 싼 기술로 때우지 않고 모은다 (u.wantSk → bossSave). 격노한 뒤에는 비기가 먼저
+  for (n = 0; n < u.skills.length; n++) ord.push(u.skills[(n + (u.rot || 0)) % u.skills.length]);
+  if (big && u.enraged) ord.sort(function (a, b) { return (SK[b] && SK[b].bult ? 1 : 0) - (SK[a] && SK[a].bult ? 1 : 0); });
+  u.wantSk = 0;
+  for (n = 0; n < ord.length; n++) {
+    var id = ord[n], S = SK[id];
+    if (!S || u.cd[id] > 0 || (!big && u.gauge < S.tick)) continue;
     var e0 = S.eff[0], tgt = null, ok = false, r1 = S.rng ? S.rng[1] : 0, r0 = S.rng ? S.rng[0] : 0, i, v;
     if (S.ai === 'summon') { ok = this.units.filter(function (m) { return !m.dead && m.owner === u.id; }).length + S.eff[0].n <= S.cap; }
+    else if (S.ai === 'bomb') { ok = allies.some(function (a) { return dist(u, a) <= 1; }); }      // 2.3.0 터지는 몸: 붙으면
+    else if (S.ai === 'far') {      // 2.3.0 땅굴 · 그림자 걸음: 닿는 곳 안에서 가장 먼(뒷줄의) 이
+      var fd = -1; allies.forEach(function (a) { var d = dist(u, a); if (d > r1 || d < r0) return; var sc = d + (a.rng && a.rng[1] >= 3 ? 3 : 0) + (a.heal ? 2 : 0); if (sc > fd) { fd = sc; tgt = { x: a.x, y: a.y }; } });
+      ok = !!tgt;
+    }
+    else if (S.ai === 'ward') { ok = !!this.mendTgt(u, S.eff[0].r || 3) || (S.eff.some(function (e) { return e.t === 'taunt'; }) && allies.some(function (a) { return dist(u, a) <= 2; })); }      // 2.3.0 보호막 · 방패
+    else if (S.ai === 'near') { ok = allies.some(function (a) { return dist(u, a) <= (S.near || 2); }); }      // 2.3.0 둘레 기술: 가까이 붙었을 때
+    else if (S.ai === 'enr') { ok = !!u.enraged && allies.some(function (a) { return dist(u, a) <= (S.near || 9); }); }
     else if (S.ai === 'blink') { ok = allies.some(function (a) { return dist(u, a) <= 1; }) && u.hp < u.mhp * 0.85; }
     else if (S.ai === 'buff') { ok = fr.length >= 2; }
     else if (S.ai === 'plague') { ok = allies.filter(function (a) { return !a.st.poison; }).length >= 2; }
@@ -1617,11 +1857,11 @@ P.enemySkill = function (u, allies) {
     }
     else if (S.tg === 'self') { ok = this.victims(u, S, this.areaTiles(u, S, u.x, u.y)).length >= 1; }
     else if (S.tg === 'dir') {
-      var bc2 = 0; DIR.forEach(function (dd) {
-        var t = { x: u.x + dd[0], y: u.y + dd[1] }, c = self.victims(u, S, self.areaTiles(u, S, t.x, t.y)).length;
+      var bc2 = 0, BW = u.fw || 1, BH = u.fh || 1; DIR.forEach(function (dd) {
+        var t = BW > 1 || BH > 1 ? { x: dd[0] > 0 ? u.x + BW : dd[0] < 0 ? u.x - 1 : u.x, y: dd[1] > 0 ? u.y + BH : dd[1] < 0 ? u.y - 1 : u.y } : { x: u.x + dd[0], y: u.y + dd[1] }, c = self.victims(u, S, self.areaTiles(u, S, t.x, t.y)).length;
         if (c > bc2) { bc2 = c; tgt = t; }
       });
-      ok = bc2 >= 1;
+      ok = bc2 >= (S.minN || 1);
     }
     else if (S.tg === 'row' || S.tg === 'unit') {
       var bd2 = 99; allies.forEach(function (a) { var d = dist(u, a); if (d < bd2 && d <= 7) { bd2 = d; tgt = { x: a.x, y: a.y }; } });
@@ -1629,7 +1869,8 @@ P.enemySkill = function (u, allies) {
     }
     else if (S.tg === 'multi') { ok = allies.some(function (a) { return dist(u, a) <= 8; }); }
     if (!ok) continue;
-    u.rot = (u.rot || 0) + n + 1;
+    if (big && u.gauge < S.tick) { u.wantSk = S.tick; return false; }
+    u.rot = big ? u.skills.indexOf(id) + 1 : (u.rot || 0) + n + 1;
     if (this.cast(u, id, tgt, false)) return true;
   }
   return false;
@@ -1701,6 +1942,7 @@ P.tick = function (dt) {
     if (u.acc >= 1) {
       u.acc -= 1;
       if (this.kind[u.y * this.w + u.x] === 'lava' && !has(u, 'fly') && u.passive !== 'fireborn') { this.hurt(u, Math.max(1, Math.round(u.mhp * 0.04)), null, { type: 'fire' }); if (u.dead) continue; }
+      if (u.aura && !peace && (u.side !== 'enemy' || u.aggro) && this.mode !== 'town') this.auraTick(u);      // 2.3.0 독 · 서리 기운
       // 싸움이 끝나도 체력·마나는 그대로 이어진다. 쉬면 아주 천천히 돌아올 뿐 (마을에서는 조금 빨리).
       if (u.trait === 'medic' && u.back && u.hp < u.mhp) u.hp = Math.min(u.mhp, u.hp + u.mhp * 0.035);
       if (peace && u.side === 'ally') {
@@ -1721,6 +1963,7 @@ P.tick = function (dt) {
     if (u.busy <= 0 && !u.casting) this.think(u);
   }
   if (this._er) this.erTick(dt);      // r17: 이름 지우기 예고
+  if (this.hz.length) this.hazTick(dt);      // 2.3.0 땅의 위험
   // 예고 기술
   if (this.tele.length) {
     var done = [];
@@ -1731,7 +1974,10 @@ P.tick = function (dt) {
       done.forEach(function (T) {
         T.u.casting = null;
         self.emit({ t: 'castEnd', tid: T.id });
-        if (!T.u.dead) { self._tele = true; self.resolve(T.u, T.sk, T.tiles, null); self._tele = false; }
+        if (!T.u.dead) {
+          self._tele = true; self._at = T.c; self.resolve(T.u, T.sk, T.tiles, null); self._tele = false; self._at = null;
+          var TS = SK[T.sk]; if (TS && TS.dash && !T.u.dead && !self.result) self.dashTo(T.u, T.tiles);      // 2.3.0: 예고한 돌진은 친 뒤 길 끝까지 달려 나간다
+        }
       });
     }
   }
@@ -1759,9 +2005,9 @@ P.erStart = function (v) {
     E.used[u.id] = 1; u.erM = { k: k, cov: 0 }; u.order = null; u.casting = null;
     self.tele = self.tele.filter(function (T) { if (T.u === u) { self.emit({ t: 'castEnd', tid: T.id, cancel: true }); return false; } return true; });
     for (var s = 0; s < C.pull; s++) {      // 왕 쪽으로 끌려간다 (빈 칸만)
-      var dx = v.x - u.x, dy = v.y - u.y; if (Math.abs(dx) + Math.abs(dy) <= 2) break;
+      var kn = nearT(v, u.x, u.y), dx = kn.x - u.x, dy = kn.y - u.y; if (Math.abs(dx) + Math.abs(dy) <= 2) break;
       var opts = Math.abs(dx) >= Math.abs(dy) ? [[Math.sign(dx), 0], [0, Math.sign(dy)]] : [[0, Math.sign(dy)], [Math.sign(dx), 0]], moved = false;
-      for (var q = 0; q < 2 && !moved; q++) { var nx = u.x + opts[q][0], ny = u.y + opts[q][1]; if ((opts[q][0] || opts[q][1]) && self.pass(u.mt, nx, ny) && !self.occ[ny * self.w + nx]) { self.occ[u.y * self.w + u.x] = null; u.x = nx; u.y = ny; self.occ[ny * self.w + nx] = u; moved = true; } }
+      for (var q = 0; q < 2 && !moved; q++) { var nx = u.x + opts[q][0], ny = u.y + opts[q][1]; if ((opts[q][0] || opts[q][1]) && self.pass(u.mt, nx, ny) && !self.occ[ny * self.w + nx]) { self.moveTo(u, nx, ny); moved = true; } }
       if (!moved) break;
     }
     self.emit({ t: 'knock', id: u.id, x: u.x, y: u.y });

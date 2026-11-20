@@ -736,6 +736,12 @@ DS.enemySpec = function (type, L, o) {
     exp: Math.round((6 + 1.6 * L) * (B ? 8 : 1) * (o.expMul == null ? 1 : o.expMul) * (o.xpK || 1)), gold: Math.round((5 + 1.5 * DS.killGoldL(L)) * (B ? 6 : 1) * (o.expMul == null ? 1 : o.expMul)),
     phase2: B && B.phase2
   };
+  var SZ = B ? B.sz : e.sz;      // 2.3.0: 큰 몸 (가로 × 세로 칸) · 격노 · 둘레 기운 · 갈라짐 · 먼저 칠 적
+  if (SZ && (SZ[0] > 1 || SZ[1] > 1) && !o.small) { u.fw = SZ[0]; u.fh = SZ[1]; if (DS.BIG_HP) { var bk = DS.BIG_HP[SZ[0] * SZ[1]] || 1; u.hp = u.mhp = Math.round(u.hp * bk); } }
+  var EN = B ? B.enr : e.enr; if (EN) u.enr = { th: EN.th || 0.4, atk: EN.atk || 0, spd: EN.spd || 0, add: (EN.add || []).slice(), say: EN.say || '' };
+  var AU = (B && B.aura) || (!B && e.aura); if (AU) u.aura = { s: AU.s, r: AU.r || 1, p: AU.p || 0, dur: AU.dur || 3 };
+  if (!B && e.split) u.split = { type: e.split.type, n: e.split.n || 2, dL: e.split.dL || 1, hp: e.split.hp || 1 };
+  if (!B && e.pri) u.pri = e.pri;
   if (!B && o.zone && o.save && o.save.cleared && o.save.cleared[DS.KGOLD.from]) u.gold = Math.round(u.gold * DS.killGoldLow(o.save, L) * (DS.KGOLD.zone[o.zone] || 1));      // 들판 적만 (시나리오 적은 o.save 가 없다)
   if (o.x != null) { u.x = o.x; u.y = o.y; }
   if (o.grp != null) u.grp = o.grp;
