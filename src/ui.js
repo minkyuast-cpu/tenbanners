@@ -945,6 +945,47 @@ function partyHp() {
   s.party.forEach(function (id) { var c = s.chars[id]; if (!c || c.down) return; sum += c.hp == null ? 1 : c.hp; n++; DS.mercsOf(s, id).forEach(function (m) { sum += m.hp == null ? 1 : m.hp; n++; }); });
   return n ? sum / n : 1;
 }
+// ───────── 2.2.8 출전 셋 ─────────
+// 한 줄: 맹주 + 출전한 가주 둘의 얼굴 · 이름 · 단 (+ 바꾸기). where: 'gate' (입구 창) · 'party' (부대 탭)
+function sortieMsg(r) { return r.out ? r.in + ' 출전, ' + r.out + ' 쉼' : r.in + ' 출전'; }
+function sortieBar(s, where) {
+  DS.partySync(s);
+  var list = s.party.map(function (id) { return s.chars[id]; }).filter(Boolean), rest = DS.benched ? DS.benched(s).length : 0, N = DS.PARTY_MAX || 3;
+  var faces = list.map(function (ch) {
+    var hero = ch.id === s.hero, b = hero ? ch.ps : DS.bearer(s, ch), nm = hero ? DS.charName(ch) : b ? (b.ttl || b.n || '') : '';
+    return '<span class="sof' + (hero ? ' lord' : '') + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '"><span class="sop">' + charSpr(ch, 2) + '</span><b>' + esc(nm) + '</b><small class="num">' + (b ? DS.tierOfL(DS.pL(b)) + '단 ' + DS.lvOfL(DS.pL(b)) : '') + '</small></span>';
+  }).join('');
+  for (var i = list.length; i < N; i++) faces += '<span class="sof none"><span class="sop"></span><b>빈 자리</b><small>가주 없음</small></span>';
+  var kin = DS.mercsOf ? DS.mercsOf(s, s.hero).length : 0;
+  return '<div class="sobar ' + where + '"><div class="soh"><b>출전 ' + list.length + '명</b><small>' + (kin ? '가문원 ' + kin + '명도 함께' : '') + (rest ? (kin ? ', ' : '') + '쉬는 가주 ' + rest + '명' : '') + '</small>' +
+    (rest ? '<button class="btn small" data-sopick="1">바꾸기</button>' : '') + '</div><div class="sol">' + faces + '</div></div>';
+}
+// 고르기 창: 맹주는 늘, 가주 가운데 둘. 줄을 누르면 출전 ↔ 쉼 (둘이 차 있으면 먼저 하나를 쉬게 한다). 「확인」 → 모자란 자리는 가장 센 이로
+function sortiePick(done) {
+  var s = G.save, N = DS.SORTIE_N ? DS.SORTIE_N() : 2, pick = (s.sortie || []).map(function (e) { return e.h; });
+  var o = sheet('출전 고르기', function () {
+    var cands = DS.sortieRank(s), h = s.chars[s.hero], html = '<p class="hint sm">맹주와 가주 둘이 나간다. 가문원은 늘 함께 싸운다. 쉬는 가주는 경험치를 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '% 받는다.</p>';
+    if (h && h.ps) html += '<div class="row pr2 sopr on lord">' + charSpr(h, 2) + '<div class="tx"><b>' + esc(DS.charName(h)) + ' <i class="tg">맹주</i></b><small class="msub"><i class="mlv">' + lv(DS.pL(h.ps)) + '</i></small></div><span class="pra">' + pwNum(DS.sortiePow(s, h), 'sm') + '<i class="sotag on">출전</i></span></div>';
+    cands.forEach(function (ch) {
+      var b = DS.bearer(s, ch), on = pick.indexOf(ch.id) >= 0;
+      html += '<button class="row pr2 sopr' + (on ? ' on' : '') + '" data-sop="' + ch.id + '">' + mercSpr(b, 2) + '<div class="tx"><b>' + esc(b.ttl || b.n || '') + ' <small class="dim">' + crestH(ch, 12) + esc(hgShort(ch)) + '</small></b><small class="msub"><i class="mlv">' + lv(DS.pL(b)) + '</i>' + agTag(b) + '</small></div><span class="pra">' + pwNum(DS.sortiePow(s, ch), 'sm') + '<i class="sotag' + (on ? ' on' : '') + '">' + (on ? '출전' : '쉼') + '</i></span></button>';
+    });
+    if (!cands.length) html += '<p class="hint dimh">고를 가주가 없다. 영웅관에서 가문을 연다</p>';
+    return '<div class="sopk">' + html + '<p class="hint sm soc">출전 <b class="num">' + (1 + pick.length) + ' / ' + (N + 1) + '</b></p></div>';
+  }, 'sub');
+  o.foot = function () { return '<button class="btn gold wide" data-sook="1">확인</button>'; }; o.draw();
+  o.addEventListener('click', function (e) {
+    var r = e.target.closest('[data-sop]');
+    if (r) { var id = +r.dataset.sop, i = pick.indexOf(id); if (i >= 0) pick.splice(i, 1); else if (pick.length >= N) { A('cancel'); toast('출전은 ' + (N + 1) + '명까지다. 먼저 한 사람을 쉬게 한다', 2400); return; } else pick.push(id); A('tap'); o.draw(); return; }
+    if (e.target.closest('[data-sook]')) {
+      var before = (s.sortie || []).map(function (x) { return x.h; }).join(','); DS.sortieSet(s, pick); var after = s.sortie.map(function (x) { return x.h; }).join(',');
+      A('ok'); if (before !== after) { DS.rebuildParty(); DS.updateQuest(); U.persist(); toast('출전: ' + s.party.map(function (id) { var ch = s.chars[id]; return ch.id === s.hero ? DS.charName(ch) : (DS.bearer(s, ch) || {}).n || ''; }).join(', '), 2600); }
+      o.close(); if (done) done();
+    }
+  });
+  return o;
+}
+DS.sortiePick = sortiePick;
 // ───────── 시나리오 입구 ─────────
 function rewardText(s) {
   var r = s.reward || {}, out = [], sv = G.save;
@@ -977,13 +1018,14 @@ DS.openGate = function (s, lock) {
     '<div class="gate-head">' + (B ? sprTag(B.sprite, B.pal, 3) : '<span class="noboss">방어전</span>') + '<div><h2>' + esc(s.name) + '</h2><p>' + (B ? '<b class="boss">' + esc(B.name) + '</b>' + (title ? ', ' + esc(title) : '') : '세 차례 습격을 모두 막아라') + '</p></div></div>' +
     '<dl class="facts"><dt>권장</dt><dd>' + lv(rec) + (s.tier ? ', ' + s.tier + '단 전용' : '') + (rec !== s.L ? ' <small class="dim">적 ' + lv(s.L) + '</small>' : '') + '</dd><dt>우리 부대</dt><dd class="' + rtg.cls + '">' + (DS.partySpecs ? DS.partySpecs(sv).length + '명, ' : '') + '평균 ' + lv(pl) + (rtg.tag ? ' <i class="tagw ' + rtg.tc + '">' + rtg.tag + '</i>' : '') + '</dd>' +
     '<dt>적</dt><dd class="foes">' + foes + '</dd>' + (moves.length ? '<dt>보스의 기술</dt><dd class="moves">' + moves.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</dd>' : '') + '<dt>보상</dt><dd>' + esc(rewardText(s)) + '</dd></dl>' +
+    sortieBar(sv, 'gate') +      // 2.2.8: 출전 셋 · 바꾸기
     (empt ? '<p class="soft">빈 가문 ' + empt + '곳은 싸우지 않는다. <button class="lnk2" data-go="party">부대</button></p>' : '') +
     (hp < 0.6 ? '<p class="lock">부대 체력 ' + Math.round(hp * 100) + '% (자동 회복 안 됨)</p>' : '') +
     (low ? '<p class="lock">자동 전투: 기운초 안 씀. 위험하면 퇴각</p>' : '') +      // r8 hud (fun 6 · newbie 1d)
     (!low && pl < rec && !sv.cleared[s.id] && s.id <= 3 ? '<p class="soft">권장: 들판에서 ' + lv(rec) + '까지</p>' : '') +      // 첫 판들: 안내대로 곧장 들어가 지는 일이 많았다 (QA K9)
     (lock ? '<p class="lock">' + esc(lock) + '</p>' : '') +
     '</div><div class="sfoot two"><button class="btn" data-close>닫기</button><button class="btn gold" id="goScn"' + (lock ? ' disabled' : '') + '>입장</button></div>');
-  o.addEventListener('click', function (e) { if (e.target.closest('[data-go="party"]')) { A('tap'); o.close(); DS.openMenu('party'); } });
+  o.addEventListener('click', function (e) { if (e.target.closest('[data-go="party"]')) { A('tap'); o.close(); DS.openMenu('party'); } if (e.target.closest('[data-sopick]')) { A('tap'); sortiePick(function () { o.close(); DS.openGate(s, lock); }); } });      // 2.2.8: 바꾸면 창을 새로 (평균 · 꼬리표)
   $('#goScn', o).addEventListener('click', function () {
     A('ok'); o.close();
     var seenK = s.pit ? 'pit' + s.pit : null, skipIntro = s.pit ? !!sv.seen[seenK] : !!sv.cleared[s.id];      // 갱도 층 도입 글은 층마다 한 번만 (QA)
@@ -1007,11 +1049,12 @@ DS.openPit = function (lock) {
     '<div class="pitq">' + (hasSame ? '<button class="btn pitb" data-pf="' + same + '"><b>같은 층 다시</b><small class="num">' + same + '층</small></button>' : '') +
     '<button class="btn gold pitb" data-pf="' + nx + '"><b>다음 층 도전</b><small class="num">' + nx + '층</small></button></div>' +
     '<div class="pitst" role="group" aria-label="층 고르기"><button class="btn small" data-pstep="-10" aria-label="10층 위로">-10</button><button class="btn small" data-pstep="-1" aria-label="한 층 위로">-1</button><b class="num pitsel"></b><button class="btn small" data-pstep="1" aria-label="한 층 아래로">+1</button><button class="btn small" data-pstep="10" aria-label="10층 아래로">+10</button></div>' +
-    '<dl class="facts pitf"></dl>' + (lock ? '<p class="lock">' + esc(lock) + '</p>' : '') +
+    '<div class="pitso"></div><dl class="facts pitf"></dl>' + (lock ? '<p class="lock">' + esc(lock) + '</p>' : '') +
     '</div><div class="sfoot two"><button class="btn" data-close>닫기</button><button class="btn gold" id="goPit"' + (lock ? ' disabled' : '') + '></button></div>');
   function draw() {
     var sc = DS.pit(sel), pl = DS.partyL(sv), tg = DS.recTag(sv, sc), k = sc.pitKind, hp = partyHp();
     o.querySelector('.pitsel').textContent = sel + '층';
+    o.querySelector('.pitso').innerHTML = sortieBar(sv, 'gate');      // 2.2.8
     o.querySelector('#goPit').textContent = sel + '층 들어가기';
     Array.prototype.forEach.call(o.querySelectorAll('[data-pstep]'), function (b) { var v = sel + (+b.dataset.pstep); b.disabled = v < 1 || v > nx; });
     o.querySelector('.pitf').innerHTML = '<dt>층</dt><dd>' + esc(sc.name) + (k === 10 ? ' <i class="tg pk10">밑바닥 층</i>' : k === 5 ? ' <i class="tg pk5">수문장 층</i>' : '') + (sel <= best ? ' <small class="dim">깬 층</small>' : '') + '</dd>' +
@@ -1022,6 +1065,7 @@ DS.openPit = function (lock) {
   }
   draw();
   o.addEventListener('click', function (e) {
+    if (e.target.closest('[data-sopick]')) { A('tap'); sortiePick(draw); return; }      // 2.2.8
     var b = e.target.closest('[data-pstep]'); if (b && !b.disabled) { A('tap'); sel = Math.max(1, Math.min(nx, sel + (+b.dataset.pstep))); draw(); return; }
     var q = e.target.closest('[data-pf]'); if (q) { if (lock) { deny(q, '잠김', lock); return; } A('ok'); o.close(); pitGo(+q.dataset.pf); }
   });
@@ -1078,10 +1122,13 @@ function xpBoard(sv, sn, out, deadCh) {
     if (hero) lord = c; else cells.push(c);
     DS.mercsOf(sv, id).forEach(function (m) { if (m === w) return; var r = xpCell(sv, sn, m, { spr: mercSpr(m, 1.5), name: m.ttl || m.n || '', small: 1 }); up = up || r.up; kin.push(r.html); });
   });
+  var rest = [];      // 2.2.8: 쉰 가주 — 출전한 이가 얻은 경험치의 BAL.sortieExp
+  (DS.benched ? DS.benched(sv) : []).forEach(function (ch) { var w = DS.bearer(sv, ch); if (!w || !(sn && sn.P && sn.P[DS.pKey(sv, w)])) return; var r = xpCell(sv, sn, w, { spr: mercSpr(w, 1.5), name: w.ttl || w.n || '', small: 1 }); up = up || r.up; rest.push(r.html); });
   (DS.barracks ? DS.barracks(sv) : []).forEach(function (m) { var k = DS.pKey(sv, m), b0 = sn && sn.P && sn.P[k]; if (!b0) return; var g = xpGain(b0.L, b0.e, DS.pL(m), +m.exp || 0); if (g >= 1) { sbN++; sbG += g; } });
   if (!lord && !cells.length) return { html: '', up: false };
   return { up: up, html: '<div class="xb" data-xb="1">' + (lord ? '<div class="hkl">' + lord + '</div>' : '') + (cells.length ? '<div class="xb9">' + cells.join('') + '</div>' : '') +
-    (kin.length ? '<div class="xbk"><small>가문원</small><div class="xbkl">' + kin.join('') + '</div></div>' : '') + (sbN ? '<p class="xbs">막사 ' + sbN + '명 <b class="num">+' + fmtN(sbG) + '</b> exp <small>같은 병과 가주 몫의 ' + Math.round((DS.BAL.sbShare || 0) * 100) + '%</small></p>' : '') + '</div>' };
+    (kin.length ? '<div class="xbk"><small>가문원</small><div class="xbkl">' + kin.join('') + '</div></div>' : '') +
+    (rest.length ? '<div class="xbk xbr"><small>쉰 가주 <i class="num">' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%</i></small><div class="xbkl">' + rest.join('') + '</div></div>' : '') + (sbN ? '<p class="xbs">막사 ' + sbN + '명 <b class="num">+' + fmtN(sbG) + '</b> exp <small>같은 병과 가주 몫의 ' + Math.round((DS.BAL.sbShare || 0) * 100) + '%</small></p>' : '') + '</div>' };
 }
 // 막대를 움직인다: 칸마다 조금씩 늦게(최대 0.7초) · 1.3초 동안 · 끝까지 2.4초 남짓. 누르면 바로 끝. 움직임 줄이기면 처음부터 끝값
 function xbRun(o) {
@@ -1519,6 +1566,8 @@ function charSheet(id, parent) {
     var tags = '<i class="rtag s-' + st[0] + '">' + st[1] + '</i><i class="ctag">' + esc(c.name) + '</i><i class="ctag mr">' + (DS.vetBadge ? DS.vetBadge(r) : '') + esc(DS.hName(r)) + '</i>' + (hero ? '<i class="tg">맹주</i>' : '') + fuTag(s, ch);
     var html = sheetHead({ spr: bw && !hero ? mercSpr(bw, 4) : charSpr(ch, 4), fc: DS.FLAG[ch.cls] || '#f6cf57', name: crestH(ch, 22) + esc(DS.flagName(ch.cls)), tags: tags, lv: bw, pow: bw ? DS.cardPower(s, ch) : null, powLab: '가문 전투력', cls: 'hs2' + (vacH ? ' vac' : '') });
     html += gearSlots(ch, hero ? null : bw);      // 2.2.0: 장비는 머리에 (누르면 고르기)
+    if (bw) html += hero ? '<div class="duty in so"><span><b>출전</b><small>맹주는 늘 나간다</small></span></div>' : inP ? '<div class="duty in so"><span><b>출전</b><small>맹주와 함께 싸운다</small></span><button class="btn small" data-sotg="1"' + (w === 'battle' ? ' disabled' : '') + '>쉬기</button></div>' :
+      '<div class="duty so"><span><b>쉰다</b><small>싸우지 않는다. 경험치 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%</small></span><button class="btn small gold" data-sotg="1"' + (w === 'battle' ? ' disabled' : '') + '>출전</button></div>';      // 2.2.8: 출전 · 쉬기
     html += vitBars(u, hero ? ch.hp : bw && bw.hp, ch.mp, bw, meritBar(ch)) + fuseLine(s, ch);
     // 가주
     var sbs = hero ? [] : DS.sbOf(s, ch.id), nk = kinFree(s).length;
@@ -1567,6 +1616,7 @@ function charSheet(id, parent) {
     if (bnb) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } A('tap'); bnPick(id, o); return; }
     var hb = e.target.closest('[data-gohall]'); if (hb) { if (DS.townBusy && DS.townBusy()) { A('cancel'); toast(DS.townWorkWhy(), 2600); return; } A('tap'); mercShop(); return; }
     var sbu = e.target.closest('[data-sbup]'); if (sbu) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } var r = DS.hand(s, id, +sbu.dataset.sbup, { where: bnWhere() }); if (!r.ok) { A('cancel'); toast(r.why); return; } A('ok'); DS.rebuildParty(); DS.updateQuest(); U.persist(); o.draw(); if (r.nf && DS.nfAsk) { var nid = +sbu.dataset.sbup; setTimeout(function () { DS.nfAsk({ k: 'm', id: nid }, null, '새 가주, 처음 이름 정하기 (무료)'); }, 250); } return; }
+    if (e.target.closest('[data-sotg]')) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } var rt = DS.sortieToggle(s, id); if (!rt.ok) { A('cancel'); toast(rt.why); return; } A('ok'); toast(sortieMsg(rt), 2600); DS.rebuildParty(); DS.updateQuest(); U.persist(); o.draw(); return; }      // 2.2.8
     var ks = e.target.closest('[data-kinsend]'); if (ks) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } A('tap'); kinSend(+ks.dataset.kinsend, o); return; }
     if (e.target.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return; }
     if (gearSlotClick(e, id, ch && id !== s.hero ? (DS.bearer(s, ch, 1) || {}).id : 0, o)) return;      // 2.2.0: 머리의 장비 칸
@@ -1632,11 +1682,11 @@ function hgCell(s, ch, cls) {
     return '<button class="hk none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">닫힌 가문</b><small class="hkv">영웅관에서 ' + esc(DS.CLASSES[cls].name) + '이 오면</small></button>';      // 2.2.4: 가문은 영웅관에서만 연다
   }
   var m = hgMeta(s, ch), b = m.b, L = b ? DS.pL(b) : ch.L, rk = DS.hRank(ch), dn = !!ch.down;
-  var st = (m.hero ? ' lord' : '') + (dn ? ' down' : '') + (b ? '' : ' vac') + (m.pi >= 0 ? ' in' : '');
-  var por = '<span class="hkf" style="--gc:' + (b ? gcol(b.g || 3) : '#4a3f30') + '">' + charSpr(ch, m.hero ? 4 : 3) + (dn ? '<i class="hkx">쓰러짐</i>' : '') + '</span>';
+  var st = (m.hero ? ' lord' : '') + (dn ? ' down' : '') + (b ? '' : ' vac') + (m.pi >= 0 ? ' in' : b && !dn ? ' rest' : '');
+  var por = '<span class="hkf" style="--gc:' + (b ? gcol(b.g || 3) : '#4a3f30') + '">' + charSpr(ch, m.hero ? 4 : 3) + (m.pi >= 0 && !dn ? '<i class="hkso">출전</i>' : b && !dn ? '<i class="hkso rs">쉼</i>' : '') + (dn ? '<i class="hkx">쓰러짐</i>' : '') + '</span>';      // 2.2.8: 출전 셋 · 쉬는 가주
   var foot = b ? xpBar(dn ? 0 : pFrac(b)) + '<span class="hkw">' + pwNum(m.pw, 'sm') + '</span>' : '<small class="hkv">' + (m.sb ? '막사의 같은 병과 ' + m.sb + '명' : '영웅관에서 모집') + '</small>';
   var gq = hgGear(s, ch, m.hero ? null : b, m.hero);
-  return '<button class="hk hgh' + st + '" data-ch="' + ch.id + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '" aria-label="' + esc(hgShort(ch) + ' 가문, ' + (b ? m.bn + ' ' + lv(L) : '빈 가문') + (dn ? ', 쓰러짐' : '') + (gq.names.length ? ', ' + gq.names.join(', ') : '')) + '">' + gq.html +
+  return '<button class="hk hgh' + st + '" data-ch="' + ch.id + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '" aria-label="' + esc(hgShort(ch) + ' 가문, ' + (b ? m.bn + ' ' + lv(L) : '빈 가문') + (m.pi >= 0 ? ', 출전' : b ? ', 쉼' : '') + (dn ? ', 쓰러짐' : '') + (gq.names.length ? ', ' + gq.names.join(', ') : '')) + '">' + gq.html +
     '<span class="hkh">' + DS.houseCrestOf(s, ch, m.hero ? 16 : 14) + '<small>' + esc(hgShort(ch)) + '</small>' + (m.hero ? '<i class="hkt">맹주</i>' : '') + '</span>' +
     (rk >= 1 ? '<span class="hkr" title="' + esc(DS.hName(rk)) + '">' + DS.vetBadge(rk) + '</span>' : '') + por + (b ? lvPill(L) : '') +
     '<b class="hkn' + (b ? '' : ' dim') + '">' + esc(b ? m.bn : '빈 가문') + '</b>' + foot + '</button>';
@@ -1683,11 +1733,12 @@ function barList(s) {
       '<span class="pra">' + (hm ? '<small class="bhm">' + crestH(hm, 14) + esc(hgShort(hm)) + '</small>' : '') + pwNum(pw, 'sm') + '</span><span class="bbt"><button class="btn small" data-barsw="' + (hm ? hm.id : 0) + '"' + (cant ? ' disabled' : '') + '>교체</button><button class="btn small" data-fire="' + m.id + '"' + (m.lk || m.cast ? ' disabled' : '') + '>방출</button></span></div>';
   }).join('') + '</div>';
 }
-// 부대 탭 = 가문 격자 (가주 · 가문원이 칸 안에) → 막사 목록 → 한 줄 요약 → 아래 단추 줄(가계도 · 마을 일 · 수배). 2.2.0: 출전 고르기·막사는 없다 — 가주가 선 가문은 모두 싸운다
+// 부대 탭 = 출전 줄(2.2.8 — 맹주 + 가주 둘 · 바꾸기) → 가문 격자 (가주 · 가문원이 칸 안에, 출전 띠) → 막사 목록 → 한 줄 요약 → 아래 단추 줄(가계도 · 마을 일 · 수배)
 function tabParty() {
   var s = G.save, html = '', emp = DS.bnEmpty ? DS.bnEmpty(s) : [];
   html += partyMeta(s, 1);      // 맺음 직후: 「다음 세대의 장」 단추
   if (emp.length) html += '<p class="lock vacl">빈 가문 ' + emp.length + '곳은 싸우지 않는다. 가문을 눌러 채운다 (영웅관 · 맹주의 아이)</p>';
+  html += sortieBar(s, 'party');      // 2.2.8: 출전 셋 · 바꾸기
   html += houseGrid(s);
   html += barList(s);
   var near = fuNear(s), c = agCal(), eg = '';
@@ -1710,6 +1761,7 @@ function partyClick(e, o) {
   if ((b = t.closest('[data-barsw]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } if (+b.dataset.barsw) { A('tap'); bnPick(+b.dataset.barsw, o); } return true; }
   if ((b = t.closest('.hgm [data-info], .hkk [data-info], .bar2 [data-info]'))) { A('tap'); mercInfo(+b.dataset.info, o); return true; }
   if (t.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return true; }
+  if (t.closest('[data-sopick]')) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } A('tap'); sortiePick(function () { if (o.isConnected) o.draw(); }); return true; }      // 2.2.8
   if ((b = t.closest('[data-hgnone]'))) { var nc = b.dataset.hgnone; A('tap'); toast(josa(DS.flagName(nc), '은는') + ' 닫혀 있다. 영웅관에서 ' + josa(DS.CLASSES[nc].name, '이가') + ' 나오면 그 영웅이 가주가 되어 열린다.', 3600); return true; }
   if ((b = t.closest('[data-bnslot]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } A('tap'); bnPick(+b.dataset.bnslot, o); return true; }
   return false;
@@ -1850,7 +1902,9 @@ function tabHelp() {
   var S = [
     ['사람과 가문', '가문', [
       '연맹에는 <b>맹주</b> 한 명과 가문들이 있다. 가문들이 모여 <b>' + esc(DS.allyFull ? DS.allyFull(G.save) : '연맹') + '</b>을 이룬다. 맹주는 자기가 선 가문의 가주다. 연맹의 이름은 대가 바뀌어도 그대로다.',
-      '<b>가주가 선 가문은 모두 싸운다.</b> 출전을 고르는 일은 없다. 가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
+      '<b>싸움에는 셋이 나간다.</b> 맹주와 고른 가주 둘이다. 맹주의 어른 가문원은 늘 함께 싸운다. 나머지 가주는 쉰다. 쉬는 가주는 싸우지 않아 쓰러지지 않고, 나이는 그대로 먹는다.',
+      '출전은 부대 탭의 <b>바꾸기</b>나 가문 창의 <b>출전, 쉬기</b>로 바꾼다. 시나리오와 갱도 입구에서도 바꾼다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러지거나 가문이 비면 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
+      '가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
       '사람의 자리는 셋이다. <b>가주</b>는 가문을 이끌고 싸운다. <b>막사</b>는 모집한 영웅이 기다리는 곳 하나로, 가문에 매이지 않고 싸우지 않는다. <b>가문원</b>은 맹주 집 사람(아이, 배우자)으로, 어른이면 모두 맹주를 따라 싸운다.',
       '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 장비와 공훈은 가문에 남는다.',
       '빈 가문을 채우는 길은 둘이다. <b>영웅관</b>에서 모집하거나, 맹주의 <b>어른 아이</b>를 그 가문의 가주로 보낸다. 보낸 아이는 그 가문의 병과를 받는다. 맹주의 자리는 늘 이어지니 싸울 이가 아무도 없어지는 일은 없다.',
@@ -1887,6 +1941,7 @@ function tabHelp() {
       '<b>체력과 마나는 저절로 차지 않는다.</b> 약초, 치유 기술, 교회의 치료로 채운다.',
       '<b>붉게 깜빡이는 칸</b>은 곧 공격이 떨어질 자리다. 틱이 남아 있으면 부대가 알아서 피한다.',
       '상성은 보병 ▶ 창병 ▶ 기병 ▶ 보병. 화살은 나는 적에게, 신성 공격은 망자와 악마에게 1.5배.',
+      '들판에서는 가끔 <b>기습</b>이 온다. 무리가 사방에서 한꺼번에 몰려온다. 모두 물리치면 골드와 경험치를 더 준다.',
       '<b>맹주가 쓰러지면</b> 전투가 끝난 뒤에 누가 이을지 고른다. 시나리오 중이면 시나리오가 끝난 뒤에. 고르기 전에 게임을 꺼도 다시 켜면 그 창이 돌아온다.']],
     ['장비', 0, [
       '장비는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 누구나 어떤 장비든 장착한다. 병과에 맞지 않는 계열은 능력치가 ' + Math.round((1 - DS.GEAR_OFF) * 100) + '% 깎인다.',
@@ -1897,7 +1952,7 @@ function tabHelp() {
       '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다.',
       '가방 목록도 다중 선택이 기본이다. 고른 뒤 아래 붉은 버튼으로 한꺼번에 판매한다. 잠근 장비는 선택할 수 없다.']],
     ['성장과 합일', 0, [
-      '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
+      '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 쉬는 가주는 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%를 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
       '레벨 10마다 <b>단</b>이 오른다. 맹주는 모습이 바뀌고, 가주와 가문원은 테두리 빛이 바뀐다. 가주의 단만큼 가문의 기술이 열리고, 가문원은 3단, 5단, 7단에 제 기술을 익힌다.',
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
       '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받는다. 아무도 제 자리를 떠나지 않는다.',

@@ -17,6 +17,7 @@
 //   · 싸움 뒤: 진짜 규칙 그대로 — 쓰러진 가주·가문원은 영영 잃는다(DS.loseMerc · DS.linMercDied), 맹주는 미뤄진 죽음 → 후계는 사람처럼 고른다(자식 · 막사의 같은 병과 · 다른 가문의 가주 가운데 맹주가 되었을 때 레벨이 가장 높은 이 — 고를 이가 없으면 DS.linAutoAll 의 대 끊김. BOTAUTO=1: 게임의 저절로 차례),
 //     나이·출생(DS.ageCheck), 막사의 사람이 빈 가문을 잇기(DS.sbTick). 지면(전멸) 같은 시나리오를 다시 한다 (wipe 하나).
 //   · 필살기: 2.2.7 부터 자동 전투가 가문마다 스스로 쓴다 (engine.js P.ultSelf — 봇의 가문은 모두 자동). DS.BAL.ultAuto 는 조작하는 한 사람을 수동이어도 누른 것으로 친다.
+//   2.2.8: 출전은 맹주 + 가주 둘 — 싸우기 전마다 가장 센 둘을 고른다 (DS.sortieRank · 바꾼 수 sortieSw). 맹주의 어른 가문원은 늘 함께 싸운다
 //   2.2.7: 요약에 시나리오 · 들판마다 쓰러짐(dAt) · 전멸(wAt) · 필살기(uAt) · 처음 싸운 길이(tAt) · 처음 싸움 [이김, 쓰러짐, 레벨](ft). BOTREC=1: 안전 대신 권장에서 들어간다
 // 시간: hours = (엔진 시간 + 걷는 몫) / 3600. 게임 달력도 엔진 시간만큼 흐른다 (DS.ageAdvance — 게임과 같다).
 // 옛 규칙 비교: LOAD_SRC=/home/user/src/src node tools/bot.js inf 1 — 2.1.2(저장 v12) 규칙으로 같은 정책을 돌린다 (가솔 자동 채움 · 출전 셋 = 레벨 높은 셋 ·
@@ -109,6 +110,7 @@ function prep() {
   }
   if (OLD) { oldRecruit(); tidy(); } else { recruit(); sendKin(); tidy(); }
   if (s.crest && D.fuseCands(s).length >= D.FUSE_N) { const k = D.fuseAuto(s); st.fuse += k; if (k) st.log.push('fuse ×' + k); }      // 맹세의 깃대가 있으면 7단 Lv10 셋이 모일 때마다 합일 (합일한 이는 70 을 넘어 자란다)
+  if (!OLD && D.sortieSet) { const r = D.sortieRank(s).slice(0, 2).map(ch => ch.id), cur = (s.sortie || []).map(e => e.h); if (r.join() !== cur.join() && r.slice().sort().join() !== cur.slice().sort().join()) { D.sortieSet(s, r); st.sortieSw = (st.sortieSw || 0) + 1; } }      // 2.2.8: 출전은 가장 센 가주 둘 (사람이 하듯 — 싸우기 전에 본다)
   D.lootAutoEquip(s); heal(); shop();
   check('prep');
 }
@@ -303,7 +305,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
 const H = (st.simT + st.over) / 3600;
 const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
-  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, houses: D.charList(s).length,
+  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, houses: D.charList(s).length, sortieSw: st.sortieSw || 0,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
 console.log(`${cls} seed${seed}: ${out.cleared}/30 in ${out.hours}h, wipes ${out.wipes}, deaths ${out.deaths} (hero ${out.heroDeaths}, bearer ${out.bearDeaths}, kin ${out.kinDeaths}), recruits ${out.recruits}, kin sent ${out.kinSent}, vacancies max ${out.vacMax}/avg ${out.vacAvg}`);

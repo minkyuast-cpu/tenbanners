@@ -209,7 +209,7 @@ DS.fixSave = function (s) {
   if (!s || typeof s !== 'object' || !s.chars || typeof s.chars !== 'object') return null;
   var wasBn = s.bn === 1;      // 4.0: 「표시가 있었나」는 채움보다 먼저 (bn 은 기본값 채움에 걸리지 않는다 — 표시가 틀려도 DS.bnFix 의 불변식이 바로잡는다)
   var def = DS.newSave('대장', 'inf'), k, id, hid0 = own(s.chars, s.hero) ? +s.hero : 0;
-  for (k in def) if (s[k] === undefined && k !== 'chars' && k !== 'party' && k !== 'hero' && k !== 'nid' && k !== 'lin' && k !== 'coffins' && k !== 'cal' && k !== 'bn' && k !== 'us') s[k] = def[k];      // r42: us(필살기 씨앗)는 새 판에서만 — 없는 저장은 eg.seed 로 (결정적)      // 가계도·관은 DS.linFix 가 채운다 (새 판의 사람 명부를 옮겨 오지 않게)
+  for (k in def) if (s[k] === undefined && k !== 'chars' && k !== 'party' && k !== 'hero' && k !== 'nid' && k !== 'lin' && k !== 'coffins' && k !== 'cal' && k !== 'bn' && k !== 'us' && k !== 'sortie') s[k] = def[k];      // r42: us(필살기 씨앗)는 새 판에서만 — 없는 저장은 eg.seed 로 (결정적)      // 가계도·관은 DS.linFix 가 채운다 (새 판의 사람 명부를 옮겨 오지 않게)
   ['items', 'opt', 'seen', 'visited', 'cleared'].forEach(function (g) {
     if (!s[g] || typeof s[g] !== 'object' || Array.isArray(s[g])) s[g] = def[g];
     for (var q in def[g]) if (s[g][q] === undefined) s[g][q] = def[g][q];
@@ -268,6 +268,11 @@ DS.fixSave = function (s) {
   // 깨진 저장의 거대한 배열만 막는다 (300). 4.0 (②-2-4): 가계·깃발에 걸린 줄(든 사람 h · 열쇠 cast · 가계도 pid · 잠금 lk · 깃발 밑 o)은 앞으로 모으고, 자를 때는 막사 일반 줄만 자른다
   if (DS.bnCap) DS.bnCap(s, 300); else s.mercs = s.mercs.slice(0, 300);
   if (s.lock != null && (typeof s.lock !== 'object' || Array.isArray(s.lock))) s.lock = {};      // 장비 잠금: 배열이면 JSON 에 남지 않아 잠금이 사라진다
+  var soNew = !Array.isArray(s.sortie);      // 2.2.8: 출전 칸이 없던 옛 저장 — 맨 끝(모든 정리 뒤)에 가장 센 둘로
+  if (s.sortie != null) {      // 2.2.8 출전 (맹주 밖 가주 둘): [{ h: 가문 번호, m: 가주 번호, n: 이름 }] — 깨진 칸은 걷고, 없으면 DS.sortieFix 가 가장 센 둘로 (옛 저장)
+    s.sortie = Array.isArray(s.sortie) ? s.sortie.filter(function (e) { return e && typeof e === 'object' && int(e.h) && own(s.chars, e.h); }).slice(0, 2).map(function (e) { var o = { h: +e.h, m: int(e.m) ? +e.m : 0 }; if (typeof e.n === 'string') o.n = e.n.slice(0, 24); return o; }) : [];
+  }
+  if (s.sortieNews != null) { if (!Array.isArray(s.sortieNews)) delete s.sortieNews; else s.sortieNews = s.sortieNews.filter(function (n) { return n && typeof n === 'object' && typeof n.in === 'string'; }).slice(-6).map(function (n) { return { out: typeof n.out === 'string' ? n.out.slice(0, 24) : '', in: n.in.slice(0, 24), why: String(n.why || '').slice(0, 6) }; }); }
   if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 (가주 하나 · 가문원은 맹주 가문 · 그 밖은 막사)
   if (!Array.isArray(s.fallen)) s.fallen = [];
   s.fallen = DS.fallenTrim(s.fallen.filter(function (f) { return f && typeof f === 'object'; }));
@@ -296,8 +301,17 @@ DS.fixSave = function (s) {
   if (DS.bnFix) DS.bnFix(s, wasBn);      // 4.0: 부대원 + 깃발 — 불변식 넷을 검사하고 어긴 줄만 변환한다 (두 번 돌려도 같다)
   if (DS.fuseUnions) DS.fuseUnions(s);      // r42: 옛 묶음 기록은 없어졌다 (비운다)
   if (DS.pSync) DS.pSync(s);      // r42: 가문 줄 ← 가주의 개인 레벨
+  if (soNew) s._soNew = 1;      // 2.2.8: 읽기(Save.read · peek)가 모든 정리(겉의 fixSave 들까지) 뒤에 출전을 새로 고른다 (soFresh)
   return s;
 };
+// 2.2.8: 출전 칸이 없던 옛 저장 → 맹주 + 가장 센 가주 둘 (소식 없이). 정리하는 동안 잠깐 채운 것은 버린다
+function soFresh(s) {
+  if (!s || !s._soNew) return s;
+  delete s._soNew; delete s.sortie; delete s.sortieNews;
+  var hold = DS.sortieHold; DS.sortieHold = null;
+  try { if (DS.partySync) DS.partySync(s); } finally { DS.sortieHold = hold; }
+  return s;
+}
 DS.Save = {
   // 저장을 읽는다. 낡은 판이면 옮기고, 옮기기 전 원본은 따로 남긴다.
   KEY: KEY, OLD_KEY: OLD,
@@ -327,7 +341,7 @@ DS.Save = {
       while (s.v < DS.SAVE_V) { var m = MIGRATE[s.v]; if (!m) break; m(s); moved = true; }
       s.hist = (Array.isArray(s.hist) ? s.hist : []).concat([{ from: from, to: s.v, ver: DS.VERSION }]);
     }
-    s = DS.fixSave(s); if (!s) return null;
+    s = soFresh(DS.fixSave(s)); if (!s) return null;
     // 회귀자인데 아직 특전을 받지 못한 저장이면 지금 드린다
     var r = this.legacy();
     if (r && !s.perk) { DS.grantReturnee(s, r, true); moved = true; }
@@ -344,7 +358,7 @@ DS.Save = {
       s.v = verOf(s);
       var from = s.v;
       if (from < DS.SAVE_V) { scrub(s); while (s.v < DS.SAVE_V) { var m = MIGRATE[s.v]; if (!m) break; m(s); } }
-      s = DS.fixSave(s); if (s) s._from = from;
+      s = soFresh(DS.fixSave(s)); if (s) s._from = from;
       return s;
     } catch (e) { return null; }
   },

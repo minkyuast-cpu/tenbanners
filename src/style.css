@@ -4820,3 +4820,31 @@ html body #app#app .hk.vac .hkg, html body #app#app .xb .hkg { opacity: .55; }
 .hrm.shut { border-color: color-mix(in srgb, var(--fc, #c9a96a) 60%, transparent); background: color-mix(in srgb, var(--fc, #c9a96a) 12%, transparent); }
 .hrm.shut svg.crest { filter: grayscale(.4); }
 .hshut .hint { margin: 0; }
+/* 2.2.8 출전 셋 — 격자 칸의 「출전」 띠 · 쉬는 가주는 조금 어둡게 · 출전 줄(부대 탭 · 입구 창) · 고르기 창 · 결과 창의 쉰 가주 */
+html body #app#app .hkf .hkso { position: absolute; left: 0; right: 0; top: 0; padding: 1px 0; font: 700 9.5px/12px var(--f-head); font-style: normal; letter-spacing: .06em; color: #08222b; background: rgba(127, 208, 230, .92); }
+html body #app#app .hkf .hkso.rs { color: #d8ccb2; background: rgba(20, 15, 10, .72); font-weight: 500; }
+html body #app#app .hk.in:not(.lord) { background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 22%, #241c15) 0%, #1d1611 55%, #16110d 100%) padding-box, linear-gradient(#7fd0e6, #2f5a66) border-box; }
+html body #app#app .hk.rest .hkf canvas, html body #app#app .hk.rest .hkf img { filter: brightness(.78) saturate(.8); }
+html body #app#app .hk.rest .hkn { color: var(--a-mute, #b9ab90); }
+html body #app#app .sobar { display: grid; gap: 6px; margin: 4px 0 10px; padding: 8px 10px; border: 1px solid rgba(127, 208, 230, .4); border-radius: 10px; background: linear-gradient(180deg, rgba(127, 208, 230, .08), rgba(127, 208, 230, .02)), #1b1510; }
+html body #app#app .sobar .soh { display: flex; align-items: center; gap: 8px; min-width: 0; }
+html body #app#app .sobar .soh b { flex: none; font: 700 13px/18px var(--f-head); color: #bfe9f5; }
+html body #app#app .sobar .soh small { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 11px/15px var(--f-ui); color: var(--a-mute, #b9ab90); }
+html body #app#app .sobar .soh .btn { flex: none; margin-left: auto; }
+html body #app#app .sobar .sol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+html body #app#app .sof { --fc: #c9a96a; display: grid; justify-items: center; gap: 1px; min-width: 0; padding: 4px 2px; border-radius: 8px; background: color-mix(in srgb, var(--fc) 14%, #16110d); border: 1px solid color-mix(in srgb, var(--fc) 40%, transparent); }
+html body #app#app .sof.lord { border-color: rgba(232, 195, 106, .7); }
+html body #app#app .sof.none { opacity: .55; border-style: dashed; }
+html body #app#app .sof .sop { display: grid; place-items: center; height: 34px; }
+html body #app#app .sof .sop canvas, html body #app#app .sof .sop img { max-height: 32px; width: auto; image-rendering: pixelated; }
+html body #app#app .sof b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 11.5px/15px var(--f-head); }
+html body #app#app .sof small { font: 500 10px/12px var(--f-num); color: #f6e6b8; }
+html body #app#app .sobar.gate { margin: 8px 0 6px; }
+html body #app#app .sopk { display: grid; gap: 6px; }
+html body #app#app button.row.sopr { width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+html body #app#app .row.sopr.on { border-color: rgba(127, 208, 230, .6); box-shadow: inset 3px 0 0 #7fd0e6; }
+html body #app#app .sotag { flex: none; min-width: 34px; padding: 1px 6px; border-radius: 4px; text-align: center; font: 700 11px/16px var(--f-head); font-style: normal; color: #d8ccb2; background: rgba(255, 255, 255, .07); }
+html body #app#app .sotag.on { color: #08222b; background: #7fd0e6; }
+html body #app#app .sopk .soc { text-align: center; }
+html body #app#app .duty.so { margin: 6px 0 8px; }
+html body #app#app .xbr > small i { font-style: normal; color: #bfe9f5; }

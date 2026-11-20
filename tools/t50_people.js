@@ -17,11 +17,11 @@ module.exports = async (page, shot, L) => {
     DS.mercTidy(s); DS.pSync(s);
   });
   await ev(() => { DS.enterZone('haemil'); }); await L.sleep(700);
-  // ① 모두 싸운다: 유닛 수 = 가주가 선 가문 + 어른 가문원
-  let c = await ev(() => { var s = DS.G.save; return { units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length, houses: DS.partyIds(s).length, kin: DS.mercsOf(s, s.hero).length, chips: Object.keys(DS.G.chipEls).length }; });
-  A(c.units === c.houses + c.kin && c.houses === 8, 'everyone fights: ' + c.units + ' units = ' + c.houses + ' houses + ' + c.kin + ' kin');
-  A(c.chips === c.houses, 'one chip per fighting house (' + c.chips + ')');
-  await shot('everyone');
+  // ① 2.2.8 셋이 나간다: 유닛 수 = 맹주 + 출전한 가주 둘 + 어른 가문원 · 칩은 셋 · 처음 출전은 가장 센 둘
+  let c = await ev(() => { var s = DS.G.save; var rank = DS.sortieRank(s).map(ch => ch.id); return { units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length, houses: DS.partyIds(s).length, all: DS.charList(s).length, kin: DS.mercsOf(s, s.hero).length, chips: Object.keys(DS.G.chipEls).length, sortie: (s.sortie || []).map(e => e.h), top2: rank.slice(0, 2), bench: DS.benched(s).length }; });
+  A(c.units === c.houses + c.kin && c.houses === 3 && c.all === 8 && c.bench === 5, 'three go out of ' + c.all + ' houses: ' + c.units + ' units = ' + c.houses + ' + ' + c.kin + ' kin, ' + c.bench + ' rest');
+  A(c.chips === 3, 'one chip per sortie house (' + c.chips + ')');
+  await shot('three');
   // ② 아이: 혼인 → 미성년 아이는 싸우지 않는다 → 열다섯이 되면 가문원으로 싸운다
   c = await ev(() => {
     var s = DS.G.save, h = s.chars[s.hero];
@@ -35,10 +35,10 @@ module.exports = async (page, shot, L) => {
     return { wed: !!w, young: yp.id, n0: n0, kin0: DS.mercsOf(s, s.hero).length };
   });
   A(c.wed, 'hero married');
-  A(c.kin0 === 0 && c.n0 === 8, 'minor does not fight (specs ' + c.n0 + ')');
+  A(c.kin0 === 0 && c.n0 === 3, 'minor does not fight (specs ' + c.n0 + ')');
   c = await ev((pid) => { var s = DS.G.save; DS.ageAdvance(s, 16 * DS.AGE.year); var e = DS.ageCheck(s, '시험'); DS.mercTidy(s); DS.rebuildParty(); return { adult: e.filter(x => x.t === 'adult').length, kin: DS.mercsOf(s, s.hero).length, specs: DS.partySpecs(s).length, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length, st: s.lin.P[pid].st }; }, c.young);
   A(c.adult >= 1 && c.kin === 1 && c.st === 'live', 'kid came of age as kin');
-  A(c.units === 9, 'adult kin fights (' + c.units + ' units)');
+  A(c.units === 4, 'adult kin fights alongside the three (' + c.units + ' units)');
   // ③ 영웅 모집: 빈 가문으로 → 가주 / 가주가 선 가문 → 막사 · 빈 가문은 레벨·단을 잃는다 · 새 가주는 제 레벨 그대로
   c = await ev(() => {
     var s = DS.G.save, chs = DS.charList(s).filter(function (ch) { return ch.id !== s.hero; }), out = {};
@@ -105,7 +105,7 @@ module.exports = async (page, shot, L) => {
   if (gp.id) { await page.click('.ov .gpk-r[data-on="' + gp.id + '"]'); await L.sleep(400); }
   const gw = await ev((a) => { var s = DS.G.save; return { w: s.chars[a.X].w, sheet: !!document.querySelector('.ov .gsl2'), picker: !!document.querySelector('.ov .gpk-r') }; }, { X: c.X });
   A(gs.n >= 2 && gs.vis && !gs.old && gp.rows > 0 && gp.best && gw.w === gp.id && gw.sheet && !gw.picker, 'house sheet: gear slots in the header (visible at 390×844), picker equips in one tap (' + gp.id + ')');
-  await ev(() => DS.ui.closeAll());
+  await ev((id) => { DS.ui.closeAll(); var s = DS.G.save; if (!DS.sortieOn(s, id)) { DS.sortieSet(s, [id]); DS.rebuildParty(); } }, c.X); await L.sleep(300);      // 2.2.8: 그 가문이 나가 있어야 칩이 있다
   await page.click('#chips .chip[data-u="c' + c.X + '"]').catch(() => {}); await L.sleep(300);
   if (!(await ev(() => !!document.querySelector('.ov .gsl2')))) { await page.click('#chips .chip[data-u="c' + c.X + '"]').catch(() => {}); await L.sleep(400); }
   A(await ev(() => !!document.querySelector('.ov .gsl2')), 'tapping the selected top chip again opens the same house sheet');
@@ -113,7 +113,7 @@ module.exports = async (page, shot, L) => {
   // 마을에서 가주가 떠났다 (천수 같은 싸움 밖의 죽음) → 다음 부대 정리(rebuildParty)에서 곧바로 막사의 같은 병과가 잇는다
   c = await ev(() => {
     DS.ui.closeAll(); var s = DS.G.save, H = DS.charList(s).filter(function (ch) { return ch.id !== s.hero && DS.bearer(s, ch, 1) && !DS.CLASSES[ch.cls].master; })[1];
-    var m = DS.addMerc(s, DS.heroType(H.cls), 3, 0); m.sb = 1; m.nc = DS.houseCls(H); m.L = 33; DS.mercTidy(s);
+    DS.sortieSet(s, [H.id]); var m = DS.addMerc(s, DS.heroType(H.cls), 3, 0); m.sb = 1; m.nc = DS.houseCls(H); m.L = 33; DS.mercTidy(s);      // 2.2.8: 나가 있는 가주 (새 가주가 더 세니 그 가문이 다시 나간다)
     var b0 = DS.bearer(s, H, 1); DS.loseMerc(s, b0.id); DS.linMercDied(s, b0, '시험', '천수를 누림');
     DS.rebuildParty();
     return { seat: DS.bearer(s, H, 1) === m, L: H.L, chip: !!DS.G.chipEls['c' + H.id] };
@@ -145,7 +145,8 @@ module.exports = async (page, shot, L) => {
     o.tk2 = DS.applyClear(n0, DS.scn(2)).tickets;      // 다시 깨면 없다
     o.t12 = DS.applyClear(n0, DS.scn(12)).tickets;     // 가문이 오지 않던 판은 한 장도 없다 (열 번째가 아니면)
     var a = cp(), shut0 = DS.closedCls(a).slice(), r = DS.recruitHero(a, Math.random, { cls: shut0[0] }), ch = r && r.ch;
-    o.role = r && r.role; o.open = !!ch && ch.cls === shut0[0] && DS.bearer(a, ch) === r.m && DS.closedCls(a).length === shut0.length - 1; o.L = r && r.m.L; o.rL = DS.recruitL(s, r ? r.g : 3); o.party = !!ch && DS.partyIds(a).indexOf(ch.id) >= 0 && DS.partySpecs(a).some(function (u) { return u.ch === ch.id; });
+    o.role = r && r.role; o.open = !!ch && ch.cls === shut0[0] && DS.bearer(a, ch) === r.m && DS.closedCls(a).length === shut0.length - 1; o.L = r && r.m.L; o.rL = DS.recruitL(s, r ? r.g : 3); o.party = !!ch && DS.partyIds(a).indexOf(ch.id) < 0 && DS.benched(a).indexOf(ch) >= 0 && a.sortie.length === 2 && !DS.partySpecs(a).some(function (u) { return u.ch === ch.id; });      // 2.2.8: 출전이 차 있으면 새 가문은 쉰다
+    var f = DS.newSave('빈', 'inf'), rf = DS.recruitHero(f, Math.random, { cls: DS.closedCls(f)[0] }); o.fresh = !!(rf && rf.ch && DS.partyIds(f).indexOf(rf.ch.id) >= 0 && /출전/.test(DS.sortieNewsText(f)));      // 자리가 비어 있으면 곧바로 나간다
     o.hp0 = a.hpity;
     var b = cp(); b.hpity = DS.HOUSE_OPEN.pity; o.odds1 = DS.openOdds(b); var rb = DS.recruitHero(b, function () { return 0.001; }); o.sure = rb && rb.role === 'open';      // 천장: 반드시 연다 (난수가 선 가문 쪽이어도)
     var cnt = 0, N = 400, rs = 7; var rnd = function () { rs = (rs * 16807) % 2147483647; return rs / 2147483647; };
@@ -157,7 +158,8 @@ module.exports = async (page, shot, L) => {
     return o;
   });
   A(c.start === 1 && c.t0 === 2 && c.after === 1 && c.tk === c.t0 + 10 && c.tk2 === 0 && c.t12 === 0, 'scenario clears never add a house: houses ' + c.start + ' → ' + c.after + ', tickets ' + c.t0 + ' → ' + c.tk + ' (join scenarios and 10th give a ticket, replays none)');
-  A(c.role === 'open' && c.open && c.party && c.hp0 === 0, 'pull of a closed class opens that house with this hero as 가주, who fights at once');
+  A(c.role === 'open' && c.open && c.party && c.hp0 === 0, 'pull of a closed class opens that house with this hero as 가주; with the sortie full it joins the bench');
+  A(c.fresh, 'a new house fills an empty sortie seat at once and the player is told');
   A(Math.abs(c.L - c.rL) <= 2, 'new house 가주 comes at the usual recruit level (L ' + c.L + ' ≈ ' + c.rL + ')');
   A(c.odds1 === 1 && c.sure, 'pity: after ' + c.seq + ' the next pull always opens a house');
   A(/^(sb|bear),(sb|bear),open$/.test(c.seq), 'pity sequence with worst-case luck: ' + c.seq);
@@ -185,7 +187,8 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var s = DS.G.save, raw = JSON.parse(JSON.stringify(s)); raw.hpity = 'x'; raw.ver = '2.2.3'; var f = DS.fixSave(raw); return { same: DS.charList(f).length === DS.charList(s).length, hp: f.hpity, shut: DS.closedCls(f).length }; });
   A(c.same && c.hp === 0, 'old save keeps every joined house (hpity sanitized to ' + c.hp + ', closed ' + c.shut + ')');
   // ⑥ 싸움에서 가주가 쓰러진다: 막사에 같은 병과가 있으면 싸움 뒤 그이가 잇는다 / 없으면 빈 가문 (레벨·단도 잃는다)
-  await ev(() => { var s = DS.G.save; DS.charList(s).forEach(function (ch) { if (ch.cls === 'cle' || ch.cls === 'arc') DS.sbOf(s, ch.id).forEach(function (m) { DS.loseMerc(s, m.id); }); }); var m = DS.addMerc(s, DS.heroType('arc'), 3, 0); m.o = 0; m.sb = 1; m.nc = 'arc'; m.L = 25; DS.mercTidy(s); DS.rebuildParty(); });
+  await ev(() => { var s = DS.G.save; DS.charList(s).forEach(function (ch) { if (ch.cls === 'cle' || ch.cls === 'arc') DS.sbOf(s, ch.id).forEach(function (m) { DS.loseMerc(s, m.id); }); }); var m = DS.addMerc(s, DS.heroType('arc'), 3, 0); m.o = 0; m.sb = 1; m.nc = 'arc'; m.L = 25; DS.mercTidy(s); DS.sortieSet(s, DS.charList(s).filter(ch => ch.cls === 'cle' || ch.cls === 'arc').map(ch => ch.id)); DS.rebuildParty();
+    var f0 = DS.sortieNewsText; window.__sn = []; DS.sortieNewsText = function (sv) { var t = f0(sv); if (t) window.__sn.push(t); return t; }; });      // 2.2.8: 나간 두 가주가 쓰러진다 · 저절로 채운 소식을 적어 둔다
   await ev(() => { DS.G.quiet = true; DS.startScenario(DS.scn(9)); }); await L.sleep(800);
   c = await ev(() => {
     var s = DS.G.save, sim = DS.G.sim, out = {};
@@ -201,10 +204,13 @@ module.exports = async (page, shot, L) => {
   await L.settle(page, 30000); await L.sleep(2500);
   c = await ev((o) => { var s = DS.G.save, arc = s.chars[o.arc], cle = s.chars[o.cle], b = DS.bearer(s, arc); return { arcB: b ? b.id : 0, was: o.arcB, arcL: arc.L, bL: b ? b.L : 0, cleVac: DS.vacant(s, cle), cleL: cle.L, cleFight: s.party.indexOf(cle.id) >= 0, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.ch === cle.id && u.role === 'cmd').length, fallen: (s.fallen || []).length }; }, c);
   A(c.arcB && c.arcB !== c.was && c.arcL === c.bL && c.bL === 25, '가주 died in battle → same-class 막사 person took the seat at own level (L ' + c.bL + ')');
-  {      // 2.2.3: 칩 차례 — 자리를 이은 가문은 제자리, 맹주가 맨 앞
-    const k1 = await ev(() => Object.keys(DS.G.chipEls)), k0 = c0chips.chips0;
-    const a = k0.filter(k => k1.indexOf(k) >= 0), b = k1.filter(k => k0.indexOf(k) >= 0);
-    A(JSON.stringify(a) === JSON.stringify(b) && a.indexOf('c' + c0chips.arc) === b.indexOf('c' + c0chips.arc) && b.indexOf('c' + c0chips.arc) >= 0 && k1[0] === await ev(() => 'c' + DS.G.save.hero), 'chip order: the seat-filled house keeps its slot, 맹주 first (' + k1.join(' ') + ')');
+  {      // 2.2.8: 나간 가주가 쓰러지면 쉬는 가주 가운데 가장 센 둘로 저절로 채운다 · 알린다 · 칩은 맹주가 맨 앞, 그다음 격자 차례
+    const k = await ev((o) => { var s = DS.G.save, top = DS.sortieRank(s).slice(0, 2).map(ch => ch.id).sort(), so = s.sortie.map(e => e.h).sort();
+      return { chips: Object.keys(DS.G.chipEls), party: s.party.slice(), hero: s.hero, top: top, so: so, sn: window.__sn.join(' / '), units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.role === 'cmd').map(u => u.ch).sort() }; }, c0chips);
+    A(k.chips0 !== k.chips && k.chips.length === 3 && k.chips[0] === 'c' + k.hero && k.chips.join() === k.party.map(id => 'c' + id).join(), 'chip order after auto-fill: 맹주 first, then grid order (' + k.chips.join(' ') + ')');
+    A(JSON.stringify(k.so) === JSON.stringify(k.top) && k.party.indexOf(c0chips.cle) < 0, 'both sortie 가주 fell → the two strongest resting 가주 go out (' + k.so.join(',') + ')');
+    A(/대신/.test(k.sn) && (k.sn.match(/출전/g) || []).length >= 2, 'the player is told who stepped in: 「' + k.sn + '」');
+    A(k.units.length === 3 && k.units.join() === k.party.slice().sort().join(), 'the field units are the new three (' + k.units.join(',') + ')');
   }
   A(c.cleVac && !c.cleFight && c.units === 0 && c.cleL === 1, '가주 died with no same-class 막사 person → vacant (L 1), not fighting');
   await ev(() => DS.openMenu('party')); await L.sleep(500); await shot('party_vacant');
@@ -218,8 +224,8 @@ module.exports = async (page, shot, L) => {
   const kidL = await ev(() => { var s = DS.G.save, k = DS.mercsOf(s, s.hero)[0]; return k ? k.L : 0; });
   await kidBtn.click(); await L.sleep(500); await shot('kid_pick');
   await page.click('.ov [data-bnto]'); await L.sleep(800);
-  c = await ev((id) => { var s = DS.G.save, b = DS.bearer(s, s.chars[id]); DS.pSync(s); return { b: b ? b.n : '', nc: b && b.nc, kin: DS.mercsOf(s, s.hero).length, kid: !!(b && DS.kidOf(s, b)), fight: s.party.indexOf(id) >= 0, bL: b ? b.L : 0, hL: s.chars[id].L }; }, c);
-  A(c.b && c.kid && c.nc === 'cle' && c.kin === 0 && c.fight, 'adult kid sent to vacant house as 가주 (takes class ' + c.nc + ')');
+  c = await ev((id) => { var s = DS.G.save, b = DS.bearer(s, s.chars[id]); DS.pSync(s); return { b: b ? b.n : '', nc: b && b.nc, kin: DS.mercsOf(s, s.hero).length, kid: !!(b && DS.kidOf(s, b)), fight: DS.sortieCands(s).indexOf(s.chars[id]) >= 0, bL: b ? b.L : 0, hL: s.chars[id].L }; }, c);
+  A(c.b && c.kid && c.nc === 'cle' && c.kin === 0 && c.fight, 'adult kid sent to vacant house as 가주 (takes class ' + c.nc + '), the house can go out again');
   A(c.bL === kidL && c.hL === kidL, 'sent kid keeps exactly their own level, no boost (L ' + kidL + ')');
   await L.closeAll(page);
   await page.evaluate(() => { var o = document.querySelector('.ov'); if (o) DS.ui.closeAll(); });
@@ -324,11 +330,11 @@ module.exports = async (page, shot, L) => {
   await L.closeAll(page);
   c = await ev((a) => {
     var X = a[0], T = a[1], s = DS.G.save, old = s.chars[X.hid], nb = DS.bearer(s, old, 1), h = s.chars[s.hero];
-    return { moved: s.hero === T.id, ps: !!(h.ps && !h.vac), hx: (h.hx || 0) === T.hx, w: h.w === T.w, oldBear: nb && nb.id === X.k2, oldL: old.L, nc: nb && nb.nc === DS.houseCls(old), oldHero: !old.ps && !old.vac, party: DS.partyIds(s).indexOf(old.id) >= 0 && DS.partyIds(s).indexOf(s.hero) >= 0, kinOk: DS.mercsOf(s, old.id).length === 0, units: DS.G.sim.units.filter(function (u) { return u.side === 'ally' && !u.dead; }).length, specs: DS.partySpecs(s).length, sel: !!DS.G.sim.byId['c' + s.hero] };
+    return { moved: s.hero === T.id, ps: !!(h.ps && !h.vac), hx: (h.hx || 0) === T.hx, w: h.w === T.w, oldBear: nb && nb.id === X.k2, oldL: old.L, nc: nb && nb.nc === DS.houseCls(old), oldHero: !old.ps && !old.vac, party: DS.sortieCands(s).indexOf(old) >= 0 && DS.partyIds(s).indexOf(s.hero) === 0 && DS.partyIds(s).length === Math.min(3, 1 + DS.sortieCands(s).length), kinOk: DS.mercsOf(s, old.id).length === 0, units: DS.G.sim.units.filter(function (u) { return u.side === 'ally' && !u.dead; }).length, specs: DS.partySpecs(s).length, sel: !!DS.G.sim.byId['c' + s.hero] };
   }, [X, tgt]);
   A(/보통 가문이 된다/.test(conf) && /작은별/.test(conf), 'option 3 confirm tells what happens to the old 맹주 house (' + conf.replace(/\s+/g, ' ').slice(0, 90) + ')');
   A(c.moved && c.ps && c.hx && c.w && c.oldHero, 'option 3: s.hero moves to that house; it keeps its gear and 공훈; the old house holds no 맹주 data');
-  A(c.oldBear && c.oldL === 15 && c.nc && c.party && c.kinOk && c.units === c.specs && c.sel, 'option 3: old 맹주 house → its adult blood kin is 가주 at own level (L ' + c.oldL + '), takes the house class, both houses fight');
+  A(c.oldBear && c.oldL === 15 && c.nc && c.party && c.kinOk && c.units === c.specs && c.sel, 'option 3: old 맹주 house → its adult blood kin is 가주 at own level (L ' + c.oldL + '), takes the house class, can go out; the new 맹주 leads three');
   {      // 2.2.3: 맹주가 바뀌면 칩 줄의 맨 앞은 새 맹주, 나머지는 부대 탭 격자 차례 (DS.houseOrd)
     await ev(() => { DS.ui.closeAll(); }); await L.sleep(300);
     const o = await ev(() => { var s = DS.G.save, ks = Object.keys(DS.G.chipEls), want = DS.houseSort(s, DS.partyIds(s).filter(function (id) { return id !== s.hero; }).map(function (id) { return s.chars[id]; })).map(function (ch) { return 'c' + ch.id; }); return { ks: ks, hero: 'c' + s.hero, rest: ks.slice(1).join(' ') === want.join(' '), sp: DS.partySpecs(s).map(function (u) { return u.role; }).join(','), u0: DS.G.sim.units.filter(function (u) { return u.side === 'ally' && u.role === 'cmd'; })[0].id }; });
@@ -543,5 +549,104 @@ module.exports = async (page, shot, L) => {
   A((await L.badText(page, '.ov')).length === 0, 'migrated 부대 tab has no NaN/undefined');
   await ev(() => { DS.ui.closeAll(); DS.openMenu('people'); }); await L.sleep(500); await shot('migrated_people');
   A((await L.badText(page, '.ov')).length === 0, 'migrated 인물 tab has no NaN/undefined');
+  // ⑬ 2.2.8 출전 셋: 부대 격자의 띠 · 가문 창의 출전/쉬기 · 바꾸기 창 · 입구 창의 셋 · 쉬는 가주 경험치 · 옛 저장 · 결과 창
+  const V228 = process.env.V228 || '';
+  const vshot = async (n) => { if (V228) { fs.mkdirSync(V228, { recursive: true }); await page.screenshot({ path: path.join(V228, n + '.png') }); } await shot(n); };
+  await L.newGame(page, { cls: 'inf', name: '셋' });
+  await ev(() => { var a = 2280; Math.random = function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; DS.G.save.opt.cine = 'off'; });
+  await L.edit(page, function () {
+    s.gold = 500000; for (var id = 1; id <= 13; id++) DS.applyClear(s, DS.scn(id)); DS.houseOpenN(s, 9);
+    DS.charList(s).forEach(function (c, i) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 40 + (i % 5); b.exp = 0; } });
+    for (var i = 0; i < 2; i++) { var m = DS.addMerc(s, 'm_sword', 3, s.hero); m.kn = 1; m.L = 38; }
+    delete s.sortie; DS.mercTidy(s); DS.pSync(s);
+  });
+  await ev(() => { DS.ui.closeAll(); DS.enterZone('haemil'); }); await L.sleep(700);
+  c = await ev(() => { var s = DS.G.save, top = DS.sortieRank(s).slice(0, 2).map(ch => ch.id).sort(); return { so: s.sortie.map(e => e.h).sort(), top: top, n: DS.charList(s).length }; });
+  A(c.n === 10 && JSON.stringify(c.so) === JSON.stringify(c.top), 'no sortie yet → the two strongest go out (' + c.so.join(',') + ')');
+  await ev(() => DS.openMenu('party')); await L.sleep(600);
+  c = await ev(() => { var o = document.querySelector('.ov'), s = DS.G.save; return { on: o.querySelectorAll('.hk .hkso:not(.rs)').length, rs: o.querySelectorAll('.hk .hkso.rs').length, bar: o.querySelectorAll('.sobar .sof:not(.none)').length, pick: !!o.querySelector('.sobar [data-sopick]'), lordOn: !!o.querySelector('.hk.lord .hkso:not(.rs)'), sw: document.documentElement.scrollWidth, ids: [...o.querySelectorAll('.hk9 .hk.in')].map(e => +e.dataset.ch).sort(), so: s.sortie.map(e => e.h).sort() }; });
+  A(c.on === 3 && c.rs === 7 && c.lordOn && JSON.stringify(c.ids) === JSON.stringify(c.so), '부대 grid: 「출전」 band on the three (맹주 + ' + c.ids.join(',') + '), 「쉼」 on the 7 others');
+  A(c.bar === 3 && c.pick && c.sw <= 390, 'sortie bar with three faces and 바꾸기 fits 390px (' + c.sw + ')');
+  A((await L.badText(page, '.ov')).length === 0, '부대 tab with sortie has no NaN/undefined');
+  await vshot('grid_badges');
+  // 가문 창: 쉬는 가주 → 출전 (둘 가운데 약한 이와 바꾼다) · 출전한 가주 → 쉬기 (쉬는 이 가운데 가장 센 이가 대신)
+  const rest0 = await ev(() => { var s = DS.G.save; return DS.benched(s).map(ch => ch.id)[0]; });
+  await ev((id) => { var b = document.querySelector('.ov .hk[data-ch="' + id + '"]'); b.click(); }, rest0); await L.sleep(500);
+  c = await ev(() => { var d = document.querySelector('.ov .duty.so'); return { has: !!d, txt: d ? d.innerText.replace(/\s+/g, ' ') : '', btn: !!(d && d.querySelector('[data-sotg]')) }; });
+  A(c.has && /쉰다/.test(c.txt) && /30%/.test(c.txt) && c.btn, 'house sheet of a resting 가주: 「쉰다 · 경험치 30%」 with 출전 (' + c.txt + ')');
+  await vshot('sheet_rest');
+  c = await ev((id) => { var s = DS.G.save, weak = DS.sortieRank(s, s.sortie.map(e => s.chars[e.h])).pop().id; document.querySelector('.ov .duty.so [data-sotg]').click(); return { weak: weak, so: s.sortie.map(e => e.h), party: s.party.slice(), units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.role === 'cmd').map(u => u.ch) }; }, rest0);
+  await L.sleep(400);
+  A(c.so.indexOf(rest0) >= 0 && c.so.indexOf(c.weak) < 0 && c.party.indexOf(rest0) >= 0 && c.units.indexOf(rest0) >= 0 && c.units.length === 3, 'toggle 출전: that 가주 goes out, the weaker of the two rests, field units follow (' + c.units.join(',') + ')');
+  c = await ev(() => { var d = document.querySelector('.ov .duty.so'); return d ? d.innerText.replace(/\s+/g, ' ') : ''; });
+  A(/출전/.test(c) && /쉬기/.test(c), 'sheet now says 출전 with 쉬기 (' + c + ')');
+  await vshot('sheet_out');
+  c = await ev((id) => { var s = DS.G.save, best = DS.sortieRank(s, DS.benched(s))[0].id; document.querySelector('.ov .duty.so [data-sotg]').click(); return { best: best, so: s.sortie.map(e => e.h) }; }, rest0);
+  A(c.so.indexOf(rest0) < 0 && c.so.indexOf(c.best) >= 0 && c.so.length === 2, 'toggle 쉬기: the strongest resting 가주 steps in (' + c.best + ')');
+  // 바꾸기 창: 둘을 골라 확인 · 셋째를 고르면 막힌다
+  await ev(() => { DS.ui.closeAll(); DS.openMenu('party'); }); await L.sleep(400);
+  await page.click('.ov .sobar [data-sopick]'); await L.sleep(400);
+  c = await ev(() => { var s = DS.G.save, rows = [...document.querySelectorAll('.ov .sopk [data-sop]')], want = DS.benched(s).slice(-2).map(ch => ch.id);
+    [...document.querySelectorAll('.ov .sopk .sopr.on[data-sop]')].map(r => r.dataset.sop).forEach(id => document.querySelector('.ov .sopk [data-sop="' + id + '"]').click());      // 누를 때마다 다시 그린다
+    want.forEach(id => document.querySelector('.ov .sopk [data-sop="' + id + '"]').click());
+    var third = rows.map(r => +r.dataset.sop).filter(id => want.indexOf(id) < 0)[0]; document.querySelector('.ov .sopk [data-sop="' + third + '"]').click();
+    var on = [...document.querySelectorAll('.ov .sopk .sopr.on[data-sop]')].map(r => +r.dataset.sop).sort();
+    return { rows: rows.length, want: want.sort(), on: on, sw: document.documentElement.scrollWidth }; });
+  A(c.rows === 9 && JSON.stringify(c.on) === JSON.stringify(c.want) && c.sw <= 390, 'picker lists 9 가주, a third pick is refused (on ' + c.on.join(',') + ')');
+  const want2 = c.want;
+  await vshot('picker');
+  await page.click('.ov [data-sook]'); await L.sleep(400);
+  c = await ev(() => DS.G.save.sortie.map(e => e.h).sort());
+  A(JSON.stringify(c) === JSON.stringify(want2), 'picker 확인 applies the pick (' + c.join(',') + ')');
+  // 입구 창: 셋 · 바꾸기 · 우리 부대 평균 = 셋의 평균
+  await ev(() => { DS.ui.closeAll(); DS.openGate(DS.scn(14), null); }); await L.sleep(500);
+  c = await ev(() => { var s = DS.G.save, o = document.querySelector('.ov .gate'), dd = [...o.querySelectorAll('.facts dt')].filter(d => d.textContent === '우리 부대')[0]; var avg = Math.round(s.party.reduce((a, id) => a + s.chars[id].L, 0) / s.party.length);
+    return { faces: o.querySelectorAll('.sobar .sof:not(.none)').length, pick: !!o.querySelector('.sobar [data-sopick]'), line: dd ? dd.nextElementSibling.textContent : '', avg: DS.lvText(avg), sw: document.documentElement.scrollWidth }; });
+  A(c.faces === 3 && c.pick && c.line.indexOf(c.avg) >= 0 && c.sw <= 390, 'scenario gate shows the three and 바꾸기; 우리 부대 is the sortie average (' + c.line + ')');
+  A((await L.badText(page, '.ov')).length === 0, 'gate has no NaN/undefined');
+  await vshot('gate');
+  await page.click('.ov .gate [data-sopick]'); await L.sleep(400);
+  c = await ev(() => !!document.querySelector('.ov .sopk'));
+  A(c, 'gate 바꾸기 opens the picker');
+  await page.click('.ov [data-sook]'); await L.sleep(500);
+  A(await ev(() => !!document.querySelector('.ov .gate .sobar')), 'gate comes back after the picker');
+  await ev(() => { DS.ui.closeAll(); DS.openPit(null); }); await L.sleep(400);
+  A(await ev(() => document.querySelectorAll('.ov .pitw .sobar .sof:not(.none)').length === 3 && !!document.querySelector('.ov .pitw [data-sopick]')), 'pit entry shows the three and 바꾸기');
+  await ev(() => DS.ui.closeAll());
+  // 쉬는 가주의 경험치: 같은 레벨 · 같은 성장이면 나간 이가 얻은 몫의 30% · 막사는 같은 병과 가주가 얻은 몫의 10% (그 가주가 쉬면 쉬는 몫의)
+  c = await ev(() => { var s = DS.G.save, out = DS.G.save.sortie[0], rest = DS.benched(s)[0], a = DS.bearer(s, s.chars[out.h]), b = DS.bearer(s, rest); a.L = b.L = 40; a.exp = b.exp = 0; var ga = a.g, pa = a.pot; a.g = b.g; a.pot = b.pot; s.chars[s.hero].ps.L = 40;
+    var e0 = DS.expNeed(40) * 0.5; DS.gainExp(s, e0, 40); var ra = a.exp, rb = b.exp; a.g = ga; a.pot = pa; return { ra: ra, rb: rb, k: DS.BAL.sortieExp }; });
+  A(c.ra > 0 && Math.abs(c.rb / c.ra - c.k) < 0.005, 'resting 가주 gets ' + Math.round(c.k * 100) + '% of what a sortie 가주 at the same level gets (' + Math.round(c.rb) + ' / ' + Math.round(c.ra) + ')');
+  // 결과 창: 나간 셋이 위에 크게, 쉰 가주는 따로 몫과 함께
+  await ev(() => { DS.G.quiet = true; DS.G.pause = true; DS.ui.closeAll(); DS.startScenario(DS.scn(14)); }); await L.sleep(800);
+  c = await ev(() => { var sim = DS.G.sim; return { cmds: sim.units.filter(u => u.side === 'ally' && u.role === 'cmd').length, kin: sim.units.filter(u => u.side === 'ally' && u.role === 'merc').length }; });
+  A(c.cmds === 3 && c.kin === 2, 'battle with three 가주 + 2 가문원 (' + c.cmds + ' + ' + c.kin + ')');
+  await ev(() => { DS.G.pause = false; DS.G.quiet = false; DS.G.sim.units.forEach(e => { if (e.side === 'enemy') e.aggro = true; }); }); await L.sleep(2500);
+  await vshot('battle');
+  await ev(() => { DS.G.pause = true; DS.gainExp(DS.G.save, DS.expNeed(41) * 1.2, 41); DS.G.sim.win(); });
+  for (let i = 0; i < 40; i++) { await L.sleep(150); await L.skipStory(page, 1); if (await ev(() => !!document.querySelector('.ov.res26 .xb'))) break; }
+  await ev(() => DS.xbSkip && DS.xbSkip()); await L.sleep(400);
+  c = await ev(() => { var xb = document.querySelector('.ov.res26 .xb'); return { lord: !!xb.querySelector('.hk.lord'), grid: xb.querySelectorAll('.xb9 .hk').length, rest: xb.querySelectorAll('.xbr .xk').length, lab: (xb.querySelector('.xbr > small') || {}).textContent || '', g: [...xb.querySelectorAll('.xbr .xk')].map(e => +e.dataset.g) }; });
+  A(c.lord && c.grid === 2 && c.rest === 7 && /쉰 가주/.test(c.lab) && c.g.every(g => g > 0), 'result exp board: the three on top, 7 rested 가주 below with their share (' + c.lab + ')');
+  await ev(() => { var b = document.querySelector('.ov.res26 .rbody'); var x = b && b.querySelector('.xb'); if (x) x.scrollIntoView({ block: 'start' }); }); await L.sleep(200);
+  await vshot('result');
+  await L.settle(page, 30000); await L.sleep(800);
+  // 옛 저장(출전 칸이 없다): 맹주 + 가장 센 둘 · 소식 없이 · 깨진 칸은 걷는다
+  c = await ev(() => { var s = DS.G.save, raw = JSON.parse(JSON.stringify(s)); delete raw.sortie; delete raw.sortieNews; raw.ver = '2.2.7'; var f = DS.Save.read(JSON.stringify(raw)); var top = DS.sortieRank(f).slice(0, 2).map(ch => ch.id).sort(), rk = DS.sortieRank(f).map(ch => ch.id + ':' + DS.sortiePow(f, ch)).join(' ');
+    var bad = JSON.parse(JSON.stringify(s)); bad.sortie = [{ h: 'x' }, null, { h: 99999, m: 1 }, 7]; var g = DS.Save.read(JSON.stringify(bad));
+    return { rk: rk, so: f.sortie.map(e => e.h).sort(), top: top, party: f.party.length, news: !!f.sortieNews, specs: DS.partySpecs(f).filter(u => u.role === 'cmd').length, bad: g.sortie.length, badParty: g.party.length }; });
+  A(JSON.stringify(c.so) === JSON.stringify(c.top) && c.party === 3 && !c.news && c.specs === 3, '2.2.7 save migrates: 맹주 + the two strongest go out, silently (' + c.so.join(',') + ' of ' + c.rk + ', party ' + c.party + ', specs ' + c.specs + ', news ' + c.news + ')');
+  A(c.bad === 2 && c.badParty === 3, 'broken sortie entries are dropped and refilled (' + c.bad + ')');
+  // 기습: 물결 없이 한 번에 — 수는 물결을 모두 더한 것 · 걸어서 닿는 빈 칸에 겹치지 않게
+  await ev(() => { DS.ui.closeAll(); DS.FIELD.webdriver = true; DS.enterZone('dawn'); }); await L.sleep(900); await L.closeAll(page);
+  c = await ev(() => { DS.G.pause = false; var sim = DS.G.sim; sim.units.filter(u => u.side === 'enemy').forEach(u => { sim.remove(u); delete DS.G.view.vu[u.id]; }); var why = DS.fieldForce('ambush'); return { why: why, sizes: sim.fld.amb && sim.fld.amb.sizes.slice() }; });
+  A(c.why === '' && c.sizes && c.sizes.length === 1, 'ambush starts as one wave (' + JSON.stringify(c.sizes) + ')');
+  await L.sleep(1600);
+  c = await ev(() => { var sim = DS.G.sim, A0 = sim.fld.amb, en = sim.units.filter(u => u.side === 'enemy' && u.fa && !u.dead), seen = {}, dup = 0, lead = sim.byId[sim.leader]; en.forEach(u => { var k = u.x + ',' + u.y; if (seen[k]) dup++; seen[k] = 1; });
+    return { n: en.length, want: A0 ? A0.sizes[0] : -1, w: A0 ? A0.w : -1, of: A0 ? A0.sizes.length : -1, dup: dup }; });
+  A(c.w === 1 && c.of === 1 && c.n === c.want && c.n >= 6 && c.dup === 0, 'all ' + c.n + ' ambushers arrive at once on distinct tiles (wave ' + c.w + '/' + c.of + ')');
+  await ev(() => { document.querySelectorAll('.coach').forEach(e => e.remove()); }); await L.sleep(1400);      // 「기습!」 띠가 걷힌 뒤 — 사방의 무리가 한꺼번에 다가온다
+  await vshot('ambush');
+  await ev(() => { DS.G.sim.units.forEach(u => { if (u.side === 'enemy' && !u.dead) DS.G.sim.kill(u); }); DS.FIELD.webdriver = false; }); await L.sleep(1500);
   console.log('t50 done');
 };

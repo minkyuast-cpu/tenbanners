@@ -264,13 +264,16 @@ DS.ui = { josa: josa, $: $, $$: $$, h: h, esc: esc, sprTag: sprTag, charSpr: cha
   deny: deny, haptic: haptic, calm: calm, countUp: countUp, coach: coach, vban: vban, svg: icon, fmtN: fmtN };
 
 // ───────── 부대 배치 ─────────
+DS.sortieHold = function () { return !!(G.scn || (G.sim && G.sim.combat)); };      // 2.2.8: 싸우는 동안은 출전 셋을 고치지 않는다 (meta.js DS.sortieFix)
+function sortieNote() { var t = DS.sortieNewsText ? DS.sortieNewsText(G.save) : ''; if (t) later(t, 4200); return !!t; }      // 2.2.8: 출전 자리를 저절로 채운 소식
 function reviveAll() { DS.charList(G.save).forEach(function (c) { if (c.down) { c.down = false; c.hp = 0.5; c.mp = 0.5; } }); }
 function placeParty(sim, x, y, starts) {
   var s = G.save;
   var egp = !!(DS.egPassOn && DS.egPassOn(s));      // 3.3.0: 스무 해 창이 열려 있으면 빈자리는 그 창의 멈춤이 정한다 (안전망이 먼저 채우지 않는다)
   if (!G.riteBusy && !egp && DS.linVacant && DS.linVacant(s).length) { (DS.linAutoAll(s) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(s, e.ev), 4200); }); }      // 안전망: 의식을 거치지 않은 빈자리는 출전 전에 채운다
   if (!egp && !G.scn && !sim.combat && DS.sbTick) bnNote(DS.sbTick(s));      // 2.2.0: 싸움 밖이면 빈 가문은 막사의 같은 병과가 곧바로 잇는다 (마을에서 천수로 떠난 가주 · 방출 · 판 올림 뒤)
-  if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 · 출전 목록(s.party) = 가주가 선 가문 모두
+  if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 · 2.2.8: 출전 목록(s.party) = 맹주 + 출전한 가주 둘
+  sortieNote();
   if (!egp && !s.party.some(function (id) { return s.chars[id] && !s.chars[id].down; })) reviveAll();
   var specs = DS.partySpecs(s), first = null, keep = G.sel, pos = starts && DS.formation ? DS.formation(specs, starts) : null;      // r44 대열: 튼튼한 이가 앞줄
   specs.forEach(function (u, i) {
@@ -403,7 +406,7 @@ function startScenario(s) {
   var sv = G.save, me = G.sim.byId[G.sel];
   syncVitals();
   G.ret = G.keepRet || { zone: G.zone.id, pos: me ? { x: me.x, y: me.y } : null }; G.keepRet = null;      // 2.2.3: 갱도 층을 잇달아 들어가면 처음 들어온 자리로 돌아간다
-  if (DS.mercTidy) DS.mercTidy(sv);      // 2.2.0: 출전 목록 = 가주가 선 가문 모두
+  if (DS.mercTidy) DS.mercTidy(sv);      // 2.2.8: 출전 목록 = 맹주 + 출전한 가주 둘 (+ 가문원)
   if (DS.ui && DS.ui.takeSnap) DS.ui.takeSnap(s);      // 2.2.2: 결과 창의 경험치 막대는 이 순간(싸움 직전)부터 — 관문 창을 거치지 않고 들어와도
   var b = DS.buildScenario(s, DS.partySpecs ? DS.partySpecs(sv).length : sv.party.length, sv.chars[sv.hero] ? sv.chars[sv.hero].cls : 'inf');
   var sim = new DS.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (Date.now() & 0xffff) + s.id, inv: sv.items, mode: 'scn' });
@@ -1402,7 +1405,7 @@ var dangerOk = {};      // 경고를 한 번 본 지역 (이 판 동안). 다시
 function dangerGate(id) {      // true = 이번에는 멈추고 경고만
   var w = zoneDanger(id); if (!w) return false;
   if (dangerOk[id] && performance.now() - dangerOk[id] < 15000) return false;
-  dangerOk[id] = performance.now(); A('cancel'); toast(w + '. 한 번 더 하면 들어갑니다', 3600); return true;
+  dangerOk[id] = performance.now(); A('cancel'); toast(w + '. 한 번 더 하면 들어갑니다' + (DS.sortieNames ? '. 출전: ' + DS.sortieNames(G.save) : ''), 4200); return true;      // 2.2.8: 나가는 셋
 }
 function warpWhy(id) {      // '' = 지금 바로 갈 수 있다, 글 = 못 가는 까닭
   if (G.ending) return '결과를 다 본 뒤에 간다';
@@ -1979,6 +1982,9 @@ function refillMercs() {
   var sim = G.sim, s = G.save, seat = DS.sbTick && !G.scn ? DS.sbTick(s) : [];
   if (DS.mercTidy) DS.mercTidy(s);
   bnNote(seat);
+  var swap = sortieNote();
+  sim.cmds().forEach(function (c) { if (!c.dead && c.ch !== s.hero && s.party.indexOf(c.ch) < 0) { sim.remove(c); delete G.view.vu[c.id]; swap = true; } });      // 2.2.8: 출전에서 빠진 가문은 물러난다
+  if (swap && !sim.byId[G.sel] && sim.cmds()[0]) { G.sel = sim.cmds()[0].id; sim.leader = G.sel; }
   var lead = sim.byId[G.sel] || sim.cmds()[0];
   if (lead) s.party.forEach(function (id) {
     var ch = s.chars[id], u = sim.byId['c' + id]; if (!ch || (u && !u.dead) || ch.down || ch.vac) return;
@@ -1998,7 +2004,7 @@ function refillMercs() {
     });
   });
   sim.ev = sim.ev.filter(function (e) { return e.t !== 'spawn'; });
-  if (seat.length) renderChips();
+  if (seat.length || swap) renderChips();
 }
 // 2.2.0: 막사의 사람이 빈 가문을 이었다 — 「센주 가문의 가주를 막사의 난새가 잇는다」. 같은 병과가 없으면 그 가문은 빈 채로 (부대 탭에 「빈 가문」)
 function bnNote(list) {

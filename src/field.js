@@ -19,7 +19,9 @@ DS.FIELD = {
     hpMin: 0.5,                  // 부대 평균 체력이 이보다 낮으면 미룬다 (방금 싸운 부대를 덮치지 않는다)
     perAlly: 0.5,                // 첫 물결의 수 = 살아 있는 우리 유닛(가주+가문원) × 이 값 × 세기
     size: [3, 9], max: 10, grow: 1,    // 물결 하나의 수 (최소·최대), 상한, 다음 물결마다 +grow (2.2.2: 7·8 → 9·10 — 열 넘는 부대에도 사방에서 몰려온다)
-    waves3: 6,                   // 우리 유닛이 이만큼 이상이고 레벨이 밀리지 않으면 세 물결 (아니면 둘)
+    waves3: 6,                   // 우리 유닛이 이만큼 이상이고 레벨이 밀리지 않으면 세 물결 (아니면 둘) — 2.2.8: 물결을 나누지 않는다. 그 물결들을 모두 더한 수가 한꺼번에 (oneGo)
+    oneGo: true,                 // 2.2.8: 1차 · 2차 물결 없이 한 번에 몰려온다 (수는 물결을 모두 더한 것 그대로)
+    spread: 4,                   // 2.2.8: 한꺼번에 올 때 몰려오는 곳 하나에 이만큼씩 (셋 ~ 여섯 곳)
     ring: [6, 9],                // 부대 선두에서 몇 칸 떨어진 곳에서 몰려오는가 (걸어서 닿는 땅)
     gap: 30, rest: 0.25, pre: 0.9,     // 다음 물결: 앞 물결이 rest(25%) 아래로 줄었거나 gap 초가 지나면, pre 초 예고 뒤 (겹쳐 몰려오면 법사가 쓰러졌다)
     first: 0.8,                  // 경보 뒤 첫 물결까지 (실제로는 느려지는 동안)
@@ -159,6 +161,7 @@ function ambStart(sim, F) {
   var str = clamp(1 + (pl - L) * 0.05, 0.6, 1.35);
   var s0 = clamp(Math.round(al * A_.perAlly * str), A_.size[0], A_.size[1]), W = al >= A_.waves3 && pl >= L ? 3 : 2, sizes = [];
   for (var i = 0; i < W; i++) sizes.push(Math.min(A_.max, s0 + i * A_.grow));
+  if (A_.oneGo) { sizes = [sizes.reduce(function (a, b) { return a + b; }, 0)]; W = 1; }      // 2.2.8: 한 번에 모두
   F.n++;
   var A = F.amb = { id: 'fa' + F.n, L: L, sizes: sizes, w: 0, at: sim.t + A_.first, units: [], cur: [], t0: sim.t, kg: 0, ke: 0, dead: 0, calmT: null, x: u.x, y: u.y };
   DS.fieldStats.amb++;
@@ -169,10 +172,17 @@ function ambWave(sim, F, A) {
   var u = lead(sim); if (!u) return;
   var n = A.sizes[A.w], r = F.rnd, tiles = ring(sim, u, A_.ring[0], A_.ring[1]);
   if (tiles.length < 3) tiles = ring(sim, u, 3, 12);
-  var cs = centers(tiles, A.w === 0 ? 3 : 2, r), made = [];
+  var nc = A.w === 0 ? (A_.oneGo ? clamp(Math.ceil(n / (A_.spread || 4)), 3, 6) : 3) : 2, cs = centers(tiles, nc, r), made = [], used = {};
   if (!cs.length) cs = [{ x: u.x, y: u.y }];
+  if (tiles.length < n) { var more = ring(sim, u, 3, 13); more.forEach(function (t) { if (!tiles.some(function (q) { return q.x === t.x && q.y === t.y; })) tiles.push(t); }); }
+  function spot(c) {      // 2.2.8: 그 몰려오는 곳에 가장 가까운, 아직 아무도 서지 않은 걸어서 닿는 칸 (한꺼번에 와도 겹치거나 막힌 땅에 서지 않게)
+    var best = null, bd = 1e9;
+    for (var j = 0; j < tiles.length; j++) { var t = tiles[j], k = t.y * sim.w + t.x; if (used[k] || sim.occ[k]) continue; var d = dist(t, c) + r() * 0.5; if (d < bd) { bd = d; best = t; } }
+    if (best) used[best.y * sim.w + best.x] = 1;
+    return best || c;
+  }
   for (var i = 0; i < n; i++) {
-    var c = cs[i % cs.length], spec = sim.mk(zoneMob(F.def, A.L, r), { x: c.x, y: c.y, grp: A.id, L: A.L });
+    var c = spot(cs[i % cs.length]), spec = sim.mk(zoneMob(F.def, A.L, r), { x: c.x, y: c.y, grp: A.id, L: A.L });
     spec.x = c.x; spec.y = c.y; spec.hx = u.x; spec.hy = u.y;      // 집 = 부대가 있던 자리 (들판 적은 집에서 11칸 넘게 끌려가면 진정한다)
     var m = sim.add(spec); if (!m) continue;
     m.atk = Math.round(m.atk * A_.atk); m.mag = Math.round(m.mag * A_.atk); m.exp = Math.round((m.exp || 0) * A_.mobExp);

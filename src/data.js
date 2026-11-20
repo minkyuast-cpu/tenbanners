@@ -6,7 +6,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 DS.LV_PER_TIER = 10;      // 단마다 레벨 1~10
 DS.MAX_TIER = 10;
 DS.TICK = { regen: 11, attack: 40, item: 25, step: 12, quick: 0.65 };   // 틱(행동) 게이지 규칙
-DS.PARTY_MAX = 99;        // 2.2.0: 출전 고르기는 없다 — 가주가 선 가문은 모두 싸운다 (s.party 는 저절로 맞춘 목록)
+DS.PARTY_MAX = 3;         // 2.2.8: 출전은 셋 — 맹주 + 고른 가주 둘 (meta.js DS.sortieFix · s.party 는 저절로 맞춘 목록). 맹주 가문의 가문원은 따로 함께 싸운다
 
 // 깃발(합일 단위)
 DS.FAMILY = {
