@@ -150,7 +150,7 @@ var ZONE_MOBS = {
 };
 if (DS.ZONES) for (k in ZONE_MOBS) if (DS.ZONES[k] && DS.ZONES[k].mobs) DS.ZONES[k].mobs = ZONE_MOBS[k].filter(function (m) { return EN[m]; });
 // 시나리오: 1~20 은 하나를 더하고, 21~30 은 비슷한 세기의 하나를 바꾼다 (2.2.9 에 이미 출렁이는 판 — 세기를 더 얹지 않는다)
-var SCN_ADD = { 3: 'boomer', 4: 'gobShaman', 6: 'gobShaman', 7: 'skelGuard', 8: 'stormcaller', 10: 'stormcaller', 12: 'sandworm', 14: 'toad', 15: 'banshee', 17: 'shade' };
+var SCN_ADD = { 3: 'boomer', 6: 'gobShaman', 7: 'skelGuard', 8: 'stormcaller', 10: 'stormcaller', 12: 'sandworm', 14: 'toad', 15: 'banshee', 17: 'shade' };
 var SCN_SWAP = { 22: ['darkMage', 'cultist'], 23: ['imp', 'boomer'], 25: ['ghost', 'banshee'], 26: ['scorpion', 'sandworm'], 27: ['salamander', 'hellhound'], 29: ['gargoyle', 'hellhound'] };
 if (DS.SCENARIOS) DS.SCENARIOS.forEach(function (s) {
   if (!s || !s.mobs) return;

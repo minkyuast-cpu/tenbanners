@@ -1788,7 +1788,7 @@ function ultFx(u, sk) {
 // ───────── 2.3.0 큰 보스: 등장 연출 · 비기 컷인 ─────────
 // 등장 연출 (사건 연출 DS.cine 의 「강적」): 큰 몸의 보스가 처음 깨어날 때 한 번 — 큰 그림 · 이름 · 칭호 · 한마디. 설정 「사건 연출: 끔」이면 없다. 「짧게」 · 움직임 줄이기면 짧게
 function bigCine(u, sim, sub) {
-  if (!u || !(u.fw > 1 || u.fh > 1) || G.quiet && !DS.bigCineForce) return false;
+  if (!u || !(u.fw > 1 || u.fh > 1) || (G.quiet && !DS.bigCineForce) || (DS.cineMode && DS.cineMode() === 'off')) return false;
   var seen = sim.bigSeen || (sim.bigSeen = {}); if (seen[u.type]) return false; seen[u.type] = 1;
   var pic = DS.bigPortrait ? DS.bigPortrait(u.type, u.fw, u.fh, 3) : null, por = [];
   if (pic) { try { por.push('<img class="cbimg" alt="" src="' + pic.toDataURL() + '" style="--bw:' + u.fw + ';--bh:' + u.fh + '">'); } catch (x) {} }
