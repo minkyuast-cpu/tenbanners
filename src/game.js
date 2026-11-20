@@ -1807,8 +1807,8 @@ DS.ultCut = ultCut;
 function fuseNews(up) {
   var sv = G.save, P = DS.fuseProg(sv); if (!P.can) return;
   var nm = up && up.who ? (up.hero ? DS.charName(sv.chars[sv.hero]) : (up.who.ttl || up.who.n || '')) : '';
-  if (P.ok) banner('합일 준비 끝', '교회에서 7단 Lv10 세 사람을 골라 함께 오른다', 3400);
-  else banner((nm ? nm + ', ' : '') + '7단 Lv10', '합일: 7단 Lv10 사람 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대는 아직'), 2800);
+  if (P.ok) banner('합일 준비 끝', '교회에서 서로 다른 가문의 가주 셋을 고른다', 3400);
+  else banner((nm ? nm + ', ' : '') + '7단 Lv10', '합일: 7단 Lv10 가주 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대는 아직'), 2800);
   if (!G.scn) updateQuest();
 }
 // ───────── r17 boss: 이름 지우기 (30번 어스름의 왕) ─────────

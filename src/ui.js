@@ -874,7 +874,7 @@ function fuRepBox(s, pick) {
     h += '<button class="furbb' + (on ? ' on' : '') + '" data-furep="' + c.id + '"' + (dis ? ' disabled aria-disabled="true"' : '') + ' aria-pressed="' + on + '" style="--fc:' + (DS.FLAG[c.cls] || '#c9a96a') + '">' + crestH(c, 22) + '<b>' + esc(hgShort(c)) + '</b><small>' + esc(c.id === s.hero ? '맹주' : (w.ttl || w.n || '')) + '</small><small>' + esc([fuAge(s, { role: c.id === s.hero ? 'hero' : 'bear', who: w }).replace(/, .*$/, ''), dft && c === dft && !lock ? '공훈 1위' : ''].filter(Boolean).join(', ')) + '</small>' + (on ? '<i class="furk">대표</i>' : '') + '</button>';
   });
   h += '</div><ul class="fuout"><li class="up">' + crestH(R, 16) + '<span><b>' + esc(DS.flagName(R.cls, s)) + '</b> 가주가 8단 <b>' + esc(x.name || '') + '</b>에 오른다. 공훈 +' + fmtN(DS.FUSE_HX || 0) + '</span></li>' +
-    gone.map(function (c) { var w = who[hs.indexOf(c)]; return '<li class="dn">' + crestH(c, 16) + '<span><b>' + esc(DS.flagName(c.cls, s)) + '</b> 가주 ' + esc(w.ttl || w.n || '') + '는 흡수된다. 가문은 다음 세대까지 잠든다</span></li>'; }).join('') +
+    gone.map(function (c) { var w = who[hs.indexOf(c)]; return '<li class="dn">' + crestH(c, 16) + '<span><b>' + esc(DS.flagName(c.cls, s)) + '</b> 가주 ' + esc(josa(w.ttl || w.n || '', '은는')) + ' 흡수된다. 가문은 다음 세대까지 잠든다</span></li>'; }).join('') +
     '</ul><p class="hint sm">흡수된 가주의 장비는 가방으로 간다. 막사의 그 병과 사람은 기다린다</p></div>';
   return h;
 }
@@ -1142,8 +1142,8 @@ function nextLine() {      // 결과 창 맨 아래 한 줄: 이제 무엇을 �
   if (n.tier > DS.partyTier(sv)) {
     if (n.tier === 8) {
       var P = DS.fuseProg(sv);
-      if (P.can) return P.ok ? '합일할 수 있다. 교회에서 가문 셋을 고른다' : '합일: 7단 Lv10 가문 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대 필요');
-      return '8단 합일: 7단 Lv10 가문 셋 (교회)';
+      if (P.can) return P.ok ? '합일할 수 있다. 교회에서 가주 셋을 고른다' : '합일: 7단 Lv10 가주 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대 필요');
+      return '8단 합일: 서로 다른 가문의 7단 Lv10 가주 셋 (교회)';
     }
     return n.tier + '단이 되면 ' + n.id + '. ' + n.name;
   }
@@ -1260,7 +1260,7 @@ DS.showResult = function (s, out, cb) {
     (killsN ? '<span>쓰러뜨린 적</span><b class="num">' + killsN + '</b>' : '') + (G.sim && G.sim.t ? '<span>걸린 시간</span><b class="num">' + Math.floor(G.sim.t / 60) + '분 ' + Math.floor(G.sim.t % 60) + '초</b>' : '') + '</div><!--xb--><ul class="loot">';
   var gotR = out.gear && DS.gear(out.gear) ? [DS.gear(out.gear)] : [];      // 2.1.0: 정해진 보상 전설 장비 (옛 유물 자리 — 자세한 줄은 아래 전리품 목록에)
   gotR.forEach(function (g) { html += '<li class="hl lg5"><b><i class="tg">정해진 보상</i> 전설 「' + esc(g.short) + '」</b><br><small>가방에 넣었다</small></li>'; });
-  if (out.crest) html += '<li class="hl">맹세의 깃대 <small>합일 조건: 7단 Lv10 가문 셋 (어느 가문이든)</small></li>';
+  if (out.crest) html += '<li class="hl">맹세의 깃대 <small>합일 조건: 서로 다른 가문의 7단 Lv10 가주 셋</small></li>';
   if (out.tickets) html += '<li>모집권 ×' + out.tickets + '</li>';
   html += '</ul>';
   // 전리품: 보스가 남긴 것(out.drops)과 싸우는 동안 주운 것(G.gain.loot)
@@ -1467,7 +1467,7 @@ function rankBlock(who, merc, follow) {
   var h = '<div class="rkbox">';
   h += '<div class="rkhd"><span class="rkk">등급</span><b style="color:' + (G0.col || '#efe6d0') + '">' + esc(G0.name || '') + '</b><small class="schips">' + gEff + '</small></div>';
   h += '<ol class="rkl">' + DS.GRADES.slice(1).map(function (q, i) { var k = i + 1; return '<li class="' + (k === g ? 'on' : k < g ? 'past' : '') + '" style="--rc:' + q.col + '">' + esc(q.name) + '</li>'; }).join('') + '</ol>';
-  h += '<div class="rkhd"><span class="rkk">단</span><b>' + t + '단 Lv' + DS.lvOfL(L) + '</b><small>' + esc((who.fz ? '합일함. 레벨 100까지' : L >= 70 ? '7단 Lv10. 교회에서 합일하면 70을 넘는다' : '단이 오를 때마다 기질에 맞는 능력치가 오른다')) + '</small></div>';
+  h += '<div class="rkhd"><span class="rkk">단</span><b>' + t + '단 Lv' + DS.lvOfL(L) + '</b><small>' + esc((who.fz ? '합일함. 레벨 100까지' : L >= 70 ? '7단 Lv10. 가주면 교회에서 합일해 70을 넘는다' : '단이 오를 때마다 기질에 맞는 능력치가 오른다')) + '</small></div>';
   var lord = !!(DS.ultFor && DS.ultFor(G.save, who)), uv = {}; if (lord && DS.ULT && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { uv[DS.tierOfL(q[0])] = q[1]; });      // 맹주: 5단 · 8단 = 필살기 +15%
   var pgl = DS.pgList ? DS.pgList(who) : [], st = DS.vetStars(L);
   h += '<ol class="rkl v t10">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (k) { var uu = uv[k], gg = k > 1 ? pgl[k - 2] : null, sk = lord && DS.ULT && DS.ULT.stars.indexOf((k - 1) * 10 + 1) >= 0; return '<li class="' + (k === t ? 'on' : k < t ? 'past' : '') + (uu || sk ? ' ult' : '') + '">' + k + '단' + (uu ? '<i class="rku">필살 +' + Math.round(uu * 100) + '%</i>' : '') + (sk ? '<i class="rku ust">✦</i>' : '') + (gg ? '<i class="rkg">' + esc(DS.pgText(gg)) + '</i>' : '') + '</li>'; }).join('') + '</ol>';
@@ -1605,7 +1605,7 @@ function fuseLine(s, ch) {      // r42: 그 가문 가주의 합일 (사람 셋)
   if (b.fz) return '<p class="fzl"><i>합일</i><small>가주가 합일했다. 레벨 100까지</small></p>';
   var L = DS.pL(b), P = DS.fuseProg(s), ok = P.n, n = P.of, near = L >= DS.FUSE_MIN || DS.FUSE_MIN - L <= FUSE_NEAR; if (!P.can || (!near && !ok)) return '';
   var box = ''; for (var i = 0; i < n; i++) box += i < ok ? '■' : '□';
-  return '<p class="fzl"><i>합일 조건</i><b class="fzb" aria-label="' + ok + ' / ' + n + '">' + box + '</b><small>7단 Lv10 사람 ' + ok + '/' + n + '</small></p>';
+  return '<p class="fzl"><i>합일 조건</i><b class="fzb" aria-label="' + ok + ' / ' + n + '">' + box + '</b><small>7단 Lv10 가주 ' + ok + '/' + n + '</small></p>';
 }
 // r42: 가문 공훈 칸 — 표식 · 계급 · 효과 · 다음 계급까지 막대
 function hMeritBox(ch) {
@@ -1780,9 +1780,9 @@ function houseGrid(s) {
 // 부대 탭 한 줄: 합일까지 (7단 Lv10 가문 수). 5단 넘은 가문이 없으면 빈칸
 function fuNear(s) {
   var P = DS.fuseProg(s); if (!P.can) return '';
-  if (P.ok) return '합일할 수 있다. 교회에서 가문 셋을 고른다';
+  if (P.ok) return '합일할 수 있다. 교회에서 가주 셋을 고른다';
   var topT = 0; P.pool.forEach(function (c) { topT = Math.max(topT, DS.tierOfL(c.L)); });
-  return topT >= 5 ? '합일: 7단 Lv10 가문 ' + P.n + '/' + P.of + (s.crest || topT < 6 ? '' : ', 맹세의 깃대 없음') : '';
+  return topT >= 5 ? '합일: 7단 Lv10 가주 ' + P.n + '/' + P.of + (s.crest || topT < 6 ? '' : ', 맹세의 깃대 없음') : '';
 }
 function heroFits(s, m) { var h = s.chars[s.hero]; return !!(h && DS.sbFits && DS.sbFits(h, m)); }      // 맹주 가문과 같은 병과 (가주로 설 가문은 없고, 맹주의 후계 후보)
 // 막사 목록 (부대 탭): 등급 → 레벨 순. 줄을 누르면 사람 창, 「교체」 = 같은 병과 가문의 가주 고르기, 「방출」
@@ -1838,7 +1838,7 @@ function tabBag() {      // r12: 줄 문법 = 그림 · 이름 ×n · 풀이 한
     html += '<div class="row">' + itemIco(k) + '<div class="tx"><b>' + it.name + ' <i class="own">' + itemHave(k) + '</i></b><small>' + it.desc + '</small></div>' + (use ? '<button class="btn small gold" data-use="' + k + '">사용</button>' : '') + '</div>';
   });
   html += '<div class="row">' + icon('misc', 'ticket') + '<div class="tx"><b>영웅 모집권 <i class="own">×' + (s.tickets || 0) + '</i></b><small>영웅 모집 1회 (영웅관)</small></div></div>';
-  if (s.crest) html += '<div class="row">' + icon('misc', 'crest') + '<div class="tx"><b>맹세의 깃대</b><small>7단 Lv10 가문 셋을 골라 교회에서 합일한다. 어느 가문이든 된다.</small></div></div>';
+  if (s.crest) html += '<div class="row">' + icon('misc', 'crest') + '<div class="tx"><b>맹세의 깃대</b><small>서로 다른 가문의 7단 Lv10 가주 셋을 골라 교회에서 합일한다.</small></div></div>';
   if (DS.lootUI && DS.lootUI.bag) return html + '<div class="lootbag" id="hjb2">' + DS.lootUI.bag(s) + '</div>';      // 정렬·잠금·모두 팔기는 그 안에서 (openMenu 가 손잡이를 단다)
   var gl = Object.keys(s.gear).filter(function (id) { return DS.gear(id); }).sort(function (a, b) { return DS.gearScore(DS.gear(b)) - DS.gearScore(DS.gear(a)); });
   html += '<h4 id="hjb2">장비 ' + gl.length + '종</h4>';
@@ -2019,8 +2019,12 @@ function tabHelp() {
       '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 쉬는 가주는 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%를 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
       '레벨 10마다 <b>단</b>이 오른다. 맹주는 모습이 바뀌고, 가주와 가문원은 테두리 빛이 바뀐다. 가주의 단만큼 가문의 기술이 열리고, 가문원은 3단, 5단, 7단에 제 기술을 익힌다.',
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
-      '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받는다. 아무도 제 자리를 떠나지 않는다.',
-      '8단부터의 모습과 기술은 그 사람이 선 가문의 계열(강철, 바람, 별)을 따른다.',
+      '<b>합일</b>: 맹세의 깃대가 있으면 교회에서 <b>서로 다른 세 가문의 가주</b>(맹주 포함, 7단 Lv10) 셋을 고른다. 가문원과 막사의 사람은 합일하지 않는다.',
+      '셋 가운데 <b>대표 가문</b>을 고른다. 처음은 공훈이 가장 큰 곳이고, 맹주가 들면 맹주 가문으로 정해진다. 대표의 가주가 그 가문의 8단에 올라 레벨 70을 넘어 자라고, 공훈 +' + DS.FUSE_HX + '을 받는다. 사람, 장비, 나이, 배우자는 그대로다.',
+      '나머지 두 가주는 대표에게 <b>흡수</b>된다. 가계도에는 합일로 남고, 든 장비는 가방으로 간다. 대표는 두 사람의 남은 해만큼 더 산다.',
+      '흡수된 두 가문은 <b>이번 세대가 끝날 때까지 잠든다</b>. 영웅관에서 그 병과가 나와도 열리지 않고, 막사의 그 병과 사람은 기다린다. 다음 세대의 장을 열면 깨어나 영웅관에서 다시 열 수 있다.',
+      '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
+      '8단 위의 가주가 쓰러지면 그대로 떠난다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
@@ -2793,6 +2797,7 @@ function lgHeirKind(c) {      // 설계서 linHeirs: kind 'kid' | 'adopt' | 'kin
   return 'merc';
 }
 // 2.2.9: 8단 위(합일한 넋)의 죽음 — 셋의 이름과 함께. 그 가문의 다음 가주는 제 단으로 선다 (8단은 잇지 않는다)
+function lgBig(spr) { return String(spr || '').replace(/data-px="[\d.]+"/, 'data-px="4"'); }      // 연출 얼굴은 크게
 function lgFallX(d) {
   var r = d && LS() && LS().P[d.id], sn = r && r.snap || {}; if (!r || !(+sn.L > 70 || sn.fz)) return null;
   var nm = (r.fu3 || []).filter(Boolean); if (!nm.length) nm = [d.name];
@@ -2801,7 +2806,7 @@ function lgFallX(d) {
 function lgRite(ev, cb, griefs, seen) {
   var s = G.save, d = lgP(ev.a), chId = ev.ch;
   if (!d || !chId || !s.chars[chId]) { if (cb) cb(); return; }
-  if (DS.cine && !seen) { var fx0 = lgFallX(d); DS.cine(fx0 ? { k: 'fallx', por: [d.spr || ''], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note } : { k: 'death', por: [d.spr || ''], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', ') }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
+  if (DS.cine && !seen) { var fx0 = lgFallX(d); DS.cine(fx0 ? { k: 'fallx', por: [lgBig(d.spr)], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note } : { k: 'death', por: [d.spr || ''], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', ') }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
   var step = 'mourn', pick = null, more = false, lock = 0, HO = { k: 'new', t: '' };      // 4.0 ⑬: 가문이 옮겨 갈 때의 호 (확인 걸음)
   var canE = DS.linEntomb && DS.linCanEntomb ? lgTry(function () { return DS.linCanEntomb(s, d.id); }) : null, cf = lgCoffins();
   var body = canE && canE.ok ? 'keep' : 'bury', nat = agNatural(d, ev);      // r6 나이: 천수를 누린 이는 이야기 창부터 조용히
@@ -2968,7 +2973,7 @@ function nfLater(ref, head, n) {
 function lgMournOthers(evs, cb, griefs, seen) {
   var all = lgAll(), ds = evs.map(function (e) { return all[e.a]; }).filter(Boolean); if (!ds.length) { if (cb) cb(); return; }
   var fxs = ds.map(lgFallX), fxi = fxs.findIndex ? fxs.findIndex(Boolean) : -1;
-  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [dx.spr || ''], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
+  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [lgBig(dx.spr)], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
   if (DS.cine && !seen) { DS.cine({ k: 'death', por: ds.slice(0, 3).map(function (d) { return d.spr || ''; }), title: ds.length > 1 ? ds.length + '명이 잠들었다' : ds[0].name, sub: ds.length > 1 ? ds.slice(0, 3).map(function (d) { return d.name; }).join(', ') + (ds.length > 3 ? ' 외' : '') : [ds[0].role, lgDiedTxt(ds[0])].filter(Boolean).join(', ') }, function () { lgMournOthers(evs, cb, griefs, true); }); return; }      // 2.2.4: 먼저 조용한 연출
   var C = LGU().coffin || {}, kept = {};
   A2('mourn', 'lose');

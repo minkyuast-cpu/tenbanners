@@ -42,7 +42,7 @@ DS.ZONES = {
     gates: [{ ids: [9], fx: 0.42, fy: 0.26, icon: 'statue' }], border: 'w',
     terr: { forest: 0.62, hill: 0.7, water: 0.74, mount: 0.84 } },
   gaon: { name: '가온', town: true, theme: 'coast', gear: [6, 10], special: true, exits: [{ side: 'N', to: 'isle' }],
-    npcs: ['북쪽 하늘을 보게. 저 저녁은 밤이 돼도 안 걷히네. 문이 열려 있다는 뜻일세.', '가온은 6단이 넘은 이만 받습죠. 문 가까이서 싸울 사람만 온다는 뜻입니다.', '7단 Lv10 가문 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 어느 집이든 돼요.'] },
+    npcs: ['북쪽 하늘을 보게. 저 저녁은 밤이 돼도 안 걷히네. 문이 열려 있다는 뜻일세.', '가온은 6단이 넘은 이만 받습죠. 문 가까이서 싸울 사람만 온다는 뜻입니다.', '7단 Lv10 가주 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 세 집은 서로 달라야 해요.'] },
   desert: { name: '붉은 모래 사막', theme: 'desert', base: 'd', w: 36, h: 32, seed: 71, L: [36, 47], mobs: ['scorpion', 'mummy', 'skeleton', 'skelArcher', 'darkMage'],
     exits: [{ side: 'W', at: 0.5, to: 'coast' }, { side: 'E', at: 0.4, to: 'mire' }],
     gates: [{ ids: [11], fx: 0.3, fy: 0.3, icon: 'oasis' }, { ids: [12, 13], fx: 0.62, fy: 0.68, icon: 'pyramid' }],

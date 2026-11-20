@@ -12,12 +12,12 @@ DS.RISE_G = 1.22;
 var LINE = {
   inf:  { k: 'xinf',  t: ['성벽기사', '철옹공', '불괴왕'], short: '성벽', aura: '#8fc8ff', blurb: '무너지지 않는 성채가 된 방패. 9단에 「불괴의 방진」, 10단에 「성벽 붕괴」를 익힌다.' },
   cav:  { k: 'xcav',  t: ['뇌전기사', '천둥군주', '뇌제'], short: '뇌전', aura: '#ffe27a', blurb: '번개를 끌고 달리는 기병의 왕. 9단에 「천둥 창」, 10단에 「뇌운 질주」를 익힌다.' },
-  fly:  { k: 'xfly',  t: ['폭풍기수', '창공군주', '천룡왕'], short: '폭풍', aura: '#9fe8ec', blurb: '폭풍을 타는 용의 기수. 9단에 「용의 포효」, 10단에 「천룡의 숨결」을 익힌다.' },
+  fly:  { k: 'xfly',  t: ['폭풍기수', '창공군주', '용황'], short: '폭풍', aura: '#9fe8ec', blurb: '폭풍을 타는 용의 기수. 9단에 「용의 포효」, 10단에 「용황의 숨결」을 익힌다.' },
   mar:  { k: 'xmar',  t: ['해일장군', '파도군주', '해신'], short: '해일', aura: '#62d0ee', blurb: '바다를 부리는 장수. 9단에 「소용돌이」, 10단에 「대해일」을 익힌다.' },
   pike: { k: 'xpike', t: ['창벽장군', '만창공', '창성'], short: '창벽', aura: '#b6f0a0', blurb: '창의 숲을 세우는 수문장. 9단에 「창의 숲」, 10단에 「천 갈래 창」을 익힌다.' },
   arc:  { k: 'xarc',  t: ['매눈사수', '신궁', '천궁성'], short: '매눈', aura: '#d8ff9a', blurb: '한 번 본 것은 놓치지 않는 명사수. 9단에 「꿰뚫는 매눈」, 10단에 「천궁 소나기」를 익힌다.' },
   cle:  { k: 'xcle',  t: ['금강권', '무성', '천무신'], short: '금강', aura: '#ffd27a', blurb: '맨손으로 산을 여는 무의 성인. 9단에 「천수권」, 10단에 「천지개벽장」을 익힌다.' },
-  mon:  { k: 'xmon',  t: ['성등사', '대성관', '일륜성자'], short: '성등', aura: '#fff0a0', blurb: '꺼지지 않는 등불의 성자. 9단에 「광륜」, 10단에 「일륜 강림」을 익힌다.' },
+  mon:  { k: 'xmon',  t: ['성등사', '대성관', '광명성자'], short: '성등', aura: '#fff0a0', blurb: '꺼지지 않는 등불의 성자. 9단에 「빛의 고리」, 10단에 「태양 강림」을 익힌다.' },
   mag:  { k: 'xmag',  t: ['대마도사', '원소왕', '천원현자'], short: '마도', aura: '#c9a8ff', blurb: '세 원소를 한 손에 쥔 대마도사. 9단에 「원소 폭주」, 10단에 「천원 운석」을 익힌다.' },
   sha:  { k: 'xsha',  t: ['사령군주', '명계왕', '불사왕'], short: '사령', aura: '#b6ff5a', blurb: '죽음을 다스리는 불사의 군주. 9단에 「망령 군단」, 10단에 「죽음의 장막」을 익힌다.' }
 };
@@ -38,7 +38,7 @@ var SK = {
   // 비병 (폭풍기수)
   xfly_dive:  { name: '용의 급강하', mp: 6, tick: 45, rng: [2, 5], tg: 'enemy', leap: true, back: 3, fx: 'dive', ic: 'dive', eff: [{ t: 'dmg', m: 1.9, vs: 'mark', vx: 1.5 }, { t: 'status', s: 'mark', dur: 8, p: 20 }], desc: '2~5칸 밖의 적에게 내리꽂아 190%(표식이 있으면 1.5배), 표식을 남기고 세 칸 날아오른다.' },
   xfly_roar:  { name: '용의 포효', mp: 11, tick: 50, tg: 'self', area: 'r2', side: 'enemy', back: 2, fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 1.8 }, { t: 'knock', n: 1 }, { t: 'buff', s: 'atk', p: -20, dur: 10 }, { t: 'gauge', v: -30 }], desc: '둘레 2칸 적에게 180%, 밀어내고 공격 −20% (10초), 게이지를 깎은 뒤 날아오른다.' },
-  xfly_breath:{ name: '천룡의 숨결', mp: 16, tick: 60, tg: 'dir', len: 5, fx: 'fire', ic: 'flame', eff: [{ t: 'dmg', m: 2.2, type: 'magic', stat: 'atk' }, { t: 'status', s: 'burn', dur: 8, p: 3 }, { t: 'status', s: 'mark', dur: 8, p: 20 }], desc: '용이 직선 5칸에 불을 뿜는다. 220%, 화상과 표식.' },
+  xfly_breath:{ name: '용황의 숨결', mp: 16, tick: 60, tg: 'dir', len: 5, fx: 'fire', ic: 'flame', eff: [{ t: 'dmg', m: 2.2, type: 'magic', stat: 'atk' }, { t: 'status', s: 'burn', dur: 8, p: 3 }, { t: 'status', s: 'mark', dur: 8, p: 20 }], desc: '용이 직선 5칸을 불로 태운다. 220%, 화상과 표식.' },
   // 해병 (해일장군)
   xmar_surge: { name: '해일 밀기', mp: 8, tick: 50, tg: 'dir', len: 4, fx: 'water', ic: 'wave', eff: [{ t: 'dmg', m: 1.9, type: 'magic', stat: 'atk' }, { t: 'knock', n: 2 }, { t: 'status', s: 'wet', dur: 14 }], desc: '직선 4칸에 해일 190%, 두 칸 밀어내고 젖게 한다.' },
   xmar_whirl: { name: '소용돌이', mp: 11, tick: 50, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'water', ic: 'hook', eff: [{ t: 'dmg', m: 1.6, type: 'magic', stat: 'atk' }, { t: 'pull', n: 1 }, { t: 'status', s: 'wet', dur: 12 }, { t: 'status', s: 'slow', dur: 8 }], desc: '2칸 반경에 소용돌이 160%, 한 칸 끌어오고 젖게 하며 둔화.' },
@@ -57,8 +57,8 @@ var SK = {
   xcle_heaven:{ name: '천지개벽장', mp: 16, tick: 60, tg: 'dir', len: 5, fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 2.6, type: 'magic', stat: 'mix' }, { t: 'knock', n: 2 }, { t: 'aura', r: 2, m: 1.2 }], desc: '직선 5칸에 기공 260%, 두 칸 밀어낸다. 둘레 2칸 아군을 회복.' },
   // 신관 (성등사)
   xmon_smite: { name: '성등 치기', mp: 6, tick: 45, rng: [1, 3], tg: 'enemy', fx: 'holy', ic: 'lamp', eff: [{ t: 'dmg', m: 3.0, type: 'holy' }, { t: 'ward', r: 4, m: 1.3 }], desc: '신성 300% (망자, 악마에게 1.5배). 4칸 안 가장 다친 아군에게 보호막.' },
-  xmon_halo:  { name: '광륜', mp: 13, tick: 50, tg: 'self', area: 'r2', side: 'ally', fx: 'sanct', ic: 'sanct', eff: [{ t: 'buff', s: 'shd', m: 1.6, dur: 15 }, { t: 'cleanse' }, { t: 'heal', m: 0.8 }], desc: '둘레 2칸 아군에게 빛의 고리. 보호막(마공의 160%, 15초), 상태 이상을 풀고 회복.' },
-  xmon_sun:   { name: '일륜 강림', mp: 18, tick: 60, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'holy', ic: 'sun', eff: [{ t: 'dmg', m: 2.2, type: 'holy' }, { t: 'ward', r: 4, m: 1.5 }], desc: '2칸 반경에 해가 내려앉는다. 신성 220% (망자, 악마에게 1.5배), 가장 다친 아군에게 보호막.' },
+  xmon_halo:  { name: '빛의 고리', mp: 13, tick: 50, tg: 'self', area: 'r2', side: 'ally', fx: 'sanct', ic: 'sanct', eff: [{ t: 'buff', s: 'shd', m: 1.6, dur: 15 }, { t: 'cleanse' }, { t: 'heal', m: 0.8 }], desc: '둘레 2칸 아군에게 빛의 고리. 보호막(마공의 160%, 15초), 상태 이상을 풀고 회복.' },
+  xmon_sun:   { name: '태양 강림', mp: 18, tick: 60, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'holy', ic: 'sun', eff: [{ t: 'dmg', m: 2.2, type: 'holy' }, { t: 'ward', r: 4, m: 1.5 }], desc: '2칸 반경에 해가 내려앉는다. 신성 220% (망자, 악마에게 1.5배), 가장 다친 아군에게 보호막.' },
   // 법사 (대마도사)
   xmag_bolt:  { name: '연쇄 뇌우', mp: 13, tick: 55, rng: [1, 4], tg: 'enemy', fx: 'thunder', ic: 'bolt', eff: [{ t: 'dmg', m: 1.6, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.5 }, { t: 'chain', n: 3, r: 2, m: 0.8, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.5 }], desc: '번개 160%, 2칸 안의 셋에게 옮겨 간다(80%). 얼거나 젖은 적에게 1.5배.' },
   xmag_prism: { name: '원소 폭주', mp: 14, tick: 55, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'fire', ic: 'flame', eff: [{ t: 'dmg', m: 1.5, type: 'magic', vs: 'burn', vx: 1.3 }, { t: 'status', s: 'burn', dur: 8, p: 2 }, { t: 'status', s: 'slow', dur: 8 }], desc: '불과 얼음이 2칸 반경에 함께 터진다. 150% (화상 입은 적에게 1.3배), 화상과 둔화.' },

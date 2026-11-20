@@ -106,20 +106,20 @@ function sendKin() {
 // 2.2.9 합일 (사람이 하듯): 맹세의 깃대가 있고 서로 다른 세 가문의 가주 셋이 7단 Lv10 이면 합일한다.
 //   셋: 맹주가 들 수 있으면 맹주(대표는 맹주 가문으로 잠긴다) → 출전 중인 가주 → 쉬는 가주 가운데 공훈이 낮은 둘(잃어도 덜 아픈 가문)을 흡수한다.
 //   대표: 맹주 가문 · 아니면 출전 중인 가문 가운데 공훈이 가장 큰 곳 · 아니면 셋 가운데 공훈이 가장 큰 곳.
-//   더 하지 않는다: 남는 가문이 BOTKEEP(6) 밑이 되면 · 출전 셋이 모두 합일했으면 · 이번 세대에 이미 BOTFUSEMAX(2) 번 했으면. 단 문턱 앞인데 출전에 합일한 이가 없으면 가문이 셋 넘게 남는 한 한 번 더
-const FUSE_KEEP = +(process.env.BOTKEEP || 6), FUSE_MAX = +(process.env.BOTFUSEMAX || 2);
+//   더 하지 않는다: 남는 가문이 BOTKEEP(4) 밑이 되면 · 출전 셋이 모두 합일했으면 · 이번 세대에 이미 BOTFUSEMAX(3) 번 했으면. 단 문턱 앞인데 출전에 합일한 이가 없으면 가문이 셋 넘게 남는 한 한 번 더
+const FUSE_KEEP = +(process.env.BOTKEEP || 4), FUSE_MAX = +(process.env.BOTFUSEMAX || 3);
 function fusedIn() { return D.persons(s).filter(p => p.dep && p.who.fz).length; }
 function fuseGen() { return (st.fuseG || {})[D.genNow ? D.genNow(s) : 1] || 0; }
 function fuseWant() { return !OLD && !!s.crest && fuseGen() < FUSE_MAX && fusedIn() < 3 && D.charList(s).length - 2 >= FUSE_KEEP; }
 function lifeLeft(c) { const e = c.role === 'hero' ? s.chars[s.hero] : c.who, L = D.ageLife ? D.ageLife(s, e) : null; return L && L.left != null ? L.left : 99; }
 //   2.2.9: 대표는 남은 해가 가장 긴 가주 (늙은 이를 올리면 곧 천수를 다해 그 가문의 8단이 사라진다 — 다음 가주는 제 단으로 선다). 맹주가 늙었으면 셋에 넣지 않는다 (넣으면 맹주 가문이 대표로 잠긴다).
-//     흡수할 둘은 남은 해가 가장 짧은 이부터 (어차피 곧 떠날 이)
+//     흡수할 둘도 남은 해가 긴 이부터 (그 해를 대표가 받는다 — DS.fuse)
 function fusePick(cs) {
   const by = cs.slice().sort((a, b) => lifeLeft(b) - lifeLeft(a) || (b.dep ? 1 : 0) - (a.dep ? 1 : 0));
   const top = by[0], hero = cs.filter(c => c.role === 'hero')[0];
   const pool = by.filter(c => c !== top && !(hero && c === hero && top !== hero));
   if (pool.length < 2) return null;
-  const tail = pool.slice().sort((a, b) => lifeLeft(a) - lifeLeft(b));
+  const tail = pool.slice().sort((a, b) => lifeLeft(b) - lifeLeft(a) || (a.dep ? 1 : 0) - (b.dep ? 1 : 0));      // 흡수된 둘의 남은 해를 대표가 받는다 — 남은 해가 긴 둘 (출전하지 않는 이 먼저)
   return [top].concat(tail.slice(0, 2)).map(c => c.key);
 }
 function fuseRepOf(sv, keys) {
@@ -131,7 +131,7 @@ function fuseMaybe(gate) {
   if (!(gate || fuseWant())) return 0;
   if (!fuseWant() && !(gate && !fusedIn() && D.charList(s).length - 2 >= 3)) return 0;      // 문턱 앞인데 출전에 합일한 이가 없으면 가문이 셋 넘게 남는 한 한 번 더
   const n0 = D.charList(s).length, k = D.fuseAuto(s, 1, { pick: fusePick, rep: fuseRepOf });
-  if (k) { const LF = D.lastFuse || {}, g = D.genNow ? D.genNow(s) : 1; st.fuse += k; st.fuseG = st.fuseG || {}; st.fuseG[g] = (st.fuseG[g] || 0) + k; st.fuseAt = (st.fuseAt || []).concat([Object.keys(s.cleared).length]); st.shut = (st.shut || []).concat((LF.gone || []).map(g => g.cls + '@' + Object.keys(s.cleared).length)); st.log.push('fuse @' + Object.keys(s.cleared).length + ' rep ' + LF.repCls + ' absorbs ' + (LF.gone || []).map(g => g.cls).join(',') + ' houses ' + n0 + '→' + D.charList(s).length); }
+  if (k) { const LF = D.lastFuse || {}, g = D.genNow ? D.genNow(s) : 1; st.fuse += k; st.fuseG = st.fuseG || {}; st.fuseG[g] = (st.fuseG[g] || 0) + k; st.fuseAt = (st.fuseAt || []).concat([Object.keys(s.cleared).length]); st.shut = (st.shut || []).concat((LF.gone || []).map(g => g.cls + '@' + Object.keys(s.cleared).length)); st.log.push('fuse @' + Object.keys(s.cleared).length + ' h' + ((st.simT + st.over) / 3600).toFixed(1) + ' left ' + (D.ageLife(s, LF.repWho === D.heroPs(s) ? s.chars[s.hero] : LF.repWho).left) + ' (+' + LF.ls + ') rep ' + LF.repCls + ' absorbs ' + (LF.gone || []).map(g => g.cls).join(',') + ' houses ' + n0 + '→' + D.charList(s).length); }
   return k;
 }
 function prep() {
@@ -157,7 +157,7 @@ function prep() {
   check('prep');
 }
 // 한 싸움: specs 를 starts(또는 x,y 근처)에 세우고 끝날 때까지. 돌려주는 것: 'win' | 'lose' | 'end'
-const RETREAT = process.env.BOTRETREAT !== '0', RETREAT_AT = +(process.env.BOTRETREAT || 2);      // 2.2.9: BOTRETREAT=0 이면 예전처럼 끝까지 싸운다 (수 = 몇째로 쓰러질 때 물러나는가)
+const RETREAT = process.env.BOTRETREAT !== '0', RETREAT_AT = +(process.env.BOTRETREAT || 2), RETREAT_HP = +(process.env.BOTRETHP || 0.25);      // 2.2.9: BOTRETREAT=0 이면 예전처럼 끝까지 싸운다 (수 = 몇째로 쓰러질 때 물러나는가)
 function run(sim, mode, zid, maxT) {
   let res = null, quiet = 0, fell = 0;
   const born = sim.t;
@@ -173,7 +173,8 @@ function run(sim, mode, zid, maxT) {
       } else if (e.t === 'die') {
         const u = sim.byId[e.id]; if (!u) continue;
         if (u.side === 'ally' && !e.flee) {
-          if (u.role === 'cmd' && mode === 'scn' && RETREAT && !res) fell++;      // 2.2.9: 시나리오에서 가주 · 맹주가 둘째로 쓰러지면 남은 이를 지키러 물러난다 (사람이 하듯 — 쓰러짐 창의 「퇴각」)
+          if (e.erase) st.erased = (st.erased || 0) + 1;
+          if (u.role === 'cmd' && mode === 'scn' && RETREAT && !res && !e.erase) fell++;      // 이름 지우기(30번의 정해진 장치)로 사라진 이는 세지 않는다      // 2.2.9: 시나리오에서 가주 · 맹주가 둘째로 쓰러지면 남은 이를 지키러 물러난다 (사람이 하듯 — 쓰러짐 창의 「퇴각」)
           if (u.role === 'cmd') {
             const ch = s.chars[u.ch]; if (!ch) continue;
             if (u.ch === s.hero) { if (ch.ps && D.pL(ch.ps) > 70) { st.xDeaths = (st.xDeaths || 0) + 1; st.log.push('8+ hero died L' + D.pL(ch.ps) + ' @' + Object.keys(s.cleared).length); } ch.down = true; st.heroDeaths++; st.deaths++; st.dAt[where] = (st.dAt[where] || 0) + 1; st.log.push('hero died ' + mode + (zid ? ' ' + zid : '') + ' L' + D.pL(ch.ps) + ' houses ' + D.partyIds(s).length + ' @h' + ((st.simT + st.over) / 3600).toFixed(2)); }
@@ -193,11 +194,21 @@ function run(sim, mode, zid, maxT) {
         const u = sim.byId[e.id]; if (!u || u.side !== 'ally' || u.role !== 'cmd') continue;
         const S = D.SKILLS[e.sk]; if (!S) continue;
         if (S.ult) { const k = hcls(sim, u) || '?'; st.ult[k + ':' + e.sk] = (st.ult[k + ':' + e.sk] || 0) + 1; st.uAt[where] = (st.uAt[where] || 0) + 1; } else st.sk[e.sk] = (st.sk[e.sk] || 0) + 1;
+      } else if (e.t === 'erase' && RETREAT) {      // 2.2.9: 30번의 이름 지우기 — 사람이 하듯 지워질 가주를 구한다 (맹주의 부름 한 번 · 다른 가주가 곁으로 가서 감싼다). 합일한 이 먼저
+        const h = sim.erHero(), K = sim._er, marked = (e.ids || []).map(id => sim.byId[id]).filter(u => u && !u.dead && u.erM).sort((a, b) => (b.tier || 0) - (a.tier || 0) || (b.role === 'cmd') - (a.role === 'cmd'));
+        marked.forEach((u, i) => {
+          if (i === 0 && K && !K.er.called && h && !h.dead && !h.erM) { sim.setOrder(h.id, { t: 'call', tid: u.id }); st.erCall = (st.erCall || 0) + 1; return; }
+          const g = sim.erGuard(u).filter(c => !c.dead && !(c.order && c.order.t === 'call')).sort((a, b) => (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y)))[0];
+          if (g) { sim.setOrder(g.id, { t: 'move', x: u.x, y: u.y }); st.erCover = (st.erCover || 0) + 1; }
+        });
       } else if (e.t === 'win') res = 'win';
       else if (e.t === 'lose') res = 'lose';
     }
     if (sim.result) res = sim.result;
     if (fell >= RETREAT_AT && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd')) { res = 'retreat'; st.retreats = (st.retreats || 0) + 1; }
+    if (RETREAT && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd' && u.tier >= 8 && u.hp < u.mhp * RETREAT_HP)) {      // 2.2.9: 합일한 가주(8단~)가 위태로우면 물러난다 — 시나리오는 퇴각(진 판), 들판은 싸움을 버리고 떠난다 (8단은 다시 얻기 어렵다)
+      if (mode === 'scn') { res = 'retreat'; st.retreats = (st.retreats || 0) + 1; st.retX = (st.retX || 0) + 1; } else { res = 'end'; st.fieldRet = (st.fieldRet || 0) + 1; }
+    }
     if (mode === 'zone' && !res) {
       const foes = sim.units.filter(u => !u.dead && u.side === 'enemy');
       if (!foes.length) res = 'end';
@@ -235,7 +246,7 @@ function place(sim, specs, starts, x, y) {
 function after(scnWin, sc) {
   if (sc && D.linAfterScn) D.linAfterScn(s, { win: scnWin, cmds: [], mercs: [] });
   const ev = D.ageCheck(s, sc ? sc.name : '들판').concat(D.linSettle(s, sc ? sc.name : '들판'));
-  ev.forEach(e => { if (e.t === 'birth') st.births++; if (e.t === 'death' && e.nat) st.log.push('천수 ' + (e.k || '') + ' @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' yr' + D.calNow(s).yr); });
+  ev.forEach(e => { if (e.t === 'birth') st.births++; if (e.t === 'death' && e.nat) { const q = s.lin.P[e.a], x = q && q.snap && (q.snap.fz || q.snap.L > 70); if (x) st.xNat = (st.xNat || 0) + 1; st.log.push('천수 ' + (e.k || '') + (x ? ' 8+' : '') + ' @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' yr' + D.calNow(s).yr); } });
   tidy();
   check(sc ? 'scn' : 'field');
 }
@@ -300,6 +311,7 @@ function scenario(sc) {
   return r === 'win';
 }
 function partyTier() { return D.partyTier(s); }
+function capL() { const ids = s.party || []; let t = 0, n = 0; ids.forEach(id => { const ch = s.chars[id]; if (!ch) return; const b = id === s.hero ? ch.ps : D.bearer(s, ch); t += b ? D.pCap(b) : ch.L; n++; }); return n ? Math.floor(t / n) : 100; }
 // 들어갈 레벨: 2.2.3 — 잰 표의 「안전」(DS.recSafe: 열 번 다 이기고 쓰러지는 이가 드문 레벨), 없으면 권장. 사람이 권장을 넘겨 조금 더 다지고 들어가듯
 //   조율용(tools/calib.js 의 재료): BOTFOCUS=N BOTD=d — N번만 2.2.2 의 권장(OLD_REC) + d 에 들어가고 나머지는 OLD_REC 그대로. N번 직전의 판을 BOTSNAP 에 쓰고 끝낸다
 const OLD_REC = { 1: 2, 2: 4, 3: 6, 4: 9, 5: 11, 6: 15, 7: 21, 8: 24, 9: 26, 10: 29, 11: 31, 12: 34, 13: 36, 14: 39, 15: 42, 16: 45, 17: 47, 18: 50, 19: 53, 20: 55, 21: 66, 22: 67, 23: 68, 24: 70, 25: 71, 26: 73, 27: 79, 28: 80, 29: 81, 30: 82 };
@@ -324,13 +336,13 @@ for (let n = 1; n <= 30 && !stuck; n++) {
     }
     if (NOFIELD && !tries && D.partyL(s) < D.recL(sc) && fields < +(process.env.BOTREPLAY || 6)) { farm(); fields++; continue; }      // 시나리오만: 권장에 못 미치면 앞 시나리오를 몇 번 다시
     if (NOFIELD && tries >= 3 && tries % 3 === 0 && fields < tries * 4 + 6) { farm(); fields++; continue; }      // 시나리오만: 세 번 지면 앞 시나리오를 몇 번 다시
-    const learn = process.env.BOTNOLEARN ? 0 : 2 * Math.min(3, tries);      // 2.2.8: 지면 두 레벨 더 다지고 다시 (셋째 패배까지 — 사람이 하듯. BOTNOLEARN=1 이면 예전처럼 곧장 다시)
-    if (!NOFIELD && D.partyL(s) < target(sc) + (D.partySpecs(s).length < 3 ? 3 : 0) + learn && fields < MAX_FIELD) { farm(); fields++; continue; }      // 싸우는 이가 셋보다 적으면 권장보다 세 레벨 더 (사람이 하듯 조심스럽게)
+    const learn = process.env.BOTNOLEARN ? 0 : 2 * Math.min(n >= 21 ? 6 : 3, tries);      // 2.2.9: 21번부터는 여섯째 패배까지 (합일한 이는 100 까지 자란다 — 물러난 판은 더 다지고)      // 2.2.8: 지면 두 레벨 더 다지고 다시 (셋째 패배까지 — 사람이 하듯. BOTNOLEARN=1 이면 예전처럼 곧장 다시)
+    if (!NOFIELD && D.partyL(s) < Math.min(target(sc) + (D.partySpecs(s).length < 3 ? 3 : 0) + learn, capL()) && fields < MAX_FIELD) { farm(); fields++; continue; }      // 2.2.9: 출전한 이가 모두 제 상한(합일 전 70)이면 더 다지지 못한다 — 그 자리에서 들어간다      // 싸우는 이가 셋보다 적으면 권장보다 세 레벨 더 (사람이 하듯 조심스럽게)
     tries++; if (tries === 1) st.eL[n] = D.partyL(s);
     if (process.env.BOTSNAP && tries === 1 && !tag && (!FOCUS || FOCUS === n)) { require('fs').writeFileSync(require('path').join(process.env.BOTSNAP, cls + '_' + seed + '_' + n + '.json'), JSON.stringify(s)); if (FOCUS) process.exit(0); }      // 조율용(tools/calib.js): 시나리오 N 에 처음 들어가기 직전의 판
     const d0 = st.deaths, ok = scenario(sc);
     if (tries === 1) st.ft[n] = [ok ? 1 : 0, st.deaths - d0, D.partyL(s) >= 0 ? st.eL[n] : 0];      // 2.2.7: 처음 싸움 [이김, 쓰러진 수, 들어간 레벨]
-    if (!ok) { st.wipes++; st.wAt[n] = (st.wAt[n] || 0) + 1; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + target(sc)); if (tries > 12) { stuck = true; break; } }
+    if (!ok) { st.wipes++; st.wAt[n] = (st.wAt[n] || 0) + 1; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + target(sc)); if (tries > 20) { stuck = true; break; } }
   }
   if (process.env.BOTSAVE && !tag && n === +(process.env.BOTSAVEAT || 15)) { require('fs').writeFileSync(process.env.BOTSAVE, JSON.stringify(s)); console.log('saved', process.env.BOTSAVE); process.exit(0); }      // 화면 시험용: N번을 깬 판을 저장 글로
   st.perScn.push({ n: tag + n, h: +((st.simT + st.over) / 3600).toFixed(2), L: D.partyL(s), units: D.partySpecs(s).length, vac: D.bnEmpty(s).length, tries, houses: D.charList(s).length, fh: +(st.fieldT / 3600).toFixed(2), rec: target(sc), rL: D.recL(sc) });
@@ -353,7 +365,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
 const H = (st.simT + st.over) / 3600;
 const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
-  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, xDeaths: st.xDeaths || 0, retreats: st.retreats || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
+  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, xDeaths: st.xDeaths || 0, xNat: st.xNat || 0, erCall: st.erCall || 0, erCover: st.erCover || 0, erased: st.erased || 0, retreats: st.retreats || 0, retX: st.retX || 0, fieldRet: st.fieldRet || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
 console.log(`${cls} seed${seed}: ${out.cleared}/30 in ${out.hours}h, wipes ${out.wipes}, deaths ${out.deaths} (hero ${out.heroDeaths}, bearer ${out.bearDeaths}, kin ${out.kinDeaths}), recruits ${out.recruits}, kin sent ${out.kinSent}, vacancies max ${out.vacMax}/avg ${out.vacAvg}`);

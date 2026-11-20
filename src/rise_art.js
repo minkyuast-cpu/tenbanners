@@ -32,7 +32,7 @@ var LOOK = {
     L('circlet', 'gi', ['aura2', 'cape', 'scarf', 'gaunt'], { a: '#fff6dc', A: '#e8d0a0', b: '#e0525e', B: '#9c2f45', h: '#1b1626', i: '#f6cf57', I: '#c08f2c', c: '#62b0ee', l: '#ffffff', q: '#f6cf57', Q: '#c08f2c', m: '#ffffff', M: '#cdd5e3', p: '#3a3350', Y: '#ffd27a' }),
     L('circlet', 'gi', ['aura3', 'cape', 'scarf', 'gaunt'], { a: '#ffffff', A: '#e8e0cc', b: '#f6cf57', B: '#c08f2c', h: '#1b1626', i: '#ffffff', I: '#f6cf57', c: '#ff4d6d', l: '#fff6dc', q: '#e0525e', Q: '#9c2f45', m: '#ffe27a', M: '#c08f2c', p: '#7a2a34', Y: '#ffe9a0' })
   ],
-  xmon: [      // 성등사 → 대성관 → 일륜성자: 흰 법의 · 등불빛 → 주황 · 날개 → 해처럼 흰 금
+  xmon: [      // 성등사 → 대성관 → 광명성자: 흰 법의 · 등불빛 → 주황 · 날개 → 해처럼 흰 금
     L('mitre', 'robe', ['aura', 'cape', 'cross'], { a: '#fff6dc', A: '#e8d0a0', b: '#f09a4a', h: '#f6cf57', H: '#c08f2c', q: '#f09a4a', Q: '#b8642a', Y: '#fff0a0' }),
     L('crown', 'robe', ['aura2', 'mwing', 'cape', 'orb'], { a: '#f09a4a', A: '#b8642a', b: '#fff6d8', h: '#fff6dc', H: '#e0c888', q: '#fff6d8', Q: '#e0c888', c: '#ffffff', C: '#fff0a0', w: '#fff6dc', Y: '#fff0a0' }),
     L('crown', 'robe', ['aura3', 'mwing2', 'cape', 'orb'], { a: '#ffffff', A: '#f0e6c8', b: '#f6cf57', h: '#f6cf57', H: '#c08f2c', q: '#f09a4a', Q: '#b8642a', c: '#ffffff', C: '#ffd24a', w: '#ffffff', Y: '#fff6c0' })
@@ -54,7 +54,7 @@ var CAVX = [      // 뇌전기사 → 천둥군주 → 뇌제: 검은 군마 · 
   { head: 'crown', items: ['aura2', 'cape', 'spear'], pal: { a: '#ffe27a', A: '#c08f2c', b: '#3a3350', q: '#3a2a78', Q: '#241a50', h: '#3a3350', H: '#262036', m: '#ffffff', M: '#cdd5e3', Y: '#ffe27a' }, H: { c: '#f1ead9', mane: '#ffe27a', cloth: '#3a2a78', trim: '#ffe27a', helm: '#ffe27a', horn: '#e8d8a8', wings: '#fff3b0' } },
   { head: 'crown', items: ['aura3', 'cape', 'spear'], pal: { a: '#fff6dc', A: '#d8c8a0', b: '#62b0ee', q: '#f6cf57', Q: '#c08f2c', h: '#f6cf57', H: '#c08f2c', m: '#ffffff', M: '#9fe8ec', i: '#ffffff', I: '#f6cf57', Y: '#fff3b0' }, H: { c: '#1b1626', mane: '#9fe8ec', cloth: '#f6cf57', trim: '#ffffff', helm: '#f6cf57', horn: '#ffffff', wings: '#ffe27a' } }
 ];
-var FLYX = [      // 폭풍기수 → 창공군주 → 천룡왕: 푸른 용 → 흰 용 · 금 뿔 → 금빛 용 · 붉은 눈
+var FLYX = [      // 폭풍기수 → 창공군주 → 용황: 푸른 용 → 흰 용 · 금 뿔 → 금빛 용 · 붉은 눈
   { head: 'horned', items: ['aura', 'cape', 'spear'], pal: { a: '#62b0ee', A: '#3572b8', b: '#ffffff', q: '#3572b8', Q: '#24508a', m: '#e8f4ff', M: '#9fc8e8', Y: '#9fe8ec' }, F: { mount: 'dragon', c: '#3a6ab0', wing: '#2a4a80', belly: '#cfe6ff', eye: '#9fe8ec', horn: '#e8f4ff' } },
   { head: 'crown', items: ['aura2', 'cape', 'spear'], pal: { a: '#e2e9f2', A: '#a7b2c6', b: '#62b0ee', q: '#62b0ee', Q: '#3572b8', h: '#62b0ee', H: '#3572b8', m: '#ffffff', M: '#cdd5e3', Y: '#9fe8ec' }, F: { mount: 'dragon', c: '#e8f0ff', wing: '#9fc8e8', belly: '#ffffff', eye: '#62b0ee', horn: '#f6cf57' } },
   { head: 'crown', items: ['aura3', 'cape', 'spear'], pal: { a: '#f6cf57', A: '#c08f2c', b: '#ffffff', q: '#e0525e', Q: '#9c2f45', h: '#ffffff', H: '#cdd5e3', m: '#ffffff', M: '#f6cf57', i: '#ffffff', I: '#f6cf57', Y: '#ffe9a0' }, F: { mount: 'dragon', c: '#f6cf57', wing: '#ffe9a0', belly: '#fff6dc', eye: '#ff4d6d', horn: '#ffffff' } }
@@ -68,10 +68,11 @@ DS.auraOf = function (items, pal) {      // 장비 목록의 오라 칸 → { lv
 function hexA(c, a) { var h = String(c || '#f6cf57').replace('#', ''); if (h.length === 3) h = h.split('').map(function (x) { return x + x; }).join(''); var n = parseInt(h, 16); return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
 DS.artAura = function (g, A, cx, cy, head) {
   if (!A || !g || !g.createRadialGradient) return;
-  var lv = A.lv || 1, R = 17 + lv * 3.4, c = A.c;
+  var lv = A.lv || 1, R = 22 + lv * 2.6, c = A.c;
   g.save();
-  var gr = g.createRadialGradient(cx, cy, 1, cx, cy, R); gr.addColorStop(0, hexA(c, 0.5 + lv * 0.06)); gr.addColorStop(0.55, hexA(c, 0.2 + lv * 0.04)); gr.addColorStop(1, hexA(c, 0));
+  var gr = g.createRadialGradient(cx, cy, 1, cx, cy, R); gr.addColorStop(0, hexA(c, 0.95)); gr.addColorStop(0.5, hexA(c, 0.62 + lv * 0.06)); gr.addColorStop(0.8, hexA(c, 0.3 + lv * 0.05)); gr.addColorStop(1, hexA(c, 0));
   g.fillStyle = gr; g.beginPath(); g.ellipse(cx, cy, R, R * 1.12, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = hexA(c, 0.55 + lv * 0.1); g.lineWidth = 0.9 + lv * 0.3; g.beginPath(); g.ellipse(cx, cy, R * 0.84, R * 0.94, 0, 0, Math.PI * 2); g.stroke();      // 오라의 테
   if (lv >= 3) {      // 빛살 여덟
     g.strokeStyle = hexA('#ffffff', 0.32); g.lineWidth = 1;
     for (var k = 0; k < 8; k++) { var a = k / 8 * Math.PI * 2 + 0.2; g.beginPath(); g.moveTo(cx + Math.cos(a) * R * 0.45, cy + Math.sin(a) * R * 0.5); g.lineTo(cx + Math.cos(a) * R * 1.02, cy + Math.sin(a) * R * 1.1); g.stroke(); }

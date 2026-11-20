@@ -229,19 +229,19 @@ module.exports = async (page, shot, L) => {
   A(c.bL === kidL && c.hL === kidL, 'sent kid keeps exactly their own level, no boost (L ' + kidL + ')');
   await L.closeAll(page);
   await page.evaluate(() => { var o = document.querySelector('.ov'); if (o) DS.ui.closeAll(); });
-  // ⑧ 합일: 아무도 제 가문을 떠나지 않는다
+  // ⑧ 합일 (2.2.9): 서로 다른 세 가문의 가주 셋 — 대표(맹주가 들면 맹주 가문)만 8단, 나머지 둘은 흡수 · 두 가문은 잠든다
   c = await ev(() => {
     var s = DS.G.save; s.crest = true;
     var hs = DS.charList(s).filter(ch => ch.id !== s.hero && DS.bearer(s, ch)).slice(0, 2);
     var who = [DS.heroPs(s)].concat(hs.map(ch => DS.bearer(s, ch)));
-    var sbm = DS.sbOf(s, hs[0].id)[0]; if (sbm) who[2] = sbm;
-    who.forEach(function (w) { w.L = 70; w.exp = 0; }); DS.pSync(s);
-    var before = who.map(function (w) { return { o: w === DS.heroPs(s) ? s.hero : w.o, h: !!w.h, sb: !!w.sb }; });
-    var keys = who.map(function (w) { return DS.pKey(s, w); }), r = DS.fuse(s, keys);
-    var after = who.map(function (w) { return { o: w === DS.heroPs(s) ? s.hero : w.o, h: !!w.h, sb: !!w.sb, L: DS.pL(w), fz: !!w.fz }; });
-    return { ok: !!r, same: JSON.stringify(before) === JSON.stringify(after.map(function (a) { return { o: a.o, h: a.h, sb: a.sb }; })), L: after.map(a => a.L), fz: after.every(a => a.fz), rep: DS.lastFuse && DS.lastFuse.hx };
+    var sbm = DS.sbOf(s, hs[0].id)[0];
+    who.forEach(function (w) { w.L = 70; w.exp = 0; }); if (sbm) { sbm.L = 70; } DS.pSync(s);
+    var sbOk = !sbm || DS.fuseOk(s, [DS.pKey(s, who[0]), DS.pKey(s, who[1]), DS.pKey(s, sbm)]).ok === false;
+    var n0 = DS.charList(s).length, keys = who.map(function (w) { return DS.pKey(s, w); }), r = DS.fuse(s, keys, { rep: hs[0].id });
+    var hp = DS.heroPs(s);
+    return { ok: !!r, sbOk: sbOk, heroRep: DS.lastFuse.rep === s.hero, L: DS.pL(hp), fz: !!hp.fz, gone: DS.lastFuse.gone.length, n: DS.charList(s).length, n0: n0, shut: DS.fzShutList(s).length, hx: DS.lastFuse.hx };
   });
-  A(c.ok && c.same && c.fz && c.L.every(x => x === 71) && c.rep === 1000, '합일: three rise to 8단, nobody leaves their seat, rep house +1000');
+  A(c.ok && c.sbOk && c.heroRep && c.L === 71 && c.fz && c.gone === 2 && c.n === c.n0 - 2 && c.shut === 2 && c.hx === 1000, '합일: 가주 only (막사 refused), 맹주 in → 맹주 house is the representative, rises to 8단, the other two absorbed and their houses sleep, rep house +1000');
   // ⑨ 연무장 · 무술대회
   await ev(() => { DS.ui.closeAll(); DS.rebuildParty(); }); await L.sleep(300);
   c = await ev(() => {
