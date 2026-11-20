@@ -37,15 +37,15 @@ var NEW_SK = {
   bb_meteor:   { name: '불비', tick: 55, tg: 'multi', n: 6, area: 'single', cast: 2.4, fx: 'meteor', cd: 14, eff: [{ t: 'dmg', m: 1.35, type: 'magic' }, { t: 'hazard', k: 'fire', dur: 5, p: 3, s: 'burn' }] },
   bb_pool:     { name: '독웅덩이', tick: 50, tg: 'multi', n: 4, area: 'r1', cast: 1.8, fx: 'poison', cd: 13, eff: [{ t: 'dmg', m: 0.9, type: 'magic', stat: 'atk' }, { t: 'hazard', k: 'poison', dur: 7, p: 3, s: 'poison', every: 2 }] },
   bb_firebreath: { name: '불숨', tick: 50, tg: 'dir', len: 4, cone: true, cast: 1.8, fx: 'fire', cd: 11, minN: 1, eff: [{ t: 'dmg', m: 1.4, type: 'magic' }, { t: 'status', s: 'burn', dur: 6, p: 2 }, { t: 'hazard', k: 'fire', dur: 5, p: 3, every: 2 }] },
-  bb_frostbreath:{ name: '서리숨', tick: 50, tg: 'dir', len: 4, cone: true, cast: 1.8, fx: 'frost', cd: 11, minN: 1, eff: [{ t: 'dmg', m: 1.3, type: 'magic' }, { t: 'status', s: 'slow', dur: 8 }, { t: 'hazard', k: 'frost', dur: 5, p: 2, s: 'slow', every: 2 }] },
+  bb_frostbreath:{ name: '서리숨', tick: 50, tg: 'dir', len: 4, cone: true, cast: 1.8, fx: 'frost', cd: 11, minN: 1, eff: [{ t: 'dmg', m: 1.3, type: 'magic' }, { t: 'status', s: 'slow', dur: 6 }, { t: 'hazard', k: 'frost', dur: 5, p: 2, s: 'slow', every: 2 }] },
   bb_venombreath:{ name: '독숨', tick: 50, tg: 'dir', len: 4, cone: true, cast: 1.8, fx: 'poison', cd: 11, minN: 1, eff: [{ t: 'dmg', m: 1.1, type: 'magic', stat: 'atk' }, { t: 'status', s: 'poison', dur: 10, p: 4 }, { t: 'hazard', k: 'poison', dur: 6, p: 3, every: 2 }] },
   bb_bonebreath: { name: '망자의 숨', tick: 50, tg: 'dir', len: 4, cone: true, cast: 1.8, fx: 'dark', cd: 11, minN: 1, eff: [{ t: 'dmg', m: 1.4, type: 'magic' }, { t: 'buff', s: 'atk', p: -20, dur: 10 }] },
   bb_wing:     { name: '날갯짓', tick: 45, tg: 'self', area: 'r2', side: 'enemy', cast: 1.4, fx: 'wind', ai: 'near', near: 2, cd: 12, eff: [{ t: 'dmg', m: 0.8 }, { t: 'knock', n: 2 }, { t: 'gauge', v: -30 }] },
   bb_burrow:   { name: '땅굴', tick: 50, rng: [2, 7], tg: 'unit', area: 'r1', cast: 1.6, fx: 'quake', ai: 'far', cd: 14, eff: [{ t: 'emerge' }, { t: 'dmg', m: 1.2 }, { t: 'gauge', v: -20 }] },
   // ── 비기 (격노한 뒤에만 · 보스 컷인) ──
-  bu_cataclysm: { name: '대지 붕괴', tick: 60, tg: 'self', area: 'r4', side: 'enemy', cast: 3.0, fx: 'quake', ai: 'enr', near: 6, bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.8 }, { t: 'knock', n: 2 }, { t: 'gauge', v: -40 }] },
+  bu_cataclysm: { name: '대지 붕괴', tick: 60, tg: 'self', area: 'r4', side: 'enemy', cast: 3.0, fx: 'quake', ai: 'enr', near: 6, bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.5 }, { t: 'knock', n: 2 }, { t: 'gauge', v: -30 }] },
   bu_inferno:   { name: '겁화', tick: 60, tg: 'multi', n: 9, area: 'r1', cast: 3.0, fx: 'meteor', ai: 'enr', bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.55, type: 'magic' }, { t: 'hazard', k: 'fire', dur: 6, p: 3, s: 'burn', every: 2 }] },
-  bu_glacier:   { name: '얼음 시대', tick: 60, tg: 'self', area: 'r4', side: 'enemy', cast: 3.0, fx: 'frost', ai: 'enr', near: 6, bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.5, type: 'magic' }, { t: 'status', s: 'slow', dur: 10 }, { t: 'gauge', v: -50 }] },
+  bu_glacier:   { name: '얼음 시대', tick: 60, tg: 'self', area: 'r4', side: 'enemy', cast: 3.0, fx: 'frost', ai: 'enr', near: 6, bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.4, type: 'magic' }, { t: 'status', s: 'slow', dur: 6 }, { t: 'gauge', v: -30 }] },
   bu_plague:    { name: '죽음의 안개', tick: 60, tg: 'multi', n: 9, area: 'r1', cast: 3.0, fx: 'poison', ai: 'enr', bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.05, type: 'magic' }, { t: 'status', s: 'poison', dur: 10, p: 3 }, { t: 'hazard', k: 'poison', dur: 6, p: 3, every: 2 }] },
   bu_horn:      { name: '뿔 폭풍', tick: 60, tg: 'dir', len: 8, cast: 2.2, dash: true, fx: 'thrust', ai: 'enr', bult: true, cd: 18, eff: [{ t: 'dmg', m: 1.9 }, { t: 'knock', n: 1, dir: 'side' }, { t: 'gauge', v: -30 }] },
   bu_moon:      { name: '달 울음', tick: 60, tg: 'self', area: 'r3', side: 'enemy', cast: 2.4, fx: 'wind', ai: 'enr', near: 5, bult: true, cd: 20, eff: [{ t: 'dmg', m: 1.4 }, { t: 'gauge', v: -40 }, { t: 'status', s: 'slow', dur: 6 }] },
@@ -99,7 +99,7 @@ var BIG_STORY = {
   gatekeeper:{ sz: [2, 2], skills: ['b_quake', 'b_sumImp', 'bb_rocks', 'e_smash'], enr: ENR(['bu_cataclysm'], '문이 무너진다') },
   swarm:     { sz: [2, 2], skills: ['b_sumImp', 'b_cloud', 'bb_wing', 'e_smash'], enr: ENR(['bu_plague'], '파리 떼가 하늘을 덮는다', 0.35) },
   bonewyrm:  { sz: [4, 2], skills: ['bb_bonebreath', 'b_sumSkel', 'bb_wing', 'bb_tail'], enr: ENR(['bu_plague'], '뼈가 일어선다', 0.35) },
-  glacia:    { sz: [4, 2], skills: ['bb_frostbreath', 'b_frost', 'bb_wing', 'bb_tail'], enr: ENR(['bu_glacier'], '숨이 얼어붙는다', 0.35) },
+  glacia:    { sz: [4, 2], skills: ['bb_frostbreath', 'bb_wing', 'bb_tail', 'e_smash'], enr: ENR(['bu_glacier'], '숨이 얼어붙는다', 0.35) },
   ignar:     { sz: [4, 2], skills: ['bb_firebreath', 'b_erupt', 'bb_tail', 'bb_meteor'], enr: ENR(['bu_inferno'], '화산이 깨어난다', 0.35) },
   duskking:  { sz: [2, 4], enr: ENR(['bu_dusk'], '문 너머가 열린다', 0.3) }
 };
