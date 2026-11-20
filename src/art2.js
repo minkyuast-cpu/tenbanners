@@ -231,7 +231,7 @@ function fistP(g, S, hand, maskOnly, back) {      // 감은 천(맨손) 또는 �
   if (!back) part(g, function (g) { RR(g, x - 3.6, y + 0.8, 5.2, 4.6, 1.4); }, sh1(mc), { sd: 0.8, gl: function (g) { E(g, x - 2.2, y + 1.8, 0.7, 1.4); } });      // 팔목 가리개
   part(g, function (g) { E(g, x, y, r + 0.3, r); }, mc, { sd: 1.1, hl: 0.8, gl: function (g) { E(g, x - 1, y - 1, 0.9, 0.6, -0.4); } });
   if (!back) {
-    for (var i = 0; i < 3; i++) dot(g, x + 1.9, y - 1.6 + i * 1.6, 0.62, css(lt(mc, 0.45)));      // 주먹마디 징
+    for (var i = 0; i < 3; i++) dot(g, x + 1.9, y - 1.6 + i * 1.6, 0.62, css(lt(mc, 0.45)));      // 주먹마디 돌기
     if (F.spike) for (var j = 0; j < 3; j++) part(g, function (g) { var yy = y - 1.6 + j * 1.6; g.moveTo(x + 2.4, yy - 0.6); g.lineTo(x + 4.4, yy); g.lineTo(x + 2.4, yy + 0.6); g.closePath(); }, mc, { sd: 0.2, hl: 0, ln: 0.5 });
     if (F.grade >= 4 || F.acc) line(g, [x - 3.4, y + 2.6, x + 1.4, y + 2.6], css(mute(F.acc || '#d8b450')), 0.7);
     if (F.grade >= 4) dot(g, x - 1.2, y + 3.4, 0.8, css(mute(F.grade >= 5 ? (F.gem || '#62b0ee') : '#9a6ad0')));
@@ -349,7 +349,7 @@ function frontArm(g, S, hand, w) {
   var C = S.C, sl = C('a'), pl = S.a && S.a.cat === 'heavy' ? mute(S.a.m[1]) : sl, sx = 39.2, sy = 39.6;
   if (S.body === 'bones') { part(g, cap(sx, sy, hand[0], hand[1], 1.1), C('l'), { sd: 0.4 }); part(g, circ(hand[0], hand[1], 1.6), C('l'), { sd: 0.4 }); return; }
   var mx = (sx + hand[0]) / 2 + 1, my = (sy + hand[1]) / 2;
-  if (S.body === 'gi') {      // 2.2.6: 짧은 소매 (소맷부리 테) · 맨 팔뚝 — 주먹은 fistP
+  if (S.body === 'gi') {      // 2.2.6: 짧은 소매 (소매 끝 테) · 맨 팔뚝 — 주먹은 fistP
     part(g, cap(mx, my, hand[0], hand[1], 2.3), C('s'), { sd: 1 });
     part(g, cap(sx, sy, mx, my, 2.8), sl, { sd: 1.1 });
     part(g, circ(mx, my, 2.5), lt(sl, 0.22), { sd: 0.6, hl: 0.2 });

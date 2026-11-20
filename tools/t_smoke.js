@@ -235,6 +235,8 @@ module.exports = async (page, shot, L) => {
       ids.forEach(function (id) {
         var S = SK[id]; if (!S) { out.push(id + ':missing'); return; }
         sim.units.forEach(function (x) { if (x.side === 'enemy' && !x.dead && x.summoned) sim.kill(x); });
+        var open = function (cx, cy) { for (var dy = -2; dy <= 2; dy++) for (var dx = -2; dx <= 2; dx++) { if (Math.abs(dx) + Math.abs(dy) > 2) continue; var x = cx + dx, y = cy + dy, o = sim.at(x, y); if (!sim.pass('foot', x, y) || (o && o !== u && o.side === 'ally')) return false; } return true; };
+        if (!open(u.x, u.y)) { var op = null; for (var ro = 1; ro <= 12 && !op; ro++) for (var ox = -ro; ox <= ro && !op; ox++) for (var os = -1; os <= 1 && !op; os += 2) { var qx = u.x + ox, qy = u.y + (ro - Math.abs(ox)) * os; if (sim.pass(u.mt, qx, qy) && !sim.at(qx, qy) && open(qx, qy)) op = [qx, qy]; } if (op) mv(u, op[0], op[1]); }      // 둘레 2칸이 트인 자리에서 (지형이 판마다 달라도)
         u.cls = c; u.mt = C.mt; u.rng = C.rng.slice(); u.atk = st.atk; u.mag = st.mag; u.def = st.def; u.res = st.res; u.mhp = u.hp = st.hp; u.mmp = u.mp = 999; u.gauge = 100; u.cd = {}; u.dead = false; u.casting = null; u.order = null;
         u.skills = C.skills.map(function (s) { return s[0]; }); u.ult = S.ult ? id : u.ult; u.uc = 100; u.buffs = {}; u.st = {};
         var fs = sim.units.filter(function (x) { return x.side === 'enemy' && !x.dead; });
@@ -246,6 +248,14 @@ module.exports = async (page, shot, L) => {
         var tgt = null;
         if (S.tg === 'enemy') tgt = S.rng && S.rng[0] >= 2 ? far : near; else if (S.tg === 'ally') { tgt = al || u; var fa = fs[2] || far, pa2 = spot(tgt.x, tgt.y, 1, 1); if (fa && pa2 && Math.abs(fa.x - tgt.x) + Math.abs(fa.y - tgt.y) > 1) mv(fa, pa2[0], pa2[1]); }      // 대상 곁에도 적 하나 (수호의 도발) else if (S.tg === 'tile') tgt = { x: far.x, y: far.y }; else if (S.tg === 'dir') tgt = { x: u.x + Math.sign(near.x - u.x), y: u.y + Math.sign(near.y - u.y) };
         if (S.tg === 'dir') {      // 직선: 땅이 가장 길게 이어지는 쪽 — 첫 칸에 적을 세운다 (돌파가 달려 나갈 빈칸이 남게)
+          if (S.dash) {      // 돌파: 직선 칸이 모두 비어 있는 자리로 옮겨 선다 (지형이 판마다 달라도 달려 나갈 곳이 있게)
+            var found = null;
+            for (var rr2 = 0; rr2 <= 8 && !found; rr2++) for (var ddx = -rr2; ddx <= rr2 && !found; ddx++) for (var sg2 = -1; sg2 <= 1 && !found; sg2 += 2) {
+              var cx = u.x + ddx, cy = u.y + (rr2 - Math.abs(ddx)) * sg2; if (!(cx === u.x && cy === u.y) && (!sim.pass(u.mt, cx, cy) || sim.at(cx, cy))) continue;
+              D4.forEach(function (d) { if (found) return; for (var i = 1; i <= S.len; i++) { var x = cx + d[0] * i, y = cy + d[1] * i; if (!sim.pass(u.mt, x, y) || (sim.at(x, y) && sim.at(x, y) !== near)) return; } found = [cx, cy]; });
+            }
+            if (found && (found[0] !== u.x || found[1] !== u.y)) mv(u, found[0], found[1]);
+          }
           var bd = null, bn = -1; D4.forEach(function (d) { var n = 0; for (var i = 1; i <= S.len; i++) { var x = u.x + d[0] * i, y = u.y + d[1] * i; if (!sim.pass(u.mt, x, y)) break; var o = sim.at(x, y); if (o && o.side === 'ally') break; n++; } if (n > bn) { bn = n; bd = d; } });
           var t1 = [u.x + bd[0], u.y + bd[1]], o1 = sim.at(t1[0], t1[1]);
           if (o1 !== near && !o1) mv(near, t1[0], t1[1]);
@@ -301,6 +311,24 @@ module.exports = async (page, shot, L) => {
     return out;
   });
   rv.forEach(function (r) { A(r.ok, 'reservation works on the new skill ' + r.sk); });
+  // ④ 2.2.5 의 판(봇이 26번까지 깬 저장 · tools/fixtures/v225.json — 맹주 · 가주의 옛 필살기, 돌아온 이의 옛 깃발 기술을 넣어 둠): 읽혀서 싸울 수 있다
+  const v225 = fs.readFileSync(path.join(__dirname, 'fixtures', 'v225.json'), 'utf8');
+  const ld = await ev((raw) => {
+    var s2 = DS.Save.read(raw); if (!s2) return { err: 'read null' };
+    var bad = [], OLD = /^(bash|attackUp|protect|thunder|dive|whirl|harpoon|tidal|slow|pierce|aimed|arrowRain|holy|quick|bless|fire|ice|blizzard|meteor|drain|summon|curse|deathCloud)$/;
+    var hu = s2.chars[s2.hero].ps.ul; if (hu && !DS.ULTS[hu]) bad.push('hero ul ' + hu);
+    s2.mercs.forEach(function (m) { if (m.ul && !DS.ULTS[m.ul]) bad.push('m.ul ' + m.ul); if (m.s && (!DS.SKILLS[m.s] || OLD.test(m.s))) bad.push('m.s ' + m.s); });
+    DS.G.save = s2; DS.ui.persist(); var specs = DS.partySpecs(s2);
+    specs.forEach(function (u) { (u.skills || []).forEach(function (k) { if (!DS.SKILLS[k] || OLD.test(k)) bad.push(u.name + ' ' + k); }); if (u.ult && !DS.ULTS[u.ult]) bad.push('ult ' + u.ult); });
+    var ms = s2.mercs.filter(function (m) { return m.rv && m.s; }).map(function (m) { return m.s; });
+    return { bad: bad, n: specs.length, hu: hu, ms: ms.join(',') };
+  }, v225);
+  A(ld && !ld.err && !ld.bad.length && ld.hu === 'u_bastion', '2.2.5 save loads: ' + (ld.n || 0) + ' units, lord ult → ' + ld.hu + ', returned flag skills → ' + ld.ms + (ld.bad && ld.bad.length ? ' BAD ' + ld.bad.join('; ') : '') + (ld.err || ''));
+  await ev(() => { DS.ui.closeAll(); DS.rebuildParty(); DS.G.quiet = true; DS.enterZone('windy'); DS.G.save.opt.speed = 2; }); await L.sleep(1200); await L.skipStory(page, 3);
+  await ev(() => { DS.ui.closeAll(); DS.G.sim.hunt = true; DS.G.save.opt.hunt = true; }); await L.sleep(6000);
+  const f225 = await ev(() => { var sim = DS.G.sim; return { t: Math.round(sim.t), allies: sim.units.filter(function (u) { return u.side === 'ally' && u.role === 'cmd'; }).length }; });
+  A(f225.allies >= 5 && f225.t >= 4, '2.2.5 save fights in the field (' + f225.allies + ' houses, ' + f225.t + ' s)');
+  await ev(() => { DS.G.sim.hunt = false; DS.G.save.opt.hunt = false; DS.ui.closeAll(); });
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
   A(/^2\.2\.6 [^/]+ \/ 2\.2\.6 \/ 7\.0\.6$/.test(notes), 'version ' + notes);
   console.log('smoke done');
