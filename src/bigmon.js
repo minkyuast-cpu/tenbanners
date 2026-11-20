@@ -157,12 +157,12 @@ if (DS.SCENARIOS) DS.SCENARIOS.forEach(function (s) {
   if (SCN_ADD[s.id] && s.mobs.indexOf(SCN_ADD[s.id]) < 0) s.mobs = s.mobs.concat([SCN_ADD[s.id]]);
   var sw = SCN_SWAP[s.id]; if (sw) s.mobs = s.mobs.map(function (m) { return m === sw[0] ? sw[1] : m; });
 });
-// 갱도: 층 묶음마다 새 몬스터 하나 · 수문장 층(5 · 10)은 큰 수문장
+// 갱도: 7층부터 층 묶음마다 새 몬스터 하나 · 수문장 층(5 · 10)은 큰 수문장
 var PIT_ADD = ['skelGuard', 'banshee', 'boomer', 'stormcaller', 'sandworm', 'cultist'];
 var pit0 = DS.pit;
 if (pit0) DS.pit = function (f) {
   var s = pit0(f), g = Math.floor((s.pit - 1) / 3) % PIT_ADD.length, add = PIT_ADD[g];
-  if (add && s.mobs.indexOf(add) < 0) s.mobs = s.mobs.concat([add]);
+  if (add && s.pit > 6 && s.mobs.indexOf(add) < 0) s.mobs = s.mobs.concat([add]);      // 1~6층은 2.2.9 그대로 (봇이 오래 다지는 얕은 층에서 사람을 더 잃었다)
   if (s.pitKind === 10) s.boss = Math.floor(s.pit / 10) % 2 ? 'pitTitan' : 'pitWorm';
   else if (s.pitKind === 5) s.boss = 'pitGolem';
   return s;
