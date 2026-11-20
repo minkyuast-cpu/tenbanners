@@ -263,7 +263,9 @@ module.exports = async (page, shot, L) => {
     if (f) { sim.occ[f.y * sim.w + f.x] = null; var p = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(function (d) { return [u.x + d[0], u.y + d[1]]; }).filter(function (q) { return sim.pass(f.mt || 'foot', q[0], q[1]) && !sim.at(q[0], q[1]); })[0]; if (p) { f.x = p[0]; f.y = p[1]; } sim.occ[f.y * sim.w + f.x] = f; f.hp = f.mhp = 999999; f.aggro = true; var fr = f.role; f.role = 'boss'; }      // 보스 한 명이면 쓸 자리(둘 몫)가 된다 — 곁에 다른 적이 우연히 있느냐에 따라 갈리던 것
     u.auto = false; o.manual = sim.ultSelf(u);
     u.auto = true; o.auto = sim.ultSelf(u);
-    var n0 = u.ultN || 0; sim.aiCmd(u); o.fired = (u.ultN || 0) > n0; o.uc = u.uc;
+    sim.tele = []; if (sim.reDanger) sim.reDanger(); u.st = {}; u.buffs = u.buffs || {};      // 2.2.8: 붉은 칸 피하기 · 상태 이상이 앞서지 않게 (셋이 나가 판의 모양이 달라졌다)
+    o.foes = sim.foes(u).length; o.dodge = !!(sim.dz && sim.dz[u.y * sim.w + u.x]);
+    var n0 = u.ultN || 0; sim.aiCmd(u); o.fired = (u.ultN || 0) > n0; o.uc = u.uc; o.cast = u.casting ? u.casting.sk || 1 : 0; o.ord = u.order ? u.order.t : '';
     u.uc = 100; u.gauge = 100; u.busy = 0; o.gap = sim.ultSelf(u);
     if (f) f.role = fr; DS.BAL.ultAuto = ua; DS.G.pause = false; return o;
   });

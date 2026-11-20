@@ -955,7 +955,7 @@ function sortieBar(s, where) {
     var hero = ch.id === s.hero, b = hero ? ch.ps : DS.bearer(s, ch), nm = hero ? DS.charName(ch) : b ? (b.ttl || b.n || '') : '';
     return '<span class="sof' + (hero ? ' lord' : '') + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '"><span class="sop">' + charSpr(ch, 2) + '</span><b>' + esc(nm) + '</b><small class="num">' + (b ? DS.tierOfL(DS.pL(b)) + '단 ' + DS.lvOfL(DS.pL(b)) : '') + '</small></span>';
   }).join('');
-  for (var i = list.length; i < N; i++) faces += '<span class="sof none"><span class="sop"></span><b>빈 자리</b><small>가주 없음</small></span>';
+  for (var i = list.length; i < N; i++) faces += '<span class="sof none"><span class="sop"></span><b>빈 자리</b><small>영웅관에서</small></span>';
   var kin = DS.mercsOf ? DS.mercsOf(s, s.hero).length : 0;
   return '<div class="sobar ' + where + '"><div class="soh"><b>출전 ' + list.length + '명</b><small>' + (kin ? '가문원 ' + kin + '명도 함께' : '') + (rest ? (kin ? ', ' : '') + '쉬는 가주 ' + rest + '명' : '') + '</small>' +
     (rest ? '<button class="btn small" data-sopick="1">바꾸기</button>' : '') + '</div><div class="sol">' + faces + '</div></div>';

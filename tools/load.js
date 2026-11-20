@@ -34,6 +34,7 @@ module.exports = function load(opt) {
   if (process.env.FAM && DS.FIELD_EN) DS.FIELD_EN.am = +process.env.FAM;
   if (process.env.PACKCAP && DS.PACK) DS.PACK.cap = +process.env.PACKCAP;      // 2.2.7 조율용: 들판 무리 크기
   if (process.env.PACKPER && DS.PACK) DS.PACK.per = +process.env.PACKPER;
+  if (process.env.SORTIEEXP && DS.BAL) DS.BAL.sortieExp = +process.env.SORTIEEXP;      // 2.2.8 조율용: 쉬는 가주의 경험치 몫
   DS0 = DS;
   return DS;
 };

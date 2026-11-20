@@ -265,6 +265,7 @@ DS.ui = { josa: josa, $: $, $$: $$, h: h, esc: esc, sprTag: sprTag, charSpr: cha
 
 // ───────── 부대 배치 ─────────
 DS.sortieHold = function () { return !!(G.scn || (G.sim && G.sim.combat)); };      // 2.2.8: 싸우는 동안은 출전 셋을 고치지 않는다 (meta.js DS.sortieFix)
+function sortieFree(f) { var h = DS.sortieHold; DS.sortieHold = null; try { f(); } finally { DS.sortieHold = h; } }      // 2.2.8: 싸움 직전 · 직후처럼 지금 고쳐야 할 때
 function sortieNote() { var t = DS.sortieNewsText ? DS.sortieNewsText(G.save) : ''; if (t) later(t, 4200); return !!t; }      // 2.2.8: 출전 자리를 저절로 채운 소식
 function reviveAll() { DS.charList(G.save).forEach(function (c) { if (c.down) { c.down = false; c.hp = 0.5; c.mp = 0.5; } }); }
 function placeParty(sim, x, y, starts) {
@@ -406,7 +407,8 @@ function startScenario(s) {
   var sv = G.save, me = G.sim.byId[G.sel];
   syncVitals();
   G.ret = G.keepRet || { zone: G.zone.id, pos: me ? { x: me.x, y: me.y } : null }; G.keepRet = null;      // 2.2.3: 갱도 층을 잇달아 들어가면 처음 들어온 자리로 돌아간다
-  if (DS.mercTidy) DS.mercTidy(sv);      // 2.2.8: 출전 목록 = 맹주 + 출전한 가주 둘 (+ 가문원)
+  sortieFree(function () { if (DS.mercTidy) DS.mercTidy(sv); });      // 2.2.8: 출전 목록 = 맹주 + 출전한 가주 둘 (+ 가문원) — 들판 싸움이 막 끝나지 않았어도 들어가기 전에 자리를 채운다
+  sortieNote();
   if (DS.ui && DS.ui.takeSnap) DS.ui.takeSnap(s);      // 2.2.2: 결과 창의 경험치 막대는 이 순간(싸움 직전)부터 — 관문 창을 거치지 않고 들어와도
   var b = DS.buildScenario(s, DS.partySpecs ? DS.partySpecs(sv).length : sv.party.length, sv.chars[sv.hero] ? sv.chars[sv.hero].cls : 'inf');
   var sim = new DS.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (Date.now() & 0xffff) + s.id, inv: sv.items, mode: 'scn' });
@@ -433,7 +435,7 @@ function pitChain(lost) {
   var sc = f ? DS.pit(f) : null, why = sc ? scnLock(sc) : 'none';
   G.scn = null; G.ending = false;
   if (!why && DS.sbTick) bnNote(DS.sbTick(sv));
-  if (DS.mercTidy) DS.mercTidy(sv);
+  sortieFree(function () { if (DS.mercTidy) DS.mercTidy(sv); });      // 2.2.8: 다음 층 앞에서 빈 출전 자리를 채운다
   if (why || !DS.partySpecs(sv).length) { if (why && why !== 'none') toast(why, 2600); backToField(lost); if (!lost) flushPromos(); return; }
   G.keepRet = r;
   if (DS.pitGo) DS.pitGo(f); else startScenario(sc);
@@ -1501,6 +1503,7 @@ function onEvents(evs) {
               var shown = G.view.cere && up.bear ? G.view.cere(cu.id, up.promo ? 'promo' : 'lv', { lv: up.to, from: DS.tierOfL(up.from), to: DS.tierOfL(up.to), sub: up.promo && ch ? DS.tierName(ch.cls, DS.tierOfL(up.to)) : '' }) : false;
               if (!shown) { G.view.float(cu.x, cu.y, up.promo ? DS.tierOfL(up.to) + '단!' : 'LEVEL UP', '#f6cf57', { dy: -10, life: 1.4 }); G.view.burst(cu.x, cu.y, ['#f6cf57', '#fff6d0'], up.bear ? 14 : 8, { up: 40, grav: -10, spd: 14, life: 0.9 }); }
             }
+            if (up.promo && up.bear && ch && !up.dep && !up.hero) later((up.who.ttl || up.who.n || DS.charName(ch)) + ', 쉬는 동안 ' + DS.tierOfL(up.to) + '단이 되었다', 3600);      // 2.2.8: 쉬는 가주의 승급 (결과 창에도)
             if (up.promo && up.bear && ch && up.dep) G.promos.push({ id: up.id, from: DS.tierOfL(up.from), to: DS.tierOfL(up.to), cls: ch.cls });
             if (up.promo && up.dep && DS.tmRankMsg && (up.pg || []).length) later(DS.tmRankMsg({ who: up.who, name: up.who.ttl || up.who.n || (ch ? DS.charName(ch) : ''), t1: DS.tierOfL(up.to), gains: up.pg, flag: up.bear }), 4200);      // r41 temper → r42: 개인 단이 오를 때 성장
             if (up.hero && up.promo && DS.heroUlt && DS.heroUlt(sv) && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { if (up.to >= q[0] && up.from < q[0]) { later('맹주의 필살기 「' + SK[DS.heroUlt(sv)].name + '」가 세졌다 (+' + Math.round(q[1] * 100) + '%)', 4200); A('star'); } });      // r42: 맹주의 개인 5단 · 8단
