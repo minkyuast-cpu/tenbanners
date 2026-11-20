@@ -237,11 +237,11 @@ module.exports = async (page, shot, L) => {
     var sbm = DS.sbOf(s, hs[0].id)[0];
     who.forEach(function (w) { w.L = 70; w.exp = 0; }); if (sbm) { sbm.L = 70; } DS.pSync(s);
     var sbOk = !sbm || DS.fuseOk(s, [DS.pKey(s, who[0]), DS.pKey(s, who[1]), DS.pKey(s, sbm)]).ok === false;
-    var n0 = DS.charList(s).length, keys = who.map(function (w) { return DS.pKey(s, w); }), r = DS.fuse(s, keys, { rep: hs[0].id });
-    var hp = DS.heroPs(s);
-    return { ok: !!r, sbOk: sbOk, heroRep: DS.lastFuse.rep === s.hero, L: DS.pL(hp), fz: !!hp.fz, gone: DS.lastFuse.gone.length, n: DS.charList(s).length, n0: n0, shut: DS.fzShutList(s).length, hx: DS.lastFuse.hx };
+    var n0 = DS.charList(s).length, keys = who.map(function (w) { return DS.pKey(s, w); }), lockOk = DS.fuseOk(s, keys, { rep: hs[0].id }).ok === false, r = DS.fuse(s, keys);
+    var hp = DS.heroPs(s); if (!r) return { ok: false, why: DS.fuseOk(s, keys).why, L: who.map(function (w) { return DS.pL(w); }).join(',') };
+    return { ok: !!r && lockOk, sbOk: sbOk, heroRep: DS.lastFuse.rep === s.hero, L: DS.pL(hp), fz: !!hp.fz, gone: DS.lastFuse.gone.length, n: DS.charList(s).length, n0: n0, shut: DS.fzShutList(s).length, hx: DS.lastFuse.hx };
   });
-  A(c.ok && c.sbOk && c.heroRep && c.L === 71 && c.fz && c.gone === 2 && c.n === c.n0 - 2 && c.shut === 2 && c.hx === 1000, '합일: 가주 only (막사 refused), 맹주 in → 맹주 house is the representative, rises to 8단, the other two absorbed and their houses sleep, rep house +1000');
+  A(c.ok && c.sbOk && c.heroRep && c.L === 71 && c.fz && c.gone === 2 && c.n === c.n0 - 2 && c.shut === 2 && c.hx === 1000, '합일: 가주 only (막사 refused), 맹주 in → 맹주 house is the representative, rises to 8단, the other two absorbed and their houses sleep, rep house +1000 ' + (c.why ? JSON.stringify(c) : ''));
   // ⑨ 연무장 · 무술대회
   await ev(() => { DS.ui.closeAll(); DS.rebuildParty(); }); await L.sleep(300);
   c = await ev(() => {

@@ -18,6 +18,19 @@ module.exports = async (page, shot, L) => {
     DS.pSync(s); DS.kit(s);
   });
   await L.closeAll(page);
+  // 2.2.9 영웅 모집 값: 빈 가문(영웅관이 열 수 있는 닫힌 가문) 수에 반비례 — 같은 열기에서 e=1 이면 e=4 의 네 배, 잠든 가문은 세지 않는다
+  let pr = await ev(() => {
+    var s = DS.fixSave(JSON.parse(JSON.stringify(DS.G.save))), ks = Object.keys(s.chars).map(Number).filter(function (id) { return id !== s.hero; });
+    var drop = function (n) { while (DS.recruitOpenN(s) < n && ks.length) { var id = ks.pop(); s.mercs = s.mercs.filter(function (m) { return m.o !== id; }); delete s.chars[id]; } };
+    s.rh = { h: 0, t: DS.calNow ? DS.calNow(s).t : 0 };
+    drop(4); var e4 = DS.recruitOpenN(s), p4 = DS.recruitPrice(s, 0);
+    drop(8); var e8 = DS.recruitOpenN(s), p8 = DS.recruitPrice(s, 0);
+    var s1 = DS.fixSave(JSON.parse(JSON.stringify(DS.G.save))); s1.rh = { h: 0, t: s.rh.t }; var k1 = Object.keys(s1.chars).map(Number).filter(function (id) { return id !== s1.hero; }); while (DS.recruitOpenN(s1) < 1 && k1.length) { var id = k1.pop(); s1.mercs = s1.mercs.filter(function (m) { return m.o !== id; }); delete s1.chars[id]; }
+    var e1 = DS.recruitOpenN(s1), p1 = DS.recruitPrice(s1, 0);
+    var s0 = DS.fixSave(JSON.parse(JSON.stringify(DS.G.save))); s0.rh = { h: 0, t: s.rh.t }; var p0 = DS.recruitPrice(s0, 0);
+    return { e4: e4, p4: p4, e8: e8, p8: p8, e1: e1, p1: p1, e0: DS.recruitOpenN(s0), p0: p0 };
+  });
+  A(pr.e4 === 4 && pr.e1 === 1 && Math.abs(pr.p1 / pr.p4 - 4) < 0.05 && Math.abs(pr.p8 / pr.p4 - 0.5) < 0.05 && pr.p0 === pr.p1, 'recruit price ∝ 1/empty houses at the same heat: e=8 ' + pr.p8 + ', e=4 ' + pr.p4 + ', e=1 ' + pr.p1 + ' (×' + (pr.p1 / pr.p4).toFixed(2) + '), e=0 ' + pr.p0);
   // ① 합일 규칙 (규칙 함수)
   let c = await ev(() => {
     var s = DS.G.save, cs = DS.fuseCands(s), o = { n: cs.length, roles: cs.map(function (x) { return x.role; }).join() };
@@ -77,7 +90,15 @@ module.exports = async (page, shot, L) => {
     s2.hpity = 0; DS.recruitHero(s2, Math.random); o.pity = +s2.hpity || 0;      // 닫힌 가문이 잠든 둘뿐이면 천장 셈을 하지 않는다
     return o;
   });
+  A(await ev(() => DS.recruitOpenN(DS.G.save) === DS.closedCls(DS.G.save).length + DS.bnEmpty(DS.G.save).length && DS.fzShutList(DS.G.save).every(function (k) { return DS.closedCls(DS.G.save).indexOf(k) < 0; })), 'sleeping houses do not count as empty houses for the price');
   A(c.shut === 2 && c.notClosed && c.bad === 0 && c.pity === 0, 'gacha never opens a fusion-closed house this generation and the pity counter ignores them (opened ' + (c.opened.join(',') || 'none') + ')');
+  c = await ev(() => {      // 선 가문이 셋 밑으로 줄면(더 합일할 수 없으면) 잠든 가문이 일찍 깨어난다 — 8단을 모두 잃은 뒤의 막힘을 막는다
+    var s2 = DS.fixSave(JSON.parse(JSON.stringify(DS.G.save))), shut = DS.fzShutList(s2).slice(), ids = Object.keys(s2.chars).map(Number).filter(function (id) { return id !== s2.hero; });
+    var a = DS.closedCls(s2).filter(function (k) { return shut.indexOf(k) >= 0; }).length;
+    while (DS.charList(s2).length >= 3 && ids.length) { var id = ids.pop(); s2.mercs = s2.mercs.filter(function (m) { return m.o !== id; }); delete s2.chars[id]; }
+    var cc = DS.closedCls(s2); return { before: a, after: shut.filter(function (k) { return cc.indexOf(k) >= 0; }).length, n: shut.length, early: shut.every(function (k) { return s2.fzShut[k] && s2.fzShut[k].early; }), q: (s2.fzWake || []).length };
+  });
+  A(c.before === 0 && c.after === c.n && c.early && c.q === c.n, 'safety valve: with fewer than 3 houses the sleeping houses wake early and can be reopened (' + c.after + '/' + c.n + ')');
   await ev(() => { DS.openShop('merc'); }); await L.sleep(500);
   A(await ev(() => /합일로 잠듦/.test(document.querySelector('.ov').textContent)), '영웅관 lists the sleeping houses');
   await L.closeAll(page);

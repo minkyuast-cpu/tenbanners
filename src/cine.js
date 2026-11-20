@@ -67,7 +67,7 @@ function wakeQ() {      // 2.2.9: 세대가 바뀌어 깨어난 가문 (save.fzW
   if (mode() === 'off') return;
   var ks = w.filter(function (k) { return DS.CLASSES[k]; }).slice(0, 4), nm = ks.map(function (k) { return String(DS.flagName ? DS.flagName(k) : k).replace(/ 가문$/, ''); });
   if (!ks.length) return;
-  DS.cine({ k: 'wake', crests: ks.map(function (k) { return DS.houseCrest ? DS.houseCrest(k, 40) : ''; }), fcs: ks.map(function (k) { return DS.FLAG[k] || ''; }), title: '잠든 가문이 깨어난다', sub: nm.join(', ') + ' 가문', note: '영웅관에서 다시 열 수 있다' });
+  DS.cine({ k: 'wake', crests: ks.map(function (k) { return DS.houseCrest ? DS.houseCrest(k, 40) : ''; }), fcs: ks.map(function (k) { return DS.FLAG[k] || ''; }), title: '잠든 가문이 깨어난다', sub: nm.join(', ') + ' 가문', note: ks.some(function (k) { var z = s.fzShut && s.fzShut[k]; return z && z.early; }) ? '선 가문이 셋 밑으로 줄어 일찍 깨어났다. 영웅관에서 다시 열 수 있다' : '영웅관에서 다시 열 수 있다' });
   if (U.persist) try { U.persist(); } catch (x) {}
 }
 setInterval(function () { tick++; if (!cur) wakeQ(); if (!cur && (Q.length || (G.save && G.save.cineQ && G.save !== seenSave))) pump(); }, 700);

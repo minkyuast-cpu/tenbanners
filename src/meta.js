@@ -576,6 +576,7 @@ DS.heroRoom = function (save) {
   return DS.charList(save).filter(function (ch) { return !full || DS.vacant(save, ch); });
 };
 DS.closedCls = function (save) {      // 닫힌 가문의 병과 (병과 차례 그대로)
+  if (save && save.fzShut && DS.fzWakeTick && DS.fzLow(save)) DS.fzWakeTick(save);      // 2.2.9: 가문이 셋 밑으로 줄면 잠든 가문이 깨어난다
   return Object.keys(DS.CLASSES).filter(function (k) { var C = DS.CLASSES[k], F = DS.FAMILY[C.fam]; return !C.master && !DS.hasClass(save, k) && !(F && DS.hasClass(save, F.master)) && !(DS.fzShut && DS.fzShut(save, k)); });      // 2.2.9: 합일로 잠든 가문은 이번 세대에는 열리지 않는다
 };
 // 다음 모집이 닫힌 가문을 열 확률 (0 ~ 1) · 반드시 열기까지 남은 모집 수 (닫힌 가문이 없으면 0)
@@ -596,7 +597,7 @@ DS.houseOpen = function (save, cls, m, g) {
   m = m || DS.addMerc(save, DS.heroType(cls), g || 3, 0);
   var ch = DS.addChar(save, cls, DS.pL(m), '');
   m.nc = cls; m.o = ch.id; m.h = 1; delete m.sb; ch.Ls = ch.L; ch.op = 1;      // op: 영웅관에서 연 가문 (보이는 표시만)
-  if (woke) { ch.reop = { g: DS.genNow(save), from: woke.g, n: woke.n || '', rep: woke.rep || '' }; delete save.fzShut[cls]; }
+  if (woke) { ch.reop = { g: DS.genNow(save), from: woke.g, n: woke.n || '', rep: woke.rep || '', early: woke.early ? 1 : 0 }; delete save.fzShut[cls]; }
   if (DS.nfGive) DS.nfGive(m);
   if (DS.mercTidy) DS.mercTidy(save);
   return ch;
@@ -640,7 +641,12 @@ DS.recruitHeat = function (s) {
   if (t > r.t) { r.h = Math.max(0, r.h - (t - r.t) / q * DS.RECRUIT.ease); r.t = t; } else if (t < r.t) r.t = t;      // 달력이 뒤로 가면(옛 저장) 그 자리부터 다시 잰다
   return r.h;
 };
-DS.recruitPrice = function (s, k) { var h = DS.recruitHeat(s) + (k || 0); return Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) * (1 + DS.RECRUIT.step * h) / 10) * 10; };      // 2.2.0: 영웅 값 = 기본값 × RECRUIT.k      // k = 지금부터 몇 번째 뒤
+// 2.2.9: 빈 가문이 많을수록 싸다 — 값 × RECRUIT.emp ÷ e (e = 빈 가문 수: 영웅관이 열 수 있는 닫힌 가문 + 가주가 없는 가문 · 합일로 잠든 가문은 빼고 · 0 이면 1 로).
+//   k 번째 뒤의 값(「다음」): 이번 모집이 반드시 가문을 연다면(천장 · DS.openOdds = 1) 그 뒤는 e − 1 로, 아니면 지금 e 그대로 셈한다 (열릴지 · 빈 가문을 채울지는 뽑아 봐야 안다)
+DS.recruitOpenN = function (s) { return (DS.closedCls ? DS.closedCls(s).length : 0) + (DS.bnEmpty ? DS.bnEmpty(s).length : 0); };      // 빈 가문 = 영웅관이 열 수 있는 닫힌 가문 + 가주가 없는 가문(영웅이 오면 곧 가주가 된다). 합일로 잠든 가문은 빼고
+DS.recruitEmp = function (s, k) { var e = DS.recruitOpenN(s); if (k > 0 && e > 0 && DS.openOdds && DS.openOdds(s) >= 1) e = Math.max(0, e - Math.min(k, 1)); return (DS.RECRUIT.emp || 1) / Math.max(1, e); };
+DS.recruitBase = function (s) { return Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) * DS.recruitEmp(s, 0) / 10) * 10; };      // 기본값 (열기 없이 · 빈 가문 배율은 넣고)
+DS.recruitPrice = function (s, k) { var h = DS.recruitHeat(s) + (k || 0); return Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) * DS.recruitEmp(s, k || 0) * (1 + DS.RECRUIT.step * h) / 10) * 10; };      // 2.2.0: 영웅 값 = 기본값 × RECRUIT.k      // k = 지금부터 몇 번째 뒤
 DS.recruitTotal = function (s, n) { var t = 0; for (var i = 0; i < n; i++) t += DS.recruitPrice(s, i); return t; };
 DS.recruitPaid = function (s, n) { DS.recruitHeat(s); s.rh.h = Math.min(DS.RECRUIT.max, s.rh.h + (n || 1)); };
 DS.recruitEase = function (s) { var h = DS.recruitHeat(s), e = DS.RECRUIT.ease; return h > 0 && e > 0 ? Math.ceil(h / e) : 0; };      // 기본값으로 돌아올 때까지 남은 계절
@@ -944,13 +950,15 @@ DS.fzShutFix = function (save) {      // 저장 칸 다듬기: { 병과: { g, t,
   for (var k in z) { var C = DS.CLASSES[k]; if (!Object.prototype.hasOwnProperty.call(DS.CLASSES, k) || !C || C.master || !z[k] || typeof z[k] !== 'object' || DS.hasClass(save, k)) { delete z[k]; continue; } z[k].g = Math.max(1, Math.round(+z[k].g || 1)); }
   return z;
 };
-DS.fzShut = function (save, cls) { var z = save && save.fzShut, e = z && Object.prototype.hasOwnProperty.call(z, cls) ? z[cls] : null; return !!(e && e.g >= DS.genNow(save) && !DS.hasClass(save, cls)); };      // 지금 잠들어 있는가
+DS.fzShut = function (save, cls) { var z = save && save.fzShut, e = z && Object.prototype.hasOwnProperty.call(z, cls) ? z[cls] : null; return !!(e && !e.woke && e.g >= DS.genNow(save) && !DS.hasClass(save, cls)); };      // 지금 잠들어 있는가
+DS.fzLow = function (save) { return !!(save && save.chars) && DS.charList(save).length < DS.FUSE_N; };      // 2.2.9: 선 가문이 셋 밑 — 다시 합일할 수 없다 (잠든 가문이 일찍 깨어난다: 8단을 모두 잃으면 단 문턱을 넘지 못하던 막힘을 막는다)
 DS.fzShutList = function (save) { var z = save && save.fzShut, out = []; if (z) for (var k in z) if (DS.fzShut(save, k)) out.push(k); return out; };
-DS.fzWoke = function (save, cls) { var z = save && save.fzShut, e = z && Object.prototype.hasOwnProperty.call(z, cls) ? z[cls] : null; return !!(e && e.g < DS.genNow(save) && !DS.hasClass(save, cls)); };      // 깨어났지만 아직 다시 열리지 않았다
+DS.fzWoke = function (save, cls) { var z = save && save.fzShut, e = z && Object.prototype.hasOwnProperty.call(z, cls) ? z[cls] : null; return !!(e && (e.woke || e.g < DS.genNow(save)) && !DS.hasClass(save, cls)); };      // 깨어났지만 아직 다시 열리지 않았다
 // 세대가 바뀌었다: 잠든 가문이 깨어난다 (돌려주는 것: 깨어난 병과 목록 — 한 번만. 화면은 save.fzWake 를 연출로 읽고 비운다)
 DS.fzWakeTick = function (save) {
   var z = save && save.fzShut, g = DS.genNow(save), out = []; if (!z) return out;
-  for (var k in z) if (z[k] && z[k].g < g && !z[k].woke && !DS.hasClass(save, k)) { z[k].woke = g; out.push(k); }
+  var low = DS.fzLow(save);
+  for (var k in z) if (z[k] && (z[k].g < g || low) && !z[k].woke && !DS.hasClass(save, k)) { z[k].woke = g; if (low && z[k].g >= g) z[k].early = 1; out.push(k); }
   if (out.length) save.fzWake = (save.fzWake || []).concat(out).filter(function (k, i, a) { return a.indexOf(k) === i; });
   return out;
 };

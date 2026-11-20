@@ -740,19 +740,19 @@ function fzHallLine(zz) {      // 2.2.9: 합일로 잠든 가문 — 이번 세�
 // 2.2.4 가문이 열리는 순간: 펼쳐지는 깃발 + 새 가주 + 그 가문의 가훈 한마디 (DS.cine 이 있으면 그 연출로)
 function houseOpenShow(r, cb) {
   var ch = r.ch, m = r.m, cast = LORE().cast && LORE().cast[ch.cls], say = cast && cast.join ? '"' + lt(cast.join) + '"' : '', left = DS.closedCls(G.save).length;
-  if (DS.cine && r.reopen) { DS.cine({ k: 'reopen', por: [mercSpr(m, 4)], crest: DS.houseCrest(ch.cls, 52), fc: DS.FLAG[ch.cls] || '', title: DS.flagName(ch.cls) + '이 다시 열렸다', sub: '잠든 지 ' + Math.max(1, (r.reopen.g || 2) - (r.reopen.from || 1)) + '세대 만에, 가주 ' + (m.n || ''), say: say, note: r.reopen.n ? '옛 가주 ' + josa(r.reopen.n, '은는') + ' ' + (r.reopen.rep || '대표') + '에게 스몄다' : '' }, cb); return; }      // 2.2.9: 합일로 잠들었던 가문
+  if (DS.cine && r.reopen) { DS.cine({ k: 'reopen', por: [mercSpr(m, 4)], crest: DS.houseCrest(ch.cls, 52), fc: DS.FLAG[ch.cls] || '', title: DS.flagName(ch.cls) + '이 다시 열렸다', sub: (r.reopen.early ? '일찍 깨어나' : '잠든 지 ' + Math.max(1, (r.reopen.g || 2) - (r.reopen.from || 1)) + '세대 만에') + ', 가주 ' + (m.n || ''), say: say, note: r.reopen.n ? '옛 가주 ' + josa(r.reopen.n, '은는') + ' ' + (r.reopen.rep || '대표') + '에게 스몄다' : '' }, cb); return; }      // 2.2.9: 합일로 잠들었던 가문
   if (DS.cine) { DS.cine({ k: 'open', por: [mercSpr(m, 4)], crest: DS.houseCrest(ch.cls, 52), fc: DS.FLAG[ch.cls] || '', title: DS.flagName(ch.cls) + '이 열렸다', sub: '가주 ' + (m.n || '') + ', ' + (DS.GRADES[m.g] || {}).name + ' ' + DS.CLASSES[ch.cls].name, say: say, note: left ? '닫힌 가문 ' + left + '곳' : '열 가문이 모두 모였다' }, cb); return; }
   if (cb) cb();
 }
 DS.houseOpenShow = houseOpenShow;
 function mercShop() {
   var o = sheet('영웅관', function () {
-    var s = G.save, cost = DS.recruitPrice(s, 0), next = DS.recruitPrice(s, 1), base = Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) / 10) * 10, html = '', why = DS.recruitWhy(s);
+    var s = G.save, cost = DS.recruitPrice(s, 0), next = DS.recruitPrice(s, 1), base = DS.recruitBase(s), eN = DS.recruitOpenN(s), html = '', why = DS.recruitWhy(s);
     var pityLeft = Math.max(1, DS.PITY - (s.pity || 0)), ease = DS.recruitEase(s), pg = (DS.GRADES[DS.PITY_G || 5] || {}).name || '', can = !why && (s.tickets > 0 || s.gold >= cost);
     html += '<div class="gacha"><div class="gh"><b>영웅 모집</b><span>모집권 <b class="num">' + (s.tickets || 0) + '</b>장</span></div>' +
       '<p class="hint sm">한 번에 한 사람. 병과는 무작위. <b class="warn">쓰러지면 잃는다</b></p>' +
       '<div class="gprice"><span>지금 ' + coin(cost) + '</span><i aria-hidden="true">→</i><span>다음 ' + coin(next) + '</span></div>' +
-      '<p class="gwhy">부를 때마다 값이 오른다. 계절이 지나면 조금씩 내려간다.' + (ease > 0 ? ' <b>기본값 ' + coin(base) + '까지 ' + ease + '계절</b>' : '') + ' 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다, 그리고 2, 3, 4, 5, 6, 7, 9, 11, 13번을 처음 깰 때 한 장.</p>' +
+      '<p class="gwhy">빈 가문이 많을수록 싸다. 지금 빈 가문 <b>' + eN + '곳</b>. 부를 때마다 오르고 계절마다 내려간다.' + (ease > 0 ? ' <b>기본값 ' + coin(base) + '까지 ' + ease + '계절</b>' : '') + ' 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다, 그리고 2, 3, 4, 5, 6, 7, 9, 11, 13번을 처음 깰 때 한 장.</p>' +
       heroRoomLine(s) +
       '<div class="gbtn one"><button class="btn' + (can ? ' gold' : ' poor') + '" data-pull="1"' + (why ? ' disabled aria-disabled="true"' : '') + '><span>영웅 모집</span><small>' + (why ? '막사 가득' : s.tickets > 0 ? '모집권 1장' : coin(cost)) + '</small></button></div>' +
       '<p class="pity">' + (pityLeft <= 5 || FOLD.rates ? pg + '까지 ' + pityLeft + '회, ' : '') + '<button class="lnk" data-pfold="rates" aria-expanded="' + !!FOLD.rates + '">등급 확률 ' + (FOLD.rates ? '▾' : '▸') + '</button></p>' +
@@ -1973,7 +1973,7 @@ function tabHelp() {
       '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 장비와 공훈은 가문에 남는다.',
       '빈 가문을 채우는 길은 둘이다. <b>영웅관</b>에서 모집하거나, 맹주의 <b>어른 아이</b>를 그 가문의 가주로 보낸다. 보낸 아이는 그 가문의 병과를 받는다. 맹주의 자리는 늘 이어지니 싸울 이가 아무도 없어지는 일은 없다.',
       '<b>가문은 영웅관에서 열린다.</b> 처음에는 맹주의 가문 하나뿐이다. 닫힌 가문의 병과가 나오면 그 영웅이 가주가 되어 가문이 열린다. 시나리오를 깨도 가문은 오지 않는다.',
-      '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람, 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장, 예전에 가문이 합류하던 시나리오(2, 3, 4, 5, 6, 7, 9, 11, 13번)는 처음 깨면 한 장 더 준다.',
+      '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람이다. 빈 가문(영웅관이 열 수 있는 닫힌 가문과 가주가 없는 가문)이 많을수록 싸고, 하나뿐이거나 없으면 넷일 때의 네 배다. 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장, 예전에 가문이 합류하던 시나리오(2, 3, 4, 5, 6, 7, 9, 11, 13번)는 처음 깨면 한 장 더 준다.',
       '병과는 무작위다. 닫힌 가문의 병과가 선 가문보다 ' + DS.HOUSE_OPEN.w + '배 잘 나오고, ' + DS.HOUSE_OPEN.pity + '번 연달아 못 열면 다음 모집은 반드시 닫힌 가문을 연다. 선 가문의 병과가 나오면 그 가문이 비어 있을 때 곧바로 가주, 아니면 막사로 간다. 맹주와 같은 병과면 막사에서 맹주의 뒤를 받친다. 막사는 ' + DS.MERC_MAX + '명까지다.',
       '막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 같은 병과 가주와 자리를 바꿀 수 있고, 물러난 가주는 막사로 간다. 막사의 사람은 방출할 수 있다. 가주를 그냥 내리는 길은 없다.',
       '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. <b>맹주가 쓰러지면 누가 이을지 고른다.</b> 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 하나다. 고를 이가 없으면 대가 끊기고 스무 해가 흐른다.',
@@ -2022,7 +2022,7 @@ function tabHelp() {
       '<b>합일</b>: 맹세의 깃대가 있으면 교회에서 <b>서로 다른 세 가문의 가주</b>(맹주 포함, 7단 Lv10) 셋을 고른다. 가문원과 막사의 사람은 합일하지 않는다.',
       '셋 가운데 <b>대표 가문</b>을 고른다. 처음은 공훈이 가장 큰 곳이고, 맹주가 들면 맹주 가문으로 정해진다. 대표의 가주가 그 가문의 8단에 올라 레벨 70을 넘어 자라고, 공훈 +' + DS.FUSE_HX + '을 받는다. 사람, 장비, 나이, 배우자는 그대로다.',
       '나머지 두 가주는 대표에게 <b>흡수</b>된다. 가계도에는 합일로 남고, 든 장비는 가방으로 간다. 대표의 수명은 30년에 두 사람의 남은 해를 더한 만큼 늘어난다 (많아야 ' + DS.FUSE_LS_MAX + '년).',
-      '흡수된 두 가문은 <b>이번 세대가 끝날 때까지 잠든다</b>. 영웅관에서 그 병과가 나와도 열리지 않고, 막사의 그 병과 사람은 기다린다. 다음 세대의 장을 열면 깨어나 영웅관에서 다시 열 수 있다.',
+      '흡수된 두 가문은 <b>이번 세대가 끝날 때까지 잠든다</b>. 영웅관에서 그 병과가 나와도 열리지 않고, 막사의 그 병과 사람은 기다린다. 다음 세대의 장을 열면 깨어나 영웅관에서 다시 열 수 있다. 선 가문이 셋 밑으로 줄면(더 합일할 수 없으면) 일찍 깨어난다.',
       '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
       '8단 위의 가주가 쓰러지면 그대로 떠난다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
