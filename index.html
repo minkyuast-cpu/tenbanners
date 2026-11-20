@@ -4836,6 +4836,34 @@ html body #app#app .hk.vac .hkg, html body #app#app .xb .hkg { opacity: .55; }
 .hrm.shut { border-color: color-mix(in srgb, var(--fc, #c9a96a) 60%, transparent); background: color-mix(in srgb, var(--fc, #c9a96a) 12%, transparent); }
 .hrm.shut svg.crest { filter: grayscale(.4); }
 .hshut .hint { margin: 0; }
+/* 2.2.8 출전 셋 — 격자 칸의 「출전」 띠 · 쉬는 가주는 조금 어둡게 · 출전 줄(부대 탭 · 입구 창) · 고르기 창 · 결과 창의 쉰 가주 */
+html body #app#app .hkf .hkso { position: absolute; left: 0; right: 0; top: 0; padding: 1px 0; font: 700 9.5px/12px var(--f-head); font-style: normal; letter-spacing: .06em; color: #08222b; background: rgba(127, 208, 230, .92); }
+html body #app#app .hkf .hkso.rs { color: #d8ccb2; background: rgba(20, 15, 10, .72); font-weight: 500; }
+html body #app#app .hk.in:not(.lord) { background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 22%, #241c15) 0%, #1d1611 55%, #16110d 100%) padding-box, linear-gradient(#7fd0e6, #2f5a66) border-box; }
+html body #app#app .hk.rest .hkf canvas, html body #app#app .hk.rest .hkf img { filter: brightness(.78) saturate(.8); }
+html body #app#app .hk.rest .hkn { color: var(--a-mute, #b9ab90); }
+html body #app#app .sobar { display: grid; gap: 6px; margin: 4px 0 10px; padding: 8px 10px; border: 1px solid rgba(127, 208, 230, .4); border-radius: 10px; background: linear-gradient(180deg, rgba(127, 208, 230, .08), rgba(127, 208, 230, .02)), #1b1510; }
+html body #app#app .sobar .soh { display: flex; align-items: center; gap: 8px; min-width: 0; }
+html body #app#app .sobar .soh b { flex: none; font: 700 13px/18px var(--f-head); color: #bfe9f5; }
+html body #app#app .sobar .soh small { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 11px/15px var(--f-ui); color: var(--a-mute, #b9ab90); }
+html body #app#app .sobar .soh .btn { flex: none; margin-left: auto; }
+html body #app#app .sobar .sol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+html body #app#app .sof { --fc: #c9a96a; display: grid; justify-items: center; gap: 1px; min-width: 0; padding: 4px 2px; border-radius: 8px; background: color-mix(in srgb, var(--fc) 14%, #16110d); border: 1px solid color-mix(in srgb, var(--fc) 40%, transparent); }
+html body #app#app .sof.lord { border-color: rgba(232, 195, 106, .7); }
+html body #app#app .sof.none { opacity: .55; border-style: dashed; }
+html body #app#app .sof .sop { display: grid; place-items: center; height: 34px; }
+html body #app#app .sof .sop canvas, html body #app#app .sof .sop img { max-height: 32px; width: auto; image-rendering: pixelated; }
+html body #app#app .sof b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 11.5px/15px var(--f-head); }
+html body #app#app .sof small { font: 500 10px/12px var(--f-num); color: #f6e6b8; }
+html body #app#app .sobar.gate { margin: 8px 0 6px; }
+html body #app#app .sopk { display: grid; gap: 6px; }
+html body #app#app button.row.sopr { width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+html body #app#app .row.sopr.on { border-color: rgba(127, 208, 230, .6); box-shadow: inset 3px 0 0 #7fd0e6; }
+html body #app#app .sotag { flex: none; min-width: 34px; padding: 1px 6px; border-radius: 4px; text-align: center; font: 700 11px/16px var(--f-head); font-style: normal; color: #d8ccb2; background: rgba(255, 255, 255, .07); }
+html body #app#app .sotag.on { color: #08222b; background: #7fd0e6; }
+html body #app#app .sopk .soc { text-align: center; }
+html body #app#app .duty.so { margin: 6px 0 8px; }
+html body #app#app .xbr > small i { font-style: normal; color: #bfe9f5; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -4873,7 +4901,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 DS.LV_PER_TIER = 10;      // 단마다 레벨 1~10
 DS.MAX_TIER = 10;
 DS.TICK = { regen: 11, attack: 40, item: 25, step: 12, quick: 0.65 };   // 틱(행동) 게이지 규칙
-DS.PARTY_MAX = 99;        // 2.2.0: 출전 고르기는 없다 — 가주가 선 가문은 모두 싸운다 (s.party 는 저절로 맞춘 목록)
+DS.PARTY_MAX = 3;         // 2.2.8: 출전은 셋 — 맹주 + 고른 가주 둘 (meta.js DS.sortieFix · s.party 는 저절로 맞춘 목록). 맹주 가문의 가문원은 따로 함께 싸운다
 
 // 깃발(합일 단위)
 DS.FAMILY = {
@@ -5696,10 +5724,21 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.2.7';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.0.7';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.2.8';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.0.8';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.2.8', date: '2026-11-20', tag: '변경', title: '셋이 나간다',
+    lead: '싸움에는 맹주와 가주 둘, 셋이 나갑니다. 맹주의 가문원은 예전처럼 함께 싸웁니다. 들판의 기습은 한꺼번에 몰려옵니다.',
+    items: [
+      ['변경', '시나리오, 들판, 갱도 모두 맹주와 고른 가주 둘이 나갑니다. 나머지 가주는 쉽니다.'],
+      ['변경', '맹주 가문의 어른 가문원은 예전처럼 맹주를 따라 함께 싸웁니다.'],
+      ['새로', '부대 탭의 가문 칸에 「출전」 띠가 붙습니다. 위의 바꾸기나 가문 창의 출전, 쉬기로 바꿉니다. 시나리오와 갱도 입구에서도 바꿀 수 있습니다.'],
+      ['변경', '쉬는 가주는 싸우지 않아 쓰러지지 않고, 나간 이가 얻는 경험치의 30%를 받습니다. 결과 창에 따로 보입니다.'],
+      ['변경', '나간 가주가 쓰러지거나 가문이 비면 쉬는 가주 가운데 가장 센 이가 저절로 나섭니다. 바뀌면 알려 줍니다.'],
+      ['변경', '들판의 기습은 1차, 2차 없이 한 번에 모두 몰려옵니다. 수는 예전과 같습니다.'],
+      ['안내', '예전 저장은 맹주와 가장 센 가주 둘이 나갑니다. 적의 세기는 그대로입니다.']
+    ] },
   { ver: '2.2.7', date: '2026-11-20', tag: '변경', title: '더 센 적, 스스로 쓰는 필살기',
     lead: '적이 조금 세졌습니다. 특히 보스 싸움이 길고 거칩니다. 자동 전투는 이제 필살기도 씁니다.',
     items: [
@@ -5983,7 +6022,7 @@ DS.hash2 = function (x, y, s) {
 };
 
 // 전체 균형 손잡이 (시뮬레이션으로 맞춘 값)
-DS.BAL = { ehp: 1.5, eatk: 0.75, edef: 1.0, exp: 1.0, gold: 1.0, bench: 0.05, sbShare: 0.1, bossCast: true };      // 2.2.0: sbShare = 막사의 사람은 같은 병과 가문의 가주가 얻은 경험치의 이만큼을 함께 얻는다 (나누지 않는다 · 그 병과 가주가 없으면 0) · bench = 가문 밖 사람(없어야 한다)
+DS.BAL = { ehp: 1.5, eatk: 0.75, edef: 1.0, exp: 1.0, gold: 1.0, bench: 0.05, sortieExp: 0.3, sbShare: 0.1, bossCast: true };      // 2.2.0: sbShare = 막사의 사람은 같은 병과 가문의 가주가 얻은 경험치의 이만큼을 함께 얻는다 (나누지 않는다 · 그 병과 가주가 없으면 0) · bench = 가문 밖 사람(없어야 한다)
 
 // 레벨지수 L(1~100) ↔ 단·레벨
 DS.tierOfL = function (L) { return Math.min(DS.MAX_TIER, Math.floor((L - 1) / DS.LV_PER_TIER) + 1); };
@@ -6380,11 +6419,82 @@ DS.mercTidy = function (save) {
 };
 DS.popOf = function (save, chId) { return DS.mercsOf(save, chId).length; };
 DS.reserve = function (save) { return (save.mercs || []).filter(function (m) { return !m.o; }); };      // 막사 (DS.barracks 와 같다 — 옛 이름)
-// 싸우는 가문: 가주가 선 가문 모두 (맹주 가문은 맹주가 살아 서 있을 때). s.party 는 이 목록을 비춘다 (DS.partySync — 출전 고르기는 없다)
+// 2.2.8 출전: 맹주 + 고른 가주 둘 (DS.PARTY_MAX = 3). 나머지 가주는 쉰다 — 싸우지 않고, 싸움에서 쓰러지지 않고, 출전한 이가 얻는 경험치의 DS.BAL.sortieExp 를 함께 얻는다.
+//   맹주 가문의 어른 가문원은 예전처럼 맹주 깃발을 따라 함께 싸운다 (출전 셋에 들지 않는다 · 고르지 않는다).
+//   save.sortie = [{ h: 가문 번호, m: 고를 때의 가주(사람) 번호 }] — 가주가 쓰러지거나 바뀌었거나 가문이 비면 그 자리는 빈다 → 남은 가주 가운데 가장 센 이가 저절로 (DS.sortieFix)
+//   저절로 채운 일은 save.sortieNews 에 [{ out: 빠진 이 이름 | '', in: 들어온 이 이름, why: 'down' | 'vac' | 'new' }] (화면이 읽고 비운다). save.sortie 가 없던 옛 저장은 말없이 가장 센 둘
+//   싸우는 동안(DS.sortieHold() — 화면이 단다)은 고치지 않는다 (싸움 중에 다른 가문이 끼어들지 않게)
+DS.SORTIE_N = function () { return Math.max(0, (DS.PARTY_MAX || 3) - 1); };
+DS.sortieHold = DS.sortieHold || null;
+DS.sortieCands = function (save) {      // 출전할 수 있는 가주의 가문 (맹주 가문 밖 · 가주가 서 있다)
+  if (!save || !save.chars) return [];
+  var hid = +save.hero;
+  return DS.charList(save).filter(function (ch) { return ch.id !== hid && !ch.down && !ch.vac && !!(DS.bearer && DS.bearer(save, ch, 1)); });
+};
+DS.sortiePow = function (save, ch) { var p = 0; try { p = DS.cardPower ? DS.cardPower(save, ch) : 0; } catch (x) { p = 0; } return p || (ch ? ch.L : 0); };
+DS.sortieRank = function (save, list) { return (list || DS.sortieCands(save)).slice().sort(function (a, b) { return DS.sortiePow(save, b) - DS.sortiePow(save, a) || DS.houseOrd(a, b); }); };
+function sortieWho(save, ch) { var b = DS.bearer ? DS.bearer(save, ch, 1) : null; return b ? (b.ttl || b.n || DS.flagName(ch.cls)) : DS.flagName(ch.cls); }
+DS.sortieFix = function (save) {
+  if (!save || !save.chars) return [];
+  if (DS.sortieHold && DS.sortieHold()) return (save.sortie || []).map(function (e) { return e.h; });
+  var fresh = !Array.isArray(save.sortie), cur = fresh ? [] : save.sortie, cands = DS.sortieCands(save), ok = {}, keep = [], gone = [], N = DS.SORTIE_N();
+  cands.forEach(function (ch) { ok[ch.id] = ch; });
+  cur.forEach(function (e) {
+    var ch = e && ok[e.h], b = ch && DS.bearer(save, ch, 1);
+    if (ch && b && (!e.m || e.m === b.id) && keep.length < N && keep.every(function (k) { return k.h !== ch.id; })) { keep.push({ h: ch.id, m: b.id }); return; }
+    if (e && save.chars[e.h] && e.h !== +save.hero) gone.push(e);      // 맹주가 된 가문은 소식 없이 빠진다
+  });
+  var news = [], left = DS.sortieRank(save, cands.filter(function (ch) { return keep.every(function (k) { return k.h !== ch.id; }); }));
+  while (keep.length < N && left.length) {
+    var ch = left.shift(), b = DS.bearer(save, ch, 1); keep.push({ h: ch.id, m: b.id });
+    if (fresh) continue;
+    var g = gone.shift(), gch = g && save.chars[g.h], vac = gch && !(DS.bearer && DS.bearer(save, gch, 1));
+    news.push({ out: g ? (g.n || (gch ? DS.flagName(gch.cls) : '')) : '', in: sortieWho(save, ch), h: ch.id, why: !g ? 'new' : vac ? 'vac' : 'down' });
+  }
+  keep.forEach(function (k) { var ch = save.chars[k.h]; k.n = sortieWho(save, ch); });      // 이름 (빠질 때의 소식에 쓴다)
+  save.sortie = keep;
+  if (news.length) save.sortieNews = (save.sortieNews || []).concat(news).slice(-6);
+  return keep.map(function (k) { return k.h; });
+};
+DS.sortieNewsText = function (save) {      // 화면: 저절로 채운 출전 소식 한 줄 (읽으면 비운다)
+  var l = save && save.sortieNews; if (!l || !l.length) return '';
+  delete save.sortieNews;
+  return l.map(function (n) { return n.out ? n.out + ' 대신 ' + n.in + ' 출전' : n.in + ' 출전'; }).join(' · ');
+};
+DS.sortieOn = function (save, id) { return (save.sortie || []).some(function (e) { return e.h === +id; }); };
+// 고르기: ids = 맹주 밖 가문 번호 (많아야 둘). 모자란 자리는 가장 센 이로 채운다. 돌려주는 것: 출전 가문 번호
+DS.sortieSet = function (save, ids) {
+  var N = DS.SORTIE_N(), cands = DS.sortieCands(save), out = [];
+  (ids || []).forEach(function (id) { var ch = cands.filter(function (c) { return c.id === +id; })[0]; if (ch && out.length < N && out.every(function (e) { return e.h !== ch.id; })) out.push({ h: ch.id, m: DS.bearer(save, ch, 1).id }); });
+  save.sortie = out;
+  var hold = DS.sortieHold; DS.sortieHold = null;
+  try { DS.sortieFix(save); } finally { DS.sortieHold = hold; }
+  delete save.sortieNews;
+  if (DS.partySync) DS.partySync(save);
+  return save.sortie.map(function (e) { return e.h; });
+};
+// 가문 창의 출전 · 쉬기: 출전 → 둘 가운데 약한 이와 바꾼다 (자리가 비었으면 그냥) · 쉬기 → 쉬는 가주 가운데 가장 센 이가 대신. 돌려주는 것: { ok, in, out } (이름)
+DS.sortieToggle = function (save, id) {
+  id = +id; var on = DS.sortieOn(save, id), cur = (save.sortie || []).map(function (e) { return e.h; }), ch = save.chars[id];
+  if (!ch || id === +save.hero) return { ok: false, why: '맹주는 늘 출전한다' };
+  if (on) {
+    var rest = DS.sortieRank(save, DS.sortieCands(save).filter(function (c) { return cur.indexOf(c.id) < 0; }))[0];
+    if (!rest) return { ok: false, why: '대신 나갈 가주가 없다' };
+    DS.sortieSet(save, cur.filter(function (h) { return h !== id; }).concat([rest.id]));
+    return { ok: true, out: sortieWho(save, ch), in: sortieWho(save, rest) };
+  }
+  if (DS.sortieCands(save).indexOf(ch) < 0) return { ok: false, why: '가주가 없는 가문은 나가지 못한다' };
+  var N = DS.SORTIE_N(), drop = null;
+  if (cur.length >= N) { drop = DS.sortieRank(save, cur.map(function (h) { return save.chars[h]; }).filter(Boolean)).pop(); cur = cur.filter(function (h) { return !drop || h !== drop.id; }); }
+  DS.sortieSet(save, cur.concat([id]));
+  return { ok: true, in: sortieWho(save, ch), out: drop ? sortieWho(save, drop) : '' };
+};
+// 싸우는 가문: 맹주 가문(맹주가 살아 서 있을 때) + 출전한 가주의 가문. s.party 는 이 목록을 비춘다 (DS.partySync)
 //   2.2.3: 차례 = 맹주 → 다른 가문(부대 탭 격자와 같은 차례 — DS.houseOrd: 공훈 계급 → 합류. 계급이 오를 때만 바뀐다). 가주가 바뀌어도 가문은 제자리, 맹주가 바뀌면 새 맹주가 맨 앞
 DS.partyIds = function (save) {
   if (!save || !save.chars) return [];
-  var hid = +save.hero, list = DS.charList(save).filter(function (ch) { return !ch.down && !ch.vac && (ch.id === hid ? !!ch.ps : !!(DS.bearer && DS.bearer(save, ch, 1))); });
+  var hid = +save.hero, so = DS.sortieFix(save);
+  var list = DS.charList(save).filter(function (ch) { return !ch.down && !ch.vac && (ch.id === hid ? !!ch.ps : so.indexOf(ch.id) >= 0 && !!(DS.bearer && DS.bearer(save, ch, 1))); });
   return list.sort(function (a, b) { return (b.id === hid) - (a.id === hid) || DS.houseOrd(a, b); }).map(function (ch) { return ch.id; });
 };
 DS.partyOrder = function (save, ids) {      // 2.2.3: 아무 가문 번호 목록이나 같은 차례로 (맹주 → DS.houseOrd). 싸움 중에 쓰러진 가문도 빼지 않는다 (칩 줄 · 결과 창)
@@ -6397,6 +6507,8 @@ DS.partySync = function (save) {
   save.party = ids;
   return ids;
 };
+DS.sortieNames = function (save) { return (DS.partySync(save) || []).map(function (id) { var ch = save.chars[id]; return !ch ? '' : ch.id === +save.hero ? DS.charName(ch) : sortieWho(save, ch); }).filter(Boolean).join(', '); };
+DS.benched = function (save) { var p = save.party || []; return DS.sortieCands(save).filter(function (ch) { return p.indexOf(ch.id) < 0; }); };      // 2.2.8: 쉬는 가주의 가문
 DS.vacant = function (save, ch) { return !!ch && ch.id !== +save.hero && !(DS.bearer && DS.bearer(save, ch, 1)); };      // 빈 가문: 가주가 없다 (막사에 같은 병과가 있으면 곧 선다)
 // 이름: 지금 명부에 있거나 추모에 남은 이름은 피해서 고른다 (명부 60 + 추모 30 < 이름 수 이므로 늘 남는 이름이 있다)
 DS.pickMercName = function (save, rnd) {
@@ -6621,7 +6733,7 @@ DS.newSave = function (name, heroCls) {
   var s = {
     v: DS.SAVE_V || 11, name: name || '대장', nid: 1, chars: {}, party: [], hero: 0, gold: 300,
     items: { herb: 5, mana: 2, endo: 1 }, cleared: {}, visited: { haemil: true },
-    gear: {}, mercs: [], mnid: 1, tickets: 2, pity: 0, fallen: [],      // r35: 처음 모집권 1장 (예전 2장) · 2.2.4: 다시 2장 — 가문이 영웅관에서만 열리니 첫 두 가문을 바로 열 수 있게 (초반에 셋이 함께 싸운다)
+    gear: {}, mercs: [], mnid: 1, sortie: [], tickets: 2, pity: 0, fallen: [],      // r35: 처음 모집권 1장 (예전 2장) · 2.2.4: 다시 2장 — 가문이 영웅관에서만 열리니 첫 두 가문을 바로 열 수 있게 (초반에 셋이 함께 싸운다)
    
     zone: 'haemil', pos: null, town: 'haemil', crest: false, pit: 1, pitBest: 0, pitCur: 1, pitV: 2, kills: 0, time: 0,
     opt: { sfx: true, bgm: true, speed: 1, refill: true }, seen: {}, perk: null, news: [], ver: DS.VERSION || ''
@@ -6640,7 +6752,7 @@ DS.addChar = function (save, cls, L, name) {
   if (first || name) { ch.name = name || ''; ch.down = false; ch.hp = 1; }      // hp 는 사람 것 (대장 줄)
   DS.stdGear(ch, Math.max(1, t - 1));
   save.chars[ch.id] = ch;
-  if (save.party.indexOf(ch.id) < 0) save.party.push(ch.id);      // 2.2.0: 출전 고르기는 없다 (DS.partySync 가 가주 없는 가문을 뺀다)
+  if (save.party.indexOf(ch.id) < 0) save.party.push(ch.id);      // 2.2.8: 출전 셋은 DS.partySync 가 다시 맞춘다 (새 가문은 자리가 비었을 때만 나간다)
   return ch;
 };
 DS.charList = function (save) { return Object.keys(save.chars).map(function (k) { return save.chars[k]; }).sort(function (a, b) { return a.id - b.id; }); };
@@ -6725,9 +6837,10 @@ DS.gainExp = function (save, amount, eL) {
       gain *= DS.BAL.sbShare || 0;
     } else {
       var d = (eL || w.L) - w.L, f = d >= 0 ? Math.min(1.5, 1 + d * 0.08) : Math.max(0.25, 1 + d * 0.075);
-      f *= (p.dep ? 1 : DS.BAL.bench) * DS.BAL.exp * (1 + Math.min(DS.PEXP.catchCap, Math.max(0, top - w.L - 2) * 0.15)) * (1 + perk) * (DS.potMul ? DS.potMul(w) : 1);
+      var rest = !p.dep && p.role === 'bear' && p.ch && !p.ch.down && !p.ch.vac;      // 2.2.8: 쉬는 가주는 DS.BAL.sortieExp
+      f *= (p.dep ? 1 : rest ? DS.BAL.sortieExp : DS.BAL.bench) * DS.BAL.exp * (1 + Math.min(DS.PEXP.catchCap, Math.max(0, top - w.L - 2) * 0.15)) * (1 + perk) * (DS.potMul ? DS.potMul(w) : 1);
       gain = amount * f;
-      if ((p.role === 'bear' || p.role === 'hero') && p.dep && p.ch && w.L < cap) got[p.ch.id] = gain;
+      if ((p.role === 'bear' || p.role === 'hero') && (p.dep || rest) && p.ch && w.L < cap) got[p.ch.id] = gain;      // 막사는 같은 병과 가주가 얻은 몫의 sbShare (그 가주가 쉬면 쉬는 몫의)
     }
     if (w.L >= cap) { w.exp = 0; return; }
     if (!(gain > 0)) return;
@@ -13368,7 +13481,7 @@ DS.fixSave = function (s) {
   if (!s || typeof s !== 'object' || !s.chars || typeof s.chars !== 'object') return null;
   var wasBn = s.bn === 1;      // 4.0: 「표시가 있었나」는 채움보다 먼저 (bn 은 기본값 채움에 걸리지 않는다 — 표시가 틀려도 DS.bnFix 의 불변식이 바로잡는다)
   var def = DS.newSave('대장', 'inf'), k, id, hid0 = own(s.chars, s.hero) ? +s.hero : 0;
-  for (k in def) if (s[k] === undefined && k !== 'chars' && k !== 'party' && k !== 'hero' && k !== 'nid' && k !== 'lin' && k !== 'coffins' && k !== 'cal' && k !== 'bn' && k !== 'us') s[k] = def[k];      // r42: us(필살기 씨앗)는 새 판에서만 — 없는 저장은 eg.seed 로 (결정적)      // 가계도·관은 DS.linFix 가 채운다 (새 판의 사람 명부를 옮겨 오지 않게)
+  for (k in def) if (s[k] === undefined && k !== 'chars' && k !== 'party' && k !== 'hero' && k !== 'nid' && k !== 'lin' && k !== 'coffins' && k !== 'cal' && k !== 'bn' && k !== 'us' && k !== 'sortie') s[k] = def[k];      // r42: us(필살기 씨앗)는 새 판에서만 — 없는 저장은 eg.seed 로 (결정적)      // 가계도·관은 DS.linFix 가 채운다 (새 판의 사람 명부를 옮겨 오지 않게)
   ['items', 'opt', 'seen', 'visited', 'cleared'].forEach(function (g) {
     if (!s[g] || typeof s[g] !== 'object' || Array.isArray(s[g])) s[g] = def[g];
     for (var q in def[g]) if (s[g][q] === undefined) s[g][q] = def[g][q];
@@ -13427,6 +13540,11 @@ DS.fixSave = function (s) {
   // 깨진 저장의 거대한 배열만 막는다 (300). 4.0 (②-2-4): 가계·깃발에 걸린 줄(든 사람 h · 열쇠 cast · 가계도 pid · 잠금 lk · 깃발 밑 o)은 앞으로 모으고, 자를 때는 막사 일반 줄만 자른다
   if (DS.bnCap) DS.bnCap(s, 300); else s.mercs = s.mercs.slice(0, 300);
   if (s.lock != null && (typeof s.lock !== 'object' || Array.isArray(s.lock))) s.lock = {};      // 장비 잠금: 배열이면 JSON 에 남지 않아 잠금이 사라진다
+  var soNew = !Array.isArray(s.sortie);      // 2.2.8: 출전 칸이 없던 옛 저장 — 맨 끝(모든 정리 뒤)에 가장 센 둘로
+  if (s.sortie != null) {      // 2.2.8 출전 (맹주 밖 가주 둘): [{ h: 가문 번호, m: 가주 번호, n: 이름 }] — 깨진 칸은 걷고, 없으면 DS.sortieFix 가 가장 센 둘로 (옛 저장)
+    s.sortie = Array.isArray(s.sortie) ? s.sortie.filter(function (e) { return e && typeof e === 'object' && int(e.h) && own(s.chars, e.h); }).slice(0, 2).map(function (e) { var o = { h: +e.h, m: int(e.m) ? +e.m : 0 }; if (typeof e.n === 'string') o.n = e.n.slice(0, 24); return o; }) : [];
+  }
+  if (s.sortieNews != null) { if (!Array.isArray(s.sortieNews)) delete s.sortieNews; else s.sortieNews = s.sortieNews.filter(function (n) { return n && typeof n === 'object' && typeof n.in === 'string'; }).slice(-6).map(function (n) { return { out: typeof n.out === 'string' ? n.out.slice(0, 24) : '', in: n.in.slice(0, 24), why: String(n.why || '').slice(0, 6) }; }); }
   if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 (가주 하나 · 가문원은 맹주 가문 · 그 밖은 막사)
   if (!Array.isArray(s.fallen)) s.fallen = [];
   s.fallen = DS.fallenTrim(s.fallen.filter(function (f) { return f && typeof f === 'object'; }));
@@ -13455,8 +13573,17 @@ DS.fixSave = function (s) {
   if (DS.bnFix) DS.bnFix(s, wasBn);      // 4.0: 부대원 + 깃발 — 불변식 넷을 검사하고 어긴 줄만 변환한다 (두 번 돌려도 같다)
   if (DS.fuseUnions) DS.fuseUnions(s);      // r42: 옛 묶음 기록은 없어졌다 (비운다)
   if (DS.pSync) DS.pSync(s);      // r42: 가문 줄 ← 가주의 개인 레벨
+  if (soNew) s._soNew = 1;      // 2.2.8: 읽기(Save.read · peek)가 모든 정리(겉의 fixSave 들까지) 뒤에 출전을 새로 고른다 (soFresh)
   return s;
 };
+// 2.2.8: 출전 칸이 없던 옛 저장 → 맹주 + 가장 센 가주 둘 (소식 없이). 정리하는 동안 잠깐 채운 것은 버린다
+function soFresh(s) {
+  if (!s || !s._soNew) return s;
+  delete s._soNew; delete s.sortie; delete s.sortieNews;
+  var hold = DS.sortieHold; DS.sortieHold = null;
+  try { if (DS.partySync) DS.partySync(s); } finally { DS.sortieHold = hold; }
+  return s;
+}
 DS.Save = {
   // 저장을 읽는다. 낡은 판이면 옮기고, 옮기기 전 원본은 따로 남긴다.
   KEY: KEY, OLD_KEY: OLD,
@@ -13486,7 +13613,7 @@ DS.Save = {
       while (s.v < DS.SAVE_V) { var m = MIGRATE[s.v]; if (!m) break; m(s); moved = true; }
       s.hist = (Array.isArray(s.hist) ? s.hist : []).concat([{ from: from, to: s.v, ver: DS.VERSION }]);
     }
-    s = DS.fixSave(s); if (!s) return null;
+    s = soFresh(DS.fixSave(s)); if (!s) return null;
     // 회귀자인데 아직 특전을 받지 못한 저장이면 지금 드린다
     var r = this.legacy();
     if (r && !s.perk) { DS.grantReturnee(s, r, true); moved = true; }
@@ -13503,7 +13630,7 @@ DS.Save = {
       s.v = verOf(s);
       var from = s.v;
       if (from < DS.SAVE_V) { scrub(s); while (s.v < DS.SAVE_V) { var m = MIGRATE[s.v]; if (!m) break; m(s); } }
-      s = DS.fixSave(s); if (s) s._from = from;
+      s = soFresh(DS.fixSave(s)); if (s) s._from = from;
       return s;
     } catch (e) { return null; }
   },
@@ -15380,7 +15507,9 @@ DS.FIELD = {
     hpMin: 0.5,                  // 부대 평균 체력이 이보다 낮으면 미룬다 (방금 싸운 부대를 덮치지 않는다)
     perAlly: 0.5,                // 첫 물결의 수 = 살아 있는 우리 유닛(가주+가문원) × 이 값 × 세기
     size: [3, 9], max: 10, grow: 1,    // 물결 하나의 수 (최소·최대), 상한, 다음 물결마다 +grow (2.2.2: 7·8 → 9·10 — 열 넘는 부대에도 사방에서 몰려온다)
-    waves3: 6,                   // 우리 유닛이 이만큼 이상이고 레벨이 밀리지 않으면 세 물결 (아니면 둘)
+    waves3: 6,                   // 우리 유닛이 이만큼 이상이고 레벨이 밀리지 않으면 세 물결 (아니면 둘) — 2.2.8: 물결을 나누지 않는다. 그 물결들을 모두 더한 수가 한꺼번에 (oneGo)
+    oneGo: true,                 // 2.2.8: 1차 · 2차 물결 없이 한 번에 몰려온다 (수는 물결을 모두 더한 것 그대로)
+    spread: 4,                   // 2.2.8: 한꺼번에 올 때 몰려오는 곳 하나에 이만큼씩 (셋 ~ 여섯 곳)
     ring: [6, 9],                // 부대 선두에서 몇 칸 떨어진 곳에서 몰려오는가 (걸어서 닿는 땅)
     gap: 30, rest: 0.25, pre: 0.9,     // 다음 물결: 앞 물결이 rest(25%) 아래로 줄었거나 gap 초가 지나면, pre 초 예고 뒤 (겹쳐 몰려오면 법사가 쓰러졌다)
     first: 0.8,                  // 경보 뒤 첫 물결까지 (실제로는 느려지는 동안)
@@ -15520,6 +15649,7 @@ function ambStart(sim, F) {
   var str = clamp(1 + (pl - L) * 0.05, 0.6, 1.35);
   var s0 = clamp(Math.round(al * A_.perAlly * str), A_.size[0], A_.size[1]), W = al >= A_.waves3 && pl >= L ? 3 : 2, sizes = [];
   for (var i = 0; i < W; i++) sizes.push(Math.min(A_.max, s0 + i * A_.grow));
+  if (A_.oneGo) { sizes = [sizes.reduce(function (a, b) { return a + b; }, 0)]; W = 1; }      // 2.2.8: 한 번에 모두
   F.n++;
   var A = F.amb = { id: 'fa' + F.n, L: L, sizes: sizes, w: 0, at: sim.t + A_.first, units: [], cur: [], t0: sim.t, kg: 0, ke: 0, dead: 0, calmT: null, x: u.x, y: u.y };
   DS.fieldStats.amb++;
@@ -15530,10 +15660,17 @@ function ambWave(sim, F, A) {
   var u = lead(sim); if (!u) return;
   var n = A.sizes[A.w], r = F.rnd, tiles = ring(sim, u, A_.ring[0], A_.ring[1]);
   if (tiles.length < 3) tiles = ring(sim, u, 3, 12);
-  var cs = centers(tiles, A.w === 0 ? 3 : 2, r), made = [];
+  var nc = A.w === 0 ? (A_.oneGo ? clamp(Math.ceil(n / (A_.spread || 4)), 3, 6) : 3) : 2, cs = centers(tiles, nc, r), made = [], used = {};
   if (!cs.length) cs = [{ x: u.x, y: u.y }];
+  if (tiles.length < n) { var more = ring(sim, u, 3, 13); more.forEach(function (t) { if (!tiles.some(function (q) { return q.x === t.x && q.y === t.y; })) tiles.push(t); }); }
+  function spot(c) {      // 2.2.8: 그 몰려오는 곳에 가장 가까운, 아직 아무도 서지 않은 걸어서 닿는 칸 (한꺼번에 와도 겹치거나 막힌 땅에 서지 않게)
+    var best = null, bd = 1e9;
+    for (var j = 0; j < tiles.length; j++) { var t = tiles[j], k = t.y * sim.w + t.x; if (used[k] || sim.occ[k]) continue; var d = dist(t, c) + r() * 0.5; if (d < bd) { bd = d; best = t; } }
+    if (best) used[best.y * sim.w + best.x] = 1;
+    return best || c;
+  }
   for (var i = 0; i < n; i++) {
-    var c = cs[i % cs.length], spec = sim.mk(zoneMob(F.def, A.L, r), { x: c.x, y: c.y, grp: A.id, L: A.L });
+    var c = spot(cs[i % cs.length]), spec = sim.mk(zoneMob(F.def, A.L, r), { x: c.x, y: c.y, grp: A.id, L: A.L });
     spec.x = c.x; spec.y = c.y; spec.hx = u.x; spec.hy = u.y;      // 집 = 부대가 있던 자리 (들판 적은 집에서 11칸 넘게 끌려가면 진정한다)
     var m = sim.add(spec); if (!m) continue;
     m.atk = Math.round(m.atk * A_.atk); m.mag = Math.round(m.mag * A_.atk); m.exp = Math.round((m.exp || 0) * A_.mobExp);
@@ -23199,13 +23336,17 @@ DS.ui = { josa: josa, $: $, $$: $$, h: h, esc: esc, sprTag: sprTag, charSpr: cha
   deny: deny, haptic: haptic, calm: calm, countUp: countUp, coach: coach, vban: vban, svg: icon, fmtN: fmtN };
 
 // ───────── 부대 배치 ─────────
+DS.sortieHold = function () { return !!(G.scn || (G.sim && G.sim.combat)); };      // 2.2.8: 싸우는 동안은 출전 셋을 고치지 않는다 (meta.js DS.sortieFix)
+function sortieFree(f) { var h = DS.sortieHold; DS.sortieHold = null; try { f(); } finally { DS.sortieHold = h; } }      // 2.2.8: 싸움 직전 · 직후처럼 지금 고쳐야 할 때
+function sortieNote() { var t = DS.sortieNewsText ? DS.sortieNewsText(G.save) : ''; if (t) later(t, 4200); return !!t; }      // 2.2.8: 출전 자리를 저절로 채운 소식
 function reviveAll() { DS.charList(G.save).forEach(function (c) { if (c.down) { c.down = false; c.hp = 0.5; c.mp = 0.5; } }); }
 function placeParty(sim, x, y, starts) {
   var s = G.save;
   var egp = !!(DS.egPassOn && DS.egPassOn(s));      // 3.3.0: 스무 해 창이 열려 있으면 빈자리는 그 창의 멈춤이 정한다 (안전망이 먼저 채우지 않는다)
   if (!G.riteBusy && !egp && DS.linVacant && DS.linVacant(s).length) { (DS.linAutoAll(s) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(s, e.ev), 4200); }); }      // 안전망: 의식을 거치지 않은 빈자리는 출전 전에 채운다
   if (!egp && !G.scn && !sim.combat && DS.sbTick) bnNote(DS.sbTick(s));      // 2.2.0: 싸움 밖이면 빈 가문은 막사의 같은 병과가 곧바로 잇는다 (마을에서 천수로 떠난 가주 · 방출 · 판 올림 뒤)
-  if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 · 출전 목록(s.party) = 가주가 선 가문 모두
+  if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 · 2.2.8: 출전 목록(s.party) = 맹주 + 출전한 가주 둘
+  sortieNote();
   if (!egp && !s.party.some(function (id) { return s.chars[id] && !s.chars[id].down; })) reviveAll();
   var specs = DS.partySpecs(s), first = null, keep = G.sel, pos = starts && DS.formation ? DS.formation(specs, starts) : null;      // r44 대열: 튼튼한 이가 앞줄
   specs.forEach(function (u, i) {
@@ -23338,7 +23479,8 @@ function startScenario(s) {
   var sv = G.save, me = G.sim.byId[G.sel];
   syncVitals();
   G.ret = G.keepRet || { zone: G.zone.id, pos: me ? { x: me.x, y: me.y } : null }; G.keepRet = null;      // 2.2.3: 갱도 층을 잇달아 들어가면 처음 들어온 자리로 돌아간다
-  if (DS.mercTidy) DS.mercTidy(sv);      // 2.2.0: 출전 목록 = 가주가 선 가문 모두
+  sortieFree(function () { if (DS.mercTidy) DS.mercTidy(sv); });      // 2.2.8: 출전 목록 = 맹주 + 출전한 가주 둘 (+ 가문원) — 들판 싸움이 막 끝나지 않았어도 들어가기 전에 자리를 채운다
+  sortieNote();
   if (DS.ui && DS.ui.takeSnap) DS.ui.takeSnap(s);      // 2.2.2: 결과 창의 경험치 막대는 이 순간(싸움 직전)부터 — 관문 창을 거치지 않고 들어와도
   var b = DS.buildScenario(s, DS.partySpecs ? DS.partySpecs(sv).length : sv.party.length, sv.chars[sv.hero] ? sv.chars[sv.hero].cls : 'inf');
   var sim = new DS.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (Date.now() & 0xffff) + s.id, inv: sv.items, mode: 'scn' });
@@ -23365,7 +23507,7 @@ function pitChain(lost) {
   var sc = f ? DS.pit(f) : null, why = sc ? scnLock(sc) : 'none';
   G.scn = null; G.ending = false;
   if (!why && DS.sbTick) bnNote(DS.sbTick(sv));
-  if (DS.mercTidy) DS.mercTidy(sv);
+  sortieFree(function () { if (DS.mercTidy) DS.mercTidy(sv); });      // 2.2.8: 다음 층 앞에서 빈 출전 자리를 채운다
   if (why || !DS.partySpecs(sv).length) { if (why && why !== 'none') toast(why, 2600); backToField(lost); if (!lost) flushPromos(); return; }
   G.keepRet = r;
   if (DS.pitGo) DS.pitGo(f); else startScenario(sc);
@@ -24337,7 +24479,7 @@ var dangerOk = {};      // 경고를 한 번 본 지역 (이 판 동안). 다시
 function dangerGate(id) {      // true = 이번에는 멈추고 경고만
   var w = zoneDanger(id); if (!w) return false;
   if (dangerOk[id] && performance.now() - dangerOk[id] < 15000) return false;
-  dangerOk[id] = performance.now(); A('cancel'); toast(w + '. 한 번 더 하면 들어갑니다', 3600); return true;
+  dangerOk[id] = performance.now(); A('cancel'); toast(w + '. 한 번 더 하면 들어갑니다' + (DS.sortieNames ? '. 출전: ' + DS.sortieNames(G.save) : ''), 4200); return true;      // 2.2.8: 나가는 셋
 }
 function warpWhy(id) {      // '' = 지금 바로 갈 수 있다, 글 = 못 가는 까닭
   if (G.ending) return '결과를 다 본 뒤에 간다';
@@ -24433,6 +24575,7 @@ function onEvents(evs) {
               var shown = G.view.cere && up.bear ? G.view.cere(cu.id, up.promo ? 'promo' : 'lv', { lv: up.to, from: DS.tierOfL(up.from), to: DS.tierOfL(up.to), sub: up.promo && ch ? DS.tierName(ch.cls, DS.tierOfL(up.to)) : '' }) : false;
               if (!shown) { G.view.float(cu.x, cu.y, up.promo ? DS.tierOfL(up.to) + '단!' : 'LEVEL UP', '#f6cf57', { dy: -10, life: 1.4 }); G.view.burst(cu.x, cu.y, ['#f6cf57', '#fff6d0'], up.bear ? 14 : 8, { up: 40, grav: -10, spd: 14, life: 0.9 }); }
             }
+            if (up.promo && up.bear && ch && !up.dep && !up.hero) later((up.who.ttl || up.who.n || DS.charName(ch)) + ', 쉬는 동안 ' + DS.tierOfL(up.to) + '단이 되었다', 3600);      // 2.2.8: 쉬는 가주의 승급 (결과 창에도)
             if (up.promo && up.bear && ch && up.dep) G.promos.push({ id: up.id, from: DS.tierOfL(up.from), to: DS.tierOfL(up.to), cls: ch.cls });
             if (up.promo && up.dep && DS.tmRankMsg && (up.pg || []).length) later(DS.tmRankMsg({ who: up.who, name: up.who.ttl || up.who.n || (ch ? DS.charName(ch) : ''), t1: DS.tierOfL(up.to), gains: up.pg, flag: up.bear }), 4200);      // r41 temper → r42: 개인 단이 오를 때 성장
             if (up.hero && up.promo && DS.heroUlt && DS.heroUlt(sv) && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { if (up.to >= q[0] && up.from < q[0]) { later('맹주의 필살기 「' + SK[DS.heroUlt(sv)].name + '」가 세졌다 (+' + Math.round(q[1] * 100) + '%)', 4200); A('star'); } });      // r42: 맹주의 개인 5단 · 8단
@@ -24914,6 +25057,9 @@ function refillMercs() {
   var sim = G.sim, s = G.save, seat = DS.sbTick && !G.scn ? DS.sbTick(s) : [];
   if (DS.mercTidy) DS.mercTidy(s);
   bnNote(seat);
+  var swap = sortieNote();
+  sim.cmds().forEach(function (c) { if (!c.dead && c.ch !== s.hero && s.party.indexOf(c.ch) < 0) { sim.remove(c); delete G.view.vu[c.id]; swap = true; } });      // 2.2.8: 출전에서 빠진 가문은 물러난다
+  if (swap && !sim.byId[G.sel] && sim.cmds()[0]) { G.sel = sim.cmds()[0].id; sim.leader = G.sel; }
   var lead = sim.byId[G.sel] || sim.cmds()[0];
   if (lead) s.party.forEach(function (id) {
     var ch = s.chars[id], u = sim.byId['c' + id]; if (!ch || (u && !u.dead) || ch.down || ch.vac) return;
@@ -24933,7 +25079,7 @@ function refillMercs() {
     });
   });
   sim.ev = sim.ev.filter(function (e) { return e.t !== 'spawn'; });
-  if (seat.length) renderChips();
+  if (seat.length || swap) renderChips();
 }
 // 2.2.0: 막사의 사람이 빈 가문을 이었다 — 「센주 가문의 가주를 막사의 난새가 잇는다」. 같은 병과가 없으면 그 가문은 빈 채로 (부대 탭에 「빈 가문」)
 function bnNote(list) {
@@ -26285,6 +26431,47 @@ function partyHp() {
   s.party.forEach(function (id) { var c = s.chars[id]; if (!c || c.down) return; sum += c.hp == null ? 1 : c.hp; n++; DS.mercsOf(s, id).forEach(function (m) { sum += m.hp == null ? 1 : m.hp; n++; }); });
   return n ? sum / n : 1;
 }
+// ───────── 2.2.8 출전 셋 ─────────
+// 한 줄: 맹주 + 출전한 가주 둘의 얼굴 · 이름 · 단 (+ 바꾸기). where: 'gate' (입구 창) · 'party' (부대 탭)
+function sortieMsg(r) { return r.out ? r.in + ' 출전, ' + r.out + ' 쉼' : r.in + ' 출전'; }
+function sortieBar(s, where) {
+  DS.partySync(s);
+  var list = s.party.map(function (id) { return s.chars[id]; }).filter(Boolean), rest = DS.benched ? DS.benched(s).length : 0, N = DS.PARTY_MAX || 3;
+  var faces = list.map(function (ch) {
+    var hero = ch.id === s.hero, b = hero ? ch.ps : DS.bearer(s, ch), nm = hero ? DS.charName(ch) : b ? (b.ttl || b.n || '') : '';
+    return '<span class="sof' + (hero ? ' lord' : '') + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '"><span class="sop">' + charSpr(ch, 2) + '</span><b>' + esc(nm) + '</b><small class="num">' + (b ? DS.tierOfL(DS.pL(b)) + '단 ' + DS.lvOfL(DS.pL(b)) : '') + '</small></span>';
+  }).join('');
+  for (var i = list.length; i < N; i++) faces += '<span class="sof none"><span class="sop"></span><b>빈 자리</b><small>영웅관에서</small></span>';
+  var kin = DS.mercsOf ? DS.mercsOf(s, s.hero).length : 0;
+  return '<div class="sobar ' + where + '"><div class="soh"><b>출전 ' + list.length + '명</b><small>' + (kin ? '가문원 ' + kin + '명도 함께' : '') + (rest ? (kin ? ', ' : '') + '쉬는 가주 ' + rest + '명' : '') + '</small>' +
+    (rest ? '<button class="btn small" data-sopick="1">바꾸기</button>' : '') + '</div><div class="sol">' + faces + '</div></div>';
+}
+// 고르기 창: 맹주는 늘, 가주 가운데 둘. 줄을 누르면 출전 ↔ 쉼 (둘이 차 있으면 먼저 하나를 쉬게 한다). 「확인」 → 모자란 자리는 가장 센 이로
+function sortiePick(done) {
+  var s = G.save, N = DS.SORTIE_N ? DS.SORTIE_N() : 2, pick = (s.sortie || []).map(function (e) { return e.h; });
+  var o = sheet('출전 고르기', function () {
+    var cands = DS.sortieRank(s), h = s.chars[s.hero], html = '<p class="hint sm">맹주와 가주 둘이 나간다. 가문원은 늘 함께 싸운다. 쉬는 가주는 경험치를 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '% 받는다.</p>';
+    if (h && h.ps) html += '<div class="row pr2 sopr on lord">' + charSpr(h, 2) + '<div class="tx"><b>' + esc(DS.charName(h)) + ' <i class="tg">맹주</i></b><small class="msub"><i class="mlv">' + lv(DS.pL(h.ps)) + '</i></small></div><span class="pra">' + pwNum(DS.sortiePow(s, h), 'sm') + '<i class="sotag on">출전</i></span></div>';
+    cands.forEach(function (ch) {
+      var b = DS.bearer(s, ch), on = pick.indexOf(ch.id) >= 0;
+      html += '<button class="row pr2 sopr' + (on ? ' on' : '') + '" data-sop="' + ch.id + '">' + mercSpr(b, 2) + '<div class="tx"><b>' + esc(b.ttl || b.n || '') + ' <small class="dim">' + crestH(ch, 12) + esc(hgShort(ch)) + '</small></b><small class="msub"><i class="mlv">' + lv(DS.pL(b)) + '</i>' + agTag(b) + '</small></div><span class="pra">' + pwNum(DS.sortiePow(s, ch), 'sm') + '<i class="sotag' + (on ? ' on' : '') + '">' + (on ? '출전' : '쉼') + '</i></span></button>';
+    });
+    if (!cands.length) html += '<p class="hint dimh">고를 가주가 없다. 영웅관에서 가문을 연다</p>';
+    return '<div class="sopk">' + html + '<p class="hint sm soc">출전 <b class="num">' + (1 + pick.length) + ' / ' + (N + 1) + '</b></p></div>';
+  }, 'sub');
+  o.foot = function () { return '<button class="btn gold wide" data-sook="1">확인</button>'; }; o.draw();
+  o.addEventListener('click', function (e) {
+    var r = e.target.closest('[data-sop]');
+    if (r) { var id = +r.dataset.sop, i = pick.indexOf(id); if (i >= 0) pick.splice(i, 1); else if (pick.length >= N) { A('cancel'); toast('출전은 ' + (N + 1) + '명까지다. 먼저 한 사람을 쉬게 한다', 2400); return; } else pick.push(id); A('tap'); o.draw(); return; }
+    if (e.target.closest('[data-sook]')) {
+      var before = (s.sortie || []).map(function (x) { return x.h; }).join(','); DS.sortieSet(s, pick); var after = s.sortie.map(function (x) { return x.h; }).join(',');
+      A('ok'); if (before !== after) { DS.rebuildParty(); DS.updateQuest(); U.persist(); toast('출전: ' + s.party.map(function (id) { var ch = s.chars[id]; return ch.id === s.hero ? DS.charName(ch) : (DS.bearer(s, ch) || {}).n || ''; }).join(', '), 2600); }
+      o.close(); if (done) done();
+    }
+  });
+  return o;
+}
+DS.sortiePick = sortiePick;
 // ───────── 시나리오 입구 ─────────
 function rewardText(s) {
   var r = s.reward || {}, out = [], sv = G.save;
@@ -26317,13 +26504,14 @@ DS.openGate = function (s, lock) {
     '<div class="gate-head">' + (B ? sprTag(B.sprite, B.pal, 3) : '<span class="noboss">방어전</span>') + '<div><h2>' + esc(s.name) + '</h2><p>' + (B ? '<b class="boss">' + esc(B.name) + '</b>' + (title ? ', ' + esc(title) : '') : '세 차례 습격을 모두 막아라') + '</p></div></div>' +
     '<dl class="facts"><dt>권장</dt><dd>' + lv(rec) + (s.tier ? ', ' + s.tier + '단 전용' : '') + (rec !== s.L ? ' <small class="dim">적 ' + lv(s.L) + '</small>' : '') + '</dd><dt>우리 부대</dt><dd class="' + rtg.cls + '">' + (DS.partySpecs ? DS.partySpecs(sv).length + '명, ' : '') + '평균 ' + lv(pl) + (rtg.tag ? ' <i class="tagw ' + rtg.tc + '">' + rtg.tag + '</i>' : '') + '</dd>' +
     '<dt>적</dt><dd class="foes">' + foes + '</dd>' + (moves.length ? '<dt>보스의 기술</dt><dd class="moves">' + moves.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</dd>' : '') + '<dt>보상</dt><dd>' + esc(rewardText(s)) + '</dd></dl>' +
+    sortieBar(sv, 'gate') +      // 2.2.8: 출전 셋 · 바꾸기
     (empt ? '<p class="soft">빈 가문 ' + empt + '곳은 싸우지 않는다. <button class="lnk2" data-go="party">부대</button></p>' : '') +
     (hp < 0.6 ? '<p class="lock">부대 체력 ' + Math.round(hp * 100) + '% (자동 회복 안 됨)</p>' : '') +
     (low ? '<p class="lock">자동 전투: 기운초 안 씀. 위험하면 퇴각</p>' : '') +      // r8 hud (fun 6 · newbie 1d)
     (!low && pl < rec && !sv.cleared[s.id] && s.id <= 3 ? '<p class="soft">권장: 들판에서 ' + lv(rec) + '까지</p>' : '') +      // 첫 판들: 안내대로 곧장 들어가 지는 일이 많았다 (QA K9)
     (lock ? '<p class="lock">' + esc(lock) + '</p>' : '') +
     '</div><div class="sfoot two"><button class="btn" data-close>닫기</button><button class="btn gold" id="goScn"' + (lock ? ' disabled' : '') + '>입장</button></div>');
-  o.addEventListener('click', function (e) { if (e.target.closest('[data-go="party"]')) { A('tap'); o.close(); DS.openMenu('party'); } });
+  o.addEventListener('click', function (e) { if (e.target.closest('[data-go="party"]')) { A('tap'); o.close(); DS.openMenu('party'); } if (e.target.closest('[data-sopick]')) { A('tap'); sortiePick(function () { o.close(); DS.openGate(s, lock); }); } });      // 2.2.8: 바꾸면 창을 새로 (평균 · 꼬리표)
   $('#goScn', o).addEventListener('click', function () {
     A('ok'); o.close();
     var seenK = s.pit ? 'pit' + s.pit : null, skipIntro = s.pit ? !!sv.seen[seenK] : !!sv.cleared[s.id];      // 갱도 층 도입 글은 층마다 한 번만 (QA)
@@ -26347,11 +26535,12 @@ DS.openPit = function (lock) {
     '<div class="pitq">' + (hasSame ? '<button class="btn pitb" data-pf="' + same + '"><b>같은 층 다시</b><small class="num">' + same + '층</small></button>' : '') +
     '<button class="btn gold pitb" data-pf="' + nx + '"><b>다음 층 도전</b><small class="num">' + nx + '층</small></button></div>' +
     '<div class="pitst" role="group" aria-label="층 고르기"><button class="btn small" data-pstep="-10" aria-label="10층 위로">-10</button><button class="btn small" data-pstep="-1" aria-label="한 층 위로">-1</button><b class="num pitsel"></b><button class="btn small" data-pstep="1" aria-label="한 층 아래로">+1</button><button class="btn small" data-pstep="10" aria-label="10층 아래로">+10</button></div>' +
-    '<dl class="facts pitf"></dl>' + (lock ? '<p class="lock">' + esc(lock) + '</p>' : '') +
+    '<div class="pitso"></div><dl class="facts pitf"></dl>' + (lock ? '<p class="lock">' + esc(lock) + '</p>' : '') +
     '</div><div class="sfoot two"><button class="btn" data-close>닫기</button><button class="btn gold" id="goPit"' + (lock ? ' disabled' : '') + '></button></div>');
   function draw() {
     var sc = DS.pit(sel), pl = DS.partyL(sv), tg = DS.recTag(sv, sc), k = sc.pitKind, hp = partyHp();
     o.querySelector('.pitsel').textContent = sel + '층';
+    o.querySelector('.pitso').innerHTML = sortieBar(sv, 'gate');      // 2.2.8
     o.querySelector('#goPit').textContent = sel + '층 들어가기';
     Array.prototype.forEach.call(o.querySelectorAll('[data-pstep]'), function (b) { var v = sel + (+b.dataset.pstep); b.disabled = v < 1 || v > nx; });
     o.querySelector('.pitf').innerHTML = '<dt>층</dt><dd>' + esc(sc.name) + (k === 10 ? ' <i class="tg pk10">밑바닥 층</i>' : k === 5 ? ' <i class="tg pk5">수문장 층</i>' : '') + (sel <= best ? ' <small class="dim">깬 층</small>' : '') + '</dd>' +
@@ -26362,6 +26551,7 @@ DS.openPit = function (lock) {
   }
   draw();
   o.addEventListener('click', function (e) {
+    if (e.target.closest('[data-sopick]')) { A('tap'); sortiePick(draw); return; }      // 2.2.8
     var b = e.target.closest('[data-pstep]'); if (b && !b.disabled) { A('tap'); sel = Math.max(1, Math.min(nx, sel + (+b.dataset.pstep))); draw(); return; }
     var q = e.target.closest('[data-pf]'); if (q) { if (lock) { deny(q, '잠김', lock); return; } A('ok'); o.close(); pitGo(+q.dataset.pf); }
   });
@@ -26418,10 +26608,13 @@ function xpBoard(sv, sn, out, deadCh) {
     if (hero) lord = c; else cells.push(c);
     DS.mercsOf(sv, id).forEach(function (m) { if (m === w) return; var r = xpCell(sv, sn, m, { spr: mercSpr(m, 1.5), name: m.ttl || m.n || '', small: 1 }); up = up || r.up; kin.push(r.html); });
   });
+  var rest = [];      // 2.2.8: 쉰 가주 — 출전한 이가 얻은 경험치의 BAL.sortieExp
+  (DS.benched ? DS.benched(sv) : []).forEach(function (ch) { var w = DS.bearer(sv, ch); if (!w || !(sn && sn.P && sn.P[DS.pKey(sv, w)])) return; var r = xpCell(sv, sn, w, { spr: mercSpr(w, 1.5), name: w.ttl || w.n || '', small: 1 }); up = up || r.up; rest.push(r.html); });
   (DS.barracks ? DS.barracks(sv) : []).forEach(function (m) { var k = DS.pKey(sv, m), b0 = sn && sn.P && sn.P[k]; if (!b0) return; var g = xpGain(b0.L, b0.e, DS.pL(m), +m.exp || 0); if (g >= 1) { sbN++; sbG += g; } });
   if (!lord && !cells.length) return { html: '', up: false };
   return { up: up, html: '<div class="xb" data-xb="1">' + (lord ? '<div class="hkl">' + lord + '</div>' : '') + (cells.length ? '<div class="xb9">' + cells.join('') + '</div>' : '') +
-    (kin.length ? '<div class="xbk"><small>가문원</small><div class="xbkl">' + kin.join('') + '</div></div>' : '') + (sbN ? '<p class="xbs">막사 ' + sbN + '명 <b class="num">+' + fmtN(sbG) + '</b> exp <small>같은 병과 가주 몫의 ' + Math.round((DS.BAL.sbShare || 0) * 100) + '%</small></p>' : '') + '</div>' };
+    (kin.length ? '<div class="xbk"><small>가문원</small><div class="xbkl">' + kin.join('') + '</div></div>' : '') +
+    (rest.length ? '<div class="xbk xbr"><small>쉰 가주 <i class="num">' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%</i></small><div class="xbkl">' + rest.join('') + '</div></div>' : '') + (sbN ? '<p class="xbs">막사 ' + sbN + '명 <b class="num">+' + fmtN(sbG) + '</b> exp <small>같은 병과 가주 몫의 ' + Math.round((DS.BAL.sbShare || 0) * 100) + '%</small></p>' : '') + '</div>' };
 }
 // 막대를 움직인다: 칸마다 조금씩 늦게(최대 0.7초) · 1.3초 동안 · 끝까지 2.4초 남짓. 누르면 바로 끝. 움직임 줄이기면 처음부터 끝값
 function xbRun(o) {
@@ -26859,6 +27052,8 @@ function charSheet(id, parent) {
     var tags = '<i class="rtag s-' + st[0] + '">' + st[1] + '</i><i class="ctag">' + esc(c.name) + '</i><i class="ctag mr">' + (DS.vetBadge ? DS.vetBadge(r) : '') + esc(DS.hName(r)) + '</i>' + (hero ? '<i class="tg">맹주</i>' : '') + fuTag(s, ch);
     var html = sheetHead({ spr: bw && !hero ? mercSpr(bw, 4) : charSpr(ch, 4), fc: DS.FLAG[ch.cls] || '#f6cf57', name: crestH(ch, 22) + esc(DS.flagName(ch.cls)), tags: tags, lv: bw, pow: bw ? DS.cardPower(s, ch) : null, powLab: '가문 전투력', cls: 'hs2' + (vacH ? ' vac' : '') });
     html += gearSlots(ch, hero ? null : bw);      // 2.2.0: 장비는 머리에 (누르면 고르기)
+    if (bw) html += hero ? '<div class="duty in so"><span><b>출전</b><small>맹주는 늘 나간다</small></span></div>' : inP ? '<div class="duty in so"><span><b>출전</b><small>맹주와 함께 싸운다</small></span><button class="btn small" data-sotg="1"' + (w === 'battle' ? ' disabled' : '') + '>쉬기</button></div>' :
+      '<div class="duty so"><span><b>쉰다</b><small>싸우지 않는다. 경험치 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%</small></span><button class="btn small gold" data-sotg="1"' + (w === 'battle' ? ' disabled' : '') + '>출전</button></div>';      // 2.2.8: 출전 · 쉬기
     html += vitBars(u, hero ? ch.hp : bw && bw.hp, ch.mp, bw, meritBar(ch)) + fuseLine(s, ch);
     // 가주
     var sbs = hero ? [] : DS.sbOf(s, ch.id), nk = kinFree(s).length;
@@ -26907,6 +27102,7 @@ function charSheet(id, parent) {
     if (bnb) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } A('tap'); bnPick(id, o); return; }
     var hb = e.target.closest('[data-gohall]'); if (hb) { if (DS.townBusy && DS.townBusy()) { A('cancel'); toast(DS.townWorkWhy(), 2600); return; } A('tap'); mercShop(); return; }
     var sbu = e.target.closest('[data-sbup]'); if (sbu) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } var r = DS.hand(s, id, +sbu.dataset.sbup, { where: bnWhere() }); if (!r.ok) { A('cancel'); toast(r.why); return; } A('ok'); DS.rebuildParty(); DS.updateQuest(); U.persist(); o.draw(); if (r.nf && DS.nfAsk) { var nid = +sbu.dataset.sbup; setTimeout(function () { DS.nfAsk({ k: 'm', id: nid }, null, '새 가주, 처음 이름 정하기 (무료)'); }, 250); } return; }
+    if (e.target.closest('[data-sotg]')) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } var rt = DS.sortieToggle(s, id); if (!rt.ok) { A('cancel'); toast(rt.why); return; } A('ok'); toast(sortieMsg(rt), 2600); DS.rebuildParty(); DS.updateQuest(); U.persist(); o.draw(); return; }      // 2.2.8
     var ks = e.target.closest('[data-kinsend]'); if (ks) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return; } A('tap'); kinSend(+ks.dataset.kinsend, o); return; }
     if (e.target.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return; }
     if (gearSlotClick(e, id, ch && id !== s.hero ? (DS.bearer(s, ch, 1) || {}).id : 0, o)) return;      // 2.2.0: 머리의 장비 칸
@@ -26972,11 +27168,11 @@ function hgCell(s, ch, cls) {
     return '<button class="hk none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">닫힌 가문</b><small class="hkv">영웅관에서 ' + esc(DS.CLASSES[cls].name) + '이 오면</small></button>';      // 2.2.4: 가문은 영웅관에서만 연다
   }
   var m = hgMeta(s, ch), b = m.b, L = b ? DS.pL(b) : ch.L, rk = DS.hRank(ch), dn = !!ch.down;
-  var st = (m.hero ? ' lord' : '') + (dn ? ' down' : '') + (b ? '' : ' vac') + (m.pi >= 0 ? ' in' : '');
-  var por = '<span class="hkf" style="--gc:' + (b ? gcol(b.g || 3) : '#4a3f30') + '">' + charSpr(ch, m.hero ? 4 : 3) + (dn ? '<i class="hkx">쓰러짐</i>' : '') + '</span>';
+  var st = (m.hero ? ' lord' : '') + (dn ? ' down' : '') + (b ? '' : ' vac') + (m.pi >= 0 ? ' in' : b && !dn ? ' rest' : '');
+  var por = '<span class="hkf" style="--gc:' + (b ? gcol(b.g || 3) : '#4a3f30') + '">' + charSpr(ch, m.hero ? 4 : 3) + (m.pi >= 0 && !dn ? '<i class="hkso">출전</i>' : b && !dn ? '<i class="hkso rs">쉼</i>' : '') + (dn ? '<i class="hkx">쓰러짐</i>' : '') + '</span>';      // 2.2.8: 출전 셋 · 쉬는 가주
   var foot = b ? xpBar(dn ? 0 : pFrac(b)) + '<span class="hkw">' + pwNum(m.pw, 'sm') + '</span>' : '<small class="hkv">' + (m.sb ? '막사의 같은 병과 ' + m.sb + '명' : '영웅관에서 모집') + '</small>';
   var gq = hgGear(s, ch, m.hero ? null : b, m.hero);
-  return '<button class="hk hgh' + st + '" data-ch="' + ch.id + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '" aria-label="' + esc(hgShort(ch) + ' 가문, ' + (b ? m.bn + ' ' + lv(L) : '빈 가문') + (dn ? ', 쓰러짐' : '') + (gq.names.length ? ', ' + gq.names.join(', ') : '')) + '">' + gq.html +
+  return '<button class="hk hgh' + st + '" data-ch="' + ch.id + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '" aria-label="' + esc(hgShort(ch) + ' 가문, ' + (b ? m.bn + ' ' + lv(L) : '빈 가문') + (m.pi >= 0 ? ', 출전' : b ? ', 쉼' : '') + (dn ? ', 쓰러짐' : '') + (gq.names.length ? ', ' + gq.names.join(', ') : '')) + '">' + gq.html +
     '<span class="hkh">' + DS.houseCrestOf(s, ch, m.hero ? 16 : 14) + '<small>' + esc(hgShort(ch)) + '</small>' + (m.hero ? '<i class="hkt">맹주</i>' : '') + '</span>' +
     (rk >= 1 ? '<span class="hkr" title="' + esc(DS.hName(rk)) + '">' + DS.vetBadge(rk) + '</span>' : '') + por + (b ? lvPill(L) : '') +
     '<b class="hkn' + (b ? '' : ' dim') + '">' + esc(b ? m.bn : '빈 가문') + '</b>' + foot + '</button>';
@@ -27023,11 +27219,12 @@ function barList(s) {
       '<span class="pra">' + (hm ? '<small class="bhm">' + crestH(hm, 14) + esc(hgShort(hm)) + '</small>' : '') + pwNum(pw, 'sm') + '</span><span class="bbt"><button class="btn small" data-barsw="' + (hm ? hm.id : 0) + '"' + (cant ? ' disabled' : '') + '>교체</button><button class="btn small" data-fire="' + m.id + '"' + (m.lk || m.cast ? ' disabled' : '') + '>방출</button></span></div>';
   }).join('') + '</div>';
 }
-// 부대 탭 = 가문 격자 (가주 · 가문원이 칸 안에) → 막사 목록 → 한 줄 요약 → 아래 단추 줄(가계도 · 마을 일 · 수배). 2.2.0: 출전 고르기·막사는 없다 — 가주가 선 가문은 모두 싸운다
+// 부대 탭 = 출전 줄(2.2.8 — 맹주 + 가주 둘 · 바꾸기) → 가문 격자 (가주 · 가문원이 칸 안에, 출전 띠) → 막사 목록 → 한 줄 요약 → 아래 단추 줄(가계도 · 마을 일 · 수배)
 function tabParty() {
   var s = G.save, html = '', emp = DS.bnEmpty ? DS.bnEmpty(s) : [];
   html += partyMeta(s, 1);      // 맺음 직후: 「다음 세대의 장」 단추
   if (emp.length) html += '<p class="lock vacl">빈 가문 ' + emp.length + '곳은 싸우지 않는다. 가문을 눌러 채운다 (영웅관 · 맹주의 아이)</p>';
+  html += sortieBar(s, 'party');      // 2.2.8: 출전 셋 · 바꾸기
   html += houseGrid(s);
   html += barList(s);
   var near = fuNear(s), c = agCal(), eg = '';
@@ -27050,6 +27247,7 @@ function partyClick(e, o) {
   if ((b = t.closest('[data-barsw]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } if (+b.dataset.barsw) { A('tap'); bnPick(+b.dataset.barsw, o); } return true; }
   if ((b = t.closest('.hgm [data-info], .hkk [data-info], .bar2 [data-info]'))) { A('tap'); mercInfo(+b.dataset.info, o); return true; }
   if (t.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return true; }
+  if (t.closest('[data-sopick]')) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } A('tap'); sortiePick(function () { if (o.isConnected) o.draw(); }); return true; }      // 2.2.8
   if ((b = t.closest('[data-hgnone]'))) { var nc = b.dataset.hgnone; A('tap'); toast(josa(DS.flagName(nc), '은는') + ' 닫혀 있다. 영웅관에서 ' + josa(DS.CLASSES[nc].name, '이가') + ' 나오면 그 영웅이 가주가 되어 열린다.', 3600); return true; }
   if ((b = t.closest('[data-bnslot]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } A('tap'); bnPick(+b.dataset.bnslot, o); return true; }
   return false;
@@ -27190,7 +27388,9 @@ function tabHelp() {
   var S = [
     ['사람과 가문', '가문', [
       '연맹에는 <b>맹주</b> 한 명과 가문들이 있다. 가문들이 모여 <b>' + esc(DS.allyFull ? DS.allyFull(G.save) : '연맹') + '</b>을 이룬다. 맹주는 자기가 선 가문의 가주다. 연맹의 이름은 대가 바뀌어도 그대로다.',
-      '<b>가주가 선 가문은 모두 싸운다.</b> 출전을 고르는 일은 없다. 가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
+      '<b>싸움에는 셋이 나간다.</b> 맹주와 고른 가주 둘이다. 맹주의 어른 가문원은 늘 함께 싸운다. 나머지 가주는 쉰다. 쉬는 가주는 싸우지 않아 쓰러지지 않고, 나이는 그대로 먹는다.',
+      '출전은 부대 탭의 <b>바꾸기</b>나 가문 창의 <b>출전, 쉬기</b>로 바꾼다. 시나리오와 갱도 입구에서도 바꾼다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러지거나 가문이 비면 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
+      '가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
       '사람의 자리는 셋이다. <b>가주</b>는 가문을 이끌고 싸운다. <b>막사</b>는 모집한 영웅이 기다리는 곳 하나로, 가문에 매이지 않고 싸우지 않는다. <b>가문원</b>은 맹주 집 사람(아이, 배우자)으로, 어른이면 모두 맹주를 따라 싸운다.',
       '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 장비와 공훈은 가문에 남는다.',
       '빈 가문을 채우는 길은 둘이다. <b>영웅관</b>에서 모집하거나, 맹주의 <b>어른 아이</b>를 그 가문의 가주로 보낸다. 보낸 아이는 그 가문의 병과를 받는다. 맹주의 자리는 늘 이어지니 싸울 이가 아무도 없어지는 일은 없다.',
@@ -27227,6 +27427,7 @@ function tabHelp() {
       '<b>체력과 마나는 저절로 차지 않는다.</b> 약초, 치유 기술, 교회의 치료로 채운다.',
       '<b>붉게 깜빡이는 칸</b>은 곧 공격이 떨어질 자리다. 틱이 남아 있으면 부대가 알아서 피한다.',
       '상성은 보병 ▶ 창병 ▶ 기병 ▶ 보병. 화살은 나는 적에게, 신성 공격은 망자와 악마에게 1.5배.',
+      '들판에서는 가끔 <b>기습</b>이 온다. 무리가 사방에서 한꺼번에 몰려온다. 모두 물리치면 골드와 경험치를 더 준다.',
       '<b>맹주가 쓰러지면</b> 전투가 끝난 뒤에 누가 이을지 고른다. 시나리오 중이면 시나리오가 끝난 뒤에. 고르기 전에 게임을 꺼도 다시 켜면 그 창이 돌아온다.']],
     ['장비', 0, [
       '장비는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 누구나 어떤 장비든 장착한다. 병과에 맞지 않는 계열은 능력치가 ' + Math.round((1 - DS.GEAR_OFF) * 100) + '% 깎인다.',
@@ -27237,7 +27438,7 @@ function tabHelp() {
       '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다.',
       '가방 목록도 다중 선택이 기본이다. 고른 뒤 아래 붉은 버튼으로 한꺼번에 판매한다. 잠근 장비는 선택할 수 없다.']],
     ['성장과 합일', 0, [
-      '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
+      '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 쉬는 가주는 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%를 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
       '레벨 10마다 <b>단</b>이 오른다. 맹주는 모습이 바뀌고, 가주와 가문원은 테두리 빛이 바뀐다. 가주의 단만큼 가문의 기술이 열리고, 가문원은 3단, 5단, 7단에 제 기술을 익힌다.',
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
       '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받는다. 아무도 제 자리를 떠나지 않는다.',
