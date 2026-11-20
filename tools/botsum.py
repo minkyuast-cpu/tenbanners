@@ -76,3 +76,8 @@ if rows:
     for d in rows:
         for k, v in (d.get('tAt') or {}).items(): ta.setdefault(int(k), []).append(v)
     if ta: print('first-try fight length (s), scenario 1..30: ' + ' '.join('%d:%.0f' % (k, sum(v) / len(v)) for k, v in sorted(ta.items())))
+    # 2.2.7: 시나리오마다 처음 싸움 — 이김 · 아무도 안 쓰러짐 비율과 들어간 레벨 − 권장 (BOTREC=1 이면 권장에서 싸운 것)
+    ft = {}
+    for d in rows:
+        for k, v in (d.get('ft') or {}).items(): ft.setdefault(int(k), []).append(v)
+    if ft: print('first try win%/no-death% (entry-rec), scenario 1..30: ' + ' '.join('%d:%d/%d' % (k, round(100 * sum(x[0] for x in v) / len(v)), round(100 * sum(1 for x in v if x[0] and x[1] == 0) / len(v))) for k, v in sorted(ft.items())))

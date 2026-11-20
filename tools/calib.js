@@ -3,6 +3,7 @@
 //   node tools/calib.js scn  <폴더> <N> [시도=8] [옮김=-16,-12,...]   → 줄마다 {k:'scn', n, cls, seed, d, L, win, dead, t}
 //   node tools/calib.js zone <폴더> <지역> <lo|hi> [시도=8] [레벨들]   → 그 지역의 가장 약한(lo)·센(hi) 무리와. 레벨마다 가장 가까운 판을 골라 옮긴다
 //   node tools/calib.js pit  <폴더> <층> [시도=8] [레벨들]              → 갱도 층 (DS.pit)
+//   node tools/calib.js at   <폴더> <N> [시도=10] [레벨=권장]           → 2.2.7: 판마다 부대 평균을 그 레벨로 옮겨 (권장 확인 — 열에 여덟 이기고 아무도 안 쓰러지는가)
 //   node tools/calib.js sum  <결과 파일…>                             → 시나리오·지역·층마다 80% · 50% 레벨 (단조로 다듬기 전의 날것)
 // 레벨 옮기기: 모든 사람의 개인 레벨 + d (1 ~ 상한 · 합일한 이는 100). 단이 바뀌면 기술도 그 단의 것.
 'use strict';
@@ -120,6 +121,9 @@ if (mode === 'scn') {
 } else if (mode === 'scnnat') {      // 시나리오: 봇이 제 레벨로 닿은 판(BOTFOCUS · BOTD 로 여러 레벨) 그대로 — node tools/calib.js scnnat <폴더> <N> [시도=12]
   const dir = process.argv[3], n = +process.argv[4], K = +(process.argv[5] || 12), sc = D.scn(n);
   snaps(dir).filter(x => x.n === n).forEach(x => { for (let k = 0; k < K; k++) { const s = load(x.f), L = shift(s, 0); const r = fightScn(s, sc, x.seed * 1000 + k + 1); console.log(JSON.stringify({ k: 'scn', n, cls: x.cls, seed: x.seed, d: 0, L, win: r.r === 'win' ? 1 : 0, dead: r.dead, cd: r.cmdDead, t: r.t, u: D.partySpecs(s).length })); } });
+} else if (mode === 'at') {      // 2.2.7: 권장 확인 — 판마다 부대 평균이 그 레벨(기본 권장 DS.recL)이 되게 옮겨 싸운다. node tools/calib.js at <폴더> <N> [시도=10] [레벨]
+  const dir = process.argv[3], n = +process.argv[4], K = +(process.argv[5] || 10), sc = D.scn(n), T = +(process.argv[6] || D.recL(sc));
+  snaps(dir).filter(x => x.n === n).forEach(x => { for (let k = 0; k < K; k++) { const s = load(x.f), d = T - D.partyL(s); shift(s, d); keepTier(s, sc.tier); const L = D.partyL(s); const r = fightScn(s, sc, x.seed * 1000 + k + 1); console.log(JSON.stringify({ k: 'scn', n, cls: x.cls, seed: x.seed, d, T, L, win: r.r === 'win' ? 1 : 0, dead: r.dead, cd: r.cmdDead, t: r.t, u: D.partySpecs(s).length })); } });
 } else if (mode === 'sum') {
   const rows = []; process.argv.slice(3).forEach(f => fs.readFileSync(f, 'utf8').split('\n').forEach(l => { if (l.startsWith('{')) { const o = JSON.parse(l); if (!o.skip) rows.push(o); } }));
   const groups = {};

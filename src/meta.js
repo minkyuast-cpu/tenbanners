@@ -389,12 +389,12 @@ DS.mercsOf = function (save, chId) { return (save.mercs || []).filter(function (
 DS.lineOf = function (save, m) {
   if (!m) return false;
   var P = save && save.lin && save.lin.P, p = m.pid && P ? P[m.pid] : null;
+  var h = save.chars && save.chars[save.hero], hp = h && h.pid && P && P[h.pid], sp = !!(p && p.m === m.id && hp && hp.sp && hp.sp === p.id);
+  if (sp) return true;      // 2.2.7: 맹주의 배우자는 옛 맹주 가문 사람이어도 맹주 집 사람 (막사에서 혼인해 온 이가 가문원 자리에 있는데 「핏줄 밖」으로 보이던 것)
   if (p && p.m === m.id && p.hx) return false;      // 2.2.1: 옛 맹주 가문 사람 (P.hx = 그 가문 번호) — 맹주 집 사람이 아니다 (막사 · 그 가문의 병과)
   if (m.kn) return true;
   if (!p || p.m !== m.id) return false;
-  if ((p.hb && !p.ad) || p.hand) return true;
-  var h = save.chars && save.chars[save.hero], hp = h && h.pid && P[h.pid];
-  return !!(hp && hp.sp && hp.sp === p.id);
+  return !!((p.hb && !p.ad) || p.hand);
 };
 // 자리 정리 (불변식): 가주는 가문마다 하나(맹주 가문에는 없다) · 가문원은 맹주 가문에 · 그 밖의 사람은 막사(o = 0, sb = 1). 고친 수
 DS.mercTidy = function (save) {

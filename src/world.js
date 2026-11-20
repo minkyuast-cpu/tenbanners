@@ -494,9 +494,10 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
   var size = n <= 2 ? 2 : n <= 20 ? 3 : 4, nPost = n <= 2 ? 2 : 3, units = [], diff = forceDiff || DS.tuneFor(heroCls, s.id) || s.diff || 1, gi = 0;
   if (!forceDiff && !s.pit && !s.gen && DS.scnHard) diff *= DS.scnHard(s.id);      // 2.2.4: 시나리오는 조금 더 세게 (tune.js DS.HARD)
   var H7 = !forceDiff && !s.pit && !s.gen && DS.scnHard7, BK7 = H7 && DS.bossK7 ? DS.bossK7(s.id) : null;      // 2.2.7: 한 번 더 세게 (tune.js DS.HARD7 · DS.BOSS7)
-  if (H7) { diff *= DS.scnHard7(s.id); if (n >= DS.HARD7.more && n <= (DS.HARD7.last || 99)) size++; }
+  var more7 = H7 && n >= DS.HARD7.more && n <= (DS.HARD7.last || 99) ? DS.HARD7.add || 0 : 0;      // 보스 곁의 무리가 이만큼 더 (곁 무리가 없는 30번은 그대로)
+  var h7 = H7 ? DS.scnHard7(s.id) : 1, h7p = 1 + (h7 - 1) * (DS.HARD7.post == null ? 1 : DS.HARD7.post);      // 초소 무리(g0 · g1 · g2)는 그 몫의 post 만큼만 — 세기는 보스 싸움에 모은다
   var TE = !s.pit && !s.gen && DS.TUNE_E && DS.TUNE_E[s.id];      // 4.0 (⑫-3): 판마다 적의 체력·공격을 따로 (1~10 은 덜 아프게·조금 더 길게)
-  var mk = function (type, o) { o = o || {}; o.diff = diff; if (TE) { o.hm = (o.hm || 1) * TE[0]; o.am = (o.am || 1) * TE[1]; } if (s.xk && s.xk !== 1) o.expMul = (o.expMul == null ? 1 : o.expMul) * s.xk; if (s.pit) o.xpK = DS.PIT.xpK; return DS.enemySpec(type, o.L || s.L, o); };      // 2.2.3 갱도: 경험치만 PIT.xpK 배 (키 다지는 곳)
+  var mk = function (type, o) { o = o || {}; o.diff = diff * (o.grp != null && /^g\d/.test(o.grp) ? h7p : h7); if (TE) { o.hm = (o.hm || 1) * TE[0]; o.am = (o.am || 1) * TE[1]; } if (s.xk && s.xk !== 1) o.expMul = (o.expMul == null ? 1 : o.expMul) * s.xk; if (s.pit) o.xpK = DS.PIT.xpK; return DS.enemySpec(type, o.L || s.L, o); };      // 2.2.3 갱도: 경험치만 PIT.xpK 배 (키 다지는 곳)
   if (s.pitKind) size = 4;      // 2.2.3: 갱도 수문장 · 밑바닥 층은 무리마다 하나 더
   function put(type, x, y, grp, o) { o = o || {}; o.x = x; o.y = y; o.grp = grp; var u = mk(type, o); units.push(u); return u; }
   var posts = [[rnd() < 0.5 ? 4 : 8, 13], [0, 9], [6, 7]]; posts[1][0] = posts[0][0] === 4 ? 8 : 4;
@@ -514,7 +515,7 @@ DS.buildScenario = function (s, partyN, heroCls, forceDiff) {
       var grp = 'g' + (gi++);
       for (var k = 0; k < size; k++) put(s.mobs[Math.floor(rnd() * s.mobs.length)], p[0] + (k % 2 ? 1 : -1) * Math.ceil(k / 2), p[1] + (k > 1 ? 1 : 0), grp, { L: Math.max(1, s.L - 1) });
     });
-    var B = DS.BOSSES[s.boss], guard = Math.min(B.guard, n <= 1 ? 2 : n <= 4 ? 3 : 9) + (s.pitKind === 10 ? 2 : s.pitKind === 5 ? 1 : 0);
+    var B = DS.BOSSES[s.boss], guard = Math.min(B.guard, n <= 1 ? 2 : n <= 4 ? 3 : 9) + (s.pitKind === 10 ? 2 : s.pitKind === 5 ? 1 : 0) + (B.guard > 0 ? more7 : 0);
     var boss = put(null, 6, 2, 'boss', s.bossK ? { boss: s.boss, L: Math.min(100, s.L + 1), hm: s.bossK[0], am: s.bossK[1] } : BK7 ? { boss: s.boss, L: s.L + 1, hm: BK7[0], am: BK7[1] } : { boss: s.boss, L: s.L + 1 }); boss.obj = true;      // 2.2.3: 갱도 수문장 · 밑바닥 층의 갱도지기
     for (var q = 0; q < guard; q++) put(s.mobs[q % s.mobs.length], 6 + (q % 2 ? 1 : -1) * (1 + Math.floor(q / 2)), 3 + (q % 3 === 2 ? 1 : 0), 'boss', { L: s.L });
   }
