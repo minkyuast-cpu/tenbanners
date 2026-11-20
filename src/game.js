@@ -425,7 +425,7 @@ function startScenario(s) {
   $('#zName').textContent = s.name; $('#zSub').textContent = s.pit ? '던전' : '시나리오 ' + s.id; if (DS.hudCal) try { DS.hudCal(); } catch (x) {}
   $('#boss').hidden = true; layoutInsets();
   DS.Audio.bgm('battle');
-  bannerSoon(s.pit ? s.name : '시나리오 ' + s.id, s.pit ? '갱도지기를 쓰러뜨려라' : s.name + (s.boss ? ', ' + DS.BOSSES[s.boss].name + ' 격파' : ', 습격을 모두 막아라'), 2600);
+  bannerSoon(s.pit ? s.name : '시나리오 ' + s.id, s.pit ? josa(DS.BOSSES[s.boss] ? DS.BOSSES[s.boss].name : '갱도지기', '을를') + ' 쓰러뜨려라' : s.name + (s.boss ? ', ' + DS.BOSSES[s.boss].name + ' 격파' : ', 습격을 모두 막아라'), 2600);
 }
 DS.startScenario = startScenario;
 // 2.2.3 갱도 결과 창의 「다음 층 · 같은 층 다시 · 다시 도전」: 들판으로 나가지 않고 곧장 그 층으로 (돌아갈 자리 G.ret 는 처음 들어온 그대로).
@@ -1182,7 +1182,7 @@ function bossQuote(u, k) { var t = bossLore(u, k); return !t ? '' : /^[—–-]/
 function showBoss(u) {
   var L = DS.LORE, lb = L && L.boss && L.boss[u.type], fl = lb && lb.floors && G.scn && G.scn.pit ? lb.floors[(G.scn.pit - 1) % lb.floors.length] : null;      // 갱도지기는 층마다 이름이 다르다
   G.bossId = u.id; G.bossTitle = bossLore(u, 'title') || u.title || ''; G.bossTxt = null; G.bcast = null; G.bossHold = 0;
-  var el = $('#boss'); el.hidden = false; el.classList.remove('casting');
+  var el = $('#boss'); el.hidden = false; el.classList.remove('casting', 'rage'); if (u.enraged) el.classList.add('rage');
   $('b', el).textContent = fl ? fill(fl) : u.name; $('em', el).textContent = G.bossTitle;
   layoutInsets(); DS.Audio.bgm('boss');
   bossSay(bossQuote(u, 'say'));
@@ -1588,8 +1588,10 @@ function onEvents(evs) {
       case 'blocked':      // 엔진: 이동 명령이 끝내 막혀 포기했다
         if (e.id === G.sel) { G.goal = null; G.pendPoi = null; toast('길이 막혔다. 다른 곳을 눌러 돌아간다', 2800); }
         break;
-      case 'aggro': u = sim.byId[e.id]; if (u && u.role === 'boss' && u.obj && !u.fake && G.bossId !== u.id) showBoss(u); break;
-      case 'phase': u = sim.byId[e.id]; if (u) { showBoss(u); banner(u.name, '쓰러뜨려도 끝이 아니었다', 2600); if (G.view && !calm()) G.view.hitStop(0.12); } break;
+      case 'aggro': u = sim.byId[e.id]; if (u && u.role === 'boss' && u.obj && !u.fake && G.bossId !== u.id) { showBoss(u); bigCine(u, sim); } break;
+      case 'phase': u = sim.byId[e.id]; if (u) { showBoss(u); if (!bigCine(u, sim, '쓰러뜨려도 끝이 아니었다')) banner(u.name, '쓰러뜨려도 끝이 아니었다', 2600); if (G.view && !calm()) G.view.hitStop(0.12); } break;
+      case 'bossUlt': u = sim.byId[e.id]; if (u && SK[e.sk]) bossCut(u, SK[e.sk]); break;      // 2.3.0 큰 보스의 비기: 보스 컷인
+      case 'enrage': u = sim.byId[e.id]; if (u) { vban('rage', u.name + ' 격노', (u.enr && u.enr.say) || '', calm() ? 1100 : 1500); A('phase'); if (u.id === G.bossId) { var bel0 = $('#boss'); if (bel0) bel0.classList.add('rage'); } } break;
       case 'wave': vban('wave', e.text || '증원!', '', 1400); A('warn'); break;
       case 'erase': erBegin(e); break;      // r17 boss: 어스름의 왕의 이름 지우기
       case 'eraseSave': erSaved(e); break;
@@ -1782,6 +1784,33 @@ function ultFx(u, sk) {
   if (!calm()) { var gx = S.grand ? 1.5 : 1; G.view.flashA = Math.max(G.view.flashA || 0, (big ? 0.06 : 0.04) * gx); G.view.shake = Math.max(G.view.shake || 0, (big ? 0.16 : 0.1) * gx); if (big && G.view.hitStop) G.view.hitStop(0.05); }      // 2.2.9: 윗길 필살기는 조금 더 세게      // r38: 번쩍임·흔들림은 가볍게, 멈춤은 50ms — 기술 그림이 그대로 보이게
   if (u.side === 'ally') setTimeout(function () { if (G.sim && G.sim.byId[u.id] && !u.dead) bark(u, 'skill'); }, 950);
 }
+// ───────── 2.3.0 큰 보스: 등장 연출 · 비기 컷인 ─────────
+// 등장 연출 (사건 연출 DS.cine 의 「강적」): 큰 몸의 보스가 처음 깨어날 때 한 번 — 큰 그림 · 이름 · 칭호 · 한마디. 설정 「사건 연출: 끔」이면 없다. 「짧게」 · 움직임 줄이기면 짧게
+function bigCine(u, sim, sub) {
+  if (!u || !(u.fw > 1 || u.fh > 1) || G.quiet && !DS.bigCineForce) return false;
+  var seen = sim.bigSeen || (sim.bigSeen = {}); if (seen[u.type]) return false; seen[u.type] = 1;
+  var pic = DS.bigPortrait ? DS.bigPortrait(u.type, u.fw, u.fh, 3) : null, por = [];
+  if (pic) { try { por.push('<img class="cbimg" alt="" src="' + pic.toDataURL() + '" style="--bw:' + u.fw + ';--bh:' + u.fh + '">'); } catch (x) {} }
+  var sz = u.fw + '×' + u.fh + ' 칸';
+  DS.cine({ k: 'boss', title: u.name, sub: sub || bossLore(u, 'title') || u.title || '', say: bossQuote(u, 'say'), note: '큰 몸 · ' + sz + (u.enr ? ' · 체력이 ' + Math.round(u.enr.th * 100) + '% 아래면 격노' : ''), por: por, fc: '#ff4d6d' }, function () {});
+  return true;
+}
+DS.bigCine = bigCine;
+// 비기 컷인: 필살기 컷인 띠를 붉게 — 큰 그림 · 보스 이름 · 비기 이름. 효과 「가볍게」 · 빠른 배속이면 더 짧고 수수하게
+function bossCut(u, S) {
+  var sg = $('#s-game'); if (!sg || !G.view) return;
+  A('ult'); if (!calm() && G.view.hitStop) G.view.hitStop(0.06);
+  var el = $('#ultcut'); if (!el) { el = document.createElement('div'); el.id = 'ultcut'; el.setAttribute('aria-hidden', 'true'); sg.appendChild(el); }
+  var sv = G.save, spd = DS.spdOf ? DS.spdOf(sv.opt && sv.opt.speed) : 1, lite = DS.fxLite && DS.fxLite(), ud = Math.round((spd >= 2 ? 700 : spd >= 1.5 ? 820 : 980) * (lite ? 0.75 : 1));
+  el.style.setProperty('--fc', '#ff4d6d'); el.style.setProperty('--ud', ud + 'ms'); el.dataset.k = 'boss';
+  el.innerHTML = '<div class="ucb"><i class="ucl"></i><span class="ucp"></span><span class="uct"><small>' + esc(u.name || '') + '</small><span class="ucn"><i>비기</i><b>' + esc(S.name) + '</b></span></span></div>';
+  try { var pic = DS.bigPortrait ? DS.bigPortrait(u.type, u.fw || 1, u.fh || 1, 1) : null; if (pic) { var c2 = document.createElement('canvas'), Wc = 96; c2.width = Wc; c2.height = Wc; var g = c2.getContext('2d'), k = Math.min(Wc / pic.width, Wc / pic.height) * 1.25; g.imageSmoothingEnabled = true; g.drawImage(pic, (Wc - pic.width * k) / 2, Wc - pic.height * k * 0.92, pic.width * k, pic.height * k); $('.ucp', el).appendChild(c2); } } catch (x) {}
+  var tp = $('#top'), sgr = sg.getBoundingClientRect(); if (tp) { var tr = tp.getBoundingClientRect(); el.style.top = Math.max(4, Math.round(tr.bottom - sgr.top + 4)) + 'px'; }
+  el.classList.remove('on', 'calm', 'grand', 'boss', 'lite'); void el.offsetWidth; if (calm()) el.classList.add('calm'); if (lite) el.classList.add('lite'); el.classList.add('boss', 'on');
+  clearTimeout(G.ultCutTm); G.ultCutTm = setTimeout(function () { el.classList.remove('on'); }, ud + 30); G.ultCutT = performance.now();
+  if (u.id === G.bossId) G.bcast = { name: S.name, until: performance.now() + 2600 };
+}
+DS.bossCut = bossCut;
 function ultCut(u, S) {
   var sg = $('#s-game'); if (!sg) return;
   var el = $('#ultcut'); if (!el) { el = document.createElement('div'); el.id = 'ultcut'; el.setAttribute('aria-hidden', 'true'); sg.appendChild(el); }

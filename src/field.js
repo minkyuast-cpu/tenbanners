@@ -534,7 +534,8 @@ function onEv(sim, e) {
       if (v && !calm()) v.shake = Math.max(v.shake || 0, 0.45);
       panTo(u); bossHud(u, true); bsay(DS.FIELD_BOSS[F.zone] && DS.FIELD_BOSS[F.zone].say);
       shout('boss', 'cmd', 600);
-      bossCard(sim, e);
+      if ((u.fw > 1 || u.fh > 1) && DS.bigCine && DS.cineMode && DS.cineMode() !== 'off') { var ec = e; G.hold = (G.hold || 0) + 1; setTimeout(function () { G.hold = Math.max(0, (G.hold || 1) - 1); if (!DS.bigCine(u, sim, '필드 보스 · ' + (u.title || ''))) bossCard(sim, ec); else { var w = setInterval(function () { if (!DS.cineBusy || !DS.cineBusy()) { clearInterval(w); if (sim.fld && sim.fld.boss && sim.fld.boss.ask) bossCard(sim, ec); } }, 200); } }, 900); }      // 2.3.0: 큰 필드 보스는 등장 연출 뒤에 카드
+      else bossCard(sim, e);
     } else if (e.k === 'fight') { if (DS.Audio) DS.Audio.bgm('boss'); }
     else if (e.k === 'down') {
       bossHud(null, false);

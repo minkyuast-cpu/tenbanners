@@ -694,7 +694,7 @@ V.handle1 = function (e, sim) {
         if (tv) self.shape({ k: 'impact', x: tv.x, y: tv.y, dur: 0.22, c: '#ffd28a', r: 8 });
         if (self.time - (v.ctrT || -9) > 1.5) { v.ctrT = self.time; self.float(ux, uy, '되치기', '#ffd28a', { dy: -10, life: 0.8 }); }
         v.lunge = tv ? { dx: Math.sign(tv.x - v.x) || 0, dy: Math.sign(tv.y - v.y) || 0, t: 0 } : v.lunge; self.sfx('punch'); break;
-      case 'cast': self.tele[e.tid] = { tiles: e.tiles, dur: e.dur, t: 0, side: e.side }; self.sfx('warn'); break;
+      case 'cast': self.tele[e.tid] = { tiles: e.tiles, dur: e.dur, t: 0, side: e.side, big: !!(u && fpBig(u)) }; self.sfx('warn'); if (u && fpBig(u) && on && !self.lite) self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.45, c: '#ff6a7a', r: 10 + Math.max(fox(u), foy(u)) * 14 }); break;      // 2.3.0: 큰 몸의 예고는 몸에서 붉은 고리가 한 번 퍼진다
       case 'castEnd': delete self.tele[e.tid]; break;
       case 'buff': case 'status':
         if (!on) break;
@@ -801,7 +801,8 @@ V.frame = function (dt, evs) {
   if (f) { tx = f.x * 16 + 8 - vw / 2 + (dzf ? 0 : this.pan.x); ty = f.y * 16 + 8 - (it + (vh - it - ib) / 2) + (dzf ? 0 : this.pan.y); }
   var mw = this.mw * 16, mh = this.mh * 16;
   tx = mw <= vw ? (mw - vw) / 2 : Math.max(0, Math.min(mw - vw, tx));
-  ty = (mh + it + ib) <= vh ? -it - (vh - it - ib - mh) / 2 : Math.max(-it, Math.min(mh - vh + ib, ty));
+  var xt = 0; for (i = 0; i < bl.length; i++) if (fpBig(bl[i].u) && bl[i].u.y < 6) xt = 56 / k;      // 2.3.0: 큰 보스가 지도 위쪽에 있으면 보스 막대 밑으로 머리까지 보이게 위로 조금 더 올라갈 수 있다
+  ty = (mh + it + ib) <= vh ? -it - (vh - it - ib - mh) / 2 : Math.max(-it - xt, Math.min(mh - vh + ib, ty));
   if (this.snap) { this.cam.x = tx; this.cam.y = ty; this.snap = false; }
   else { var a = Math.min(1, dt * 8); this.cam.x += (tx - this.cam.x) * a; this.cam.y += (ty - this.cam.y) * a; }
   var sx = 0, sy = 0;
@@ -965,6 +966,7 @@ V.drawGround = function (g) {
     for (tk = 0; tk < T.tiles.length; tk++) {
       tq = T.tiles[tk]; tx0 = tq[0] * 16; ty0 = tq[1] * 16; te = T.edge[tk];
       g.fillStyle = tfill; g.fillRect(tx0, ty0, 16, 16);
+      if (T.big && pr > 0.72 && (Math.floor(t * 14) & 1)) { g.fillStyle = 'rgba(255,240,230,.2)'; g.fillRect(tx0, ty0, 16, 16); }      // 2.3.0 큰 보스: 떨어지기 직전 하얗게 깜빡인다
       if (tstripe) { g.globalAlpha = 0.2 + 0.25 * pr; g.drawImage(tstripe, tx0, ty0); g.globalAlpha = 1; }
       if (te) {
         g.fillStyle = 'rgba(27,22,38,.6)';
