@@ -4817,6 +4817,77 @@ html body #app#app .result.rsplit > .rfoot { position: relative; bottom: auto; f
 .cine.calm .cbar { animation: cnBar var(--dur, 1500ms) linear both !important; }
 .cine.calm .ctap { opacity: 1; }      /* 움직임 줄이기: 안내는 처음부터 그대로 */
 @media (max-height: 640px) { .cine .cfa { width: 80px; height: 80px; } .cine .cst { min-height: 92px; } .cine.ck-open .cst { min-height: 120px; } .cine .cflag { height: 116px; } }
+/* 2.2.9 합일 · 승급(9 · 10단) · 합일한 넋의 죽음 · 깨어남 · 다시 열린 가문 — transform · opacity 만 움직인다 (기본 모습 = 끝 모습: 움직임 줄이기면 끝 모습 그대로) */
+.cine.ck-fuse, .cine.ck-ascend, .cine.ck-reopen { --cr: linear-gradient(180deg, #e8bb45, #9a6c1c); }
+.cine.ck-fuse .crib b, .cine.ck-ascend .crib b, .cine.ck-reopen .crib b { color: #2a1704; text-shadow: 0 1px 0 rgba(255, 240, 200, .6); box-shadow: inset 0 1px 0 rgba(255, 250, 220, .7), 0 0 18px rgba(246, 207, 87, .45); }
+.cine.ck-fuse .cbd, .cine.ck-ascend .cbd { background: radial-gradient(ellipse at 50% 40%, rgba(150, 110, 30, .42), transparent 64%), rgba(6, 4, 2, .96); }
+.cine.ck-fuse .cst { position: relative; display: block; width: 300px; height: 210px; min-height: 0; margin: 4px 0 0; }
+.cine .cfz { position: absolute; inset: 0; }
+.cine .cfzl { position: absolute; left: 50%; top: 96px; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 246, 214, .95) 0, rgba(246, 207, 87, .55) 26%, rgba(246, 207, 87, .12) 52%, transparent 70%); opacity: .55; animation: cnFzLight 2.4s ease-out both; }
+.cine .cfzb { position: absolute; top: 0; width: 46px; height: 70px; left: 50%; margin-left: -23px; --bc: #f6cf57; transform-origin: 50% 0; }
+.cine .cfzb .cfl { background: linear-gradient(180deg, var(--bc), color-mix(in srgb, var(--bc) 50%, #000)); }
+.cine .cfzb .cfl svg { width: 28px; height: 28px; }
+.cine .cfzb::before { content: ""; position: absolute; left: -5px; right: -5px; top: -4px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #6a4c22, #dcb46a, #6a4c22); }
+.cine .cfzb.b0 { transform: translateY(-6px) scale(1.14); filter: drop-shadow(0 0 10px rgba(246, 207, 87, .8)); animation: cnFzRise 2.6s ease-out both; }
+.cine .cfzb.b1 { transform: translate(-96px, 46px); opacity: 0; animation: cnFzLowL 2.6s ease-in both; }
+.cine .cfzb.b2 { transform: translate(96px, 46px); opacity: 0; animation: cnFzLowR 2.6s ease-in both; }
+.cine .cfa.cfzf { position: absolute; top: 84px; left: 50%; width: 76px; height: 76px; margin-left: -38px; opacity: 0; transform: scale(.4); }
+.cine .cfa.cfzf.f0 { animation: cnFzIn0 2.2s cubic-bezier(.4, 0, .2, 1) both; }
+.cine .cfa.cfzf.f1 { animation: cnFzIn1 2.2s cubic-bezier(.4, 0, .2, 1) both; }
+.cine .cfa.cfzf.f2 { animation: cnFzIn2 2.2s cubic-bezier(.4, 0, .2, 1) both; }
+.cine .cfa.cneo { width: 112px; height: 112px; border-color: #f6cf57; box-shadow: 0 0 0 2px #2a1704, 0 0 0 4px #f6cf57, 0 0 34px rgba(246, 207, 87, .75), inset 0 0 18px rgba(246, 207, 87, .25); }
+.cine .cfa.cneo::before { content: ""; position: absolute; inset: -12px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 20%, rgba(255, 236, 170, .55) 25%, transparent 30% 70%, rgba(255, 236, 170, .55) 75%, transparent 80%); animation: cnSpin 3.2s linear infinite; pointer-events: none; }
+.cine.ck-fuse .cfa.cneo { position: absolute; top: 76px; left: 50%; margin-left: -56px; animation: cnFzNeo .7s cubic-bezier(.2, .9, .3, 1.25) 1.75s both; }
+.cine.ck-fuse .crib { animation-delay: 2s; } .cine.ck-fuse .csub { animation-delay: 2.15s; } .cine.ck-fuse .cnote { animation-delay: 2.3s; } .cine.ck-fuse .ctap { animation-delay: 2.4s; }
+.cine.ck-fuse .cfx i, .cine.ck-ascend .cfx i { background: #ffe9a0; box-shadow: 0 0 12px #f6cf57; animation-delay: calc(1.7s + var(--i) * .06s); }
+@keyframes cnFzLight { 0% { opacity: 0; transform: scale(.1); } 45% { opacity: .2; transform: scale(.4); } 62% { opacity: 1; transform: scale(1.5); } 100% { opacity: .55; transform: none; } }
+@keyframes cnFzRise { 0%, 55% { transform: none; filter: none; } 100% { transform: translateY(-6px) scale(1.14); } }
+@keyframes cnFzLowL { 0%, 50% { transform: translateX(-96px); opacity: 1; } 100% { transform: translate(-96px, 46px); opacity: 0; } }
+@keyframes cnFzLowR { 0%, 50% { transform: translateX(96px); opacity: 1; } 100% { transform: translate(96px, 46px); opacity: 0; } }
+@keyframes cnFzIn0 { 0% { opacity: 0; transform: translateY(14px); } 18% { opacity: 1; transform: none; } 48% { opacity: 1; transform: none; } 72% { opacity: 0; transform: scale(.4); } 100% { opacity: 0; transform: scale(.4); } }
+@keyframes cnFzIn1 { 0% { opacity: 0; transform: translate(-96px, 14px); } 18% { opacity: 1; transform: translateX(-96px); } 42% { opacity: 1; transform: translateX(-96px); } 70% { opacity: 0; transform: scale(.4); } 100% { opacity: 0; transform: scale(.4); } }
+@keyframes cnFzIn2 { 0% { opacity: 0; transform: translate(96px, 14px); } 18% { opacity: 1; transform: translateX(96px); } 42% { opacity: 1; transform: translateX(96px); } 70% { opacity: 0; transform: scale(.4); } 100% { opacity: 0; transform: scale(.4); } }
+@keyframes cnFzNeo { 0% { opacity: 0; transform: scale(.3); } 70% { opacity: 1; transform: scale(1.08); } 100% { transform: none; } }
+@keyframes cnSpin { to { transform: rotate(360deg); } }
+.cine.ck-ascend .cst { min-height: 150px; align-items: center; margin-bottom: 30px; }
+.cine.ck-ascend .cfa.cold { width: 70px; height: 70px; opacity: .4; transform: scale(.8); animation: cnLeave .9s ease-in .1s both; }
+.cine.ck-ascend .cfa.cneo { animation: cnFzNeo .7s cubic-bezier(.2, .9, .3, 1.25) .55s both; }
+.cine .cskl { position: absolute; left: 50%; bottom: -32px; transform: translateX(-50%); display: flex; align-items: baseline; gap: 6px; padding: 4px 12px; border-radius: 12px; white-space: nowrap; background: rgba(20, 12, 2, .9); box-shadow: inset 0 0 0 1px #f6cf57, 0 0 14px rgba(246, 207, 87, .4); animation: cnSkl .5s ease-out 1.1s both; }
+.cine .cskl i { font: 600 11px/1 var(--f-ui); font-style: normal; color: #f0c860; letter-spacing: .1em; }
+.cine .cskl b { font: 800 15px/1.1 var(--f-head, inherit); color: #fff3d0; }
+@keyframes cnSkl { from { opacity: 0; transform: translate(-50%, 10px); } }
+.cine.ck-fallx { --fc: #b9a37a; --cr: linear-gradient(180deg, #3a2a20, #120c08); }
+.cine.ck-fallx .cbd { background: radial-gradient(ellipse at 50% 40%, rgba(120, 40, 30, .28), transparent 60%), rgba(0, 0, 0, .97); animation-duration: .8s; }
+.cine.ck-fallx .cst { position: relative; min-height: 170px; align-items: center; }
+.cine.ck-fallx .cfa.cxf { width: 104px; height: 104px; filter: grayscale(1) brightness(.75); border-color: #6a5a40; box-shadow: none; animation: cnFade 1.2s ease-out .2s both; }
+.cine .cxr { position: absolute; left: 50%; top: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; }
+.cine .cxr i { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: #d8b450; opacity: 0; }
+.cine .cxr i:nth-child(1) { transform: rotate(0deg) translateY(-18px); animation: cnCrack0 1.6s ease-in .3s both; }
+.cine .cxr i:nth-child(2) { transform: rotate(120deg) translateY(-18px); animation: cnCrack1 1.6s ease-in .3s both; }
+.cine .cxr i:nth-child(3) { transform: rotate(240deg) translateY(-18px); animation: cnCrack2 1.6s ease-in .3s both; }
+@keyframes cnCrack0 { 0%, 30% { opacity: 1; transform: rotate(0deg); } 100% { opacity: 0; transform: rotate(0deg) translateY(-18px); } }
+@keyframes cnCrack1 { 0%, 30% { opacity: 1; transform: rotate(120deg); } 100% { opacity: 0; transform: rotate(120deg) translateY(-18px); } }
+@keyframes cnCrack2 { 0%, 30% { opacity: 1; transform: rotate(240deg); } 100% { opacity: 0; transform: rotate(240deg) translateY(-18px); } }
+.cine.ck-fallx .cst { margin-top: 30px; }
+.cine .cx3 { position: absolute; left: 0; right: 0; top: -30px; display: flex; justify-content: center; gap: 12px; }
+.cine .cx3 i { font: 600 13px/1 var(--f-ui); font-style: normal; color: #d9cba8; opacity: .8; animation: cnUp .6s ease-out both; }
+.cine .cx3 i:nth-child(1) { animation-delay: 1.1s; } .cine .cx3 i:nth-child(2) { animation-delay: 1.35s; } .cine .cx3 i:nth-child(3) { animation-delay: 1.6s; }
+.cine.ck-fallx .crib b { color: #e6dcc6; text-shadow: none; }
+.cine.ck-fallx .cfx i { top: -4%; width: 3px; height: 3px; background: #c8b48a; box-shadow: none; animation: cnAsh 3s linear calc(var(--i) * .25s) both; }
+.cine.ck-wake { --fc: #9fe8ec; --cr: linear-gradient(180deg, #3f7a8a, #1e3f4a); }
+.cine.ck-wake .cst { min-height: 120px; align-items: flex-end; gap: 14px; }
+.cine .cwk { display: flex; gap: 14px; }
+.cine .cwk .cfzb { position: relative; left: auto; margin: 0; top: auto; animation: cnWake .8s cubic-bezier(.2, .8, .3, 1.1) both; }
+.cine .cwk .cfzb.w1 { animation-delay: .2s; } .cine .cwk .cfzb.w2 { animation-delay: .4s; } .cine .cwk .cfzb.w3 { animation-delay: .6s; }
+@keyframes cnWake { from { opacity: .15; transform: translateY(46px) scaleY(.6); } }
+.cine.ck-reopen { --cr: linear-gradient(180deg, #e8bb45, #9a6c1c); }
+.cine.ck-reopen .cst { min-height: 150px; align-items: center; }
+.cine .cflag.rx { filter: drop-shadow(0 0 12px rgba(246, 207, 87, .75)); }
+.cine .cflag.rx::after { content: ""; position: absolute; inset: -6px; border: 2px solid #f6cf57; border-radius: 4px; opacity: .8; animation: cnGlow 1.2s ease-in-out .5s 2 alternate both; }
+.cine.ck-reopen .cfa.cnew { animation: cnStep .6s cubic-bezier(.2, .9, .3, 1.15) .6s both; border-color: #f6cf57; }
+.cine.calm .cfa.cneo::before { display: none; }
+@media (max-height: 640px) { .cine.ck-fuse .cst { height: 180px; } .cine .cfa.cneo { width: 92px; height: 92px; } .cine.ck-fuse .cfa.cneo { margin-left: -46px; top: 70px; } }
+
 /* 2.2.4 부대 격자: 칸 안의 장비 (초상 오른쪽 세로 줄 · 가문 창과 같은 그림 · 빈 칸은 흐리게). 칸 전체가 그대로 누르는 자리 */
 html body #app#app .hk .hkg { position: absolute; top: 25px; right: 5px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; }
 html body #app#app .hk .hgs { --gc: #6a5d48; position: relative; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 5px; background: rgba(10, 7, 5, .75); box-shadow: inset 0 0 0 1px var(--gc), 0 1px 0 #000; font-style: normal; }
@@ -4864,6 +4935,46 @@ html body #app#app .sotag.on { color: #08222b; background: #7fd0e6; }
 html body #app#app .sopk .soc { text-align: center; }
 html body #app#app .duty.so { margin: 6px 0 8px; }
 html body #app#app .xbr > small i { font-style: normal; color: #bfe9f5; }
+/* 2.2.9 합일 창: 대표 가문 고르기 · 무엇이 일어나는가 · 확인 창 */
+.furep2 { margin: 6px 0 4px; padding: 8px 10px; border: 1px solid rgba(246, 207, 87, .4); border-radius: 10px; background: rgba(246, 207, 87, .06); }
+.furep2 .fuhd small { display: block; margin-top: 2px; font-weight: 500; color: var(--mute); font-size: 11px; }
+.furb { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 6px 0; }
+.furbb { position: relative; display: grid; justify-items: center; gap: 2px; min-width: 0; padding: 8px 4px 6px; border-radius: 9px; color: inherit; background: rgba(0, 0, 0, .25); border: 1px solid var(--line); --fc: #c9a96a; }
+.furbb b { font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.furbb small { font-size: 10px; color: var(--mute); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.furbb.on { border-color: #f6cf57; background: rgba(246, 207, 87, .16); box-shadow: 0 0 0 1px #f6cf57 inset, 0 0 10px rgba(246, 207, 87, .3); }
+.furbb[disabled] { opacity: .45; }
+.furbb .furk { position: absolute; top: -7px; right: 6px; padding: 1px 6px; border-radius: 8px; font: 700 10px/1.3 var(--f-ui); font-style: normal; color: #2a1704; background: #f6cf57; }
+.fuout { list-style: none; margin: 4px 0 2px; padding: 0; display: grid; gap: 4px; }
+.fuout li { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 1.4; }
+.fuout li.up b { color: #ffe08a; } .fuout li.dn { color: var(--mute); } .fuout li.dn svg { filter: grayscale(1) brightness(.7); }
+.fuask .fuaskr { display: flex; justify-content: center; gap: 12px; margin: 6px 0 8px; }
+.fuask .fuaskr span { display: grid; justify-items: center; gap: 2px; font-size: 12px; }
+.fuask .fuaskr span.up b { color: #ffe08a; } .fuask .fuaskr span.dn { opacity: .55; }
+.fzz { color: #9fe8ec; }
+/* 부대 격자 · 영웅관: 합일로 잠든 가문 */
+html body #app#app .hk.none.fzs { opacity: .8; background: repeating-linear-gradient(135deg, #0f1418 0 6px, #131a1f 6px 12px) padding-box, linear-gradient(#2f4650, #1e2c33) border-box; }
+html body #app#app .hk.none.fzs .hkn { color: #9fd6dc; }
+html body #app#app .hk.none.fzs .hkv { color: #7fa8ae; }
+html body #app#app .hkf .hkz { display: block; width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 60% 40%, transparent 0 42%, #9fd6dc 44% 56%, transparent 58%); opacity: .7; }
+html body #app#app .hk.none.fzw { opacity: .85; }
+html body #app#app .hk.none.fzw .hkn { color: #f6cf57; }
+.hshut.fzh { border-color: rgba(159, 214, 220, .4); }
+.hshut.fzh .hsh b { color: #9fd6dc; }
+.hrm.fz { border-color: rgba(159, 214, 220, .45); }
+/* 2.2.9: 8단 위 필살기 컷인 — 금 테 · 긴 이름 띠 · 더 큰 빛 (빠른 배속이면 짧게) */
+#ultcut.grand .ucb { height: 70px; box-shadow: inset 0 2px 0 #f6cf57, inset 0 -2px 0 #f6cf57, 0 0 18px rgba(246, 207, 87, .45); }
+#ultcut.grand .ucb::before { content: ""; position: absolute; inset: 4px; border: 1px solid rgba(255, 233, 160, .55); pointer-events: none; }
+#ultcut.grand .ucp { width: 60px; height: 60px; box-shadow: 0 0 0 2px #2a1704, 0 0 0 4px #f6cf57, 0 0 18px rgba(246, 207, 87, .8); }
+#ultcut.grand .ucp canvas { width: 60px; height: 60px; }
+#ultcut.grand .ucn i { color: #2a1704; background: #f6cf57; padding: 2px 5px; border-radius: 3px; letter-spacing: .1em; }
+#ultcut.grand .ucn b { font-size: 25px; color: #fff3cf; text-shadow: 0 0 10px rgba(246, 207, 87, .95), 0 2px 0 #000; }
+#ultcut.grand .uct small { color: #ffe9a0; }
+#ultcut.grand .ucg { position: absolute; right: 52px; top: 50%; width: 90px; height: 90px; margin-top: -45px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 240, 190, .55), rgba(246, 207, 87, .15) 45%, transparent 70%); opacity: 0; pointer-events: none; }
+#ultcut.grand.on .ucg { animation: ucGrand calc(var(--ud) * .8) calc(var(--ud) * .1) ease-out both; }
+@keyframes ucGrand { 0% { opacity: 0; transform: scale(.3); } 40% { opacity: 1; transform: scale(1.25); } 100% { opacity: 0; transform: scale(1.6); } }
+#ultcut.grand.calm .ucg { display: none; }
+@media (prefers-reduced-motion: reduce) { #ultcut.grand .ucg { display: none; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -5502,7 +5613,7 @@ DS.PITY_G = 5;
 DS.PULL5_G = 3;         // r35: 5회 모집은 희귀 이상 한 명 (예전: 고급 이상)
 DS.mercCost = function (tier) { return [300, 300, 450, 650, 900, 1200, 1600, 2000, 2500, 3000, 3600][Math.max(1, Math.min(10, tier))]; };      // 기본값 (열기가 0일 때)
 // r35 모집 값: 부를 때마다 열기가 1 오르고 값은 기본값의 +step 만큼 오른다. 열기는 계절마다 ease 씩 식는다 (save.rh = { h 열기, t 마지막으로 잰 달력 초 })
-DS.RECRUIT = { step: 0.5, ease: 0.5, max: 40, k: 8 };      // 2.2.0: k = 영웅 모집 값 배율 (기본값 × 8)
+DS.RECRUIT = { step: 0.5, ease: 0.5, max: 40, k: 8, emp: 4 };      // 2.2.0: k = 영웅 모집 값 배율 (기본값 × 8) · 2.2.9: emp = 빈 가문 배율 (값 × emp ÷ 열 수 있는 닫힌 가문 수 — meta.js DS.recruitEmp)
 DS.TICKET_EVERY = 10;  // 2.2.0: 영웅 모집권은 열 번째 시나리오마다 한 장 (r35: 다섯 번째마다)
 
 // ───────── 몬스터 ─────────
@@ -5684,11 +5795,15 @@ DS.COUNTER = { inf: 'pike', pike: 'cav', cav: 'inf' };
 //   권장(이기고 쓰러짐 ≤ 1 이 80%)이 몇 레벨 올랐는지를 이웃 셋과 고르게 해 권장 · 반반에 더했다. 안전(봇이 들어가는 레벨)은 그보다 한 레벨 덜, 21번부터는 많아야 둘 (단조).
 //   확인(tools/calib.js at — 봇이 닿은 열 판을 권장 레벨로 옮겨 백 번씩): 이김 99~100%, 쓰러짐 ≤ 1 이 91~100%, 아무도 안 쓰러짐은 12번 46% · 그 밖 62~100%.
 //   zone 의 낮은 끝 · 반반은 같은 판으로 두 무리를 함께 싸워(tools/calib.js zone, 2.2.5 와 견줌) 오른 만큼 (단 문턱인 잿빛 · 끝의 땅은 그대로). 갱도는 그대로
+// 2.2.9: 셋이 나가는 싸움(2.2.8)으로 다시 재었다 — 적의 세기는 그대로. 2.2.9 봇 열 판(병과마다 한 판 · 새 합일 규칙 · 출전 셋)이 시나리오마다 처음 들어가기 직전의 판을
+//   레벨만 옮겨(-28 ~ +8, 세 번씩 · tools/calib.js scn — 싸우는 것은 출전한 셋과 맹주의 가문원뿐) 진짜 엔진에서 싸우고 tools/calsum.py 로 권장 · 반반 · 안전을 찾고, 번호를 따라 줄지 않게 앞의 큰 값을 이어 썼다 (평균으로 다듬으면 21번처럼 어려운 판이 낮아진다).
+//   21~30 은 단 문턱(8단 · 9단)이 있어 합일한 가주를 그 단의 첫 레벨 밑으로 내리지 않는다 — 그 아래는 들어가지 못하니 권장은 「합일한 이가 있는 셋의 평균」이다.
+//   30번의 안전이 높은 것은 이름 지우기 때문이다 (지워진 이는 쓰러짐으로 세지 않지만 그만큼 싸움이 거칠다).
 DS.REC = {
-  scn: { 1: [1, 1, 2], 2: [1, 1, 4], 3: [1, 1, 6], 4: [8, 6, 9], 5: [11, 8, 12], 6: [12, 11, 16], 7: [12, 11, 22], 8: [16, 14, 25], 9: [17, 14, 28], 10: [18, 15, 31], 11: [24, 19, 34], 12: [29, 19, 38], 13: [30, 19, 41], 14: [35, 24, 46], 15: [49, 28, 50],
-         16: [50, 28, 53], 17: [50, 30, 55], 18: [53, 31, 60], 19: [55, 33, 63], 20: [56, 34, 66], 21: [66, 37, 75], 22: [68, 38, 76], 23: [71, 38, 76], 24: [76, 38, 77], 25: [76, 38, 77], 26: [76, 38, 79], 27: [76, 38, 84], 28: [77, 38, 85], 29: [77, 38, 85], 30: [77, 41, 85] },
-  zone: { dawn: [1, 9, 1], windy: [11, 14, 6], stone: [17, 26, 9], coast: [25, 36, 17], isle: [21, 42, 15], desert: [33, 47, 15], mire: [47, 58, 23], spire: [63, 70, 26], ash: [71, 81, 26], end: [81, 100, 29] },
-  pit: { a: 12, b: 0.85, b5: 2, b10: 5, over: 0.6, half: 14 },
+  scn: { 1: [1, 1, 1], 2: [1, 1, 1], 3: [1, 1, 1], 4: [5, 4, 7], 5: [11, 9, 13], 6: [17, 13, 19], 7: [17, 14, 19], 8: [24, 20, 26], 9: [25, 23, 29], 10: [26, 23, 30], 11: [33, 31, 39], 12: [33, 31, 39], 13: [36, 33, 42], 14: [38, 34, 45], 15: [42, 38, 49],
+         16: [45, 41, 49], 17: [45, 41, 52], 18: [45, 42, 52], 19: [51, 45, 62], 20: [61, 48, 62], 21: [70, 66, 77], 22: [70, 68, 77], 23: [71, 68, 77], 24: [71, 69, 77], 25: [78, 69, 82], 26: [78, 69, 82], 27: [78, 76, 82], 28: [78, 76, 82], 29: [78, 76, 82], 30: [78, 76, 87] },
+  zone: { dawn: [1, 9, 1], windy: [5, 14, 1], stone: [9, 26, 1], coast: [28, 36, 16], isle: [17, 42, 9], desert: [25, 47, 13], mire: [36, 58, 26], spire: [36, 70, 25], ash: [71, 81, 29], end: [81, 100, 25] },      // 2.2.9: 셋이 나가면 무리도 그만큼 작다 (DS.packOf) — 센 무리 둘을 함께 끌어도 스물에 열아홉은 아무도 안 쓰러지는 레벨 (잿빛 · 끝의 땅은 단 문턱)
+  pit: { a: 29, b: 0.52, b5: 2, b10: 5, over: 0.35, half: 6 },      // 2.2.9: 1 ~ 50층을 출전 셋으로 다시 싸워 맞춘 직선 (깊은 층은 합일한 이가 앞장서면 예전 식보다 훨씬 낮다)
   easy: 12,
   farm: 10      // 갱도에서 되풀이해 다질 층: 권장보다 이만큼 높은 부대 (DS.pitFarm — 길 안내 · 봇)
 };
@@ -5721,13 +5836,171 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 };
 })();
 
+// 전민 — 2.2.9 「합일의 길」: 가문마다 제 8 · 9 · 10단 (열 가문 × 세 단 = 서른 모습)
+//   합일(meta.js DS.fuse)로 8단에 오른 가주는 제 가문 병과의 윗길(DS.RISE_OF[병과])로 자란다. 가문 줄의 병과(ch.cls)는 그대로 — 세기 · 기술 · 단 이름 · 모습만 이 길을 따른다 (DS.riseCls).
+//   세기: 그 병과의 7단 Lv10(L70) 값의 RISE_K 배에서 시작하고(8단 Lv1 = L71), 레벨마다 그 병과 성장의 RISE_G 배씩 자란다 — 열 길의 몫이 같다.
+//   기술: 8단에 그 병과의 대표 기술 하나가 윗길 기술로 바뀌고(kit), 9단 · 10단에 고유 기술을 하나씩 익힌다. 필살기 셋은 8단부터 윗길 필살기(DS.ULT_UP)로 쓴다.
+//   옛 판의 세 마스터(배틀 · 택틱스 · 매직마스터)는 표에 그대로 둔다 (옛 기록이 읽는다). 옛 마스터 기술은 그 병과 윗길의 고유 기술로 옮긴다 (DS.SK_OLD · DS.SK_ALIAS).
+var DS = globalThis.DS = globalThis.DS || {};
+(function () {
+'use strict';
+DS.RISE_K = { hp: 1.3, mp: 1.2, atk: 1.3, def: 1.3, mag: 1.3, res: 1.3 };
+DS.RISE_G = 1.22;
+// 병과 → 윗길 [8단, 9단, 10단 이름, 짧은 이름, 한 줄 소개, 빛깔(오라)]
+var LINE = {
+  inf:  { k: 'xinf',  t: ['성벽기사', '철옹공', '불괴왕'], short: '성벽', aura: '#8fc8ff', blurb: '무너지지 않는 성채가 된 방패. 9단에 「불괴의 방진」, 10단에 「성벽 붕괴」를 익힌다.' },
+  cav:  { k: 'xcav',  t: ['뇌전기사', '천둥군주', '뇌제'], short: '뇌전', aura: '#ffe27a', blurb: '번개를 끌고 달리는 기병의 왕. 9단에 「천둥 창」, 10단에 「뇌운 질주」를 익힌다.' },
+  fly:  { k: 'xfly',  t: ['폭풍기수', '창공군주', '용황'], short: '폭풍', aura: '#9fe8ec', blurb: '폭풍을 타는 용의 기수. 9단에 「용의 포효」, 10단에 「용황의 숨결」을 익힌다.' },
+  mar:  { k: 'xmar',  t: ['해일장군', '파도군주', '해신'], short: '해일', aura: '#62d0ee', blurb: '바다를 부리는 장수. 9단에 「소용돌이」, 10단에 「대해일」을 익힌다.' },
+  pike: { k: 'xpike', t: ['창벽장군', '만창공', '창성'], short: '창벽', aura: '#b6f0a0', blurb: '창의 숲을 세우는 수문장. 9단에 「창의 숲」, 10단에 「천 갈래 창」을 익힌다.' },
+  arc:  { k: 'xarc',  t: ['매눈사수', '신궁', '천궁성'], short: '매눈', aura: '#d8ff9a', blurb: '한 번 본 것은 놓치지 않는 명사수. 9단에 「꿰뚫는 매눈」, 10단에 「천궁 소나기」를 익힌다.' },
+  cle:  { k: 'xcle',  t: ['금강권', '무성', '천무신'], short: '금강', aura: '#ffd27a', blurb: '맨손으로 산을 여는 무의 성인. 9단에 「천수권」, 10단에 「천지개벽장」을 익힌다.' },
+  mon:  { k: 'xmon',  t: ['성등사', '대성관', '광명성자'], short: '성등', aura: '#fff0a0', blurb: '꺼지지 않는 등불의 성자. 9단에 「빛의 고리」, 10단에 「태양 강림」을 익힌다.' },
+  mag:  { k: 'xmag',  t: ['대마도사', '원소왕', '천원현자'], short: '마도', aura: '#c9a8ff', blurb: '세 원소를 한 손에 쥔 대마도사. 9단에 「원소 폭주」, 10단에 「천원 운석」을 익힌다.' },
+  sha:  { k: 'xsha',  t: ['사령군주', '명계왕', '불사왕'], short: '사령', aura: '#b6ff5a', blurb: '죽음을 다스리는 불사의 군주. 9단에 「망령 군단」, 10단에 「죽음의 장막」을 익힌다.' }
+};
+DS.RISE_LINE = LINE;
+DS.RISE_OF = {}; for (var c0 in LINE) DS.RISE_OF[c0] = LINE[c0].k;
+DS.RISE_BASE = {}; for (var c1 in LINE) DS.RISE_BASE[LINE[c1].k] = c1;
+// ── 기술: kit = 8단에 바뀌는 대표 기술 · s9 · s10 = 고유 기술 ──
+var G = 1;      // 모든 윗길 기술은 화려한 빛(grand)이 덧붙는다 (view.js V.fx)
+var SK = {
+  // 보병 (성벽기사)
+  xinf_bash:  { name: '성벽 강타', mp: 4, tick: 45, rng: [1, 1], tg: 'enemy', fx: 'shield', ic: 'shieldbash', eff: [{ t: 'dmg', m: 3.0 }, { t: 'gauge', v: -40 }, { t: 'taunt', dur: 8 }, { t: 'buff', s: 'shd', m: 0.8, stat: 'atk', dur: 10, to: 'self' }], desc: '붙은 적을 성벽처럼 쳐 300%, 게이지를 깎고 8초 동안 나를 노리게 한다. 내게 보호막(공격의 80%).' },
+  xinf_aegis: { name: '불괴의 방진', mp: 12, tick: 50, tg: 'self', area: 'r2', side: 'ally', fx: 'guard', ic: 'bulwark', eff: [{ t: 'buff', s: 'shd', m: 1.4, stat: 'atk', dur: 15 }, { t: 'buff', s: 'def', p: 30, dur: 15 }, { t: 'taunt', to: 'foe', r: 3, dur: 8 }], desc: '둘레 2칸 아군에게 보호막(공격의 140%)과 방어 +30% (15초). 둘레 3칸 적은 나를 노린다.' },
+  xinf_quake: { name: '성벽 붕괴', mp: 16, tick: 60, tg: 'self', area: 'r2', side: 'enemy', fx: 'quake', ic: 'shieldbash', eff: [{ t: 'dmg', m: 2.2 }, { t: 'knock', n: 1 }, { t: 'gauge', v: -40 }, { t: 'status', s: 'slow', dur: 8 }], desc: '방패로 땅을 내리쳐 둘레 2칸 적에게 220%, 밀어내고 게이지를 깎고 둔화.' },
+  // 기병 (뇌전기사)
+  xcav_charge:{ name: '뇌전 돌파', mp: 7, tick: 50, tg: 'dir', len: 5, dash: true, fx: 'charge', ic: 'charge', eff: [{ t: 'dmg', m: 1.9 }, { t: 'gauge', v: -30 }, { t: 'chain', n: 2, r: 2, m: 0.5 }], desc: '번개를 끌고 직선 5칸을 꿰뚫어 달린다. 190%, 게이지를 깎고 곁의 둘에게 번개(50%).' },
+  xcav_bolt:  { name: '천둥 창', mp: 10, tick: 50, rng: [2, 5], tg: 'enemy', leap: true, fx: 'thunder', ic: 'bolt', eff: [{ t: 'dmg', m: 2.4, vs: 'low', vx: 1.4 }, { t: 'chain', n: 3, r: 2, m: 0.6 }], desc: '2~5칸 밖의 적에게 벼락처럼 뛰어들어 240% (체력이 절반 아래면 1.4배), 곁의 셋에게 번개(60%).' },
+  xcav_storm: { name: '뇌운 질주', mp: 16, tick: 60, tg: 'dir', len: 7, dash: true, fx: 'thunder', ic: 'charge', eff: [{ t: 'dmg', m: 2.4 }, { t: 'gauge', v: -40 }, { t: 'chain', n: 4, r: 2, m: 0.5 }], desc: '먹구름을 끌고 직선 7칸을 달린다. 길 위의 적에게 240%, 게이지를 깎고 곁의 넷에게 번개(50%).' },
+  // 비병 (폭풍기수)
+  xfly_dive:  { name: '용의 급강하', mp: 6, tick: 45, rng: [2, 5], tg: 'enemy', leap: true, back: 3, fx: 'dive', ic: 'dive', eff: [{ t: 'dmg', m: 1.9, vs: 'mark', vx: 1.5 }, { t: 'status', s: 'mark', dur: 8, p: 20 }], desc: '2~5칸 밖의 적에게 내리꽂아 190%(표식이 있으면 1.5배), 표식을 남기고 세 칸 날아오른다.' },
+  xfly_roar:  { name: '용의 포효', mp: 11, tick: 50, tg: 'self', area: 'r2', side: 'enemy', back: 2, fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 1.8 }, { t: 'knock', n: 1 }, { t: 'buff', s: 'atk', p: -20, dur: 10 }, { t: 'gauge', v: -30 }], desc: '둘레 2칸 적에게 180%, 밀어내고 공격 −20% (10초), 게이지를 깎은 뒤 날아오른다.' },
+  xfly_breath:{ name: '용황의 숨결', mp: 16, tick: 60, tg: 'dir', len: 5, fx: 'fire', ic: 'flame', eff: [{ t: 'dmg', m: 2.2, type: 'magic', stat: 'atk' }, { t: 'status', s: 'burn', dur: 8, p: 3 }, { t: 'status', s: 'mark', dur: 8, p: 20 }], desc: '용이 직선 5칸을 불로 태운다. 220%, 화상과 표식.' },
+  // 해병 (해일장군)
+  xmar_surge: { name: '해일 밀기', mp: 8, tick: 50, tg: 'dir', len: 4, fx: 'water', ic: 'wave', eff: [{ t: 'dmg', m: 1.9, type: 'magic', stat: 'atk' }, { t: 'knock', n: 2 }, { t: 'status', s: 'wet', dur: 14 }], desc: '직선 4칸에 해일 190%, 두 칸 밀어내고 젖게 한다.' },
+  xmar_whirl: { name: '소용돌이', mp: 11, tick: 50, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'water', ic: 'hook', eff: [{ t: 'dmg', m: 1.6, type: 'magic', stat: 'atk' }, { t: 'pull', n: 1 }, { t: 'status', s: 'wet', dur: 12 }, { t: 'status', s: 'slow', dur: 8 }], desc: '2칸 반경에 소용돌이 160%, 한 칸 끌어오고 젖게 하며 둔화.' },
+  xmar_tsunami:{ name: '대해일', mp: 16, tick: 60, tg: 'dir', len: 6, fx: 'water', ic: 'wave', eff: [{ t: 'dmg', m: 2.4, type: 'magic', stat: 'atk' }, { t: 'knock', n: 2 }, { t: 'status', s: 'wet', dur: 14 }, { t: 'gauge', v: -40 }], desc: '직선 6칸을 덮는 해일 240%, 두 칸 밀어내고 젖게 하며 게이지를 깎는다.' },
+  // 창병 (창벽장군)
+  xpike_skewer:{ name: '관통창', mp: 7, tick: 50, tg: 'dir', len: 4, fx: 'thrust', ic: 'skewer', eff: [{ t: 'dmg', m: 2.3, vs: 'slow', vx: 1.4 }, { t: 'status', s: 'slow', dur: 8 }], desc: '직선 4칸을 꿰뚫어 230% (둔화된 적에게 1.4배), 둔화.' },
+  xpike_forest:{ name: '창의 숲', mp: 11, tick: 50, tg: 'self', area: 'r2', side: 'enemy', fx: 'brace', ic: 'brace', eff: [{ t: 'dmg', m: 1.9 }, { t: 'status', s: 'slow', dur: 10 }, { t: 'buff', s: 'ctr', p: 80, dur: 12, to: 'self' }], desc: '둘레 2칸에 창을 세운다. 적에게 190%와 둔화, 12초 동안 붙어 때린 적을 80%로 되찌른다.' },
+  xpike_lance:{ name: '천 갈래 창', mp: 16, tick: 60, rng: [1, 3], tg: 'tile', area: 'r2', fx: 'thrust', ic: 'pin', eff: [{ t: 'dmg', m: 2.2, vs: 'slow', vx: 1.3 }, { t: 'gauge', v: -30 }, { t: 'status', s: 'slow', dur: 8 }], desc: '2칸 반경에 창끝이 쏟아진다. 220% (둔화된 적에게 1.3배), 게이지를 깎고 둔화.' },
+  // 궁병 (매눈사수)
+  xarc_mark:  { name: '매눈 표식', mp: 5, tick: 45, rng: [2, 6], tg: 'enemy', fx: 'mark', ic: 'mark', eff: [{ t: 'dmg', m: 1.6 }, { t: 'status', s: 'mark', dur: 14, p: 25 }], desc: '최대 6칸. 160%, 표식(받는 피해 +25%, 14초).' },
+  xarc_pierce:{ name: '꿰뚫는 매눈', mp: 10, tick: 50, tg: 'dir', len: 6, fx: 'arrow', ic: 'mark', eff: [{ t: 'dmg', m: 2.4, vs: 'mark', vx: 1.4 }, { t: 'status', s: 'mark', dur: 10, p: 20 }], desc: '직선 6칸을 꿰뚫는 한 발. 240% (표식이 있으면 1.4배), 표식.' },
+  xarc_storm: { name: '천궁 소나기', mp: 16, tick: 60, rng: [2, 6], tg: 'tile', area: 'r2', fx: 'arrowRain', ic: 'volley', eff: [{ t: 'dmg', m: 1.9, vs: 'mark', vx: 1.4 }, { t: 'status', s: 'mark', dur: 10, p: 20 }], desc: '2칸 반경에 화살비 190% (표식이 있으면 1.4배), 표식.' },
+  // 승려 (금강권)
+  xcle_combo: { name: '금강 연환권', mp: 5, tick: 45, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.8 }, { t: 'dmg', m: 0.8 }, { t: 'dmg', m: 0.9 }, { t: 'mend', r: 4, m: 1.6 }], desc: '붙은 적을 세 번 친다. 모두 250%. 4칸 안에서 가장 다친 아군 하나를 회복.' },
+  xcle_hands: { name: '천수권', mp: 10, tick: 50, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.5 }, { t: 'dmg', m: 0.5 }, { t: 'dmg', m: 0.5 }, { t: 'dmg', m: 0.5 }, { t: 'dmg', m: 0.5 }, { t: 'dmg', m: 0.6 }, { t: 'gauge', v: -40 }, { t: 'mend', r: 4, m: 1.2 }], desc: '천 개의 손처럼 여섯 번 몰아친다. 모두 310%, 게이지를 깎고 가장 다친 아군을 회복.' },
+  xcle_heaven:{ name: '천지개벽장', mp: 16, tick: 60, tg: 'dir', len: 5, fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 2.6, type: 'magic', stat: 'mix' }, { t: 'knock', n: 2 }, { t: 'aura', r: 2, m: 1.2 }], desc: '직선 5칸에 기공 260%, 두 칸 밀어낸다. 둘레 2칸 아군을 회복.' },
+  // 신관 (성등사)
+  xmon_smite: { name: '성등 치기', mp: 6, tick: 45, rng: [1, 3], tg: 'enemy', fx: 'holy', ic: 'lamp', eff: [{ t: 'dmg', m: 3.0, type: 'holy' }, { t: 'ward', r: 4, m: 1.3 }], desc: '신성 300% (망자, 악마에게 1.5배). 4칸 안 가장 다친 아군에게 보호막.' },
+  xmon_halo:  { name: '빛의 고리', mp: 13, tick: 50, tg: 'self', area: 'r2', side: 'ally', fx: 'sanct', ic: 'sanct', eff: [{ t: 'buff', s: 'shd', m: 1.6, dur: 15 }, { t: 'cleanse' }, { t: 'heal', m: 0.8 }], desc: '둘레 2칸 아군에게 빛의 고리. 보호막(마공의 160%, 15초), 상태 이상을 풀고 회복.' },
+  xmon_sun:   { name: '태양 강림', mp: 18, tick: 60, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'holy', ic: 'sun', eff: [{ t: 'dmg', m: 2.2, type: 'holy' }, { t: 'ward', r: 4, m: 1.5 }], desc: '2칸 반경에 해가 내려앉는다. 신성 220% (망자, 악마에게 1.5배), 가장 다친 아군에게 보호막.' },
+  // 법사 (대마도사)
+  xmag_bolt:  { name: '연쇄 뇌우', mp: 13, tick: 55, rng: [1, 4], tg: 'enemy', fx: 'thunder', ic: 'bolt', eff: [{ t: 'dmg', m: 1.6, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.5 }, { t: 'chain', n: 3, r: 2, m: 0.8, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.5 }], desc: '번개 160%, 2칸 안의 셋에게 옮겨 간다(80%). 얼거나 젖은 적에게 1.5배.' },
+  xmag_prism: { name: '원소 폭주', mp: 14, tick: 55, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'fire', ic: 'flame', eff: [{ t: 'dmg', m: 1.5, type: 'magic', vs: 'burn', vx: 1.3 }, { t: 'status', s: 'burn', dur: 8, p: 2 }, { t: 'status', s: 'slow', dur: 8 }], desc: '불과 얼음이 2칸 반경에 함께 터진다. 150% (화상 입은 적에게 1.3배), 화상과 둔화.' },
+  xmag_nova:  { name: '천원 운석', mp: 20, tick: 65, rng: [2, 6], tg: 'tile', area: 'r2', fx: 'meteor', ic: 'meteor', eff: [{ t: 'dmg', m: 2.3, type: 'magic', vs: 'burn', vx: 1.3 }, { t: 'status', s: 'burn', dur: 8, p: 3 }, { t: 'gauge', v: -30 }], desc: '2칸 반경에 큰 운석 230% (화상 입은 적에게 1.3배), 화상과 게이지 깎기.' },
+  // 사교 (사령군주)
+  xsha_drain: { name: '영혼 흡수', mp: 6, tick: 45, rng: [1, 3], tg: 'enemy', fx: 'dark', ic: 'drain', eff: [{ t: 'dmg', m: 2.0, type: 'magic', share: 0.8 }], desc: '흑마법 200%. 준 피해의 80%로 가장 다친 아군을 고친다.' },
+  xsha_legion:{ name: '망령 군단', mp: 14, tick: 55, cd: 16, tg: 'self', fx: 'dark', ic: 'skull', ai: 'summon', cap: 4, eff: [{ t: 'summon', type: 'm_skeleton', n: 2, dur: 40, k: 0.95, ka: 1.25, kh: 1.3, kd: 1.5 }], desc: '40초 동안 싸울 망령 병사 둘을 부른다 (넷까지).' },
+  xsha_doom:  { name: '죽음의 장막', mp: 18, tick: 60, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'poison', ic: 'plague', eff: [{ t: 'dmg', m: 1.8, type: 'magic', vs: 'curse', vx: 1.4 }, { t: 'status', s: 'poison', dur: 12, p: 4 }, { t: 'buff', s: 'def', p: -25, dur: 12 }], desc: '2칸 반경에 죽음의 장막 180% (저주받은 적에게 1.4배), 강한 중독, 방어 −25%.' }
+};
+var KIT = { inf: ['inf_bash', 'xinf_bash'], cav: ['cav_charge', 'xcav_charge'], fly: ['fly_dive', 'xfly_dive'], mar: ['mar_surge', 'xmar_surge'], pike: ['pike_skewer', 'xpike_skewer'],
+  arc: ['arc_mark', 'xarc_mark'], cle: ['cle_combo', 'xcle_combo'], mon: ['mon_smite', 'xmon_smite'], mag: ['mag_bolt', 'xmag_bolt'], sha: ['sha_drain', 'xsha_drain'] };
+var SIG = { inf: ['xinf_aegis', 'xinf_quake'], cav: ['xcav_bolt', 'xcav_storm'], fly: ['xfly_roar', 'xfly_breath'], mar: ['xmar_whirl', 'xmar_tsunami'], pike: ['xpike_forest', 'xpike_lance'],
+  arc: ['xarc_pierce', 'xarc_storm'], cle: ['xcle_hands', 'xcle_heaven'], mon: ['xmon_halo', 'xmon_sun'], mag: ['xmag_prism', 'xmag_nova'], sha: ['xsha_legion', 'xsha_doom'] };
+DS.RISE_SIG = SIG; DS.RISE_KIT = KIT;
+for (var sk in SK) { SK[sk].grand = G; SK[sk].rise = 1; DS.SKILLS[sk] = SK[sk]; }
+// ── 윗길 필살기 (8단부터 — 사람이 타고난 필살기 자리 그대로 이것으로 쓴다). DS.ULTS 에는 넣지 않는다 (타고난 굴림의 후보가 바뀌지 않게)
+var UX = {
+  u_bastion: { name: '천년 성벽', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'guard', ic: 'bulwark', eff: [{ t: 'buff', s: 'def', p: 70, dur: 16 }, { t: 'buff', s: 'shd', m: 2.2, stat: 'atk', dur: 16 }, { t: 'taunt', to: 'foe', r: 4, dur: 10 }], fl: '천 년을 버틴 성벽이 다시 선다.', desc: '둘레 2칸 아군의 방어 +70%, 보호막(공격의 220%, 16초). 둘레 4칸 적은 나를 노린다.' },
+  u_ram:     { name: '성문 파쇄', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'shield', ic: 'shieldbash', eff: [{ t: 'dmg', m: 4.4 }, { t: 'gauge', v: -80 }, { t: 'knock', n: 3 }], fl: '어떤 문도 두 번은 버티지 못한다.', desc: '붙은 적 하나에 440%, 게이지를 크게 깎고 3칸 밀어낸다.' },
+  u_riposte: { name: '강철 회오리', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 2.5 }, { t: 'knock', n: 1 }, { t: 'buff', s: 'ctr', p: 120, dur: 12, to: 'self' }], fl: '강철이 소용돌이친다.', desc: '둘레 2칸 모든 적에게 250%, 밀어낸다. 12초 동안 붙어 때린 적을 120%로 되친다.' },
+  u_goldrush:{ name: '뇌광 돌격', tick: 40, tg: 'dir', len: 8, dash: true, fx: 'thunder', ic: 'charge', eff: [{ t: 'dmg', m: 3.4 }, { t: 'gauge', v: -60 }, { t: 'chain', n: 3, r: 2, m: 0.6 }], fl: '번개가 지나간 자리에 길이 난다.', desc: '직선 8칸을 번개처럼 꿰뚫는다. 340%, 게이지를 깎고 곁의 셋에게 번개.' },
+  u_stampede:{ name: '천둥 말발굽', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'quake', ic: 'hoof', eff: [{ t: 'dmg', m: 2.4 }, { t: 'status', s: 'slow', dur: 10 }, { t: 'buff', s: 'quick', p: 40, dur: 12, to: 'self' }], fl: '말굽마다 천둥이 친다.', desc: '둘레 2칸 적에게 240%와 둔화. 12초 동안 내 행동 소모 −40%.' },
+  u_debt:    { name: '벼락 빚잔치', tick: 40, rng: [1, 5], tg: 'enemy', leap: true, fx: 'thunder', ic: 'hunt', eff: [{ t: 'dmg', m: 3.6, drain: 0.5, vs: 'low', vx: 1.6 }], fl: '빚은 벼락으로 갚는다.', desc: '5칸 안의 적에게 벼락처럼 달려들어 360%, 체력이 절반 아래면 1.6배. 준 피해의 절반만큼 회복.' },
+  u_stoop:   { name: '천공 낙하', tick: 40, rng: [2, 7], tg: 'enemy', leap: true, back: 4, fx: 'dive', ic: 'dive', eff: [{ t: 'dmg', m: 4.0, vs: 'mark', vx: 1.6 }], fl: '하늘 끝에서 한 점으로.', desc: '2~7칸 밖의 적에게 내리꽂아 400%(표식이 있으면 1.6배), 네 칸 날아오른다.' },
+  u_gale:    { name: '태풍의 눈', tick: 40, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 2.3 }, { t: 'knock', n: 1 }, { t: 'status', s: 'mark', dur: 12, p: 25 }], fl: '날개 한 번에 태풍이 인다.', desc: '2칸 반경에 230%, 밀어내고 표식(+25%)을 남긴다.' },
+  u_canopy:  { name: '용익의 그늘', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', ic: 'haste', eff: [{ t: 'buff', s: 'quick', p: 45, dur: 16 }, { t: 'gauge', v: 50 }, { t: 'buff', s: 'shd', m: 1.3, stat: 'atk', dur: 12 }], fl: '용의 날개 아래 모두가 가볍다.', desc: '모든 아군의 행동 소모 −45% (16초), 게이지 +50, 보호막(공격의 130%).' },
+  u_landing: { name: '거대 해일', tick: 40, tg: 'dir', len: 7, dash: true, fx: 'water', ic: 'wave', eff: [{ t: 'dmg', m: 3.0, type: 'magic', stat: 'atk' }, { t: 'status', s: 'wet', dur: 14 }, { t: 'gauge', v: -50 }], fl: '바다째 뭍으로 올라온다.', desc: '해일을 타고 직선 7칸을 달린다. 300%, 젖게 하고 게이지를 깎는다.' },
+  u_warcry:  { name: '바다의 함성', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', ic: 'horn', eff: [{ t: 'buff', s: 'atk', p: 35, dur: 16 }, { t: 'gauge', v: 50 }, { t: 'cleanse' }, { t: 'buff', s: 'shd', m: 0.6, stat: 'atk', dur: 12 }], fl: '파도 소리가 함성이 된다.', desc: '모든 아군의 공격 +35% (16초), 게이지 +50, 상태 이상을 털고 보호막.' },
+  u_moor:    { name: '심해의 닻', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'hook', ic: 'hook', eff: [{ t: 'dmg', m: 2.6 }, { t: 'pull', n: 1 }, { t: 'status', s: 'slow', dur: 12 }], fl: '바닥 모를 닻이 땅을 문다.', desc: '2칸 반경에 260%, 한 칸 끌어오고 오래 묶는다.' },
+  u_crossbar:{ name: '빗장 관통', tick: 40, tg: 'dir', len: 6, fx: 'thrust', ic: 'skewer', eff: [{ t: 'dmg', m: 3.2, vs: 'slow', vx: 1.4 }, { t: 'status', s: 'slow', dur: 10 }, { t: 'gauge', v: -50 }], fl: '한 줄에 꿰어 문을 건다.', desc: '직선 6칸을 꿰뚫어 320%(둔화된 적에게 1.4배), 둔화와 게이지 깎기.' },
+  u_feast:   { name: '잔치의 끝장', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'thrust', ic: 'pin', eff: [{ t: 'dmg', m: 2.1 }, { t: 'buff', s: 'atk', p: -40, dur: 14 }, { t: 'status', s: 'slow', dur: 10 }], fl: '잔치는 끝났다. 창이 대답한다.', desc: '둘레 2칸 적에게 210%, 공격 −40% (14초)와 둔화.' },
+  u_gatekeep:{ name: '철문 수문장', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'brace', ic: 'brace', eff: [{ t: 'buff', s: 'def', p: 55, dur: 18 }, { t: 'buff', s: 'atk', p: 30, dur: 18 }, { t: 'buff', s: 'ctr', p: 90, dur: 18 }], fl: '쇠문 앞의 창은 물러서지 않는다.', desc: '둘레 2칸 아군의 방어 +55%, 공격 +30%, 붙어 때린 적을 90%로 되찌른다 (18초).' },
+  u_oneshot: { name: '일격필살', tick: 40, rng: [2, 9], tg: 'enemy', fx: 'mark', ic: 'mark', eff: [{ t: 'dmg', m: 4.6, vs: 'mark', vx: 1.5 }], fl: '보인 순간 끝났다.', desc: '최대 9칸. 적 하나에 460%, 표식이 있으면 1.5배.' },
+  u_deluge:  { name: '하늘 가르는 비', tick: 40, rng: [2, 6], tg: 'tile', area: 'r2', fx: 'arrowRain', ic: 'volley', eff: [{ t: 'dmg', m: 2.1 }, { t: 'status', s: 'mark', dur: 12, p: 25 }], fl: '하늘이 화살로 갈라진다.', desc: '2칸 반경에 화살 210%, 맞은 적 모두에게 표식(+25%).' },
+  u_three:   { name: '다섯 갈래 화살', tick: 40, tg: 'multi', n: 5, area: 'single', fx: 'arrow', ic: 'retreat', eff: [{ t: 'dmg', m: 2.2 }, { t: 'status', s: 'mark', dur: 10, p: 20 }, { t: 'status', s: 'slow', dur: 6 }], fl: '시위 하나에 화살 다섯.', desc: '적 다섯에게 220%, 표식과 둔화.' },
+  u_flurry:  { name: '백만권', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.7 }, { t: 'dmg', m: 0.7 }, { t: 'dmg', m: 0.7 }, { t: 'dmg', m: 0.7 }, { t: 'dmg', m: 0.7 }, { t: 'dmg', m: 0.8, drain: 0.3 }, { t: 'gauge', v: -60 }], fl: '헤아릴 수 없는 주먹.', desc: '붙은 적 하나에 여섯 번 몰아쳐 모두 430%, 게이지를 크게 깎는다. 마지막 한 방의 피해 일부만큼 회복.' },
+  u_stance:  { name: '금강부동', tick: 40, tg: 'self', side: 'ally', fx: 'chi', fist: true, eff: [{ t: 'buff', s: 'def', p: 70, dur: 16 }, { t: 'buff', s: 'ctr', p: 120, dur: 16 }, { t: 'aura', r: 2, m: 2.2 }], fl: '금강은 깨지지 않는다.', desc: '16초 동안 자기 방어 +70%, 붙어서 때린 적을 120%로 되친다. 둘레 2칸 아군을 크게 회복.' },
+  u_palm:    { name: '파천장', tick: 40, tg: 'dir', len: 6, fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 3.2, type: 'magic', stat: 'mix' }, { t: 'knock', n: 2 }, { t: 'aura', r: 2, m: 1.2 }], fl: '손바닥 하나로 하늘을 연다.', desc: '직선 6칸에 기공 320%, 2칸 밀어낸다. 둘레 2칸 아군을 회복.' },
+  u_lampdance:{ name: '성화의 춤', tick: 40, tg: 'dir', len: 6, fx: 'fire', ic: 'lamp', eff: [{ t: 'dmg', m: 3.0, type: 'holy' }, { t: 'status', s: 'burn', dur: 10, p: 3 }, { t: 'ward', r: 4, m: 2.2 }], fl: '성화를 들고 추는 춤.', desc: '직선 6칸에 신성 300%와 화상 (망자, 악마에게 1.5배). 가장 다친 아군에게 큰 보호막.' },
+  u_lantern: { name: '천 개의 등불', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'ward', ic: 'haste', eff: [{ t: 'buff', s: 'quick', p: 45, dur: 20 }, { t: 'buff', s: 'shd', m: 1.4, dur: 16 }], fl: '등불 천 개가 밤을 지운다.', desc: '모든 아군의 행동 소모 −45% (20초), 보호막(마공의 140%).' },
+  u_sunrise: { name: '해돋이', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'holy', ic: 'sun', eff: [{ t: 'dmg', m: 2.5, type: 'holy' }, { t: 'cleanse', to: 'ally', r: 3 }, { t: 'buff', s: 'shd', m: 1.2, dur: 14, to: 'ally', r: 3 }], fl: '어둠이 걷히고 해가 뜬다.', desc: '둘레 2칸 적에게 신성 250%. 둘레 3칸 아군의 상태 이상을 풀고 보호막.' },
+  u_skyfire: { name: '유성우', tick: 40, rng: [2, 6], tg: 'tile', area: 'r2', fx: 'meteor', ic: 'meteor', eff: [{ t: 'dmg', m: 2.8, type: 'magic' }, { t: 'status', s: 'burn', dur: 12, p: 4 }], fl: '하늘의 별이 다 떨어진다.', desc: '2칸 반경에 유성 280%, 긴 화상.' },
+  u_spellbook:{ name: '금단의 주문', tick: 40, rng: [1, 6], tg: 'enemy', fx: 'thunder', ic: 'bolt', eff: [{ t: 'dmg', m: 3.6, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.4 }, { t: 'chain', n: 5, r: 2, m: 0.7, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.4 }], fl: '책 맨 끝장의 주문.', desc: '적 하나에 뇌격 360%, 곁의 다섯에게 옮겨 간다(70%). 얼거나 젖은 적에게 1.4배.' },
+  u_icejail: { name: '영겁의 서리', tick: 40, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'frost', ic: 'frost', eff: [{ t: 'dmg', m: 1.9, type: 'magic', vs: 'burn', vx: 1.4 }, { t: 'status', s: 'slow', dur: 14 }, { t: 'gauge', v: -60 }], fl: '시간마저 얼린다.', desc: '2칸 반경에 190%(화상 입은 적에게 1.4배), 긴 둔화, 게이지를 크게 깎는다.' },
+  u_newmoon: { name: '불사의 군단', tick: 40, tg: 'self', fx: 'dark', ic: 'skull', ai: 'summon', cap: 5, eff: [{ t: 'summon', type: 'm_skeleton', n: 5, dur: 35, k: 1.0, ka: 1.3, kh: 1.35, kd: 1.5 }], fl: '죽지 않는 이들이 줄지어 선다.', desc: '35초 동안 싸울 불사 병사 다섯을 부른다.' },
+  u_violet:  { name: '명계의 장막', tick: 40, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'poison', ic: 'plague', eff: [{ t: 'dmg', m: 1.7, type: 'magic' }, { t: 'status', s: 'poison', dur: 14, p: 6 }, { t: 'buff', s: 'def', p: -30, dur: 14 }], fl: '장막 너머는 명계다.', desc: '2칸 반경에 피해와 아주 강한 중독, 방어 −30% (14초).' },
+  u_supper:  { name: '망자의 만찬', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'dark', ic: 'drain', eff: [{ t: 'dmg', m: 2.1, type: 'magic', share: 0.8 }], fl: '산 자의 생기로 차린 만찬.', desc: '둘레 2칸 적에게 흑마법 210%. 준 피해의 80%로 가장 다친 아군들을 고친다.' }
+};
+DS.ULT_UP = {}; DS.ULT_BASE = {}; DS.ULTX = {};
+for (var u0 in UX) { var id = 'ux_' + u0.slice(2), X = UX[u0], B = DS.ULTS[u0]; if (!B) continue; X.mp = 0; X.ult = true; X.grand = 1; X.rise = 1; X.of = u0; X.up = B.cls; DS.SKILLS[id] = X; DS.ULTX[id] = X; DS.ULT_UP[u0] = id; DS.ULT_BASE[id] = u0; }
+DS.ultUp = function (id, L) { return id && L > 70 && DS.ULT_UP[id] ? DS.ULT_UP[id] : id; };      // 8단(L71)부터 윗길 필살기
+DS.ultBaseOf = function (id) { return id && DS.ULT_BASE[id] ? DS.ULT_BASE[id] : id; };
+// ── 병과 표: 윗길 열 ──
+function r1(v) { return Math.round(v * 100) / 100; }
+for (var cls in LINE) {
+  var C = DS.CLASSES[cls], Ln = LINE[cls]; if (!C) continue;
+  var base = {}, grow = {};
+  for (var st in C.base) { var g = C.grow[st] * DS.RISE_G, v70 = C.base[st] + C.grow[st] * 69; grow[st] = r1(g); base[st] = r1(v70 * (DS.RISE_K[st] || 1.3) - grow[st] * 70); }
+  var X2 = { name: Ln.t[0], short: Ln.short, rise: cls, start: 8, kind: C.kind, mt: C.mt, master: true, tiers: Ln.t.slice(), base: base, grow: grow, spd: C.spd + 1, mv: C.mv, rng: C.rng.slice(), atk: C.atk, dtype: C.dtype,
+    skills: [[SIG[cls][1], 10], [SIG[cls][0], 9], [KIT[cls][1], 8]], merc: C.merc, aura: Ln.aura, kit: {}, blurb: Ln.blurb };
+  X2.kit[KIT[cls][0]] = KIT[cls][1];
+  ['passive', 'basic', 'martial', 'tags'].forEach(function (k) { if (C[k] != null) X2[k] = C[k] instanceof Array ? C[k].slice() : C[k]; });
+  DS.CLASSES[Ln.k] = X2;
+  DS.CLS_GEAR[Ln.k] = DS.CLS_GEAR[cls];
+  if (DS.GEAR_ALSO && DS.GEAR_ALSO[cls]) DS.GEAR_ALSO[Ln.k] = DS.GEAR_ALSO[cls];
+  DS.FLAG[Ln.k] = DS.FLAG[cls];
+  if (DS.ORDER && DS.ORDER[cls]) DS.ORDER[Ln.k] = DS.ORDER[cls];
+}
+// 옛 마스터 키 (배틀 · 택틱스 · 매직마스터) → 묶음의 첫 병과 (옛 기록 · 연무장 · 옛 저장)
+DS.OLD_MASTER = { bm: 'inf', tm: 'mar', mm: 'cle' };
+DS.oldMasterBase = function (cls, hs) { var F = DS.CLASSES[cls] && DS.FAMILY[DS.CLASSES[cls].fam]; if (!DS.OLD_MASTER[cls]) return cls; return F && hs && F.members.indexOf(hs) >= 0 ? hs : DS.OLD_MASTER[cls]; };
+// 옛 마스터 기술 → 그 병과 윗길의 고유 기술 (9단 몫 · 10단 몫)
+var OLD9 = ['bm_drive', 'bm_charge', 'tm_hunt', 'tm_gale', 'mm_star', 'mm_grace'], OLD10 = ['bm_tempest', 'bm_storm', 'tm_squall', 'tm_rain', 'mm_sun', 'mm_dawn'];
+for (var c2 in SIG) { var M = DS.SK_OLD[c2] = DS.SK_OLD[c2] || {}; OLD9.forEach(function (k) { M[k] = SIG[c2][0]; }); OLD10.forEach(function (k) { M[k] = SIG[c2][1]; }); }
+['bm', 'tm', 'mm'].forEach(function (m) { var b = DS.OLD_MASTER[m], M2 = DS.SK_OLD[m] = DS.SK_OLD[m] || {}; OLD9.forEach(function (k) { M2[k] = SIG[b][0]; }); OLD10.forEach(function (k) { M2[k] = SIG[b][1]; }); });
+OLD9.forEach(function (k) { DS.SK_OLD._[k] = SIG.inf[0]; }); OLD10.forEach(function (k) { DS.SK_OLD._[k] = SIG.inf[1]; });
+// 2.2.9: 윗길 필살기 이름이 저장 · 기록에 남아 있으면 원래 자리의 것으로 (타고난 필살기는 늘 원래 이름으로 적는다)
+for (var ux in DS.ULT_BASE) DS.SK_ALIAS[ux] = DS.ULT_BASE[ux];
+})();
+
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.2.8';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.0.8';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.2.9';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.0.9';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.2.9', date: '2026-11-20', tag: '변경', title: '합일의 길',
+    lead: '합일은 이제 서로 다른 세 가문의 가주 셋이 하나가 되는 것입니다. 대표의 가주만 8단에 오르고, 두 가주는 그에게 스며듭니다. 가문마다 제 8, 9, 10단이 생겼습니다.',
+    items: [
+      ['변경', '교회에서 서로 다른 세 가문의 7단 Lv10 가주를 고릅니다. 맹주도 맹주 가문의 가주입니다. 가문원과 막사의 사람은 합일하지 않습니다.'],
+      ['새로', '셋 가운데 대표 가문을 고릅니다. 처음은 공훈이 가장 큰 곳이고, 맹주가 들면 맹주 가문으로 정해집니다.'],
+      ['변경', '대표의 가주가 그 가문의 8단에 오릅니다. 사람, 장비, 나이, 배우자는 그대로이고, 수명이 30년에 두 가주의 남은 해를 더한 만큼 늘어납니다.'],
+      ['변경', '두 가주는 흡수됩니다. 가계도에는 합일로 남고 죽음으로 세지 않습니다. 든 장비는 가방으로 갑니다.'],
+      ['변경', '흡수된 두 가문은 이번 세대가 끝날 때까지 잠듭니다. 영웅관에서 그 병과가 나와도 열리지 않습니다. 다음 세대의 장을 열면 깨어나 다시 열 수 있습니다. 선 가문이 셋 밑으로 줄면 일찍 깨어납니다.'],
+      ['새로', '가문마다 윗길이 생겼습니다. 보병 성벽기사, 철옹공, 불괴왕. 기병 뇌전기사, 천둥군주, 뇌제. 비병 폭풍기수, 창공군주, 용황. 해병 해일장군, 파도군주, 해신. 창병 창벽장군, 만창공, 창성.'],
+      ['새로', '궁병 매눈사수, 신궁, 천궁성. 승려 금강권, 무성, 천무신. 신관 성등사, 대성관, 광명성자. 법사 대마도사, 원소왕, 천원현자. 사교 사령군주, 명계왕, 불사왕.'],
+      ['새로', '8단에 대표 기술 하나가 윗길 기술로 바뀌고, 9단과 10단에 고유 기술을 하나씩 익힙니다. 필살기 셋도 8단부터 윗길의 것으로 쓰고, 금 테 컷인이 뜹니다.'],
+      ['변경', '8단 위의 가주가 쓰러지면 그대로 떠납니다. 다음 가주는 제 단으로 섭니다. 다시 합일해야 합니다.'],
+      ['새로', '합일, 9단과 10단, 합일한 이의 죽음, 잠든 가문이 깨어나고 다시 열리는 순간을 연출로 보여 줍니다.'],
+      ['변경', '영웅 모집 값은 빈 가문(닫힌 가문과 가주가 없는 가문)이 많을수록 낮습니다. 넷이면 예전 값, 여덟이면 절반, 하나뿐이면 네 배입니다. 모집권은 그대로 한 장입니다.'],
+      ['변경', '권장 레벨을 셋이 나가는 싸움에 맞게 다시 정했습니다. 적의 세기는 그대로입니다.'],
+      ['안내', '예전에 합일한 사람은 단과 레벨 그대로 제 가문의 윗길로 옮겼습니다. 아무도 흡수되지 않았습니다.']
+    ] },
   { ver: '2.2.8', date: '2026-11-20', tag: '변경', title: '셋이 나간다',
     lead: '싸움에는 맹주와 가주 둘, 셋이 나갑니다. 맹주의 가문원은 예전처럼 함께 싸웁니다. 들판의 기습은 한꺼번에 몰려옵니다.',
     items: [
@@ -6032,12 +6305,14 @@ DS.EXP_TIER = [1.1, 2.09, 2.62, 3.3, 4.2, 5.6, 6.8, 8.4, 9.4, 10.0, 10.8];      
 DS.expNeed = function (L) { return Math.round((30 + 17 * L) * DS.EXP_TIER[DS.tierOfL(L)]); };
 // ⑮ 합일: 7단 10레벨 가문 셋(1.0.1: 아무 셋)이 하나로 합쳐지지 않고 각각 8단(L71~)으로 함께 오른다. 8단 뒤의 모습·기술은 제 계열 마스터의 것. 「오른 깃발」 = 마스터 아닌 병과로 L > 70
 DS.risen = function (ch) { return !!ch && !DS.CLASSES[ch.cls].master && ch.L > 70; };
-DS.riseCls = function (ch) { var c = DS.CLASSES[ch.cls]; if (c.master || !(ch.L > 70)) return ch.cls; var F = DS.FAMILY[c.fam]; return F ? F.master : ch.cls; };      // 8단 뒤의 세기는 그 묶음 마스터의 것
+// 2.2.9: 8단 뒤의 세기 · 기술 · 단 이름 · 모습은 제 가문 병과의 윗길 (rise.js DS.RISE_OF — 성벽기사 · 뇌전기사 …). 옛 마스터 줄(ch.cls 가 bm · tm · mm)은 그대로
+DS.riseCls = function (ch) { var c = DS.CLASSES[ch.cls]; if (c.master || !(ch.L > 70)) return ch.cls; var x = DS.RISE_OF && DS.RISE_OF[ch.cls]; if (x && DS.CLASSES[x]) return x; var F = DS.FAMILY[c.fam]; return F ? F.master : ch.cls; };
+DS.lineCls = function (cls, tier) { var c = DS.CLASSES[cls]; if (!c || c.master || !(tier >= 8)) return cls; var x = DS.RISE_OF && DS.RISE_OF[cls]; return x && DS.CLASSES[x] ? x : DS.FAMILY[c.fam] ? DS.FAMILY[c.fam].master : cls; };      // 그 단의 길 (8단부터 윗길)
 DS.RISE = { mul: 1 };      // 오른 깃발의 세기 배율 (셋이 동시에 생기므로 21~30번을 다시 재어 맞춘다)
 DS.capL = function (ch) { return DS.CLASSES[ch.cls].master || ch.L > 70 ? 100 : 70; };
 DS.tierName = function (cls, tier) {
   var c = DS.CLASSES[cls];
-  if (!c.master && tier >= 8 && DS.FAMILY[c.fam]) c = DS.CLASSES[DS.FAMILY[c.fam].master];      // 8단부터는 마스터의 단 이름
+  if (!c.master && tier >= 8) c = DS.CLASSES[DS.lineCls(cls, tier)];      // 8단부터는 윗길의 단 이름 (2.2.9)
   var i = Math.max(0, Math.min(c.tiers.length - 1, tier - c.start));
   return c.tiers[i];
 };
@@ -6175,7 +6450,7 @@ DS.charStats = function (ch) {
     atk: c.base.atk + c.grow.atk * k, def: c.base.def + c.grow.def * k,
     mag: c.base.mag + c.grow.mag * k, res: c.base.res + c.grow.res * k
   };
-  if (DS.CLASSES[ch.cls].martial && c !== DS.CLASSES[ch.cls]) { s.atk = s.mag; s.mag *= 0.65; }      // 2.2.5: 8단 뒤 무투가는 마스터(매직마스터)의 마공 줄을 공격으로, 마공은 그 0.65 (주먹이 주무기다)
+  if (DS.CLASSES[ch.cls].martial && c !== DS.CLASSES[ch.cls] && !c.rise) { s.atk = s.mag; s.mag *= 0.65; }      // 2.2.5: 8단 뒤 무투가가 옛 마스터(매직마스터)의 줄을 쓸 때만 — 마공 줄을 공격으로 (2.2.9 윗길 금강권은 제 줄 그대로)
   if (rise !== 1) { s.hp = Math.round(s.hp * rise); s.atk *= rise; s.def *= rise; s.mag *= rise; s.res *= rise; }
   var c0 = DS.CLASSES[ch.cls]; if (c0 !== c) { magic = (c0.dtype === 'magic' || c0.kind === 'holy') && !c0.martial; c = { rng: c0.rng, spd: c.spd }; }      // 사거리·공격 결은 제 병과 그대로
   var W = DS.gearAt(DS.gear(ch.w), ch.L, ch.cls, ch.gt), A = DS.gearAt(DS.gear(ch.a), ch.L, ch.cls, ch.gt), w = W ? W.pow : 0, crit = 0.06, spd = 1, mp = 1;
@@ -6191,7 +6466,14 @@ DS.charStats = function (ch) {
 DS.charSkills = function (ch) {
   var c = DS.CLASSES[ch.cls], t = DS.tierOfL(ch.L);
   var out = c.skills.filter(function (s) { return t >= s[1]; }).map(function (s) { return s[0]; });
-  if (DS.risen(ch)) DS.CLASSES[DS.riseCls(ch)].skills.forEach(function (s) { if (s[1] >= 9 && t >= s[1] && out.indexOf(s[0]) < 0) out.push(s[0]); });      // ⑮ 9·10단에 마스터의 기술을 깃발마다
+  if (DS.risen(ch)) {
+    var X = DS.CLASSES[DS.riseCls(ch)];
+    if (X.rise) {      // 2.2.9 윗길: 8단에 대표 기술이 윗길 기술로 바뀌고(kit), 9 · 10단 고유 기술은 맨 앞에 (자동 전투가 앞쪽부터 살핀다)
+      out = out.map(function (k) { return X.kit && X.kit[k] ? X.kit[k] : k; });
+      var sig = X.skills.filter(function (s) { return s[1] >= 9 && t >= s[1] && out.indexOf(s[0]) < 0; }).map(function (s) { return s[0]; });
+      out = sig.concat(out);
+    } else X.skills.forEach(function (s) { if (s[1] >= 9 && t >= s[1] && out.indexOf(s[0]) < 0) out.push(s[0]); });      // ⑮ 옛 마스터의 9·10단 기술
+  }
   return out;
 };
 
@@ -6365,12 +6647,12 @@ DS.ultInnate = function (s) {      // 맹주가 타고난 필살기 (깨어나�
 };
 DS.heroUlt = function (s) { var p = DS.ultHeroWho(s); return DS.ultOpen(s) && DS.ultAwake(p) ? DS.ultInnate(s) : null; };
 DS.ultNeedPick = function () { return false; };
-DS.ultFor = function (s, who) { if (!who) return null; var hp = DS.ultHeroWho(s); if (hp && who === hp) { if (hp.ul && DS.ULTS[hp.ul]) return hp.ul; return DS.ultRoll(s, hp); } return DS.ultBorn(who); };      // 2.1.0: 그 사람이 타고난 필살기 (깨어나기 전에도)      // r38: 고르기는 없다 (봇·옛 호출이 부른다)
+DS.ultFor = function (s, who) { if (!who) return null; var hp = DS.ultHeroWho(s), id; if (hp && who === hp) id = hp.ul && DS.ULTS[hp.ul] ? hp.ul : DS.ultRoll(s, hp); else id = DS.ultBorn(who); return DS.ultUp ? DS.ultUp(id, DS.pL(who)) : id; };      // 2.2.9: 8단부터 윗길 필살기      // 2.1.0: 그 사람이 타고난 필살기 (깨어나기 전에도)      // r38: 고르기는 없다 (봇·옛 호출이 부른다)
 DS.ultNeedReveal = function (s) { var p = DS.ultHeroWho(s); return !!(p && DS.heroUlt(s) && !p.ulw && p.ulr); };      // 1.3.0 에서 고른 것(ulr 없음)은 이미 아는 것 — 깨어남 창을 띄우지 않는다
 DS.ultRevealed = function (s) { var p = DS.ultHeroWho(s); if (p) p.ulw = 1; };
 DS.ultCost = function (s) { var ch = s && s.chars && s.chars[s.hero]; return DS.ULT.cost * Math.max(1, ch ? DS.tierOfL(ch.L) : 1); };
 DS.ultPick = function (s, id) { var p = DS.ultHeroWho(s); if (!p || !DS.ultOpen(s) || DS.ultOpts(s).indexOf(id) < 0 && id !== p.ul) return false; p.ul = id; return true; };      // r38: 화면에서는 더 부르지 않는다 (옛 시험 도구용)
-DS.ultSpec = function (u, who, hero, cmd) { if (who && who.ul && DS.SK_ALIAS[who.ul]) who.ul = DS.skAlias(who.ul); var id = !(DS.BAL && DS.BAL.ult !== false) || !who || !DS.ultAwake(who) ? null : hero ? (who.ul && DS.ULTS[who.ul] ? who.ul : null) : cmd ? DS.ultOf(who) : null; u.ult = id; u.ultP = id ? DS.ultPow(who) : 1; u.ultR = id ? DS.ultRate(who) : 1; return u; };      // 2.1.0: 가주(지휘하는 사람)는 누구나 제 필살기 — 쓰는 것은 조작하는 사람만 (game.js 단추 · 엔진은 스스로 쓰지 않는다)
+DS.ultSpec = function (u, who, hero, cmd) { if (who && who.ul && DS.SK_ALIAS[who.ul]) who.ul = DS.skAlias(who.ul); var id = !(DS.BAL && DS.BAL.ult !== false) || !who || !DS.ultAwake(who) ? null : hero ? (who.ul && DS.ULTS[who.ul] ? who.ul : null) : cmd ? DS.ultOf(who) : null; if (id && DS.ultUp) id = DS.ultUp(id, DS.pL(who)); u.ult = id; u.ultP = id ? DS.ultPow(who) : 1; u.ultR = id ? DS.ultRate(who) : 1; return u; };      // 2.1.0: 가주(지휘하는 사람)는 누구나 제 필살기 — 쓰는 것은 조작하는 사람만 (game.js 단추 · 엔진은 스스로 쓰지 않는다)
 DS.mercKind = function (m) { return DS.GRADES[m.g].name + ' ' + DS.MERCS[m.type].name; };
 // ───────── 2.2.0 「한 사람 한 사람」: 사람의 자리는 셋뿐이다 ─────────
 //   가주(m.h, m.o = 가문) — 그 가문의 깃발 유닛으로 싸운다. 맹주는 대장 줄의 사람(ch.ps).
@@ -6570,7 +6852,8 @@ DS.heroRoom = function (save) {
   return DS.charList(save).filter(function (ch) { return !full || DS.vacant(save, ch); });
 };
 DS.closedCls = function (save) {      // 닫힌 가문의 병과 (병과 차례 그대로)
-  return Object.keys(DS.CLASSES).filter(function (k) { var C = DS.CLASSES[k], F = DS.FAMILY[C.fam]; return !C.master && !DS.hasClass(save, k) && !(F && DS.hasClass(save, F.master)); });
+  if (save && save.fzShut && DS.fzWakeTick && DS.fzLow(save)) DS.fzWakeTick(save);      // 2.2.9: 가문이 셋 밑으로 줄면 잠든 가문이 깨어난다
+  return Object.keys(DS.CLASSES).filter(function (k) { var C = DS.CLASSES[k], F = DS.FAMILY[C.fam]; return !C.master && !DS.hasClass(save, k) && !(F && DS.hasClass(save, F.master)) && !(DS.fzShut && DS.fzShut(save, k)); });      // 2.2.9: 합일로 잠든 가문은 이번 세대에는 열리지 않는다
 };
 // 다음 모집이 닫힌 가문을 열 확률 (0 ~ 1) · 반드시 열기까지 남은 모집 수 (닫힌 가문이 없으면 0)
 DS.openOdds = function (save) {
@@ -6586,9 +6869,11 @@ DS.recruitWhy = function (save) {
 // 닫힌 가문 cls 를 연다: 새 가문 + 그 가문의 가주 m (없으면 등급 g 로 하나 굴린다). 레벨은 모집한 영웅과 같다 (DS.recruitL — 부대 평균보다 조금 아래). 장비는 그 단 아래의 기본 차림
 DS.houseOpen = function (save, cls, m, g) {
   if (!DS.CLASSES[cls] || DS.closedCls(save).indexOf(cls) < 0) return null;
+  var woke = DS.fzWoke && DS.fzWoke(save, cls) ? save.fzShut[cls] : null;      // 2.2.9: 지난 세대에 합일로 잠들었던 가문이 다시 열린다
   m = m || DS.addMerc(save, DS.heroType(cls), g || 3, 0);
   var ch = DS.addChar(save, cls, DS.pL(m), '');
   m.nc = cls; m.o = ch.id; m.h = 1; delete m.sb; ch.Ls = ch.L; ch.op = 1;      // op: 영웅관에서 연 가문 (보이는 표시만)
+  if (woke) { ch.reop = { g: DS.genNow(save), from: woke.g, n: woke.n || '', rep: woke.rep || '', early: woke.early ? 1 : 0 }; delete save.fzShut[cls]; }
   if (DS.nfGive) DS.nfGive(m);
   if (DS.mercTidy) DS.mercTidy(save);
   return ch;
@@ -6614,7 +6899,7 @@ DS.recruitHero = function (save, rnd, opt) {
   if (shut.length && !opt.ch) save.hpity = nc ? 0 : (+save.hpity || 0) + 1;
   if (nc) {
     var mo = DS.addMerc(save, DS.heroType(nc), g, 0), hc = DS.houseOpen(save, nc, mo);
-    return { m: mo, ch: hc, role: 'open', g: g };
+    return { m: mo, ch: hc, role: 'open', g: g, reopen: hc && hc.reop ? hc.reop : null };
   }
   var vac = DS.vacant(save, ch);
   var cls = DS.CLASSES[ch.cls].master && DS.FAMILY[DS.CLASSES[ch.cls].fam] ? DS.FAMILY[DS.CLASSES[ch.cls].fam].members[0] : ch.cls;
@@ -6632,7 +6917,12 @@ DS.recruitHeat = function (s) {
   if (t > r.t) { r.h = Math.max(0, r.h - (t - r.t) / q * DS.RECRUIT.ease); r.t = t; } else if (t < r.t) r.t = t;      // 달력이 뒤로 가면(옛 저장) 그 자리부터 다시 잰다
   return r.h;
 };
-DS.recruitPrice = function (s, k) { var h = DS.recruitHeat(s) + (k || 0); return Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) * (1 + DS.RECRUIT.step * h) / 10) * 10; };      // 2.2.0: 영웅 값 = 기본값 × RECRUIT.k      // k = 지금부터 몇 번째 뒤
+// 2.2.9: 빈 가문이 많을수록 싸다 — 값 × RECRUIT.emp ÷ e (e = 빈 가문 수: 영웅관이 열 수 있는 닫힌 가문 + 가주가 없는 가문 · 합일로 잠든 가문은 빼고 · 0 이면 1 로).
+//   k 번째 뒤의 값(「다음」): 이번 모집이 반드시 가문을 연다면(천장 · DS.openOdds = 1) 그 뒤는 e − 1 로, 아니면 지금 e 그대로 셈한다 (열릴지 · 빈 가문을 채울지는 뽑아 봐야 안다)
+DS.recruitOpenN = function (s) { return (DS.closedCls ? DS.closedCls(s).length : 0) + (DS.bnEmpty ? DS.bnEmpty(s).length : 0); };      // 빈 가문 = 영웅관이 열 수 있는 닫힌 가문 + 가주가 없는 가문(영웅이 오면 곧 가주가 된다). 합일로 잠든 가문은 빼고
+DS.recruitEmp = function (s, k) { var e = DS.recruitOpenN(s); if (k > 0 && e > 0 && DS.openOdds && DS.openOdds(s) >= 1) e = Math.max(0, e - Math.min(k, 1)); return (DS.RECRUIT.emp || 1) / Math.max(1, e); };
+DS.recruitBase = function (s) { return Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) * DS.recruitEmp(s, 0) / 10) * 10; };      // 기본값 (열기 없이 · 빈 가문 배율은 넣고)
+DS.recruitPrice = function (s, k) { var h = DS.recruitHeat(s) + (k || 0); return Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) * DS.recruitEmp(s, k || 0) * (1 + DS.RECRUIT.step * h) / 10) * 10; };      // 2.2.0: 영웅 값 = 기본값 × RECRUIT.k      // k = 지금부터 몇 번째 뒤
 DS.recruitTotal = function (s, n) { var t = 0; for (var i = 0; i < n; i++) t += DS.recruitPrice(s, i); return t; };
 DS.recruitPaid = function (s, n) { DS.recruitHeat(s); s.rh.h = Math.min(DS.RECRUIT.max, s.rh.h + (n || 1)); };
 DS.recruitEase = function (s) { var h = DS.recruitHeat(s), e = DS.RECRUIT.ease; return h > 0 && e > 0 ? Math.ceil(h / e) : 0; };      // 기본값으로 돌아올 때까지 남은 계절
@@ -6881,13 +7171,35 @@ DS.pNative = function (s, who) {      // 그 사람의 태생 병과 (맹주 = �
   return hit || 'inf';
 };
 function fuEnt(s, p) { return { id: DS.pKey(s, p.who), key: DS.pKey(s, p.who), who: p.who, ch: p.ch, L: DS.pL(p.who), exp: +p.who.exp || 0, cls: p.ch ? p.ch.cls : DS.pNative(s, p.who), role: p.role, dep: p.dep }; }
-DS.fusePool = function (save) { return DS.persons(save).filter(function (p) { return !p.who.fz && DS.pL(p.who) <= 70 && !(DS.kidOf && false); }).map(function (p) { return fuEnt(save, p); }); };
+// ───────── 2.2.9 합일: 서로 다른 세 가문의 가주 셋 ─────────
+//   후보 = 가주(맹주 가문은 맹주)로 선 사람 가운데 합일하지 않은 7단 Lv10 (가문원 · 막사는 합일하지 않는다). 셋은 늘 서로 다른 가문이다 (가문마다 가주는 하나).
+//   대표 가문 = 고른 셋 가운데 플레이어가 고른 곳 (기본 = 공훈이 가장 큰 곳 · 맹주가 셋에 들면 늘 맹주 가문). 그 가주가 8단 1레벨(L71)로 올라 제 가문 윗길(DS.riseCls)로 자란다 — 사람 · 장비 · 나이 · 배우자 · 핏줄 그대로.
+//   나머지 두 가주는 대표에게 흡수된다: 명부에서 사라지고(가계도에는 「합일」로 남는다 — 죽음으로 세지 않는다), 든 장비는 가방으로, 든 물건은 소지품으로.
+//   그 두 가문은 이번 세대가 끝날 때까지 닫힌다 (save.fzShut[병과] = { g: 닫힌 세대, …}). 세대 = DS.egGen (1 = 첫 대 · 「다음 세대의 장」을 열 때마다 하나씩 — endgame.js DS.egStart).
+//   닫힌 동안은 영웅관이 그 병과로 가문을 열지 않고(DS.closedCls 에서 빠진다 · 천장 셈에도 들지 않는다), 다음 세대가 오면 보통의 닫힌 가문이 되어 다시 열 수 있다 (열 때 연출 'reopen').
+DS.fuseCan = function (p) { return !!p && (p.role === 'hero' || p.role === 'bear') && !!p.ch && !p.ch.vac && !p.ch.down && !p.who.fz && DS.pL(p.who) <= 70; };
+DS.fusePool = function (save) { return DS.persons(save).filter(DS.fuseCan).map(function (p) { return fuEnt(save, p); }); };
 DS.fuseCands = function (save) { return DS.fusePool(save).filter(function (c) { return c.L >= DS.FUSE_MIN; }); };
-DS.fuseOk = function (save, ids) {
-  if (!(ids instanceof Array) || ids.length !== DS.FUSE_N) return { ok: false, why: DS.FUSE_N + '사람을 고른다' };
-  var seen = {}, cand = {}; DS.fuseCands(save).forEach(function (c) { cand[c.key] = 1; });
-  for (var i = 0; i < ids.length; i++) { var w = DS.pByKey(save, ids[i]), k = DS.pKey(save, w); if (!w) return { ok: false, why: '찾을 수 없는 사람이 있다' }; if (seen[k]) return { ok: false, why: '같은 사람을 두 번 골랐다' }; seen[k] = 1; if (!cand[k]) return { ok: false, why: '7단 Lv10이 아닌 사람이 있다' }; }
+DS.fuseRepLock = function (save, who) { var hp = DS.heroPs(save); return hp && (who || []).indexOf(hp) >= 0 ? save.chars[save.hero] : null; };      // 맹주가 셋에 들면 대표는 맹주 가문 (바꿀 수 없다)
+DS.fuseRep = function (save, who, repId) {
+  var hs = []; (who || []).forEach(function (w) { var h = DS.whoHouse(save, w); if (h && hs.indexOf(h) < 0) hs.push(h); });
+  var lock = DS.fuseRepLock(save, who); if (lock) return lock;
+  var pick = repId != null ? hs.filter(function (h) { return h.id === +repId; })[0] : null;
+  return pick || hs.sort(DS.houseCmp)[0] || null;
+};
+DS.fuseOk = function (save, ids, opt) {
+  if (!(ids instanceof Array) || ids.length !== DS.FUSE_N) return { ok: false, why: '가주 ' + DS.FUSE_N + '명을 고른다' };
+  var seen = {}, cand = {}, hs = {}; DS.fuseCands(save).forEach(function (c) { cand[c.key] = 1; });
+  for (var i = 0; i < ids.length; i++) {
+    var w = DS.pByKey(save, ids[i]), k = DS.pKey(save, w); if (!w) return { ok: false, why: '찾을 수 없는 사람이 있다' };
+    if (seen[k]) return { ok: false, why: '같은 사람을 두 번 골랐다' }; seen[k] = 1;
+    if (!cand[k]) return { ok: false, why: DS.whoHouse(save, w) && (w === DS.heroPs(save) || w.h) ? '7단 Lv10이 아닌 가주가 있다' : '가주만 합일한다' };
+    var h = DS.whoHouse(save, w); if (!h || hs[h.id]) return { ok: false, why: '서로 다른 세 가문의 가주를 고른다' }; hs[h.id] = 1;
+  }
   if (!save.crest) return { ok: false, why: '맹세의 깃대가 없다' };
+  var rep = opt && opt.rep != null ? +opt.rep : null, lock = DS.fuseRepLock(save, ids.map(function (k) { return DS.pByKey(save, k); }));
+  if (rep != null && !hs[rep]) return { ok: false, why: '대표 가문은 고른 셋 가운데서 정한다' };
+  if (rep != null && lock && rep !== lock.id) return { ok: false, why: '맹주가 들면 맹주 가문이 대표다' };
   return { ok: true, why: '' };
 };
 DS.fuseProg = function (save) {
@@ -6895,40 +7207,90 @@ DS.fuseProg = function (save) {
   var need = function (c) { var n = 0; for (var L = c.L; L < DS.FUSE_MIN; L++) n += DS.expNeed(L) - (L === c.L ? Math.min(c.exp || 0, DS.expNeed(L)) : 0); return n; };
   var low = pool.filter(function (c) { return c.L < DS.FUSE_MIN; }).sort(function (a, b) { return (b.dep ? 1 : 0) - (a.dep ? 1 : 0) || need(a) - need(b) || b.L - a.L; });
   var done = DS.persons(save).filter(function (p) { return p.who.fz; }).length;
-  return { ready: ready, n: Math.min(DS.FUSE_N, ready.length), of: DS.FUSE_N, low: low, pool: pool, crest: !!save.crest, ok: ready.length >= DS.FUSE_N && !!save.crest, can: pool.length >= DS.FUSE_N, unions: Math.floor(done / DS.FUSE_N), fused: done };
+  return { ready: ready, n: Math.min(DS.FUSE_N, ready.length), of: DS.FUSE_N, low: low, pool: pool, crest: !!save.crest, ok: ready.length >= DS.FUSE_N && !!save.crest, can: pool.length >= DS.FUSE_N, unions: +save.fuN2 || 0, fused: done, shut: DS.fzShutList(save).length };
 };
 // 옛 묶음 기록(가문 셋의 대가문)은 없어졌다 — 옛 호출이 읽어도 비어 있게
 DS.fuseUnions = function (save) { if (save) save.fuU = []; return []; };
 DS.unionOf = function () { return null; };
 DS.unionName = function () { return ''; };
 DS.fuseState = function (save, fam) { return { done: false, have: [], miss: [], low: [], ok: false }; };
-// 합일: ids = 사람 열쇠 셋. 돌려주는 것: 첫 사람. DS.lastFuse = { ids, who: [사람 셋], names, id }
-// 2.1.0: 대표 가문 = 셋이 선 가문 가운데 공훈이 가장 큰 곳 (같으면 계급, 그다음 먼저 합류한 가문). 그 가문에 공훈 DS.FUSE_HX
-//   2.2.0: 아무도 제 가문을 떠나지 않는다 — 셋은 제자리에서 8단으로 오른다 (가주는 가주, 막사는 막사, 가문원은 가문원)
 DS.FUSE_HX = 1000;
+DS.FUSE_LS = 30; DS.FUSE_LS_MAX = 80;      // 2.2.9: 합일한 넋은 오래 산다 — 대표의 수명이 30년에 흡수된 두 가주의 남은 해를 더한 만큼 늘어난다 (많아야 80년, 나이는 그대로)
 DS.houseCmp = function (a, b) { return (+(b && b.hx) || 0) - (+(a && a.hx) || 0) || DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 공훈 → 계급 → 합류 차례
 DS.houseOrd = function (a, b) { return DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 2.2.3: 보이는 차례 (부대 격자 · 칩 줄 · 결과 창) — 공훈 계급 → 합류 차례. 싸울 때마다 바뀌는 공훈 점수로는 줄을 섞지 않는다
 DS.houseSort = function (save, list) { return (list || DS.charList(save)).slice().sort(DS.houseOrd); };
-DS.fuseRep = function (save, who) { var hs = []; (who || []).forEach(function (w) { var h = DS.whoHouse(save, w); if (h && hs.indexOf(h) < 0) hs.push(h); }); return hs.sort(DS.houseCmp)[0] || null; };
+// ── 합일로 잠든 가문 (세대가 바뀌면 깨어난다) ──
+DS.genNow = function (save) { return DS.egGen ? DS.egGen(save) : Math.max(1, +(save && save.eg && save.eg.gen) || 1); };
+DS.fzShutFix = function (save) {      // 저장 칸 다듬기: { 병과: { g, t, by, rep, n } } — 이미 선 가문의 병과 · 모르는 병과는 지운다
+  var z = save && save.fzShut; if (!z || typeof z !== 'object' || Array.isArray(z)) { if (save) delete save.fzShut; return {}; }
+  for (var k in z) { var C = DS.CLASSES[k]; if (!Object.prototype.hasOwnProperty.call(DS.CLASSES, k) || !C || C.master || !z[k] || typeof z[k] !== 'object' || DS.hasClass(save, k)) { delete z[k]; continue; } z[k].g = Math.max(1, Math.round(+z[k].g || 1)); }
+  return z;
+};
+DS.fzShut = function (save, cls) { var z = save && save.fzShut, e = z && Object.prototype.hasOwnProperty.call(z, cls) ? z[cls] : null; return !!(e && !e.woke && e.g >= DS.genNow(save) && !DS.hasClass(save, cls)); };      // 지금 잠들어 있는가
+DS.fzLow = function (save) { return !!(save && save.chars) && DS.charList(save).length < DS.FUSE_N; };      // 2.2.9: 선 가문이 셋 밑 — 다시 합일할 수 없다 (잠든 가문이 일찍 깨어난다: 8단을 모두 잃으면 단 문턱을 넘지 못하던 막힘을 막는다)
+DS.fzShutList = function (save) { var z = save && save.fzShut, out = []; if (z) for (var k in z) if (DS.fzShut(save, k)) out.push(k); return out; };
+DS.fzWoke = function (save, cls) { var z = save && save.fzShut, e = z && Object.prototype.hasOwnProperty.call(z, cls) ? z[cls] : null; return !!(e && (e.woke || e.g < DS.genNow(save)) && !DS.hasClass(save, cls)); };      // 깨어났지만 아직 다시 열리지 않았다
+// 세대가 바뀌었다: 잠든 가문이 깨어난다 (돌려주는 것: 깨어난 병과 목록 — 한 번만. 화면은 save.fzWake 를 연출로 읽고 비운다)
+DS.fzWakeTick = function (save) {
+  var z = save && save.fzShut, g = DS.genNow(save), out = []; if (!z) return out;
+  var low = DS.fzLow(save);
+  for (var k in z) if (z[k] && (z[k].g < g || low) && !z[k].woke && !DS.hasClass(save, k)) { z[k].woke = g; if (low && z[k].g >= g) z[k].early = 1; out.push(k); }
+  if (out.length) save.fzWake = (save.fzWake || []).concat(out).filter(function (k, i, a) { return a.indexOf(k) === i; });
+  return out;
+};
+DS.fuseLsGain = function (save, who, repId) {      // 미리 보기: 대표가 받는 수명 (년)
+  var hp = DS.heroPs(save), H = DS.fuseRep(save, who, repId), add = 0;
+  (who || []).forEach(function (w) { if (!w || DS.whoHouse(save, w) === H || !DS.ageLife) return; var L0 = DS.ageLife(save, w === hp ? save.chars[save.hero] : w); if (L0 && L0.left != null) add += Math.max(0, Math.round(L0.left)); });
+  return Math.min(DS.FUSE_LS_MAX, DS.FUSE_LS + add);
+};
+// 합일: ids = 사람 열쇠 셋 (가주). opt.rep = 대표 가문 번호. 돌려주는 것: 대표 가주. DS.lastFuse = { ids, who, names, rep, repWho, gone: [{ cls, name, hid }] … }
 DS.fuse = function (save, ids, opt) {
-  ids = (ids || []).slice();
-  if (!DS.fuseOk(save, ids).ok) return null;
-  var who = ids.map(function (k) { return DS.pByKey(save, k); }), hp = DS.heroPs(save), H = DS.fuseRep(save, who), keys = who.map(function (w) { return DS.pKey(save, w); });
-  var names = who.map(function (w) { return w === hp ? (save.chars[save.hero].name || save.name || '맹주') : (w.ttl || w.n || ''); });
-  who.forEach(function (w) { w.L = Math.max(DS.pL(w), 71); w.exp = 0; w.fz = 1; });
+  ids = (ids || []).slice(); opt = opt || {};
+  if (!DS.fuseOk(save, ids, opt).ok) return null;
+  var who = ids.map(function (k) { return DS.pByKey(save, k); }), hp = DS.heroPs(save), H = DS.fuseRep(save, who, opt.rep), keys = who.map(function (w) { return DS.pKey(save, w); });
+  var nameOf = function (w) { return w === hp ? (save.chars[save.hero].name || save.name || '맹주') : (w.ttl || w.n || ''); };
+  var names = who.map(nameOf), houses = who.map(function (w) { return DS.whoHouse(save, w); }), ri = houses.indexOf(H), rw = who[ri], gen = DS.genNow(save);
+  var trio = [names[ri]].concat(names.filter(function (n, i) { return i !== ri; }));
+  rw.L = Math.max(DS.pL(rw), 71); rw.exp = 0; rw.fz = 1; rw.fu3 = trio.slice(); rw.fuG = gen;
+  // 두 넋의 남은 해: 대표의 수명이 FUSE_LS(30)년에 흡수된 두 가주가 살 해를 더한 만큼 는다 (수명 +N년 — 나이는 그대로). 맹주는 대장 줄(ch.ls)에, 가주는 그 사람(m.ls)에
+  var lsAdd = 0; who.forEach(function (w, i) { if (i === ri || !DS.ageLife) return; var e = w === hp ? save.chars[save.hero] : w, L0 = DS.ageLife(save, e); if (L0 && L0.left != null) lsAdd += Math.max(0, Math.round(L0.left)); });
+  lsAdd = Math.min(DS.FUSE_LS_MAX, DS.FUSE_LS + lsAdd);
+  var re = rw === hp ? save.chars[save.hero] : rw;
+  if (lsAdd > 0 && re && +re.ls > 0) { re.ls = Math.round(+re.ls) + lsAdd; delete re.eld; var rp0 = re.pid && save.lin && save.lin.P && save.lin.P[re.pid]; if (rp0) rp0.ls = re.ls; }
   if (H) { if (DS.hAdd) DS.hAdd(save, H, DS.FUSE_HX); else H.hx = (+H.hx || 0) + DS.FUSE_HX; }
+  var gone = [], z = save.fzShut = save.fzShut && typeof save.fzShut === 'object' && !Array.isArray(save.fzShut) ? save.fzShut : {};
+  houses.forEach(function (h, i) {
+    if (h === H || !h) return;
+    var w = who[i];
+    ['w', 'a'].forEach(function (sl) { var id = h[sl]; if (id) { save.gear[id] = (save.gear[id] || 0) + 1; h[sl] = null; } });      // 든 장비는 가방으로
+    if (w.it && DS.giveMercItem) DS.giveMercItem(save, w.id, null);      // 든 물건은 소지품으로
+    gone.push({ cls: h.cls, name: names[i], hid: h.id, m: w, hx: +h.hx || 0 });
+    DS.loseMerc(save, w.id);
+    z[h.cls] = { g: gen, t: Math.round(+save.time || 0), by: H ? H.cls : '', rep: names[ri], n: names[i] };
+    delete save.chars[h.id];
+    save.party = (save.party || []).filter(function (id) { return id !== h.id; });
+    if (Array.isArray(save.sortie)) save.sortie = save.sortie.filter(function (e) { return e && e.h !== h.id; });
+  });
   if (DS.mercTidy) DS.mercTidy(save);
   DS.pSync(save);
-  DS.lastFuse = { ids: keys, who: who, names: names, id: keys[0], name: '', union: null, mercsBack: 0, over: 0, rep: H ? H.id : 0, repName: H ? DS.flagName(H.cls, save) : '', hx: H ? DS.FUSE_HX : 0, moved: 0, succ: [] };
+  if (DS.sortieFix) { var hold = DS.sortieHold; DS.sortieHold = null; try { DS.sortieFix(save); } finally { DS.sortieHold = hold; } }
+  if (DS.partySync) DS.partySync(save);
+  DS.lastFuse = { ls: lsAdd, ids: keys, who: who, names: names, trio: trio, id: keys[ri], name: '', union: null, mercsBack: 0, over: 0, rep: H ? H.id : 0, repCls: H ? H.cls : '', repWho: rw, repName: H ? DS.flagName(H.cls, save) : '', hx: H ? DS.FUSE_HX : 0, moved: 0, succ: [], gone: gone, gen: gen };
   save.fuN2 = (+save.fuN2 || 0) + 1;
-  return who[0];
+  return rw;
 };
 DS.fuseJoinable = function () { return null; };
 DS.fuseJoin = function () { return null; };
-// 봇·시험용: 후보에서 셋씩 차례로 (출전한 사람 먼저). 돌려주는 것: 이번에 오른 셋의 수
-DS.fuseAuto = function (save, max) {
-  var n = 0; max = max == null ? 99 : max;
-  while (n < max) { var c = DS.fuseCands(save).sort(function (a, b) { return (b.dep ? 1 : 0) - (a.dep ? 1 : 0) || (b.role === 'hero') - (a.role === 'hero'); }).map(function (c) { return c.key; }); if (c.length < DS.FUSE_N || !save.crest) break; if (!DS.fuse(save, c.slice(0, DS.FUSE_N))) break; n++; }
+// 봇·시험용: 후보에서 셋씩 차례로. opt.pick(cands) → 고른 열쇠 셋 (없으면 출전한 이 먼저), opt.rep(save, keys) → 대표 가문 번호. 돌려주는 것: 합일한 수
+DS.fuseAuto = function (save, max, opt) {
+  var n = 0; max = max == null ? 99 : max; opt = opt || {};
+  while (n < max) {
+    var cs = DS.fuseCands(save); if (cs.length < DS.FUSE_N || !save.crest) break;
+    var c = opt.pick ? opt.pick(cs) : cs.sort(function (a, b) { return (b.dep ? 1 : 0) - (a.dep ? 1 : 0) || (b.role === 'hero') - (a.role === 'hero'); }).map(function (x) { return x.key; }).slice(0, DS.FUSE_N);
+    if (!c || c.length < DS.FUSE_N) break;
+    var rep = opt.rep ? opt.rep(save, c) : null;
+    if (!DS.fuse(save, c.slice(0, DS.FUSE_N), rep != null ? { rep: rep } : null)) break; n++;
+  }
   return n;
 };
 // ⑮ 옛 저장의 합일 마스터 → 원래 세(네) 깃발로: 각각 마스터의 레벨 그대로(8단이면 8단, 9단이면 9단). 마스터 줄의 번호·장비·사람 칸은 대표 깃발(rep)이 잇고, 나머지는 빈 손의 새 줄.
@@ -8415,6 +8777,7 @@ DS.LIN_TXT = {
   bury: ['{a}{을를} 해밀 언덕에 묻었다.'],
   hand: ['{a}{이가} {b}에게 집안을 맡겼다.'],
   fusepart: ['{b}{이가} 합일하던 날 곁을 떠나, {a}{은는} 곁을 지키던 날들을 마음에 묻었다.'],
+  fuseIn: ['{a}{이가} {b}에게 스며 하나가 되었다.'],
   gone: ['{a}{이가} 부대를 떠났다.'],
   house: ['이 대에 「{house}」 문패를 새로 걸었다.'],      // 4.0 ⑬·⑯
   castHeir: ['{house}의 가주를 {a}{이가} 이었다.']      // 4.0 ⑫-2
@@ -9067,13 +9430,19 @@ DS.linTidy = function (s) {
 // ── 합일: 조건·결과는 그대로. 4.0: 사람은 아무도 사라지지 않는다 — 합일체 P 를 만들지 않고, 연대기에 fuse 한 줄만 (meta.js 의 DS.fuse 가 사람을 옮긴다) ──
 var fuse0 = DS.fuse;
 // 1.0.1: 묶음은 자유 — 고른 세 가문(ids)과 묶음 이름(가주 공훈 1등 가문)을 연대기에 남긴다. 옛 꼴(fam 문자열)도 meta.js 가 받아 준다
-DS.fuse = function (s, ids, opt) {      // r42: 사람 셋 — 연대기에 셋의 이름으로 한 줄씩
+DS.fuse = function (s, ids, opt) {      // 2.2.9: 대표 가주 한 줄(fuse) + 흡수된 두 가주(fuseIn — 죽음이 아니다: 명부의 st 'fused', 배우자와는 「합일」로 헤어진다)
   var m = fuse0(s, ids, opt); if (!m) return m;
-  var LF = DS.lastFuse || {}, hp = DS.heroPs ? DS.heroPs(s) : null;
-  (LF.who || []).forEach(function (w) {
-    var p = w === hp ? charP(s, s.chars[s.hero]) : mercP(s, w, true);
-    logE(s, 'fuse', p ? p.id : 0, 0, { ids: (LF.ids || []).slice(), names: (LF.names || []).slice() });
+  var LF = DS.lastFuse || {}, hp = DS.heroPs ? DS.heroPs(s) : null, rw = LF.repWho;
+  var rp = rw ? (rw === hp ? charP(s, s.chars[s.hero]) : mercP(s, rw, true)) : null;
+  var ins = [];
+  (LF.gone || []).forEach(function (g) {
+    var q = g.m ? mercP(s, g.m, true) : null; if (!q) return;
+    q.snap = snapMerc(g.m); q.st = 'fused'; q.m = 0; q.into = rp ? rp.id : 0; q.fuAt = { s: scnN(s), tm: Math.round(s.time || 0), cls: g.cls, rep: LF.repCls || '' };
+    if (q.sp) part(s, q, '합일');
+    logE(s, 'fuseIn', q.id, rp ? rp.id : 0, { cls: g.cls, names: (LF.trio || []).slice() });
+    ins.push(q.id);
   });
+  if (rp) { rp.fu3 = (LF.trio || []).slice(); rp.fuIn = ins; logE(s, 'fuse', rp.id, 0, { ids: (LF.ids || []).slice(), names: (LF.trio || []).slice(), rep: LF.repCls || '', shut: (LF.gone || []).map(function (g) { return g.cls; }) }); }
   return m;
 };
 
@@ -9665,6 +10034,7 @@ DS.cmdSpec = function (ch, hero, who) {
   if (!hero) {
     var nm = who.ttl || who.n; if (nm) u.name = nm; u.bear = who.id || 0; u.nat = who.type && DS.MERCS[who.type] ? (DS.bnNative(ch.cls, who) ? 1 : 0) : 1;
     var bl = DS.bearerLook(who);      // r27: 가주는 제 모습 그대로 — 생김새는 든 사람(부대원)의 것, 능력·기술은 가문(병과)의 것
+    if (bl && DS.pL(who) > 70 && DS.RISE_OF && DS.RISE_OF[ch.cls]) { bl = null; u.sx = u.sx || who.sx || ''; }      // 2.2.9: 8단부터는 가문 윗길의 모습 (look = [병과, 단] — DS.lookName 이 윗길로)
     if (bl) { u.look = bl.look; u.sprite = bl.sprite; u.pal = bl.pal; u.big = bl.big; u.plook = 1; }
   }
   u.bpct = Math.round((k0 - 1) * 100);
@@ -10764,7 +11134,7 @@ DS.ZONES = {
     gates: [{ ids: [9], fx: 0.42, fy: 0.26, icon: 'statue' }], border: 'w',
     terr: { forest: 0.62, hill: 0.7, water: 0.74, mount: 0.84 } },
   gaon: { name: '가온', town: true, theme: 'coast', gear: [6, 10], special: true, exits: [{ side: 'N', to: 'isle' }],
-    npcs: ['북쪽 하늘을 보게. 저 저녁은 밤이 돼도 안 걷히네. 문이 열려 있다는 뜻일세.', '가온은 6단이 넘은 이만 받습죠. 문 가까이서 싸울 사람만 온다는 뜻입니다.', '7단 Lv10 가문 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 어느 집이든 돼요.'] },
+    npcs: ['북쪽 하늘을 보게. 저 저녁은 밤이 돼도 안 걷히네. 문이 열려 있다는 뜻일세.', '가온은 6단이 넘은 이만 받습죠. 문 가까이서 싸울 사람만 온다는 뜻입니다.', '7단 Lv10 가주 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 세 집은 서로 달라야 해요.'] },
   desert: { name: '붉은 모래 사막', theme: 'desert', base: 'd', w: 36, h: 32, seed: 71, L: [36, 47], mobs: ['scorpion', 'mummy', 'skeleton', 'skelArcher', 'darkMage'],
     exits: [{ side: 'W', at: 0.5, to: 'coast' }, { side: 'E', at: 0.4, to: 'mire' }],
     gates: [{ ids: [11], fx: 0.3, fy: 0.3, icon: 'oasis' }, { ids: [12, 13], fx: 0.62, fy: 0.68, icon: 'pyramid' }],
@@ -11470,7 +11840,7 @@ var RUMOR = {
   28: '끝의 땅 남동쪽 얼어붙은 성에 서리용이 있다네. 문짝에 물린 쐐기라더군.',
   29: '끝의 땅 북서쪽 화산에 용암용이 있다네. 그놈만 치우면 문 앞일세.',
   30: '북쪽 끝이 어스름의 문일세. 안에서 닫아야 한다던 문이지. 이번엔 누가 남을 셈인가.',
-  fuse: '단을 맞추게. 7단 Lv10에 이른 사람 셋이 모이면 교회에서 함께 오른다네. 누구끼리든 좋아.',
+  fuse: '단을 맞추게. 서로 다른 가문의 가주 셋이 7단 Lv10에 이르면 교회에서 하나가 된다네. 대신 두 가문이 잠들지.',
   tier9: '끝의 땅은 9단이 아니면 못 버틴다네. 변경과 갱도에서 더 다지고 가게.',
   end: '문이 닫혔다지. 북쪽 하늘이 저리 맑은 건 처음일세. 손주들한테 이름을 일러 둬야겠어.'
 };
@@ -11483,7 +11853,7 @@ function fuseTalk(save) {
     else if (!save.crest) out.push(RUMOR.fuse);
     else if (P.n === 2 && P.low[0]) out.push('7단 Lv10 가문이 둘이라지. 하나만 더, ' + DS.flagName(P.low[0].cls) + '이 가장 가깝다더군.');
     else if (P.n > 0) out.push('7단 Lv10 가문이 ' + KOR_I[P.n] + ' 섰다더군. 처진 집을 앞에 세우게.');
-    else out.push('누구든 셋을 7단 Lv10으로 키우게. 교회에서 함께 오른다네.');
+    else out.push('서로 다른 가문의 가주 셋을 7단 Lv10으로 키우게. 교회에서 하나가 된다네.');
   } else out.push(RUMOR.fuse);
   out.push('쉬는 사람도 조금은 큰다네. 그래도 키우려면 데리고 나가야지.');
   out.push(save.pitBest > 0 ? '갱도 ' + save.pitBest + '층까지 내려갔다지. 바닥은 없다네. 밑으로 갈수록 보수도 오르고 파수꾼도 세진다네.' : '돌마루 고원 동남쪽 갱도에 가 보게. 몇 번이고 다시 들어가 키를 다질 수 있네.');
@@ -11492,7 +11862,7 @@ function fuseTalk(save) {
   return out;
 }
 function tier9Talk(save) {
-  return [RUMOR.tier9, '함께 오른 집도 싸우러 나가야 큰다네. 8단 Lv10을 넘어서야 9단일세.', '끝의 땅 바람은 사람을 가린다네. 변경에서 버틴 이만 들이지.'];
+  return [RUMOR.tier9, '합일한 집도 싸우러 나가야 큰다네. 8단 Lv10을 넘어서야 9단일세.', '끝의 땅 바람은 사람을 가린다네. 변경에서 버틴 이만 들이지.'];
 }
 var TOWN = {
   haemil: {
@@ -11505,7 +11875,7 @@ var TOWN = {
     2: [['싸움이 끝나도 상처는 저절로 안 나아요. 약초를 챙기거나 교회에 들르세요.', '약초는 싸우는 중에도 아래 버튼으로 먹일 수 있어요. 아끼다 쓰러지면 손해예요.', '들판을 걷다 「기습!」 소리가 나면 대열부터 챙기세요. 뒤에 선 사람이 먼저 다쳐요.'],
         ['쓰러진 사람은 못 돌아와요. 많이 다친 이는 뒤로 물려서 고쳐 주세요.', '아끼는 가문원은 「호위」로 두세요. 맹주 가까이서만 싸우고 일찍 물러나요.', '「아프냐. 나도 아프다.」 교회 언니가 붕대 감아 주면서 꼭 그래요.'],
         ['뒤에 세워 둔 집은 잘 안 커요. 번갈아 데리고 나가세요.', '적이 떨군 장비는 이름 앞뒤에 붙은 말이 옵션이래요. 읽어 보고 입히세요.', '들판에 유난히 덩치 큰 놈이 돌아다니면 피하든지 단단히 준비하든지 하세요. 그런 놈이 좋은 걸 떨군대요.', '붉게 깜빡이는 칸에는 곧 뭔가 떨어져요. 게이지를 남겨 두세요.'],
-        [{ pre: 1, t: '7단 Lv10에 이른 사람이 셋 모여야 함께 오른대요. 누구끼리든 괜찮대요.' }, { pre: 1, t: '처진 사람은 앞에 세우고, 다 큰 사람은 쉬게 하세요. 쉬어도 조금은 커요.' }, { pre: 1, t: '갱도는 몇 번이고 다시 들어갈 수 있대요. 키 맞추기엔 거기가 제일이래요.' }, { m: 3, t: '세 묶음이 다 올랐다면서요. 이제 다친 데만 챙기세요. 문 앞은 춥대요.' }],
+        [{ pre: 1, t: '서로 다른 가문의 가주 셋이 7단 Lv10이면 하나가 된대요. 두 가문은 잠든대요.' }, { pre: 1, t: '처진 사람은 앞에 세우고, 다 큰 사람은 쉬게 하세요. 쉬어도 조금은 커요.' }, { pre: 1, t: '갱도는 몇 번이고 다시 들어갈 수 있대요. 키 맞추기엔 거기가 제일이래요.' }, { m: 3, t: '세 묶음이 다 올랐다면서요. 이제 다친 데만 챙기세요. 문 앞은 춥대요.' }],
         ['갱도 일꾼은 아직도 구한대요. 문은 닫혔어도 밑은 못 닫았다나요.', '약초밭에 아침 이슬이 앉아요. 요즘은 약이 잘 들어요.']],
     house: [['밤마다 북쪽 하늘이 어스름하게 저물어요. 조심해서 다니세요.', '해밀은 작아도 인심은 있어요. 다치면 교회부터 들르세요.'],
             ['방아 소리가 다시 나니 살 것 같아요. 보수가 적어서 미안했어요.', '새로 빻은 가루로 떡을 쪘어요. 부대원들 몫도 있어요.', '방앗간 개 이름이 「뭣이 중헌디」예요. 밥 줄 때만 대답해요.'],
@@ -11537,10 +11907,10 @@ var TOWN = {
         ['변경에서 온 피란민이 그러더라고요. 성주 여섯이 다 어스름에 붙었다고요.', { pre: 1, t: '나루에 배를 대 놓고 기다려요. 셋이 함께 오르면 북쪽까지 모셔다 드릴게요.' }, { pre: 1, t: '섬 사람들은 누구 셋이 먼저 오르나 내기를 걸었어요.' }, { m: 3, t: '배는 언제든 떠요. 북쪽 끝까지 모셔다 드릴게요.' }],
         ['변경 사람들이 돌아간대요. 제 성 문장을 다시 물들이겠다고요.']],
     f1: [{ pre: 1, t: '한 묶음이 함께 올랐다고 섬이 들썩였어요. 나머지도 곧이겠죠.' }],
-    2: [['7단 Lv10에 이른 사람 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 누구끼리든 돼요.'],
-        ['7단 Lv10에 이른 사람 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 누구끼리든 돼요.'],
-        ['7단 Lv10에 이른 사람 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 누구끼리든 돼요.', '교회 종은 합일할 때만 울려요. 저는 아직 한 번도 못 들었어요.'],
-        ['합일해도 사람이 없어지는 건 아니래요. 집도 그대로래요.', '셋이 함께 오르면 서로 「너, 내 동료가 돼라」 그런대요. 벌써 동료면서.', { pre: 1, t: '부대 창을 열면 집마다 몇 레벨 남았는지 나와요. 종 치기 전에 꼭 보세요.' }, { pre: 1, t: '7단 Lv10에 이른 이가 셋 모이면 저한테 오세요. 종은 제가 닦아 뒀어요.' }, { m: 3, t: '종을 세 번 쳤어요. 그렇게 크게 울릴 줄은 몰랐어요.' }],
+    2: [['7단 Lv10 가주 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 셋은 서로 다른 가문이어야 해요.'],
+        ['7단 Lv10 가주 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 셋은 서로 다른 가문이어야 해요.'],
+        ['7단 Lv10 가주 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 셋은 서로 다른 가문이어야 해요.', '교회 종은 합일할 때만 울려요. 저는 아직 한 번도 못 들었어요.'],
+        ['합일하면 두 가주가 대표에게 스며든대요. 그 두 집은 다음 세대까지 잠든대요.', '셋이 함께 오르면 서로 「너, 내 동료가 돼라」 그런대요. 벌써 동료면서.', { pre: 1, t: '부대 창을 열면 집마다 몇 레벨 남았는지 나와요. 종 치기 전에 꼭 보세요.' }, { pre: 1, t: '7단 Lv10에 이른 이가 셋 모이면 저한테 오세요. 종은 제가 닦아 뒀어요.' }, { m: 3, t: '종을 세 번 쳤어요. 그렇게 크게 울릴 줄은 몰랐어요.' }],
         ['세 묶음이 지나가면 애들이 졸졸 따라가요. 가솔이 되겠대요.']],
     house: [['돌지기 영감이 정신을 차렸다오. 뱃사람이 「악!」 하고 이름을 불러 주니 울더이다.'],
             ['돌지기 영감이 정신을 차렸다오. 뱃사람이 「악!」 하고 이름을 불러 주니 울더이다.'],
@@ -11560,7 +11930,7 @@ function rumor(save) {
   if (!n) return [RUMOR.end];
   if (n.tier > DS.partyTier(save)) {
     var masters = DS.charList(save).filter(function (c) { return DS.CLASSES[c.cls].master || c.L > 70; }).sort(function (a, b) { return b.L - a.L; });
-    if (masters.length && DS.tierOfL(masters[0].L) >= n.tier) return ['함께 오른 집을 앞에 세우게. 변경 성주들은 8단이 아니면 상대도 안 한다네.'];
+    if (masters.length && DS.tierOfL(masters[0].L) >= n.tier) return ['합일한 집을 앞에 세우게. 변경 성주들은 8단이 아니면 상대도 안 한다네.'];
     return n.tier >= 9 ? tier9Talk(save) : fuseTalk(save);
   }
   return [RUMOR[n.id] || RUMOR.end];
@@ -11730,7 +12100,7 @@ var HELP = [
     '부대에는 <b>사람과 가문</b>이 있다. <b>단과 레벨은 사람의 것</b>이고, 장비, 기술 목록, <b>가문 공훈</b>은 가문의 것이다. 가문은 그 집 <b>가주</b>의 레벨로 싸우고, 가문 공훈만큼 세진다. 가주가 선 가문은 모두 싸운다.',
     '사람의 자리는 셋이다. <b>가주</b>, 모집한 영웅이 기다리는 <b>막사</b>(가문에 매이지 않고 싸우지 않는다), 맹주를 따라 싸우는 <b>가문원</b>(맹주의 아이와 배우자).',
     '가주가 떠나면 가문은 레벨과 단을 잃고, 막사의 같은 병과가 싸움 밖에서 저절로 잇는다. 같은 병과가 없으면 <b>빈 가문</b>으로 남아 싸우지 않는다. 영웅관에서 모집하거나 맹주의 어른 아이를 보내 채운다.',
-    '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람, 병과는 자리가 있는 가문 가운데 무작위. 부를 때마다 값이 오르고 계절이 지나면 내려간다. 등급은 일반 10%, 고급 30%, 희귀 30%, 영웅 20%, 전설 10%.',
+    '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람, 병과는 자리가 있는 가문 가운데 무작위. 빈 가문이 많을수록 싸다. 부를 때마다 값이 오르고 계절이 지나면 내려간다. 등급은 일반 10%, 고급 30%, 희귀 30%, 영웅 20%, 전설 10%.',
     '사람마다 제 <b>단과 레벨</b>이 있다. 싸워서 경험치를 얻어 자라고, 단이 오를 때마다 타고난 기질에 맞는 능력치가 하나씩 더 오른다. 전공에 따라 <b>별명</b>이 붙는다.',
     '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓인다. 신참, 숙련, 고참, 정예, 용사, 불멸로 오르고, 오를 때마다 가주의 능력치(+4%씩)와 맹주 가문 가문원의 능력치(×1.06씩)가 오른다. 위 초상과 가문 칸의 표식이 가문 공훈이다.',
     '<b>필살기</b>는 <b>맹주</b>만 지닌다. 고르는 것이 아니라 <b>타고난다</b>: 맹주마다 가문 병과의 것과 성격 몫 가운데 하나를 지니고 태어나, 사람 창의 「타고난 필살기」에서 미리 볼 수 있다. 시나리오 3을 깨면 깨어난다. 바꿀 수 없다. 싸우는 동안 게이지가 차고, <b>직접 눌러야</b> 나간다(자동으로 싸워도 쓰지 않고 찬 채로 기다린다). 기술 줄 왼쪽 끝 금테 칸이고, 다른 가문을 골라도 그 자리에 있다. 가득 차면 맹주 초상에 금빛 「필」이 뜬다. 맹주의 단이 5단, 8단에 오르면 15%씩 세지고, 9단, 10단, 레벨 100에 <b>별</b>이 붙어 더 세지고 빨리 찬다. 대를 이은 맹주는 제 몫을 따로 타고난다.',
@@ -11757,7 +12127,7 @@ var HELP = [
     '레벨 10마다 <b>단</b>이 오른다. 맹주는 단마다 모습이 바뀌고, 가주와 가문원은 그림의 은빛, 금빛 테로 단이 보인다. 새로 오는 영웅은 부대 평균보다 조금 낮은 레벨로 오고, 아이도 조금 낮은 레벨로 가문원이 되어 자란다.',
     '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 가문의 기술은 가주의 단이 닿는 만큼 열린다. 태생 병과가 가문과 맞으면 기술을 제대로 살린다. 다르면 몸이 맞지 않아 능력치가 조금 준다.',
     '<b>가문원</b>은 제 레벨로 싸우고, 제 종류의 기술을 3단, 5단, 7단에 하나씩 익힌다. 영웅, 전설 등급은 고유 기술을 처음부터 지닌다.',
-    '20번 시나리오에서 「맹세의 깃대」를 얻은 뒤, <b>7단 Lv10인 사람 셋</b>을 골라 교회에서 <b>합일</b>한다. 누구끼리든 된다. 셋은 저마다 8단에 오르고, 그때부터 레벨 70을 넘어 자란다. 합일하지 않은 사람은 7단 Lv10에서 멈춘다.',
+    '20번 시나리오에서 「맹세의 깃대」를 얻은 뒤, 서로 다른 세 가문의 <b>7단 Lv10 가주</b> 셋을 골라 교회에서 <b>합일</b>한다. 대표 가문의 가주가 그 가문의 8단에 오르고, 나머지 둘은 대표에게 흡수된다. 두 가문은 다음 세대까지 잠든다. 합일하지 않은 사람은 7단 Lv10에서 멈춘다.',
     '<b>맹주</b>가 쓰러지면 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 뒤를 고른다. 막사에서 이은 이는 제 레벨 그대로다. 누가 이어도 연맹은 그대로다. 자식은 선대와의 레벨 차이 가운데 일부를 받는다.',
     '21번부터는 8단, 27번부터는 9단 가주가 있어야 들어간다.',
     '20번을 깬 뒤에는 부대 탭 맨 위 <b>현상 수배</b> 게시판에 사냥, 정예, 출몰 현상금이 붙는다. 「길 안내」를 누르면 그곳까지 데려다준다.',
@@ -11770,9 +12140,9 @@ var GLOSSARY = [
   '가문 — 세상의 중심. 집마다 문장(빛깔과 사물)과 가훈이 있고, 가주가 집안을 맡아 가솔을 이끈다. 흩어지면 문장이 바래고, 나란히 서면 빛이 돈다.',
   '열 가문의 빛깔 — 보병 푸른빛, 기병 금빛, 비병 하늘빛 / 해병 쪽빛, 창병 옥빛, 궁병 풀빛 / 승려 흰빛, 신관 감빛, 법사 보랏빛, 사교 자줏빛.',
   '열 집의 가주 — 보병 바우, 기병 우레, 비병 제비, 해병 너울, 창병 서슬, 궁병 솔개, 흰 매듭의 달래, 감빛 등잔의 등불, 보랏빛 붓의 슬기, 자줏빛 그믐달의 그믐. 주인공은 열 병과 어느 것으로든 시작하고, 그 병과의 집 사람은 나오지 않는다(그 자리에는 보병 바우가 온다).',
-  '세 계열 — 강철(보병, 기병, 비병, 쇠 달군 붉은빛), 바람(해병, 창병, 궁병, 저 혼자 나부끼는 비췻빛), 별(승려, 신관, 법사, 사교, 낮에도 보이는 금빛). 8단부터의 모습과 기술은 계열을 따른다. 합일 묶음은 계열과 상관없이 고른다(1.0.1).',
+  '윗길 — 8단부터 가문마다 제 길이 있다. 보병은 성벽기사, 기병은 뇌전기사, 비병은 폭풍기수, 해병은 해일장군, 창병은 창벽장군, 궁병은 매눈사수, 승려는 금강권, 신관은 성등사, 법사는 대마도사, 사교는 사령군주. 9단과 10단에 더 높은 이름과 고유 기술이 있다.',
   '맹세의 깃대 — 열 가문의 이름을 새긴 쇠 장대. 빛깔 없는 쇠로 벼려 어스름이 지우지 못한다. 매듭 자리가 셋이고, 키(단)가 같은 집끼리 한 매듭에 묶인다.',
-  '합일 — 키(7단 Lv10)가 같은 세 사람이 맹세의 깃대 아래 뜻을 모아 함께 오르는 것(셋이 저마다 8단). 누구끼리든 된다. 사람은 줄지 않고, 저마다 제 자리와 집 그대로다 (2.0.0 — 예전에는 세 집이 묶였다).',
+  '합일 — 서로 다른 세 가문의 가주(7단 Lv10)가 맹세의 깃대 아래 하나가 되는 것. 대표의 가주만 8단에 오르고, 두 가주는 그에게 스며든다. 두 가문은 그 세대가 끝날 때까지 잠든다.',
   '옛 열 가문 — 옛날 한 연맹으로 뭉쳐 한 깃대에 이름을 새기고 어스름을 문 너머로 밀어낸 집들. 맹주를 안에 둔 채 잠그기로 아홉 집이 손을 들어 정했고(깃대의 금 아홉 개), 밖에서 빗장을 질렀다. 「맹주가 스스로 남았다」「맹주가 문을 열어 두었다」는 그 뒤에 덮은 말이다.',
   '연맹과 맹주 — 주인공은 열 집의 연맹을 이끄는 맹주다. 연맹의 이름은 처음 고른 큰 이름을 따른다(예: 「펜드래곤 연맹」). 옛 법 「맹주는 맨 뒤에 선다」, 새 맹세 「아무도 두고 가지 않는다」. 맹주는 손목에 끈을 매는데, 그 매듭은 먼동이 처음 맨 꼴 그대로 이어진다(피가 아니라 매듭으로 대를 잇는다).',
   '옛 대장 먼동 — 문 안에 남은 옛 연맹의 맹주. 사람들은 「옛 대장」이라 불렀다. 오랜 세월 빛깔을 잃어 「어스름에 묶인 먼동」이 되었다. 빛깔 없는 깃대를 든다. 사당 벽화마다 그려진 얼굴.',
@@ -11820,7 +12190,8 @@ var LINEAGE = {
     '{a}{은는} 무릎을 꿇고 {b}의 손목 끈에 이마를 댔다. 같은 매듭이 그 손목으로 넘어갔다.'],
   kin: ['먼 친척 {a}{이가} 소식을 듣고 찾아와 {b}의 자리를 이었다.',
     '얼굴도 모르던 친척이 낡은 손목 끈을 들고 왔다. {b}의 것과 같은 매듭이었다.'],
-  fuse: ['{a} — 고른 집들과 함께 올랐다.'],
+  fuse: ['{a} — 두 가주를 받아들여 8단에 올랐다.'],
+  fuseIn: ['{a}{이가} {b}에게 스며 하나가 되었다.'],
   fuseU: ['{house}{이가} 함께 8단에 올라 {union}{이가} 되었다.'],
   rename: ['{a}{이가} {b}{으로} 이름을 바꿨다.'],      // r10 social: 개명권 — {a} 옛 이름, {b} 새 이름 ({으로} 는 받침에 맞춰 으로/로, social.js 가 채운다)
   coffin: ['{a}{을를} 관에 모셨다.',
@@ -11896,7 +12267,7 @@ var LINEAGE = {
       spouse: '{a:은는} 나눠 맸던 끈을 손목에 한 번 더 감았다.'
     },
     // 연대기 글 (lineage 팀의 DS.linEvText 가 없을 때만)
-    chronicle: { wed: '{a:와과} {b:이가} 혼인했다.', birth: '{a:이가} 태어났다.', death: '{a:이가} {at}에서 숨을 거두었다.', heir: '{a:이가} {b}의 뒤를 이었다.', adopt: '{a:이가} {b}의 집안에 들었다.', kin: '먼 친척 {a:이가} {b}의 자리를 이었다.', fuse: '{a} — 고른 집들과 함께 올랐다.', coffin: '{a:을를} 관에 모셨다.', revive: '{a:이가} 관에서 돌아왔다.', part: '{a:와과} {b:이가} 헤어졌다.' },
+    chronicle: { wed: '{a:와과} {b:이가} 혼인했다.', birth: '{a:이가} 태어났다.', death: '{a:이가} {at}에서 숨을 거두었다.', heir: '{a:이가} {b}의 뒤를 이었다.', adopt: '{a:이가} {b}의 집안에 들었다.', kin: '먼 친척 {a:이가} {b}의 자리를 이었다.', fuse: '{a} — 두 가주를 받아들여 8단에 올랐다.', fuseIn: '{a:이가} {b}에게 스며 하나가 되었다.', coffin: '{a:을를} 관에 모셨다.', revive: '{a:이가} 관에서 돌아왔다.', part: '{a:와과} {b:이가} 헤어졌다.' },
     coffin: {
       ask: '{a:을를} 어떻게 보낼까?',
       keep: '관에 모신다', bury: '묻는다',
@@ -13534,6 +13905,7 @@ DS.fixSave = function (s) {
     if (m.kn != null) { if (m.kn) m.kn = 1; else delete m.kn; }      // 2.2.0: 맹주 집 사람 (가문원)
     if (m.nc != null && !(own(DS.CLASSES, m.nc) && !DS.CLASSES[m.nc].master)) delete m.nc;      // 2.2.0: 받은 가문 병과
     delete m.gm;
+    if (m.fu3 != null) { if (Array.isArray(m.fu3) && m.fz) m.fu3 = m.fu3.slice(0, 3).map(function (x) { return String(x == null ? '' : x).slice(0, 16); }); else delete m.fu3; }      // 2.2.9: 합일한 셋의 이름 (대표 가주에게만)
     mid = Math.max(mid, m.id);
     return m.id > 0;
   });
@@ -13573,6 +13945,8 @@ DS.fixSave = function (s) {
   if (DS.bnFix) DS.bnFix(s, wasBn);      // 4.0: 부대원 + 깃발 — 불변식 넷을 검사하고 어긴 줄만 변환한다 (두 번 돌려도 같다)
   if (DS.fuseUnions) DS.fuseUnions(s);      // r42: 옛 묶음 기록은 없어졌다 (비운다)
   if (DS.pSync) DS.pSync(s);      // r42: 가문 줄 ← 가주의 개인 레벨
+  if (DS.fzShutFix) { DS.fzShutFix(s); if (DS.fzWakeTick) DS.fzWakeTick(s); }      // 2.2.9: 합일로 잠든 가문 (세대가 이미 바뀌었으면 깨운다)
+  if (s.fzWake != null && !(Array.isArray(s.fzWake) && s.fzWake.every(function (k) { return typeof k === 'string' && own(DS.CLASSES, k) && !DS.CLASSES[k].master; }))) delete s.fzWake;
   if (soNew) s._soNew = 1;      // 2.2.8: 읽기(Save.read · peek)가 모든 정리(겉의 fixSave 들까지) 뒤에 출전을 새로 고른다 (soFresh)
   return s;
 };
@@ -17710,6 +18084,7 @@ if (DS.BOSSES) for (var bk2 in BOSS_LOOK2) if (DS.BOSSES[bk2]) DS.BOSSES[bk2].sp
 // 유닛 → [스프라이트 이름, 보스 팔레트]
 DS.lookName = function (cls, tier) {
   var c = DS.CLASSES[cls]; if (!c) return cls + '_' + tier;
+  if (!c.master && tier >= 8 && DS.RISE_OF && DS.RISE_OF[cls] && DS.CLASSES[DS.RISE_OF[cls]]) { cls = DS.RISE_OF[cls]; c = DS.CLASSES[cls]; }      // 2.2.9: 8단부터 제 윗길의 모습
   var t = Math.max(c.start, Math.min(c.start + c.tiers.length - 1, tier));
   return cls + '_' + t;
 };
@@ -17808,8 +18183,9 @@ DS.charLook = function (ch, save, tier, who) {      // who: 그 사람을 직접
   if (!who) { try { who = DS.bearer(S, ch); } catch (x) { who = null; } }
   var bl = who && DS.bearerLook ? DS.bearerLook(who) : null; if (!bl) return null;
   var t = tier || (DS.tierOfL ? DS.tierOfL(ch.L) : 1);
-  if (bl.big) return [bl.sprite, bl.pal, 0.75];
   var p = linP(S, who);
+  if (t >= 8 && DS.RISE_OF && DS.RISE_OF[ch.cls]) return [DS.dressName(DS.lookName(ch.cls, t), { w: ch.w, a: ch.a, g: ageWord(S, who), x: (p && p.sx) || who.sx || '', f: !!(p && (p.rv || p.ret)) }), '', 1];      // 2.2.9: 8단부터는 가문 윗길의 모습 (장비 · 나이 · 성별은 그 사람의 것)
+  if (bl.big) return [bl.sprite, bl.pal, 0.75];
   return [DS.dressName(bl.look.join('_'), { g: ageWord(S, who), x: (p && p.sx) || '', f: !!(p && (p.rv || p.ret)), r: DS.rimOf ? DS.rimOf(t) : '' }), '', 1];
 };
 DS.charSprite = function (ch, save) {      // 화면(초상·가계도)용: 지휘관 한 사람의 옷 입은 모습 이름 (game.js charSpr 이 이것을 쓰면 장비·나이가 초상에도 보인다)
@@ -18898,7 +19274,12 @@ function specOf(name, palKey, dress) {
   if ((m = /^([a-z]+)_(\d+)$/.exec(name))) {
     var cls = m[1], t = +m[2];
     look = (DS.LOOKP && DS.LOOKP[name]) || HUM[name];
-    if (look) return { kind: 'human', S: mx(base, { head: look[0], body: look[1], items: look[2], pal: look[3], cls: cls, tier: t }) };
+    if (look) return { kind: 'human', S: mx(base, { head: look[0], body: look[1], items: look[2], pal: look[3], cls: cls, tier: t }), aura: DS.auraOf ? DS.auraOf(look[2], look[3]) : null };      // 2.2.9: 윗길의 오라
+    if ((cls === 'xcav' || cls === 'xfly') && DS.RISE_ART) {      // 2.2.9 윗길: 뇌전기사(말) · 폭풍기수(용)
+      var X = DS.RISE_ART[cls === 'xcav' ? 'cav' : 'fly'][Math.max(0, Math.min(2, t - 8))], au = DS.auraOf(X.items, X.pal);
+      if (cls === 'xcav') return { kind: 'cav', S: mx(base, { head: X.head, body: 'armor', items: X.items, pal: X.pal, cls: 'cav', tier: t }), H: X.H, aura: au };
+      return { kind: 'fly', S: mx(base, { head: X.head, body: 'armor', items: X.items, pal: mx(X.pal, { r: X.pal.b }), cls: 'fly', tier: t }), F: X.F, aura: au };
+    }
     if (cls === 'cav') { var cp = mx(CAVP[t - 1] || CAVP[0], CAVQ[t - 1] || {}); return { kind: 'cav', S: mx(base, { head: t >= 7 ? 'crown' : t >= 2 ? 'plume' : 'helm', body: 'armor', items: t >= 5 ? ['cape', 'spear'] : ['spear'], pal: cp, cls: 'cav', tier: t }), H: { c: HORSE[t - 1], mane: MANE[t - 1], cloth: t >= 3 ? (cp.q || '#5b8fd6') : null, trim: '#d8b450', helm: t >= 4 ? (cp.m || '#cdd5e3') : null, horn: t >= 7 ? '#e8d8a8' : null } }; }
     if (cls === 'bm') { var bp = BMP[t - 8] || BMP[0]; return { kind: 'cav', S: mx(base, { head: 'crown', body: 'armor', items: ['cape', 'spear'], pal: bp, cls: 'bm', tier: t }), H: { c: bp.h, mane: bp.m, cloth: bp.q, trim: '#d8b450', helm: bp.m, horn: t >= 9 ? '#e8d8a8' : null, wings: bp.w } }; }
     if (cls === 'fly') { var fp = FLYP[t - 2] || FLYP[0]; return { kind: 'fly', S: mx(base, { head: t >= 7 ? 'crown' : 'plume', body: 'armor', items: t >= 6 ? ['cape', 'spear'] : ['spear'], pal: mx(fp, { r: fp.b, q: fp.A }), cls: 'fly', tier: t }), F: fp }; }
@@ -18965,11 +19346,21 @@ DS.artCanvas = function (name, palKey, opt) {
     for (var i = 3; i < d.length; i += 16) if (d[i] > 96) { any = 1; break; }
     if (any) { mg.globalCompositeOperation = 'source-in'; mg.fillStyle = '#ffffff'; mg.fillRect(0, 0, W, W); out = T.tag(lay, sp.lw || 16); } else out = null;
   } else if (opt.bust) out = DS.artBust ? DS.artBust(sp, opt) : null;
-  else out = T.finish(paint(sp, opt, false), sp.lw || 16, { rim: opt.rim, olw: sp.olw });
+  else out = withAura(T.finish(paint(sp, opt, false), sp.lw || 16, { rim: opt.rim, olw: sp.olw }), sp);
   if (out && !opt.tint && !opt.mask && !opt.step && !opt.pose && !opt.bust) reg(out, name, palKey, sp, !!opt.flip);
   T.stat.ms += performance.now() - t0;
   return (AC[key] = out);
 };
+// 2.2.9: 오라는 테두리 선을 그린 뒤 그림 뒤에 깐다 (빛의 가장자리에 선이 서지 않게). 자리는 탈것마다
+var AURA_AT = { human: [31, 42, 31, 20.5], cav: [33, 43, 29, 24], fly: [32, 41, 30, 22] };
+function withAura(out, sp, bust) {
+  if (!out || !sp || !sp.aura || !DS.artAura) return out;
+  var W = out.width, c = T.mk(W), g = c.getContext('2d'), at = AURA_AT[sp.kind] || AURA_AT.human;
+  if (bust) { var s = W / 50; g.scale(s, s); g.translate(-7, -3); } else { var k = W / ((sp.lw || 16) * 4); g.scale(k, k); if ((sp.lw || 16) !== 16) { g.translate(48, 95.5); g.scale(1.42, 1.42); g.translate(-32, -61.5); } }
+  DS.artAura(g, sp.aura, at[0], at[1], [at[2], at[3]]);
+  g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(out, 0, 0);
+  var r = T.tag(c, out.lw); if (out.bust) r.bust = 1; return r;
+}
 // ── 초상: 창 속 그림(<i data-spr> → canvas.px)은 굽힌 그림을 그대로 베낀 것이라, 화소 서명으로 어느 그림인지 알아내 가슴 위 큰 그림으로 바꾼다 ──
 var SIG = {};
 function sigOf(cv) {
@@ -18985,7 +19376,7 @@ DS.artBust = function (sp, opt) {
   DS.artHuman(g, S); S.bust = 0;
   g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-out';      // 가슴 아래는 부드럽게 스러진다
   var gr = g.createLinearGradient(0, Z * 0.8, 0, Z); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)'); g.fillStyle = gr; g.fillRect(0, Z * 0.8, Z, Z * 0.2);
-  var out = T.finish(cv, 16, { r: 1.3 * s });
+  var out = withAura(T.finish(cv, 16, { r: 1.3 * s }), sp, true);
   if (opt.flip) { var f = T.mk(Z), fg = f.getContext('2d'); fg.translate(Z, 0); fg.scale(-1, 1); fg.drawImage(out, 0, 0); out = T.tag(f, 16); }
   out.bust = 1; return out;
 };
@@ -18995,6 +19386,132 @@ DS.artBustFor = function (c) {      // 창 속 canvas.px → { lw, bust } (새 �
   return { lw: r.lw || 16, bust: b };
 };
 DS.artPaint = paint;
+})();
+
+// 전민 — 2.2.9 윗길(8 · 9 · 10단)의 모습: 열 가문 × 세 단. 새 그림(art3 · 코드로 그린 카툰)과 픽셀 그림(sprites2 · 16칸) 둘 다.
+//   단이 오를수록 더 화려하게 — 8단: 윗길의 갑옷 · 망토 · 오라(aura) · 9단: 날개(또는 큰 망토) · 더 밝은 빛 · 오라 알갱이(aura2) · 10단: 큰 날개 · 금관 · 빛 고리와 빛살(aura3).
+//   사람 모습은 [머리, 몸, 장비, 빛깔] (sprites2 LOOKS 와 같은 꼴) — DS.LOOKP 에 올리면 새 그림이, DS.SPR 에 올리면 픽셀 그림이 읽는다.
+//   기병(뇌전기사)은 말 위, 비병(폭풍기수)은 용 위 — art3 specOf 가 DS.RISE_ART.cav · fly 를 읽는다. 오라는 그림을 다 그린 뒤 뒤에 깐다 (art3 withAura — 테두리 선에 걸리지 않게).
+var DS = globalThis.DS = globalThis.DS || {};
+(function () {
+'use strict';
+function L(head, body, items, pal) { return [head, body, items, pal]; }
+var LOOK = {
+  xinf: [      // 성벽기사 → 철옹공 → 불괴왕: 푸른 강철 → 은빛 → 흰 금
+    L('helm', 'armor', ['aura', 'cape', 'sword', 'shield'], { a: '#9fb4d8', A: '#5e72a0', b: '#f6cf57', q: '#3f6fc8', Q: '#27488c', u: '#cdd5e3', U: '#8f9ab3', m: '#e2e9f2', M: '#a7b2c6', Y: '#8fc8ff' }),
+    L('horned', 'armor', ['aura2', 'mwing', 'cape', 'sword', 'shield'], { a: '#e2e9f2', A: '#a7b2c6', b: '#f6cf57', q: '#62b0ee', Q: '#3572b8', u: '#f6cf57', U: '#c08f2c', m: '#ffffff', M: '#cdd5e3', w: '#cfe6ff', Y: '#8fc8ff' }),
+    L('crown', 'armor', ['aura3', 'mwing2', 'cape', 'gsword', 'shield'], { a: '#fff6dc', A: '#d8c8a0', b: '#62b0ee', q: '#f6cf57', Q: '#c08f2c', h: '#f6cf57', H: '#c08f2c', u: '#ffffff', U: '#f6cf57', w: '#ffffff', i: '#ffffff', I: '#f6cf57', M: '#c08f2c', Y: '#bfe0ff' })
+  ],
+  xmar: [      // 해일장군 → 파도군주 → 해신: 청록 → 물빛 → 흰 물보라
+    L('horned', 'armor', ['aura', 'cape', 'trident'], { a: '#2fb0a0', A: '#1c7468', b: '#f6cf57', q: '#2f86a6', Q: '#1f5d78', m: '#9fe8ec', M: '#4fa8b8', Y: '#62d0ee' }),
+    L('crown', 'armor', ['aura2', 'mwing', 'cape', 'trident'], { a: '#3fd0c0', A: '#228a80', b: '#ffffff', q: '#1f5d78', Q: '#123c4e', h: '#9fe8ec', H: '#4fa8b8', w: '#9fe8ec', Y: '#62d0ee' }),
+    L('crown', 'armor', ['aura3', 'mwing2', 'cape', 'trident'], { a: '#e8fbff', A: '#9fd8e0', b: '#f6cf57', q: '#2f86a6', Q: '#1f5d78', h: '#f6cf57', H: '#c08f2c', w: '#c9f1ff', i: '#ffffff', I: '#62d0ee', Y: '#9fe8ec' })
+  ],
+  xpike: [      // 창벽장군 → 만창공 → 창성: 짙은 초록 → 은 → 흰 금
+    L('horned', 'armor', ['aura', 'cape', 'halberd'], { a: '#4c9a8a', A: '#2f6b62', b: '#f6cf57', q: '#3a7d42', Q: '#24552d', m: '#cdd5e3', M: '#8f9ab3', Y: '#b6f0a0' }),
+    L('crown', 'armor', ['aura2', 'mwing', 'cape', 'halberd'], { a: '#cdd5e3', A: '#8f9ab3', b: '#5fae5a', q: '#3a7d42', Q: '#24552d', h: '#5fae5a', H: '#3a7d42', w: '#d8ffc8', Y: '#b6f0a0' }),
+    L('crown', 'armor', ['aura3', 'mwing2', 'cape', 'halberd'], { a: '#f7f2e6', A: '#cfc6ae', b: '#5fae5a', q: '#e8bb45', Q: '#b07f2a', h: '#f6cf57', H: '#c08f2c', w: '#ffffff', Y: '#d8ffb0' })
+  ],
+  xarc: [      // 매눈사수 → 신궁 → 천궁성: 숲빛 · 금 → 흰 가면 → 금관
+    L('hood', 'tunic', ['aura', 'cape', 'lbow'], { a: '#3f8f6a', A: '#27604a', b: '#f6cf57', B: '#6f4a2c', q: '#c9a227', Q: '#8a6c14', w: '#ffffff', Y: '#d8ff9a' }),
+    L('mask', 'tunic', ['aura2', 'mwing', 'cape', 'lbow'], { a: '#e9e2d0', A: '#b9ae96', b: '#5fae5a', B: '#8f9ab3', q: '#3f8f6a', Q: '#27604a', w: '#e8ffd0', Y: '#d8ff9a' }),
+    L('crown', 'tunic', ['aura3', 'mwing2', 'cape', 'lbow'], { a: '#fff6dc', A: '#d8c8a0', b: '#5fae5a', B: '#c08f2c', q: '#5fae5a', Q: '#3a7d42', h: '#f6cf57', H: '#c08f2c', w: '#ffffff', Y: '#e8ffb0' })
+  ],
+  xcle: [      // 금강권 → 무성 → 천무신: 금빛 도복 → 흰 도복 · 금 테 → 빛 고리 (무투가는 날개 대신 큰 망토와 목도리)
+    L('band', 'gi', ['aura', 'scarf', 'gaunt'], { a: '#f6cf57', A: '#c08f2c', b: '#3a3350', B: '#262036', r: '#e0525e', R: '#9c2f45', h: '#1b1626', l: '#ffffff', q: '#e0525e', Q: '#9c2f45', m: '#ffe27a', M: '#c08f2c', p: '#5e2a34', Y: '#ffd27a' }),
+    L('circlet', 'gi', ['aura2', 'cape', 'scarf', 'gaunt'], { a: '#fff6dc', A: '#e8d0a0', b: '#e0525e', B: '#9c2f45', h: '#1b1626', i: '#f6cf57', I: '#c08f2c', c: '#62b0ee', l: '#ffffff', q: '#f6cf57', Q: '#c08f2c', m: '#ffffff', M: '#cdd5e3', p: '#3a3350', Y: '#ffd27a' }),
+    L('circlet', 'gi', ['aura3', 'cape', 'scarf', 'gaunt'], { a: '#ffffff', A: '#e8e0cc', b: '#f6cf57', B: '#c08f2c', h: '#1b1626', i: '#ffffff', I: '#f6cf57', c: '#ff4d6d', l: '#fff6dc', q: '#e0525e', Q: '#9c2f45', m: '#ffe27a', M: '#c08f2c', p: '#7a2a34', Y: '#ffe9a0' })
+  ],
+  xmon: [      // 성등사 → 대성관 → 광명성자: 흰 법의 · 등불빛 → 주황 · 날개 → 해처럼 흰 금
+    L('mitre', 'robe', ['aura', 'cape', 'cross'], { a: '#fff6dc', A: '#e8d0a0', b: '#f09a4a', h: '#f6cf57', H: '#c08f2c', q: '#f09a4a', Q: '#b8642a', Y: '#fff0a0' }),
+    L('crown', 'robe', ['aura2', 'mwing', 'cape', 'orb'], { a: '#f09a4a', A: '#b8642a', b: '#fff6d8', h: '#fff6dc', H: '#e0c888', q: '#fff6d8', Q: '#e0c888', c: '#ffffff', C: '#fff0a0', w: '#fff6dc', Y: '#fff0a0' }),
+    L('crown', 'robe', ['aura3', 'mwing2', 'cape', 'orb'], { a: '#ffffff', A: '#f0e6c8', b: '#f6cf57', h: '#f6cf57', H: '#c08f2c', q: '#f09a4a', Q: '#b8642a', c: '#ffffff', C: '#ffd24a', w: '#ffffff', Y: '#fff6c0' })
+  ],
+  xmag: [      // 대마도사 → 원소왕 → 천원현자: 짙은 보라 · 세 원소 구슬 → 흰 망토 → 흰 금 · 보랏빛 날개
+    L('wizhat', 'robe', ['aura', 'cape', 'orb'], { a: '#6a4fc8', A: '#45318f', b: '#f6cf57', c: '#ff9a3c', C: '#62b0ee', q: '#2b2440', Q: '#1b1626', Y: '#c9a8ff' }),
+    L('crown', 'robe', ['aura2', 'mwing', 'cape', 'orb'], { a: '#8d6be0', A: '#5f41ad', b: '#ffffff', c: '#9fe8ec', C: '#ff9a3c', q: '#f7f2e6', Q: '#cfc6ae', h: '#cdd5e3', H: '#8f9ab3', w: '#e0d0ff', Y: '#c9a8ff' }),
+    L('crown', 'robe', ['aura3', 'mwing2', 'cape', 'orb'], { a: '#f7f2e6', A: '#cfc6ae', b: '#b181e6', c: '#ffffff', C: '#b181e6', q: '#8d6be0', Q: '#5f41ad', h: '#f6cf57', H: '#c08f2c', w: '#f0e8ff', Y: '#e0d0ff' })
+  ],
+  xsha: [      // 사령군주 → 명계왕 → 불사왕(리치): 검은 두건 · 독빛 → 뿔 · 뼈 날개 → 창백한 얼굴 · 해골 관
+    L('darkhood', 'robe', ['aura', 'cape', 'sstaff'], { a: '#2b2440', A: '#1b1626', b: '#b6ff5a', z: '#0f0c18', x: '#b6ff5a', q: '#3a5230', Q: '#24361e', Y: '#b6ff5a' }),
+    L('horned', 'robe', ['aura2', 'mwing', 'cape', 'orb'], { a: '#1b1626', A: '#0f0c18', b: '#b6ff5a', m: '#8f9ab3', M: '#5b6480', w: '#4a6a3a', q: '#5a2a6a', Q: '#3a1a4a', c: '#b6ff5a', C: '#5a9a2a', Y: '#b6ff5a' }),
+    L('crown', 'robe', ['aura3', 'mwing2', 'cape', 'orb'], { a: '#1b1626', A: '#0f0c18', b: '#ff4d6d', h: '#cdd5e3', H: '#8f9ab3', i: '#b6ff5a', I: '#5a9a2a', s: '#cdb7c6', S: '#a8909f', q: '#2f6b3a', Q: '#1a4a24', c: '#b6ff5a', C: '#5a9a2a', w: '#2b3a2a', Y: '#d0ff8a' })
+  ]
+};
+// 기병 · 비병: 탈것째 (새 그림 art3 · 픽셀 sprites2 의 bm 줄과 같은 꼴)
+var CAVX = [      // 뇌전기사 → 천둥군주 → 뇌제: 검은 군마 · 번개빛 갈기 → 흰 천마 → 검은 천마 · 하늘빛 갈기 · 금 날개
+  { head: 'horned', items: ['aura', 'cape', 'spear'], pal: { a: '#3a3350', A: '#262036', b: '#ffe27a', q: '#5f41ad', Q: '#3a2a78', m: '#ffe27a', M: '#c08f2c', Y: '#ffe27a' }, H: { c: '#2b2440', mane: '#ffe27a', cloth: '#5f41ad', trim: '#ffe27a', helm: '#cdd5e3' } },
+  { head: 'crown', items: ['aura2', 'cape', 'spear'], pal: { a: '#ffe27a', A: '#c08f2c', b: '#3a3350', q: '#3a2a78', Q: '#241a50', h: '#3a3350', H: '#262036', m: '#ffffff', M: '#cdd5e3', Y: '#ffe27a' }, H: { c: '#f1ead9', mane: '#ffe27a', cloth: '#3a2a78', trim: '#ffe27a', helm: '#ffe27a', horn: '#e8d8a8', wings: '#fff3b0' } },
+  { head: 'crown', items: ['aura3', 'cape', 'spear'], pal: { a: '#fff6dc', A: '#d8c8a0', b: '#62b0ee', q: '#f6cf57', Q: '#c08f2c', h: '#f6cf57', H: '#c08f2c', m: '#ffffff', M: '#9fe8ec', i: '#ffffff', I: '#f6cf57', Y: '#fff3b0' }, H: { c: '#1b1626', mane: '#9fe8ec', cloth: '#f6cf57', trim: '#ffffff', helm: '#f6cf57', horn: '#ffffff', wings: '#ffe27a' } }
+];
+var FLYX = [      // 폭풍기수 → 창공군주 → 용황: 푸른 용 → 흰 용 · 금 뿔 → 금빛 용 · 붉은 눈
+  { head: 'horned', items: ['aura', 'cape', 'spear'], pal: { a: '#62b0ee', A: '#3572b8', b: '#ffffff', q: '#3572b8', Q: '#24508a', m: '#e8f4ff', M: '#9fc8e8', Y: '#9fe8ec' }, F: { mount: 'dragon', c: '#3a6ab0', wing: '#2a4a80', belly: '#cfe6ff', eye: '#9fe8ec', horn: '#e8f4ff' } },
+  { head: 'crown', items: ['aura2', 'cape', 'spear'], pal: { a: '#e2e9f2', A: '#a7b2c6', b: '#62b0ee', q: '#62b0ee', Q: '#3572b8', h: '#62b0ee', H: '#3572b8', m: '#ffffff', M: '#cdd5e3', Y: '#9fe8ec' }, F: { mount: 'dragon', c: '#e8f0ff', wing: '#9fc8e8', belly: '#ffffff', eye: '#62b0ee', horn: '#f6cf57' } },
+  { head: 'crown', items: ['aura3', 'cape', 'spear'], pal: { a: '#f6cf57', A: '#c08f2c', b: '#ffffff', q: '#e0525e', Q: '#9c2f45', h: '#ffffff', H: '#cdd5e3', m: '#ffffff', M: '#f6cf57', i: '#ffffff', I: '#f6cf57', Y: '#ffe9a0' }, F: { mount: 'dragon', c: '#f6cf57', wing: '#ffe9a0', belly: '#fff6dc', eye: '#ff4d6d', horn: '#ffffff' } }
+];
+DS.RISE_ART = { look: LOOK, cav: CAVX, fly: FLYX };
+DS.auraOf = function (items, pal) {      // 장비 목록의 오라 칸 → { lv, c } (없으면 null)
+  var lv = 0; (items || []).forEach(function (n) { var m = /^aura(\d?)$/.exec(n); if (m) lv = Math.max(lv, +(m[1] || 1)); });
+  return lv ? { lv: lv, c: (pal && pal.Y) || '#f6cf57' } : null;
+};
+// ── 새 그림: 오라 (그림 뒤에 깐다 — 부드러운 빛 · 9단 알갱이 · 10단 빛 고리와 빛살). 논리 좌표(64 칸)에서 cx, cy 둘레로
+function hexA(c, a) { var h = String(c || '#f6cf57').replace('#', ''); if (h.length === 3) h = h.split('').map(function (x) { return x + x; }).join(''); var n = parseInt(h, 16); return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
+DS.artAura = function (g, A, cx, cy, head) {
+  if (!A || !g || !g.createRadialGradient) return;
+  var lv = A.lv || 1, R = 22 + lv * 2.6, c = A.c;
+  g.save();
+  var gr = g.createRadialGradient(cx, cy, 1, cx, cy, R); gr.addColorStop(0, hexA(c, 0.95)); gr.addColorStop(0.5, hexA(c, 0.62 + lv * 0.06)); gr.addColorStop(0.8, hexA(c, 0.3 + lv * 0.05)); gr.addColorStop(1, hexA(c, 0));
+  g.fillStyle = gr; g.beginPath(); g.ellipse(cx, cy, R, R * 1.12, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = hexA(c, 0.55 + lv * 0.1); g.lineWidth = 0.9 + lv * 0.3; g.beginPath(); g.ellipse(cx, cy, R * 0.84, R * 0.94, 0, 0, Math.PI * 2); g.stroke();      // 오라의 테
+  if (lv >= 3) {      // 빛살 여덟
+    g.strokeStyle = hexA('#ffffff', 0.32); g.lineWidth = 1;
+    for (var k = 0; k < 8; k++) { var a = k / 8 * Math.PI * 2 + 0.2; g.beginPath(); g.moveTo(cx + Math.cos(a) * R * 0.45, cy + Math.sin(a) * R * 0.5); g.lineTo(cx + Math.cos(a) * R * 1.02, cy + Math.sin(a) * R * 1.1); g.stroke(); }
+  }
+  if (lv >= 2) {      // 오라 알갱이 (마름모)
+    g.fillStyle = hexA('#ffffff', 0.85);
+    var n = lv >= 3 ? 8 : 5;
+    for (var i = 0; i < n; i++) { var b = i / n * Math.PI * 2 + 0.5, r = R * (0.78 + 0.12 * (i % 2)), x = cx + Math.cos(b) * r, y = cy + Math.sin(b) * r * 1.1, z = i % 2 ? 1 : 1.4;
+      g.beginPath(); g.moveTo(x, y - z); g.lineTo(x + z * 0.7, y); g.lineTo(x, y + z); g.lineTo(x - z * 0.7, y); g.closePath(); g.fill(); }
+  }
+  if (lv >= 3 && head) {      // 머리 뒤의 빛 고리
+    g.strokeStyle = hexA('#fff3c0', 0.95); g.lineWidth = 1.4;
+    g.beginPath(); g.ellipse(head[0], head[1], 8.4, 2.8, 0, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = hexA(c, 0.6); g.lineWidth = 0.7; g.beginPath(); g.ellipse(head[0], head[1], 10, 3.4, 0, 0, Math.PI * 2); g.stroke();
+  }
+  g.restore();
+};
+// ── 픽셀 그림 (16칸): 오라 알갱이 · 사람 줄 · 기병 · 비병 ──
+var P = DS.SPRP; if (!P || !DS.SPR) return;
+var ITEM = P.ITEM, SPR = DS.SPR, RAW = P.RAW;
+ITEM.aura  = [0, 0, ['................', '................', 'Y...............', '...............Y', '................', '................', '................', '................', '................', '................', '................', 'Y...............', '................', '...............Y']];
+ITEM.aura2 = [0, 0, ['.Y............Y.', '................', 'Y...............', '...............Y', '................', '................', '................', '................', '................', '................', '................', 'Y...............', '................', '...............Y', '................', '.Y............Y.']];
+ITEM.aura3 = [0, 0, ['Y.Y..........Y.Y', '.Y............Y.', 'Y...............', '...............Y', '................', '................', '................', 'Y..............Y', '................', '................', '................', 'Y...............', '................', '...............Y', '.Y............Y.', 'Y.Y..........Y.Y']];
+for (var k in LOOK) LOOK[k].forEach(function (l, n) {
+  var nm = k + '_' + (n + 8);
+  DS.LOOKP[nm] = l;
+  SPR[nm] = P.def(P.compose(l[0], l[1], l[2]), l[3]);
+});
+function over(rows, pats) {
+  var g = rows.map(function (r) { return r.split(''); });
+  pats.forEach(function (p) { p[2].forEach(function (r, dy) { for (var dx = 0; dx < r.length; dx++) { var y = p[1] + dy, x = p[0] + dx; if (r[dx] !== '.' && g[y] && x >= 0 && x < g[y].length) g[y][x] = r[dx] === '_' ? '.' : r[dx]; } }); });
+  return g.map(function (r) { return r.join(''); });
+}
+function sparks(lv) { return [[0, 0, ITEM['aura' + (lv > 1 ? lv : '')][2]]]; }
+// 기병: 왕관 · 망토 · 말옷 · 말 투구 · 금창 · 날개 (sprites2 의 bm 과 같은 조각)
+var K_CLOTH = [3, 9, ['hqqqqqqh', 'hqQqqQqh', 'hbbbbbbh']], K_HEAD = [10, 4, ['.kmMk', 'kmmhk']], K_CAPE = [0, 6, ['..kq', '.kqq', 'kqQk']], K_LANCE = [9, 7, ['iiiiiiw']], K_CROWN = [5, 0, ['i..i', 'irii']], K_HORN = [14, 1, ['.w', 'w.']],
+    K_WING = [0, 2, ['kk', 'kwk', 'kwwk', 'kwmwk', '.kwmk', '..kw']], K_WING2 = [0, 0, ['k', 'wk', 'wwk', 'wwwk', 'kwmwk', 'kwmmk', '.kwmk', '..kw']], K_BOLT = [13, 9, ['.Y', 'Y.', '.Y']];
+var CAVPX = [
+  { a: '#3a3350', A: '#262036', h: '#2b2440', H: '#1b1626', m: '#ffe27a', M: '#c08f2c', q: '#5f41ad', Q: '#3a2a78', b: '#ffe27a', i: '#ffe27a', r: '#ffe27a', w: '#ffe27a', Y: '#ffe27a' },
+  { a: '#ffe27a', A: '#c08f2c', h: '#f1ead9', H: '#cfc4a8', m: '#ffe27a', M: '#c08f2c', q: '#3a2a78', Q: '#241a50', b: '#3a3350', i: '#ffffff', r: '#3a3350', w: '#fff3b0', Y: '#ffe27a' },
+  { a: '#fff6dc', A: '#d8c8a0', h: '#1b1626', H: '#0f0c18', m: '#9fe8ec', M: '#62b0ee', q: '#f6cf57', Q: '#c08f2c', b: '#62b0ee', i: '#ffffff', r: '#f6cf57', w: '#ffe27a', Y: '#fff3b0' }];
+CAVPX.forEach(function (p, n) { SPR['xcav_' + (n + 8)] = P.def(over(RAW.knight, [K_CROWN, K_CAPE, K_CLOTH, K_HEAD, K_LANCE, n > 0 ? (n > 1 ? K_WING2 : K_WING) : [0, 0, []], K_BOLT].concat(n > 0 ? [K_HORN] : []).concat(sparks(n + 1))), p); });
+// 비병: 용 기수 (매 바탕 위에 큰 날개 · 금 띠 · 창 · 꼬리깃 · 관)
+var H_WING = [0, 3, ['kk..........kk', 'khk........khk', 'khhk......khhk']], H_BAND = [1, 6, ['b............b', '.b..........b.']], H_SPEAR = [11, 0, ['w', 'w', 'o', 'o', 'o']], H_TAIL = [5, 13, ['kTTTTk', 'kTkkTk', '.k..k.']], H_CROWN = [6, 0, ['i..i', 'iiii']];
+var FLYPX = [
+  { a: '#62b0ee', A: '#3572b8', b: '#ffffff', h: '#3a6ab0', H: '#2a4a80', y: '#cfe6ff', T: '#2a4a80', i: '#e8f4ff', w: '#e8f4ff', Y: '#9fe8ec' },
+  { a: '#e2e9f2', A: '#a7b2c6', b: '#62b0ee', h: '#e8f0ff', H: '#9fc8e8', y: '#ffffff', T: '#9fc8e8', i: '#f6cf57', w: '#ffffff', Y: '#9fe8ec' },
+  { a: '#f6cf57', A: '#c08f2c', b: '#ffffff', h: '#f6cf57', H: '#c08f2c', y: '#fff6dc', T: '#e0525e', i: '#ffffff', w: '#ffffff', Y: '#ffe9a0' }];
+FLYPX.forEach(function (p, n) { SPR['xfly_' + (n + 8)] = P.def(over(RAW.hawk, [H_CROWN, H_WING, H_BAND, H_SPEAR, H_TAIL].concat(sparks(n + 1))), p); });
 })();
 
 // r14 새 그림 ④ — 시나리오 보스 31 · 큰 부대원 4 · 일반 몬스터. 64 단위 상자에 그린 것을 큰 몸(96 단위)에는 1.42 배로 얹는다.
@@ -20452,6 +20969,19 @@ function meteorEnd(p) {
   this.rings.push({ x: p.x, y: p.y, t: 0, dur: 0.35, c: '#ffd75e', r: 12 });
   this.shake = Math.max(this.shake, 0.4);
 }
+// 2.2.9 윗길(8단~)의 기술: 그 자리 위에 금빛 고리 · 빛 · 위로 오르는 불티를 덧그린다 (값싼 것만 — 칸이 많으면 가운데 몇 칸에만). 효과 「가볍게」면 고리 하나
+V.grandFx = function (tiles, from, S) {
+  var self = this, L = tiles || [], lite = !!self.lite, n = 0, cols = ['#ffe9a0', '#f6cf57', '#ffffff'];
+  if (!L.length && from) L = [from];
+  var step = Math.max(1, Math.ceil(L.length / (lite ? 2 : 5)));
+  for (var i = 0; i < L.length; i += step) {
+    var t = L[i]; if (!t || !self.onScreen(t[0], t[1])) continue;
+    self.rings.push({ x: t[0], y: t[1], t: -0.06, dur: 0.5, c: cols[1], r: S.ult ? 18 : 14, w: 2 });
+    if (!lite) { self.rings.push({ x: t[0], y: t[1], t: -0.16, dur: 0.45, c: cols[0], r: 9, rise: true }); self.burst(t[0], t[1], cols, S.ult ? 8 : 5, { up: 36, grav: -26, spd: 12, life: 0.75 }); }
+    if (n++ < 3) self.light(t[0] * 16 + 8, t[1] * 16 + 8, S.ult ? 26 : 20, cols[1], 0.55, 0.5);
+  }
+  if (S.ult && !lite) self.flashA = Math.max(self.flashA || 0, 0.05);
+};
 V.fx = function (name, tiles, from) {
   var cols = FXC[name] || FXC.slash, self = this, n = 0;
   this.sfx(FXS[name] || 'skill');
@@ -20681,7 +21211,7 @@ V.handle1 = function (e, sim) {
       case 'heal': if (on) { self.float(u.x, u.y, '+' + Math.round(e.v), '#7fe07a', { num: true, s: 1.5, pk: 2, slow: true, life: 1 }); } break;
       case 'mana': if (on) { self.float(u.x, u.y, '+' + Math.round(e.v), '#62b0ee', { num: true, s: 1.25, pk: 1.6, slow: true, life: 1 }); self.sfx('heal'); } break;
       case 'item': if (on) { self.burst(u.x, u.y, FXC.heal, 6, { up: 20, grav: -20, spd: 6 }); self.sfx(e.key === 'endo' ? 'buff' : 'heal'); if (e.key === 'endo') self.float(u.x, u.y, '기운초!', '#f6cf57', { life: 1 }); } break;
-      case 'skill': if (self.lastSk) self.lastSk[e.id] = { fx: e.fx, t: self.time }; self.fx(e.fx, e.tiles, e.from); if (v && on) { var cc = (FXC[e.fx] || FXC.slash)[0]; v.cast = { t: 0, c: cc }; self.light(v.x * 16 + 8, v.y * 16 + 6, 14, cc, 0.5, 0.45); }
+      case 'skill': if (self.lastSk) self.lastSk[e.id] = { fx: e.fx, t: self.time }; self.fx(e.fx, e.tiles, e.from); if (DS.SKILLS && DS.SKILLS[e.sk] && DS.SKILLS[e.sk].grand) self.grandFx(e.tiles, e.from, DS.SKILLS[e.sk]); if (v && on) { var cc = (FXC[e.fx] || FXC.slash)[0]; v.cast = { t: 0, c: cc }; self.light(v.x * 16 + 8, v.y * 16 + 6, 14, cc, 0.5, 0.45); }      // 2.2.9: 윗길 기술 · 필살기의 금빛 덧빛 (grandFx)
         var SU = DS.SKILLS && DS.SKILLS[e.sk]; if (SU && SU.ult && u && u.side === 'ally' && (on || u.role === 'cmd')) { try { self.ultBlast(e, SU, u); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'ultBlast'); } }      // 2.2.5 필살기 연출
         // r26: 내가 고른 가문(또는 수동 가문)의 기술은 더 무겁게 — 멈칫 · 흔들림 · 그 색의 번쩍임 · 머리 위 기술 이름 판
         if (v && on && u.side === 'ally' && u.role === 'cmd' && (e.id === self.sel || !u.auto) && !/^i_/.test(e.sk || '')) {
@@ -24851,7 +25381,7 @@ function ultFx(u, sk) {
   A('ult');
   if (big && now - (G.ultCutT || 0) > 1400) { G.ultCutT = now; ultCut(u, S); }
   else G.view.float(u.x, u.y, S.name, '#f6cf57', { dy: -20, life: 1.3, call: true });
-  if (!calm()) { G.view.flashA = Math.max(G.view.flashA || 0, big ? 0.06 : 0.04); G.view.shake = Math.max(G.view.shake || 0, big ? 0.16 : 0.1); if (big && G.view.hitStop) G.view.hitStop(0.05); }      // r38: 번쩍임·흔들림은 가볍게, 멈춤은 50ms — 기술 그림이 그대로 보이게
+  if (!calm()) { var gx = S.grand ? 1.5 : 1; G.view.flashA = Math.max(G.view.flashA || 0, (big ? 0.06 : 0.04) * gx); G.view.shake = Math.max(G.view.shake || 0, (big ? 0.16 : 0.1) * gx); if (big && G.view.hitStop) G.view.hitStop(0.05); }      // 2.2.9: 윗길 필살기는 조금 더 세게      // r38: 번쩍임·흔들림은 가볍게, 멈춤은 50ms — 기술 그림이 그대로 보이게
   if (u.side === 'ally') setTimeout(function () { if (G.sim && G.sim.byId[u.id] && !u.dead) bark(u, 'skill'); }, 950);
 }
 function ultCut(u, S) {
@@ -24860,16 +25390,18 @@ function ultCut(u, S) {
   var sv = G.save, ch = u.role === 'cmd' ? sv.chars[u.ch] : (G.sim.byId[u.owner] ? sv.chars[G.sim.byId[u.owner].ch] : null);
   var hn = ch ? (ch.id === sv.hero ? (DS.houseName ? DS.houseName(sv) : '') : (DS.LIN_HOUSE && DS.LIN_HOUSE[ch.cls] ? DS.LIN_HOUSE[ch.cls] + ' 가문' : DS.flagName(ch.cls))) : '';
   var fc = ch ? (DS.FLAG[ch.cls] || '#c9a96a') : '#c9a96a', who = u.mn || u.name || '';
-  var spd = DS.spdOf ? DS.spdOf(sv.opt && sv.opt.speed) : 1, ud = spd >= 2 ? 620 : spd >= 1.5 ? 720 : 850;      // 2.2.5: 빠른 배속이면 더 짧게 (싸움은 멈추지 않는다)
+  var grand = !!(S.grand || (u.tier >= 8 && u.role === 'cmd'));      // 2.2.9: 8단 위 — 금 테 · 긴 이름 띠 · 더 큰 빛 (빠른 배속이면 그만큼 짧게)
+  var spd = DS.spdOf ? DS.spdOf(sv.opt && sv.opt.speed) : 1, ud = Math.round((spd >= 2 ? 620 : spd >= 1.5 ? 720 : 850) * (grand ? 1.18 : 1));      // 2.2.5: 빠른 배속이면 더 짧게 (싸움은 멈추지 않는다)
   el.style.setProperty('--fc', fc); el.style.setProperty('--ud', ud + 'ms'); el.dataset.k = DS.ultCls ? DS.ultCls(S, u) : '';
-  el.innerHTML = '<div class="ucb"><i class="ucl"></i><span class="ucp"></span><span class="uct"><small>' + esc([hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>필살</i><b>' + esc(S.name) + '</b></span></span>' + (S.ic && DS.ICONS.indexOf('sk_' + S.ic) >= 0 ? '<span class="uci">' + DS.icon('sk_' + S.ic, 30) + '</span>' : '') + '</div>';      // 2.2.6: 오른쪽 끝에 그 필살기의 그림      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
+  var tn = grand && ch ? u.tier + '단 ' + DS.tierName(ch.cls, u.tier) : '';
+  el.innerHTML = '<div class="ucb"><i class="ucl"></i>' + (grand ? '<i class="ucg"></i>' : '') + '<span class="ucp"></span><span class="uct"><small>' + esc([tn, hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>' + (grand ? '오의' : '필살') + '</i><b>' + esc(S.name) + '</b></span></span>' + (S.ic && DS.ICONS.indexOf('sk_' + S.ic) >= 0 ? '<span class="uci">' + DS.icon('sk_' + S.ic, 30) + '</span>' : '') + '</div>';      // 2.2.6: 오른쪽 끝에 그 필살기의 그림      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
   try {
     var sp = DS.unitSprite(u), cv = DS.spriteCanvas(sp[0], sp[1], { hd: 1 }), c2 = document.createElement('canvas'), W = 72;
     c2.width = W; c2.height = W; var g = c2.getContext('2d'); g.imageSmoothingEnabled = false; var hh = W * cv.height / cv.width; g.drawImage(cv, 0, 0, cv.width, cv.height, 0, W - hh, W, hh);
     $('.ucp', el).appendChild(c2);
   } catch (x) {}
   var tp = $('#top'), sgr = sg.getBoundingClientRect(); if (tp) { var tr = tp.getBoundingClientRect(); el.style.top = Math.max(4, Math.round(tr.bottom - sgr.top + 4)) + 'px'; }      // r38: 위 막대 바로 아래에 붙는다 (전장 가운데를 가리지 않는다) · 2.2.5: 좌우 끝까지
-  el.classList.remove('on', 'calm'); void el.offsetWidth; if (calm()) el.classList.add('calm'); el.classList.add('on');
+  el.classList.remove('on', 'calm', 'grand'); void el.offsetWidth; if (calm()) el.classList.add('calm'); if (grand) el.classList.add('grand'); el.classList.add('on');
   clearTimeout(G.ultCutTm); G.ultCutTm = setTimeout(function () { el.classList.remove('on'); }, ud + 30);
 }
 DS.ultCut = ultCut;
@@ -24877,8 +25409,8 @@ DS.ultCut = ultCut;
 function fuseNews(up) {
   var sv = G.save, P = DS.fuseProg(sv); if (!P.can) return;
   var nm = up && up.who ? (up.hero ? DS.charName(sv.chars[sv.hero]) : (up.who.ttl || up.who.n || '')) : '';
-  if (P.ok) banner('합일 준비 끝', '교회에서 7단 Lv10 세 사람을 골라 함께 오른다', 3400);
-  else banner((nm ? nm + ', ' : '') + '7단 Lv10', '합일: 7단 Lv10 사람 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대는 아직'), 2800);
+  if (P.ok) banner('합일 준비 끝', '교회에서 서로 다른 가문의 가주 셋을 고른다', 3400);
+  else banner((nm ? nm + ', ' : '') + '7단 Lv10', '합일: 7단 Lv10 가주 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대는 아직'), 2800);
   if (!G.scn) updateQuest();
 }
 // ───────── r17 boss: 이름 지우기 (30번 어스름의 왕) ─────────
@@ -26206,8 +26738,9 @@ function fallenRow(f) {
 //   막사가 가득(DS.MERC_MAX)하면 빈 가문 가운데서만 오고, 빈 가문도 없으면 단추가 잠기고 까닭을 보인다.
 function heroRoomLine(s) {
   var room = DS.heroRoom(s), vac = room.filter(function (ch) { return DS.vacant(s, ch); }), nb = DS.barracks(s).length, shut = DS.closedCls ? DS.closedCls(s) : [];
-  if (!room.length && !shut.length) return '<p class="gap">' + esc(DS.recruitWhy(s)) + '</p>';
-  var h = '';
+  var zz = DS.fzShutList ? DS.fzShutList(s) : [];
+  if (!room.length && !shut.length) return '<p class="gap">' + esc(DS.recruitWhy(s)) + '</p>' + fzHallLine(zz);
+  var h = fzHallLine(zz);
   if (shut.length) {      // 2.2.4: 닫힌 가문 — 그 병과의 영웅이 오면 그이가 가주가 되어 열린다
     var od = Math.round(DS.openOdds(s) * 100), sure = DS.openSure(s);
     h += '<div class="hshut"><p class="hsh"><b>닫힌 가문 ' + shut.length + '곳</b><small>' + (od >= 100 ? '이번 모집은 반드시 연다' : '다음에 열 확률 ' + od + '%, ' + sure + '번 안에 반드시') + '</small></p><p class="hsl">' +
@@ -26218,21 +26751,26 @@ function heroRoomLine(s) {
   if (room.length) h += '<p class="hint sm">' + (vac.length ? '빈 가문의 병과가 나오면 바로 가주가 된다. 선 가문의 병과면 막사로 간다' : '선 가문의 병과가 나오면 막사에서 기다린다') + '</p>';
   return h;
 }
+function fzHallLine(zz) {      // 2.2.9: 합일로 잠든 가문 — 이번 세대에는 영웅관에서 열리지 않는다
+  if (!zz || !zz.length) return '';
+  return '<div class="hshut fzh"><p class="hsh"><b>합일로 잠듦 ' + zz.length + '곳</b><small>다음 세대에 다시</small></p><p class="hsl">' + zz.map(function (k) { return '<i class="hrm shut fz" style="--fc:' + (DS.FLAG[k] || '#c9a96a') + '">' + DS.houseCrest(k, 14) + esc(hgShort(null, k)) + '<small>잠듦</small></i>'; }).join('') + '</p><p class="hint sm">이 병과가 나와도 가문이 열리지 않는다. 막사에서 기다린다</p></div>';
+}
 // 2.2.4 가문이 열리는 순간: 펼쳐지는 깃발 + 새 가주 + 그 가문의 가훈 한마디 (DS.cine 이 있으면 그 연출로)
 function houseOpenShow(r, cb) {
   var ch = r.ch, m = r.m, cast = LORE().cast && LORE().cast[ch.cls], say = cast && cast.join ? '"' + lt(cast.join) + '"' : '', left = DS.closedCls(G.save).length;
+  if (DS.cine && r.reopen) { DS.cine({ k: 'reopen', por: [mercSpr(m, 4)], crest: DS.houseCrest(ch.cls, 52), fc: DS.FLAG[ch.cls] || '', title: DS.flagName(ch.cls) + '이 다시 열렸다', sub: (r.reopen.early ? '일찍 깨어나' : '잠든 지 ' + Math.max(1, (r.reopen.g || 2) - (r.reopen.from || 1)) + '세대 만에') + ', 가주 ' + (m.n || ''), say: say, note: r.reopen.n ? '옛 가주 ' + josa(r.reopen.n, '은는') + ' ' + (r.reopen.rep || '대표') + '에게 스몄다' : '' }, cb); return; }      // 2.2.9: 합일로 잠들었던 가문
   if (DS.cine) { DS.cine({ k: 'open', por: [mercSpr(m, 4)], crest: DS.houseCrest(ch.cls, 52), fc: DS.FLAG[ch.cls] || '', title: DS.flagName(ch.cls) + '이 열렸다', sub: '가주 ' + (m.n || '') + ', ' + (DS.GRADES[m.g] || {}).name + ' ' + DS.CLASSES[ch.cls].name, say: say, note: left ? '닫힌 가문 ' + left + '곳' : '열 가문이 모두 모였다' }, cb); return; }
   if (cb) cb();
 }
 DS.houseOpenShow = houseOpenShow;
 function mercShop() {
   var o = sheet('영웅관', function () {
-    var s = G.save, cost = DS.recruitPrice(s, 0), next = DS.recruitPrice(s, 1), base = Math.round(DS.mercCost(DS.heroTier(s)) * (DS.RECRUIT.k || 1) / 10) * 10, html = '', why = DS.recruitWhy(s);
+    var s = G.save, cost = DS.recruitPrice(s, 0), next = DS.recruitPrice(s, 1), base = DS.recruitBase(s), eN = DS.recruitOpenN(s), html = '', why = DS.recruitWhy(s);
     var pityLeft = Math.max(1, DS.PITY - (s.pity || 0)), ease = DS.recruitEase(s), pg = (DS.GRADES[DS.PITY_G || 5] || {}).name || '', can = !why && (s.tickets > 0 || s.gold >= cost);
     html += '<div class="gacha"><div class="gh"><b>영웅 모집</b><span>모집권 <b class="num">' + (s.tickets || 0) + '</b>장</span></div>' +
       '<p class="hint sm">한 번에 한 사람. 병과는 무작위. <b class="warn">쓰러지면 잃는다</b></p>' +
       '<div class="gprice"><span>지금 ' + coin(cost) + '</span><i aria-hidden="true">→</i><span>다음 ' + coin(next) + '</span></div>' +
-      '<p class="gwhy">부를 때마다 값이 오른다. 계절이 지나면 조금씩 내려간다.' + (ease > 0 ? ' <b>기본값 ' + coin(base) + '까지 ' + ease + '계절</b>' : '') + ' 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다, 그리고 2, 3, 4, 5, 6, 7, 9, 11, 13번을 처음 깰 때 한 장.</p>' +
+      '<p class="gwhy">빈 가문이 많을수록 싸다. 지금 빈 가문 <b>' + eN + '곳</b>. 부를 때마다 오르고 계절마다 내려간다.' + (ease > 0 ? ' <b>기본값 ' + coin(base) + '까지 ' + ease + '계절</b>' : '') + ' 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다, 그리고 2, 3, 4, 5, 6, 7, 9, 11, 13번을 처음 깰 때 한 장.</p>' +
       heroRoomLine(s) +
       '<div class="gbtn one"><button class="btn' + (can ? ' gold' : ' poor') + '" data-pull="1"' + (why ? ' disabled aria-disabled="true"' : '') + '><span>영웅 모집</span><small>' + (why ? '막사 가득' : s.tickets > 0 ? '모집권 1장' : coin(cost)) + '</small></button></div>' +
       '<p class="pity">' + (pityLeft <= 5 || FOLD.rates ? pg + '까지 ' + pityLeft + '회, ' : '') + '<button class="lnk" data-pfold="rates" aria-expanded="' + !!FOLD.rates + '">등급 확률 ' + (FOLD.rates ? '▾' : '▸') + '</button></p>' +
@@ -26323,11 +26861,63 @@ function fuRow(s, u) {      // 이미 맺은 묶음 한 줄: 문장 셋 + 이름
 function fuWho(s, c) { return c.role === 'hero' ? DS.charName(s.chars[s.hero]) : (c.who.ttl || c.who.n || ''); }
 function fuRole(c) { return c.role === 'hero' ? '맹주' : c.role === 'bear' ? '가주' : c.role === 'kin' ? '가문원' : c.role === 'sb' ? '막사' : '가문 밖'; }
 function fuSpr(s, c) { return c.role === 'hero' ? charSpr(s.chars[s.hero], 1.2) : mercSpr(c.who, 1.2); }
+function fuAge(s, c) {      // 2.2.9: 합일할 가주의 나이 (늙은 이를 대표로 올리면 곧 천수를 다한다 — 다음 가주는 8단을 잇지 않는다)
+  var e = c.role === 'hero' ? s.chars[s.hero] : c.who, L = DS.ageLife ? DS.ageLife(s, e) : null;
+  if (!L || L.age == null) return '';
+  return L.age + '살' + (L.stage === 'elder' ? ', 노년' : L.left != null && L.left <= 20 ? ', 남은 해 ' + L.left : '');
+}
 function fuPickRow(s, c, on) {
-  var nat = DS.CLASSES[DS.pNative(s, c.who)] || {};
+  var nat = DS.CLASSES[DS.pNative(s, c.who)] || {}, ag = fuAge(s, c);
   return '<button class="row fupick' + (on ? ' on' : '') + '" data-fupick="' + c.key + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + (c.ch ? crestH(c.ch, 22) : '') + '<span class="fusp">' + fuSpr(s, c) + '</span>' +
-    '<span class="tx"><b>' + esc(fuWho(s, c)) + ' <i class="tg">' + fuRole(c) + '</i></b><small>' + (c.ch ? esc(hsShort(c.ch.cls)) + ' 가문, ' : '') + esc(c.role === 'hero' || c.role === 'bear' ? (nat.name || '') : DS.mercKind(c.who)) + ', ' + lv(c.L) + '</small></span>' +
+    '<span class="tx"><b>' + esc(fuWho(s, c)) + ' <i class="tg">' + fuRole(c) + '</i></b><small>' + (c.ch ? esc(hsShort(c.ch.cls)) + ' 가문, ' : '') + esc(c.role === 'hero' || c.role === 'bear' ? (nat.name || '') : DS.mercKind(c.who)) + ', ' + lv(c.L) + (ag ? ', ' + esc(ag) : '') + '</small></span>' +
     '<i class="fuck">' + (on ? '✓' : '') + '</i></button>';
+}
+// 2.2.9: 대표 가문 고르기 — 고른 셋의 문장 단추. 기본 = 공훈이 가장 큰 곳, 맹주가 들면 맹주 가문으로 잠긴다
+var FUREP = { key: '', id: 0 };
+function fuRepNow(s, pick) {
+  if (!pick || pick.length !== DS.FUSE_N) return null;
+  var who = pick.map(function (k) { return DS.pByKey(s, k); }), lock = DS.fuseRepLock(s, who); if (lock) return lock.id;
+  var key = pick.slice().sort().join(), hs = who.map(function (w) { return DS.whoHouse(s, w); });
+  if (FUREP.key === key && hs.some(function (h) { return h && h.id === FUREP.id; })) return FUREP.id;
+  var d = DS.fuseRep(s, who); return d ? d.id : null;
+}
+DS.fuRepNow = fuRepNow;
+function fuRepBox(s, pick) {
+  var who = pick.map(function (k) { return DS.pByKey(s, k); }), hs = who.map(function (w) { return DS.whoHouse(s, w); }), lock = DS.fuseRepLock(s, who), rid = fuRepNow(s, pick), dft = DS.fuseRep(s, who);
+  var R = hs.filter(function (h) { return h && h.id === rid; })[0]; if (!R) return '';
+  var x = DS.CLASSES[DS.lineCls(R.cls, 8)] || {}, gone = hs.filter(function (h) { return h && h !== R; });
+  var h = '<div class="furep2"><p class="fuhd">대표 가문 <small>' + (lock ? '맹주가 들어 맹주 가문으로 정해졌다' : '누르면 바꾼다. 처음은 공훈이 가장 큰 곳') + '</small></p><div class="furb">';
+  hs.forEach(function (c, i) {
+    var on = c === R, w = who[i], dis = !!lock && c !== lock;
+    h += '<button class="furbb' + (on ? ' on' : '') + '" data-furep="' + c.id + '"' + (dis ? ' disabled aria-disabled="true"' : '') + ' aria-pressed="' + on + '" style="--fc:' + (DS.FLAG[c.cls] || '#c9a96a') + '">' + crestH(c, 22) + '<b>' + esc(hgShort(c)) + '</b><small>' + esc(c.id === s.hero ? '맹주' : (w.ttl || w.n || '')) + '</small><small>' + esc([fuAge(s, { role: c.id === s.hero ? 'hero' : 'bear', who: w }).replace(/, .*$/, ''), dft && c === dft && !lock ? '공훈 1위' : ''].filter(Boolean).join(', ')) + '</small>' + (on ? '<i class="furk">대표</i>' : '') + '</button>';
+  });
+  h += '</div><ul class="fuout"><li class="up">' + crestH(R, 16) + '<span><b>' + esc(DS.flagName(R.cls, s)) + '</b> 가주가 8단 <b>' + esc(x.name || '') + '</b>에 오른다. 공훈 +' + fmtN(DS.FUSE_HX || 0) + ', 수명 +' + DS.fuseLsGain(s, who, R.id) + '년</span></li>' +
+    gone.map(function (c) { var w = who[hs.indexOf(c)]; return '<li class="dn">' + crestH(c, 16) + '<span><b>' + esc(DS.flagName(c.cls, s)) + '</b> 가주 ' + esc(josa(w.ttl || w.n || '', '은는')) + ' 흡수된다. 가문은 다음 세대까지 잠든다</span></li>'; }).join('') +
+    '</ul><p class="hint sm">흡수된 가주의 장비는 가방으로 간다. 막사의 그 병과 사람은 기다린다</p></div>';
+  return h;
+}
+// 합일 확인 → 연출(세 얼굴이 빛으로 · 깃발 둘이 내려가고 하나가 오른다 · 8단 모습) → 승급 창
+function fuAsk(s, pick, rep, closeFn) {
+  var who = pick.map(function (k) { return DS.pByKey(s, k); }), hs = who.map(function (w) { return DS.whoHouse(s, w); }), R = hs.filter(function (h) { return h && h.id === rep; })[0]; if (!R) return;
+  var gone = hs.filter(function (h) { return h !== R; }), x = DS.CLASSES[DS.lineCls(R.cls, 8)] || {};
+  var q = overlay('<div class="result fuask"><h2>합일할까?</h2><div class="fuaskr">' + hs.map(function (c, i) { return '<span class="' + (c === R ? 'up' : 'dn') + '">' + crestH(c, 26) + '<b>' + esc(hgShort(c)) + '</b><small>' + esc(c.id === s.hero ? '맹주' : (who[i].ttl || who[i].n || '')) + '</small></span>'; }).join('') + '</div>' +
+    '<p class="mnote">' + esc(DS.flagName(R.cls, s)) + ' 가주가 8단 ' + esc(x.name || '') + '에 오른다</p><p class="mnote">' + esc(gone.map(function (c) { return hgShort(c); }).join(', ')) + ' 가문은 다음 세대까지 잠든다</p>' +
+    '<p class="mwarn">되돌릴 수 없음</p><button class="btn gold wide" id="yesFuse">합일</button><button class="btn wide" data-close>취소</button></div>', 'modal center');
+  $('#yesFuse', q).addEventListener('click', function () {
+    if (q.dataset.done) return; q.dataset.done = '1'; q.close(); if (busy()) return;
+    if (!DS.fuseOk(s, pick, { rep: rep }).ok) return;
+    var por = who.map(function (w, i) { return w === DS.heroPs(s) ? charSpr(s.chars[s.hero], 4) : mercSpr(w, 4); }), crests = hs.map(function (c) { return DS.houseCrest(c.cls, 40); }), fcs = hs.map(function (c) { return DS.FLAG[c.cls] || '#c9a96a'; }), ri = hs.indexOf(R);
+    var m = DS.fuse(s, pick.slice(), { rep: rep }); if (!m) return;
+    if (closeFn) closeFn();
+    DS.rebuildParty(); DS.updateQuest(); U.persist();
+    var LF = DS.lastFuse || {}, H = s.chars[LF.rep], trio = LF.trio || [];
+    var note = trio.join(', ') + ', 셋이 하나가 되어 8단에 올랐다. 이제 레벨 70을 넘어 자란다. 대표 가문 ' + (LF.repName || '') + ', 공훈 +' + fmtN(LF.hx || 0) + '.';
+    var reveal = function () { if (H) DS.showPromo({ id: H.id, from: 7, to: 8, cls: H.cls, fused: '세 가주', note: note }, null); else toast(note, 4200); };
+    var V0 = G.view; if (V0 && V0.cere && H) { var fu = G.sim && G.sim.byId['c' + H.id]; if (fu) V0.cere(fu.id, 'fuse', { to: 8 }); }
+    var ord = [ri].concat([0, 1, 2].filter(function (i) { return i !== ri; }));
+    if (DS.cine && DS.cineMode() !== 'off') DS.cine({ k: 'fuse', por: ord.map(function (i) { return por[i]; }), crests: ord.map(function (i) { return crests[i]; }), fcs: ord.map(function (i) { return fcs[i]; }), neo: H ? charSpr(H, 5) : '', fc: H ? DS.FLAG[H.cls] || '' : '', title: '8단 ' + (x.name || ''), sub: trio.join(', '), note: (LF.gone || []).map(function (g) { return hgShort(null, g.cls); }).join(', ') + ' 가문은 다음 세대까지 잠든다' }, reveal);
+    else reveal();
+  });
 }
 function church() {
   var pick = null;      // 고른 가문 번호들 (창이 열려 있는 동안)
@@ -26339,22 +26929,24 @@ function church() {
     html += lgChurchRow();      // r4 가문: 관
     // r38: 「맹주의 필살기」 바꾸기 줄은 없앴다 — 필살기는 고르는 것이 아니라 타고난다 (사람 창의 「타고난 필살기」)
     var P = DS.fuseProg(s), cands = P.ready;
-    html += '<h4>합일 <i class="own' + (P.ok ? ' ok' : '') + '">7단 Lv10 ' + cands.length + '명</i></h4><p class="hint">7단 Lv10 사람 셋을 고르면 셋이 함께 8단에 오르고, 레벨 70을 넘어 자란다. 셋 가운데 공훈이 가장 큰 가문이 대표 가문이 되어 공훈 +' + fmtN(DS.FUSE_HX || 0) + '을 받는다. 셋은 제 자리를 떠나지 않는다. 맹세의 깃대 ' + (s.crest ? '보유' : '<b class="warn">없음</b>') + (P.fused ? '. 합일한 사람 ' + P.fused + '명' : '') + '</p>';
+    html += '<h4>합일 <i class="own' + (P.ok ? ' ok' : '') + '">7단 Lv10 가주 ' + cands.length + '명</i></h4><p class="hint">서로 다른 세 가문의 가주(7단 Lv10)를 고른다. 대표 가문의 가주가 그 가문의 8단에 오르고, 나머지 두 가주는 대표에게 흡수된다. 두 가문은 이번 세대가 끝날 때까지 잠든다. 맹세의 깃대 ' + (s.crest ? '보유' : '<b class="warn">없음</b>') + (P.fused ? '. 합일한 사람 ' + P.fused + '명' : '') + '</p>';
     if (pick == null) pick = cands.length === DS.FUSE_N ? cands.map(function (c) { return c.key; }) : [];
     pick = pick.filter(function (k) { return cands.some(function (c) { return c.key === k; }); });
     if (cands.length) {
-      html += '<p class="fuhd">고른 사람 <b class="num">' + pick.length + ' / ' + DS.FUSE_N + '</b></p>';
-      var rp = pick.length && DS.fuseRep ? DS.fuseRep(s, pick.map(function (k) { return DS.pByKey(s, k); })) : null; if (rp) html += '<p class="hint sm furep">' + crestH(rp, 18) + ' 대표 가문 <b>' + esc(DS.flagName(rp.cls, s)) + '</b> ' + DS.chip('공훈', '+' + fmtN(DS.FUSE_HX || 0), 1) + '</p>';      // 2.1.0
+      html += '<p class="fuhd">고른 가주 <b class="num">' + pick.length + ' / ' + DS.FUSE_N + '</b></p>';
       cands.forEach(function (c) { html += fuPickRow(s, c, pick.indexOf(c.key) >= 0); });
+      if (pick.length === DS.FUSE_N) html += fuRepBox(s, pick);      // 2.2.9: 대표 고르기 (맹주가 들면 잠긴다)
     }
     if (cands.length < DS.FUSE_N) {
       var near = P.low.slice(0, DS.FUSE_N - cands.length + 1);
-      html += '<p class="hint sm">' + (P.can ? '합일: 7단 Lv10 사람 ' + P.n + '/' + P.of : '합일할 사람이 셋 남지 않았다') + '</p>';
+      html += '<p class="hint sm">' + (P.can ? '합일: 7단 Lv10 가주 ' + P.n + '/' + P.of : '합일할 가주가 셋 남지 않았다') + '</p>';
       near.forEach(function (c) { html += '<div class="row fupick off">' + (c.ch ? crestH(c.ch, 22) : '') + '<span class="fusp">' + fuSpr(s, c) + '</span><span class="tx"><b>' + esc(fuWho(s, c)) + ' <i class="tg">' + fuRole(c) + '</i></b><small>' + lv(c.L) + ', ' + (DS.FUSE_MIN - c.L) + '레벨 남음</small></span></div>'; });
     }
+    var zz = DS.fzShutList ? DS.fzShutList(s) : [];
+    if (zz.length) html += '<p class="hint sm fzz">합일로 잠든 가문: ' + zz.map(function (k) { return esc(hgShort(null, k)); }).join(', ') + '. 다음 세대에 다시 열 수 있다</p>';
     return html;
   });
-  o.foot = function () { var s = G.save, ok = pick && DS.fuseOk(s, pick).ok; return pick && DS.fuseCands(s).length ? '<button class="btn gold' + (ok ? '' : ' poor') + '" data-fugo="1">합일</button>' : ''; };
+  o.foot = function () { var s = G.save, ok = pick && DS.fuseOk(s, pick, { rep: fuRepNow(s, pick) }).ok; return pick && DS.fuseCands(s).length ? '<button class="btn gold' + (ok ? '' : ' poor') + '" data-fugo="1">합일</button>' : ''; };
   o.draw();
   o.addEventListener('click', function (e) {
     var s = G.save;
@@ -26368,22 +26960,15 @@ function church() {
     var pk = e.target.closest('[data-fupick]');
     if (pk) {
       var id = pk.dataset.fupick, i = pick.indexOf(id);
-      if (i >= 0) pick.splice(i, 1); else if (pick.length < DS.FUSE_N) pick.push(id); else { A('cancel'); toast('사람은 ' + DS.FUSE_N + '명까지 고른다'); return; }
+      if (i >= 0) pick.splice(i, 1); else if (pick.length < DS.FUSE_N) pick.push(id); else { A('cancel'); toast('가주는 ' + DS.FUSE_N + '명까지 고른다'); return; }
       A('tap'); o.draw(); return;
     }
+    var rb = e.target.closest('[data-furep]');
+    if (rb) { if (rb.disabled) { A('cancel'); toast('맹주가 들면 맹주 가문이 대표다'); return; } FUREP.id = +rb.dataset.furep; FUREP.key = pick.slice().sort().join(); A('tap'); o.draw(); return; }
     if (!e.target.closest('[data-fugo]')) return;
     if (busy()) { no('전투 중', '싸우는 중에는 할 수 없다'); return; }
-    var chk = DS.fuseOk(s, pick); if (!chk.ok) { A('cancel'); toast(chk.why); return; }
-    var m = DS.fuse(s, pick.slice()); if (!m) return;
-    DS.rebuildParty(); DS.updateQuest(); U.persist(); o.close();
-    var LF = DS.lastFuse || {}, names = (LF.names || []).join(', ');
-    var lead = (LF.who || []).map(function (w) { return DS.whoHouse(s, w); }).filter(function (h, i) { var w = LF.who[i]; return h && (h.id === s.hero ? DS.heroPs(s) === w : DS.bearer(s, h) === w); })[0];
-    var note = names + ', 셋이 뜻을 모아 함께 8단에 올랐다. 이제 레벨 70을 넘어 자란다.' + (LF.repName ? ' 대표 가문 ' + LF.repName + ', 공훈 +' + fmtN(LF.hx || 0) + '.' : '');
-    var reveal = function () { if (lead) DS.showPromo({ id: lead.id, from: 7, to: 8, cls: lead.cls, fused: '세 사람', note: note }, null); else toast(note, 4200); };
-    var FL = LORE().fuse || {}, ll = (FL.any || []).map(function (t) { return typeof t === 'string' ? t.replace(/\{h\}/g, names).replace(/\{u\}/g, '세 사람').replace(/\{t\}/g, '세 사람') : t; });
-    var go = function () { if (ll && ll.length) story(ll, reveal, '합일'); else reveal(); };
-    var V0 = G.view; if (V0 && V0.cere) (LF.who || []).forEach(function (w) { var h = DS.whoHouse(s, w); if (!h) return; var fu = G.sim && G.sim.byId[(h.id === s.hero ? DS.heroPs(s) === w : DS.bearer(s, h) === w) ? 'c' + h.id : 'm' + w.id]; if (!fu) return; var nn = ''; try { nn = DS.unitSpriteName(fu); } catch (x) { nn = ''; } var a7 = DS.lookName(h.cls, 7), a8 = DS.lookName(h.cls, 8); V0.cere(fu.id, 'fuse', { to: 8, old: nn && a7 !== a8 ? nn.replace(a8, a7) : null }); });
-    go();
+    var rep = fuRepNow(s, pick), chk = DS.fuseOk(s, pick, { rep: rep }); if (!chk.ok) { A('cancel'); toast(chk.why); return; }
+    fuAsk(s, pick.slice(), rep, function () { o.close(); });
   });
 }
 // ── 2.1.0 「마을 일」: 대장간 · 영웅관 · 상점(보호 부적) · 교회(치료 · 관 · 합일) · 혼인/이별 · 관 — 시나리오와 전투 밖이면 어디서나 ──
@@ -26575,8 +27160,8 @@ function nextLine() {      // 결과 창 맨 아래 한 줄: 이제 무엇을 �
   if (n.tier > DS.partyTier(sv)) {
     if (n.tier === 8) {
       var P = DS.fuseProg(sv);
-      if (P.can) return P.ok ? '합일할 수 있다. 교회에서 가문 셋을 고른다' : '합일: 7단 Lv10 가문 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대 필요');
-      return '8단 합일: 7단 Lv10 가문 셋 (교회)';
+      if (P.can) return P.ok ? '합일할 수 있다. 교회에서 가주 셋을 고른다' : '합일: 7단 Lv10 가주 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대 필요');
+      return '8단 합일: 서로 다른 가문의 7단 Lv10 가주 셋 (교회)';
     }
     return n.tier + '단이 되면 ' + n.id + '. ' + n.name;
   }
@@ -26693,7 +27278,7 @@ DS.showResult = function (s, out, cb) {
     (killsN ? '<span>쓰러뜨린 적</span><b class="num">' + killsN + '</b>' : '') + (G.sim && G.sim.t ? '<span>걸린 시간</span><b class="num">' + Math.floor(G.sim.t / 60) + '분 ' + Math.floor(G.sim.t % 60) + '초</b>' : '') + '</div><!--xb--><ul class="loot">';
   var gotR = out.gear && DS.gear(out.gear) ? [DS.gear(out.gear)] : [];      // 2.1.0: 정해진 보상 전설 장비 (옛 유물 자리 — 자세한 줄은 아래 전리품 목록에)
   gotR.forEach(function (g) { html += '<li class="hl lg5"><b><i class="tg">정해진 보상</i> 전설 「' + esc(g.short) + '」</b><br><small>가방에 넣었다</small></li>'; });
-  if (out.crest) html += '<li class="hl">맹세의 깃대 <small>합일 조건: 7단 Lv10 가문 셋 (어느 가문이든)</small></li>';
+  if (out.crest) html += '<li class="hl">맹세의 깃대 <small>합일 조건: 서로 다른 가문의 7단 Lv10 가주 셋</small></li>';
   if (out.tickets) html += '<li>모집권 ×' + out.tickets + '</li>';
   html += '</ul>';
   // 전리품: 보스가 남긴 것(out.drops)과 싸우는 동안 주운 것(G.gain.loot)
@@ -26806,8 +27391,13 @@ DS.showRecord = function (cb, ending) {
 };
 DS.showPromo = function (p, cb) {
   var ch = G.save.chars[p.id]; if (!ch) { if (cb) cb(); return; }
-  var c = DS.CLASSES[ch.cls], learned = c.skills.filter(function (s) { return s[1] > p.from && s[1] <= p.to; }).map(function (s) { return DS.SKILLS[s[0]]; });
-  var nextSk = c.skills.filter(function (s) { return s[1] > p.to; }).sort(function (a, b) { return a[1] - b[1]; })[0];
+  var c = DS.CLASSES[ch.cls], X = DS.CLASSES[DS.lineCls ? DS.lineCls(ch.cls, p.to) : ch.cls] || c, sl = X.rise ? c.skills.concat(X.skills) : c.skills;      // 2.2.9: 8단부터는 윗길의 기술도
+  var learned = sl.filter(function (s) { return s[1] > p.from && s[1] <= p.to; }).map(function (s) { return DS.SKILLS[s[0]]; });
+  var nextSk = sl.filter(function (s) { return s[1] > p.to; }).sort(function (a, b) { return a[1] - b[1]; })[0];
+  if (X.rise && p.to >= 9 && !p.cined && DS.cine && DS.cineMode() !== 'off') {      // 2.2.9: 9 · 10단 — 새 모습과 새 고유 기술을 먼저 연출로
+    var sig = X.skills.filter(function (s) { return s[1] === p.to; })[0], sgS = sig && DS.SKILLS[sig[0]];
+    p.cined = 1; DS.cine({ k: 'ascend', old: charSpr(ch, 4, p.from), por: [charSpr(ch, 5, p.to)], fc: DS.FLAG[ch.cls] || '', title: p.to + '단 ' + DS.tierName(ch.cls, p.to), sub: DS.charName(ch) + ', ' + DS.flagName(ch.cls), skill: sgS ? sgS.name : '', note: sgS ? sgS.desc.slice(0, 58) : '' }, function () { DS.showPromo(p, cb); }); return;
+  }
   A2(p.fused ? 'fuse' : 'promo', p.fused ? 'phase' : 'level');
   // 지난 단을 지나며 오른 능력 (같은 장비 기준). 합일은 새 몸이라 지금 능력만 보여 준다
   var now = DS.charStats(ch), was = p.fused ? null : withChange(ch, { L: Math.max(1, (p.to - 2) * DS.LV_PER_TIER + 1) }), mk = mainKey(ch);
@@ -26820,11 +27410,11 @@ DS.showPromo = function (p, cb) {
   var cast = LORE().cast && LORE().cast[ch.cls], t7 = !p.fused && p.to === 7 && cast && cast.t7 && ch.id !== G.save.hero ? (cast.w ? lt(cast.w) + ' — ' : '') + '"' + lt(cast.t7) + '"' : '';
   var tail = '';
   if (nextSk && DS.SKILLS[nextSk[0]]) tail = '다음 기술: ' + nextSk[1] + '단에 「' + DS.SKILLS[nextSk[0]].name + '」';
-  else if (!c.master && p.to === 7) tail = '7단 Lv10 가문 셋이 모이면 교회에서 함께 오릅니다';
+  else if (!c.master && p.to === 7) tail = '서로 다른 세 가문의 7단 Lv10 가주가 모이면 교회에서 합일한다';
   var pl = DS.charLook ? lgTry(function () { return DS.charLook(ch, G.save); }) : null;      // r27: 부대원이 가주면 제 모습 그대로 — 테두리 빛만 오른다
   var o = overlay('<div class="result promo res2"><p class="eyebrow">' + (p.fused ? p.fused + ' 합일' : '승급') + '</p><h2>' + p.to + '단 ' + esc(DS.tierName(ch.cls, p.to)) + '</h2>' +
     '<div class="evo' + (pl ? ' keep' : '') + '">' + (p.fused ? '' : charSpr(ch, 4, p.from) + '<span class="arr">▶</span>') + charSpr(ch, 5, p.to) + '</div>' +
-    '<p class="rn">' + esc(DS.charName(ch)) + (p.fused ? '. 세 가문이 함께 올랐다' : pl ? '. 단이 올랐다' : '. 모습이 바뀌었다') + '</p>' +
+    '<p class="rn">' + esc(DS.charName(ch)) + (p.fused ? '. 두 가주를 받아들여 하나가 되었다' : pl && p.to < 8 ? '. 단이 올랐다' : '. 모습이 바뀌었다') + '</p>' +
     (t7 ? '<p class="say">' + esc(t7) + '</p>' : '') +
     '<div class="stats grow">' + cells + '</div>' + (was ? '<p class="dim">' + (p.to - 1) + '단 동안 오른 능력</p>' : '') +
     (learned.length ? '<ul class="loot">' + learned.map(function (S) { return '<li class="hl"><b>' + S.name + '</b> 습득. ' + S.desc + '</li>'; }).join('') + '</ul>' : '') +
@@ -26895,7 +27485,7 @@ function rankBlock(who, merc, follow) {
   var h = '<div class="rkbox">';
   h += '<div class="rkhd"><span class="rkk">등급</span><b style="color:' + (G0.col || '#efe6d0') + '">' + esc(G0.name || '') + '</b><small class="schips">' + gEff + '</small></div>';
   h += '<ol class="rkl">' + DS.GRADES.slice(1).map(function (q, i) { var k = i + 1; return '<li class="' + (k === g ? 'on' : k < g ? 'past' : '') + '" style="--rc:' + q.col + '">' + esc(q.name) + '</li>'; }).join('') + '</ol>';
-  h += '<div class="rkhd"><span class="rkk">단</span><b>' + t + '단 Lv' + DS.lvOfL(L) + '</b><small>' + esc((who.fz ? '합일함. 레벨 100까지' : L >= 70 ? '7단 Lv10. 교회에서 합일하면 70을 넘는다' : '단이 오를 때마다 기질에 맞는 능력치가 오른다')) + '</small></div>';
+  h += '<div class="rkhd"><span class="rkk">단</span><b>' + t + '단 Lv' + DS.lvOfL(L) + '</b><small>' + esc((who.fz ? '합일함. 레벨 100까지' : L >= 70 ? '7단 Lv10. 가주면 교회에서 합일해 70을 넘는다' : '단이 오를 때마다 기질에 맞는 능력치가 오른다')) + '</small></div>';
   var lord = !!(DS.ultFor && DS.ultFor(G.save, who)), uv = {}; if (lord && DS.ULT && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { uv[DS.tierOfL(q[0])] = q[1]; });      // 맹주: 5단 · 8단 = 필살기 +15%
   var pgl = DS.pgList ? DS.pgList(who) : [], st = DS.vetStars(L);
   h += '<ol class="rkl v t10">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (k) { var uu = uv[k], gg = k > 1 ? pgl[k - 2] : null, sk = lord && DS.ULT && DS.ULT.stars.indexOf((k - 1) * 10 + 1) >= 0; return '<li class="' + (k === t ? 'on' : k < t ? 'past' : '') + (uu || sk ? ' ult' : '') + '">' + k + '단' + (uu ? '<i class="rku">필살 +' + Math.round(uu * 100) + '%</i>' : '') + (sk ? '<i class="rku ust">✦</i>' : '') + (gg ? '<i class="rkg">' + esc(DS.pgText(gg)) + '</i>' : '') + '</li>'; }).join('') + '</ol>';
@@ -27033,7 +27623,7 @@ function fuseLine(s, ch) {      // r42: 그 가문 가주의 합일 (사람 셋)
   if (b.fz) return '<p class="fzl"><i>합일</i><small>가주가 합일했다. 레벨 100까지</small></p>';
   var L = DS.pL(b), P = DS.fuseProg(s), ok = P.n, n = P.of, near = L >= DS.FUSE_MIN || DS.FUSE_MIN - L <= FUSE_NEAR; if (!P.can || (!near && !ok)) return '';
   var box = ''; for (var i = 0; i < n; i++) box += i < ok ? '■' : '□';
-  return '<p class="fzl"><i>합일 조건</i><b class="fzb" aria-label="' + ok + ' / ' + n + '">' + box + '</b><small>7단 Lv10 사람 ' + ok + '/' + n + '</small></p>';
+  return '<p class="fzl"><i>합일 조건</i><b class="fzb" aria-label="' + ok + ' / ' + n + '">' + box + '</b><small>7단 Lv10 가주 ' + ok + '/' + n + '</small></p>';
 }
 // r42: 가문 공훈 칸 — 표식 · 계급 · 효과 · 다음 계급까지 막대
 function hMeritBox(ch) {
@@ -27164,7 +27754,12 @@ function pFrac(w) { var L = DS.pL(w), cap = DS.pCap(w); return L >= cap ? 1 : Ma
 function lvPill(L, cls) { return '<i class="hkp num' + (cls ? ' ' + cls : '') + '">' + DS.tierOfL(L) + '단 <b>Lv' + DS.lvOfL(L) + '</b></i>'; }
 function xpBar(f, cls) { return '<i class="hkb' + (cls ? ' ' + cls : '') + '"><u style="width:' + Math.round(Math.max(0, Math.min(1, f)) * 1000) / 10 + '%"></u></i>'; }
 function hgCell(s, ch, cls) {
+  if (!ch && DS.fzShut && DS.fzShut(s, cls)) {      // 2.2.9: 합일로 잠든 가문 (다음 세대에 다시)
+    var zf = s.fzShut[cls] || {};
+    return '<button class="hk none fzs" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkz" aria-hidden="true"></i></span><b class="hkn">합일로 잠듦</b><small class="hkv">다음 세대에 다시</small></button>';
+  }
   if (!ch) {      // 아직 없는 가문
+    if (DS.fzWoke && DS.fzWoke(s, cls)) return '<button class="hk none fzw" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">깨어난 가문</b><small class="hkv">영웅관에서 다시 연다</small></button>';      // 2.2.9: 세대가 바뀌어 깨어났다
     return '<button class="hk none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">닫힌 가문</b><small class="hkv">영웅관에서 ' + esc(DS.CLASSES[cls].name) + '이 오면</small></button>';      // 2.2.4: 가문은 영웅관에서만 연다
   }
   var m = hgMeta(s, ch), b = m.b, L = b ? DS.pL(b) : ch.L, rk = DS.hRank(ch), dn = !!ch.down;
@@ -27203,9 +27798,9 @@ function houseGrid(s) {
 // 부대 탭 한 줄: 합일까지 (7단 Lv10 가문 수). 5단 넘은 가문이 없으면 빈칸
 function fuNear(s) {
   var P = DS.fuseProg(s); if (!P.can) return '';
-  if (P.ok) return '합일할 수 있다. 교회에서 가문 셋을 고른다';
+  if (P.ok) return '합일할 수 있다. 교회에서 가주 셋을 고른다';
   var topT = 0; P.pool.forEach(function (c) { topT = Math.max(topT, DS.tierOfL(c.L)); });
-  return topT >= 5 ? '합일: 7단 Lv10 가문 ' + P.n + '/' + P.of + (s.crest || topT < 6 ? '' : ', 맹세의 깃대 없음') : '';
+  return topT >= 5 ? '합일: 7단 Lv10 가주 ' + P.n + '/' + P.of + (s.crest || topT < 6 ? '' : ', 맹세의 깃대 없음') : '';
 }
 function heroFits(s, m) { var h = s.chars[s.hero]; return !!(h && DS.sbFits && DS.sbFits(h, m)); }      // 맹주 가문과 같은 병과 (가주로 설 가문은 없고, 맹주의 후계 후보)
 // 막사 목록 (부대 탭): 등급 → 레벨 순. 줄을 누르면 사람 창, 「교체」 = 같은 병과 가문의 가주 고르기, 「방출」
@@ -27248,6 +27843,7 @@ function partyClick(e, o) {
   if ((b = t.closest('.hgm [data-info], .hkk [data-info], .bar2 [data-info]'))) { A('tap'); mercInfo(+b.dataset.info, o); return true; }
   if (t.closest('[data-hinfo]')) { A('tap'); heroInfo(o); return true; }
   if (t.closest('[data-sopick]')) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } A('tap'); sortiePick(function () { if (o.isConnected) o.draw(); }); return true; }      // 2.2.8
+  if ((b = t.closest('[data-hgnone]')) && DS.fzShut && DS.fzShut(s, b.dataset.hgnone)) { A('tap'); toast(josa(DS.flagName(b.dataset.hgnone), '은는') + ' 합일로 잠들었다. 다음 세대가 오면 영웅관에서 다시 열 수 있다.', 3600); return true; }
   if ((b = t.closest('[data-hgnone]'))) { var nc = b.dataset.hgnone; A('tap'); toast(josa(DS.flagName(nc), '은는') + ' 닫혀 있다. 영웅관에서 ' + josa(DS.CLASSES[nc].name, '이가') + ' 나오면 그 영웅이 가주가 되어 열린다.', 3600); return true; }
   if ((b = t.closest('[data-bnslot]'))) { if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return true; } A('tap'); bnPick(+b.dataset.bnslot, o); return true; }
   return false;
@@ -27260,7 +27856,7 @@ function tabBag() {      // r12: 줄 문법 = 그림 · 이름 ×n · 풀이 한
     html += '<div class="row">' + itemIco(k) + '<div class="tx"><b>' + it.name + ' <i class="own">' + itemHave(k) + '</i></b><small>' + it.desc + '</small></div>' + (use ? '<button class="btn small gold" data-use="' + k + '">사용</button>' : '') + '</div>';
   });
   html += '<div class="row">' + icon('misc', 'ticket') + '<div class="tx"><b>영웅 모집권 <i class="own">×' + (s.tickets || 0) + '</i></b><small>영웅 모집 1회 (영웅관)</small></div></div>';
-  if (s.crest) html += '<div class="row">' + icon('misc', 'crest') + '<div class="tx"><b>맹세의 깃대</b><small>7단 Lv10 가문 셋을 골라 교회에서 합일한다. 어느 가문이든 된다.</small></div></div>';
+  if (s.crest) html += '<div class="row">' + icon('misc', 'crest') + '<div class="tx"><b>맹세의 깃대</b><small>서로 다른 가문의 7단 Lv10 가주 셋을 골라 교회에서 합일한다.</small></div></div>';
   if (DS.lootUI && DS.lootUI.bag) return html + '<div class="lootbag" id="hjb2">' + DS.lootUI.bag(s) + '</div>';      // 정렬·잠금·모두 팔기는 그 안에서 (openMenu 가 손잡이를 단다)
   var gl = Object.keys(s.gear).filter(function (id) { return DS.gear(id); }).sort(function (a, b) { return DS.gearScore(DS.gear(b)) - DS.gearScore(DS.gear(a)); });
   html += '<h4 id="hjb2">장비 ' + gl.length + '종</h4>';
@@ -27395,7 +27991,7 @@ function tabHelp() {
       '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 장비와 공훈은 가문에 남는다.',
       '빈 가문을 채우는 길은 둘이다. <b>영웅관</b>에서 모집하거나, 맹주의 <b>어른 아이</b>를 그 가문의 가주로 보낸다. 보낸 아이는 그 가문의 병과를 받는다. 맹주의 자리는 늘 이어지니 싸울 이가 아무도 없어지는 일은 없다.',
       '<b>가문은 영웅관에서 열린다.</b> 처음에는 맹주의 가문 하나뿐이다. 닫힌 가문의 병과가 나오면 그 영웅이 가주가 되어 가문이 열린다. 시나리오를 깨도 가문은 오지 않는다.',
-      '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람, 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장, 예전에 가문이 합류하던 시나리오(2, 3, 4, 5, 6, 7, 9, 11, 13번)는 처음 깨면 한 장 더 준다.',
+      '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람이다. 빈 가문(영웅관이 열 수 있는 닫힌 가문과 가주가 없는 가문)이 많을수록 싸고, 하나뿐이거나 없으면 넷일 때의 네 배다. 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장, 예전에 가문이 합류하던 시나리오(2, 3, 4, 5, 6, 7, 9, 11, 13번)는 처음 깨면 한 장 더 준다.',
       '병과는 무작위다. 닫힌 가문의 병과가 선 가문보다 ' + DS.HOUSE_OPEN.w + '배 잘 나오고, ' + DS.HOUSE_OPEN.pity + '번 연달아 못 열면 다음 모집은 반드시 닫힌 가문을 연다. 선 가문의 병과가 나오면 그 가문이 비어 있을 때 곧바로 가주, 아니면 막사로 간다. 맹주와 같은 병과면 막사에서 맹주의 뒤를 받친다. 막사는 ' + DS.MERC_MAX + '명까지다.',
       '막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 같은 병과 가주와 자리를 바꿀 수 있고, 물러난 가주는 막사로 간다. 막사의 사람은 방출할 수 있다. 가주를 그냥 내리는 길은 없다.',
       '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. <b>맹주가 쓰러지면 누가 이을지 고른다.</b> 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 하나다. 고를 이가 없으면 대가 끊기고 스무 해가 흐른다.',
@@ -27441,8 +28037,12 @@ function tabHelp() {
       '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 쉬는 가주는 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%를 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
       '레벨 10마다 <b>단</b>이 오른다. 맹주는 모습이 바뀌고, 가주와 가문원은 테두리 빛이 바뀐다. 가주의 단만큼 가문의 기술이 열리고, 가문원은 3단, 5단, 7단에 제 기술을 익힌다.',
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
-      '<b>7단 Lv10</b>인 사람 셋과 맹세의 깃대가 있으면, 교회에서 셋을 골라 함께 8단에 오른다. 누구끼리든 된다. 합일한 사람은 레벨 70을 넘어 자란다. 셋이 선 가문 가운데 공훈이 가장 큰 곳이 <b>대표 가문</b>이 되어 공훈 +' + DS.FUSE_HX + '을 받는다. 아무도 제 자리를 떠나지 않는다.',
-      '8단부터의 모습과 기술은 그 사람이 선 가문의 계열(강철, 바람, 별)을 따른다.',
+      '<b>합일</b>: 맹세의 깃대가 있으면 교회에서 <b>서로 다른 세 가문의 가주</b>(맹주 포함, 7단 Lv10) 셋을 고른다. 가문원과 막사의 사람은 합일하지 않는다.',
+      '셋 가운데 <b>대표 가문</b>을 고른다. 처음은 공훈이 가장 큰 곳이고, 맹주가 들면 맹주 가문으로 정해진다. 대표의 가주가 그 가문의 8단에 올라 레벨 70을 넘어 자라고, 공훈 +' + DS.FUSE_HX + '을 받는다. 사람, 장비, 나이, 배우자는 그대로다.',
+      '나머지 두 가주는 대표에게 <b>흡수</b>된다. 가계도에는 합일로 남고, 든 장비는 가방으로 간다. 대표의 수명은 30년에 두 사람의 남은 해를 더한 만큼 늘어난다 (많아야 ' + DS.FUSE_LS_MAX + '년).',
+      '흡수된 두 가문은 <b>이번 세대가 끝날 때까지 잠든다</b>. 영웅관에서 그 병과가 나와도 열리지 않고, 막사의 그 병과 사람은 기다린다. 다음 세대의 장을 열면 깨어나 영웅관에서 다시 열 수 있다. 선 가문이 셋 밑으로 줄면(더 합일할 수 없으면) 일찍 깨어난다.',
+      '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
+      '8단 위의 가주가 쓰러지면 그대로 떠난다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
@@ -28214,10 +28814,17 @@ function lgHeirKind(c) {      // 설계서 linHeirs: kind 'kid' | 'adopt' | 'kin
   if (c.kin === 1 || (c.blood && c.kind === 'adopt')) return 'adkid';      // (kin 2 막사 용병 · 3 출전 중인 용병 · 4 먼 친척)
   return 'merc';
 }
+// 2.2.9: 8단 위(합일한 넋)의 죽음 — 셋의 이름과 함께. 그 가문의 다음 가주는 제 단으로 선다 (8단은 잇지 않는다)
+function lgBig(spr) { return String(spr || '').replace(/data-px="[\d.]+"/, 'data-px="4"'); }      // 연출 얼굴은 크게
+function lgFallX(d) {
+  var r = d && LS() && LS().P[d.id], sn = r && r.snap || {}; if (!r || !(+sn.L > 70 || sn.fz)) return null;
+  var nm = (r.fu3 || []).filter(Boolean); if (!nm.length) nm = [d.name];
+  return { sub: '합일한 넋이 졌다. ' + (+sn.L > 70 ? DS.tierOfL(sn.L) + '단' : '8단') + '은 잇지 않는다', names: nm.slice(0, 3), note: nm.length > 1 ? '셋이 하나였던 이' : '' };
+}
 function lgRite(ev, cb, griefs, seen) {
   var s = G.save, d = lgP(ev.a), chId = ev.ch;
   if (!d || !chId || !s.chars[chId]) { if (cb) cb(); return; }
-  if (DS.cine && !seen) { DS.cine({ k: 'death', por: [d.spr || ''], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', ') }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.2.4: 의식 앞에 조용한 연출
+  if (DS.cine && !seen) { var fx0 = lgFallX(d); DS.cine(fx0 ? { k: 'fallx', por: [lgBig(d.spr)], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note } : { k: 'death', por: [d.spr || ''], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', ') }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
   var step = 'mourn', pick = null, more = false, lock = 0, HO = { k: 'new', t: '' };      // 4.0 ⑬: 가문이 옮겨 갈 때의 호 (확인 걸음)
   var canE = DS.linEntomb && DS.linCanEntomb ? lgTry(function () { return DS.linCanEntomb(s, d.id); }) : null, cf = lgCoffins();
   var body = canE && canE.ok ? 'keep' : 'bury', nat = agNatural(d, ev);      // r6 나이: 천수를 누린 이는 이야기 창부터 조용히
@@ -28383,6 +28990,8 @@ function nfLater(ref, head, n) {
 }
 function lgMournOthers(evs, cb, griefs, seen) {
   var all = lgAll(), ds = evs.map(function (e) { return all[e.a]; }).filter(Boolean); if (!ds.length) { if (cb) cb(); return; }
+  var fxs = ds.map(lgFallX), fxi = fxs.findIndex ? fxs.findIndex(Boolean) : -1;
+  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [lgBig(dx.spr)], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
   if (DS.cine && !seen) { DS.cine({ k: 'death', por: ds.slice(0, 3).map(function (d) { return d.spr || ''; }), title: ds.length > 1 ? ds.length + '명이 잠들었다' : ds[0].name, sub: ds.length > 1 ? ds.slice(0, 3).map(function (d) { return d.name; }).join(', ') + (ds.length > 3 ? ' 외' : '') : [ds[0].role, lgDiedTxt(ds[0])].filter(Boolean).join(', ') }, function () { lgMournOthers(evs, cb, griefs, true); }); return; }      // 2.2.4: 먼저 조용한 연출
   var C = LGU().coffin || {}, kept = {};
   A2('mourn', 'lose');
@@ -28910,17 +29519,18 @@ if (typeof document !== 'undefined') { if (document.readyState === 'loading') do
 //     가벼운 것(공훈 · 모집권 · 갱도 · 성년)은 보통이면 5~6초 남짓(글 길이만큼 조금 더) 뒤에 저절로 닫힌다. 「짧게」는 모두 저절로, 3.5초 남짓.
 //     뜬 뒤 DS.CINE.guard(0.7초) 동안은 눌러도 닫히지 않는다 — 앞 화면에 누른 손이 연출을 곧장 넘기지 않게. 시험 손잡이 DS.cineSkip 은 막지 않는다.
 //   DS.cine(ev, cb): cb 가 있으면 흐름 안의 연출(창 사이 · 바로 다음에), 없으면 「한가할 때」 — 싸움이 끝나고 창이 모두 닫힌 뒤. 한가할 때의 것은 저장(save.cineQ, 많아야 6)에 남겨 다시 켜도 잃지 않는다.
-//   ev = { k: 'wed'|'birth'|'adult'|'death'|'succ'|'open'|'rank'|'ticket'|'pit', title, sub, say, note, por: [얼굴 sprTag …], old: 떠난 이 얼굴, fc: 깃발 색, crest: 문장 svg }
+//   ev = { k: 'wed'|'birth'|'adult'|'death'|'succ'|'open'|'rank'|'ticket'|'pit'|'fuse'|'ascend'|'fallx'|'wake'|'reopen', title, sub, say, note, por: [얼굴 sprTag …], old: 떠난 이 얼굴, fc: 깃발 색, crest: 문장 svg,
+//     2.2.9: crests · fcs (문장 여럿과 그 빛깔 — 합일 · 깨어남), neo (새 모습), skill (새 기술 이름), names (합일한 셋의 이름) }
 //   설정의 「사건 연출」: 보통 · 짧게 · 끔 (끄면 기록 · 알림 글만 남는다). 움직임 줄이기면 움직이지 않고 짧게. 싸움 중의 죽음은 따로 「죽음 연출」(death.js)이 보여 준다.
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
 var U = DS.ui; if (!U || typeof document === 'undefined') return;
 var G = DS.G, esc = U.esc;
-var KINDS = { wed: '혼인', birth: '출생', adult: '성년', death: '이별', succ: '잇다', open: '새 가문', rank: '공훈', ticket: '모집권', pit: '갱도' };
-var SND = { wed: 'wed', birth: 'birth', adult: 'level', death: 'cancel', succ: 'promo', open: 'promo', rank: 'level', ticket: 'coin', pit: 'star' };
+var KINDS = { wed: '혼인', birth: '출생', adult: '성년', death: '이별', succ: '잇다', open: '새 가문', rank: '공훈', ticket: '모집권', pit: '갱도', fuse: '합일', ascend: '승급', fallx: '합일한 넋', wake: '깨어남', reopen: '다시 열린 가문' };      // 2.2.9: 합일 · 9 · 10단 · 8단 위의 죽음 · 세대가 바뀌어 깨어남 · 잠들었던 가문이 다시 열림
+var SND = { wed: 'wed', birth: 'birth', adult: 'level', death: 'cancel', succ: 'promo', open: 'promo', rank: 'level', ticket: 'coin', pit: 'star', fuse: 'fuse', ascend: 'fuse', fallx: 'mourn', wake: 'holy', reopen: 'fuse' };
 var Q = [], cur = null, seenSave = null, tick = 0;
-DS.CINE = { full: 5000, fullMax: 6500, perCh: 28, short: 3500, shortMax: 4200, guard: 700, max: 6, wait: { wed: 1, birth: 1, death: 1, succ: 1, open: 1 } };      // 2.2.5: full · short = 저절로 닫히는 것의 시간(ms, 글자마다 perCh 더 · Max 까지) · wait = 누를 때까지 기다리는 종류
+DS.CINE = { full: 5000, fullMax: 6500, perCh: 28, short: 3500, shortMax: 4200, guard: 700, max: 6, wait: { wed: 1, birth: 1, death: 1, succ: 1, open: 1, fuse: 1, ascend: 1, fallx: 1, wake: 1, reopen: 1 } };      // 2.2.5: full · short = 저절로 닫히는 것의 시간(ms, 글자마다 perCh 더 · Max 까지) · wait = 누를 때까지 기다리는 종류
 function mode() { var o = G.save && G.save.opt; var m = o && o.cine; return m === 'short' || m === 'off' ? m : 'full'; }
 DS.cineMode = mode;
 var SPR = /^<i class="spr" data-spr="[\w-]+" data-pal="[^"<>&]*" data-px="[\d.]+"( data-flip="1")?><\/i>$/;
@@ -28930,7 +29540,9 @@ function str(x, n) { return typeof x === 'string' ? x.slice(0, n || 80) : ''; }
 function clean(ev, raw) {      // 저장에 남는 꼴 (얼굴은 sprTag 글만). raw: 흐름 안의 것(저장하지 않는다) — 얼굴 HTML 을 그대로 (가계도 얼굴 등)
   if (!ev || !KINDS[ev.k]) return null;
   var sp = raw ? function (x) { return typeof x === 'string' ? x : ''; } : okSpr;
-  return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: /^#[0-9a-f]{3,8}$/i.test(ev.fc || '') ? ev.fc : '', crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)) };
+  var col = function (c) { return /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : ''; };
+  return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: col(ev.fc), crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+    crests: (Array.isArray(ev.crests) ? ev.crests : []).map(okSvg).slice(0, 4), fcs: (Array.isArray(ev.fcs) ? ev.fcs : []).map(col).slice(0, 4), neo: sp(ev.neo), skill: str(ev.skill, 24), names: (Array.isArray(ev.names) ? ev.names : []).map(function (n) { return str(n, 16); }).filter(Boolean).slice(0, 3) };      // 2.2.9: 문장 여럿 · 그 빛깔 · 새 모습 · 새 기술 · 세 이름
 }
 function store() { var s = G.save; if (!s) return; var q = Q.filter(function (e) { return !e.now; }).slice(0, DS.CINE.max).map(function (e) { var c = clean(e); return c; }); if (q.length) s.cineQ = q; else delete s.cineQ; }
 function restore() {      // 저장을 불러온 뒤: 남아 있던 연출을 줄에 (같은 것은 한 번)
@@ -28964,14 +29576,23 @@ function pump() {
   var ev = Q.splice(i, 1)[0]; if (!ev.now) store();
   play(ev);
 }
-setInterval(function () { tick++; if (!cur && (Q.length || (G.save && G.save.cineQ && G.save !== seenSave))) pump(); }, 700);
+function wakeQ() {      // 2.2.9: 세대가 바뀌어 깨어난 가문 (save.fzWake — endgame.js DS.egStart · save.js 가 채운다) → 한가할 때 한 번
+  var s = G.save, w = s && s.fzWake; if (!w || !w.length || !quiet()) return;
+  delete s.fzWake;
+  if (mode() === 'off') return;
+  var ks = w.filter(function (k) { return DS.CLASSES[k]; }).slice(0, 4), nm = ks.map(function (k) { return String(DS.flagName ? DS.flagName(k) : k).replace(/ 가문$/, ''); });
+  if (!ks.length) return;
+  DS.cine({ k: 'wake', crests: ks.map(function (k) { return DS.houseCrest ? DS.houseCrest(k, 40) : ''; }), fcs: ks.map(function (k) { return DS.FLAG[k] || ''; }), title: '잠든 가문이 깨어난다', sub: nm.join(', ') + ' 가문', note: ks.some(function (k) { var z = s.fzShut && s.fzShut[k]; return z && z.early; }) ? '선 가문이 셋 밑으로 줄어 일찍 깨어났다. 영웅관에서 다시 열 수 있다' : '영웅관에서 다시 열 수 있다' });
+  if (U.persist) try { U.persist(); } catch (x) {}
+}
+setInterval(function () { tick++; if (!cur) wakeQ(); if (!cur && (Q.length || (G.save && G.save.cineQ && G.save !== seenSave))) pump(); }, 700);
 function face(spr, cls) { return '<span class="cfa' + (cls ? ' ' + cls : '') + '">' + spr + '</span>'; }
 function play(ev) {
   var calm = U.calm && U.calm(), md = mode(), C = DS.CINE, k = ev.k, chars = ((ev.title || '') + (ev.sub || '') + (ev.say || '') + (ev.note || '')).length;
   var hold = md !== 'short' && !!(C.wait[k] || ev.say);      // 2.2.5: 읽을 것이 있으면 누를 때까지
   var dur = md === 'short' ? Math.min(C.shortMax, C.short + chars * C.perCh * 0.4) : Math.min(C.fullMax, C.full + chars * C.perCh);
   var por = ev.por || [], fx = '';
-  for (var n = 0; n < (k === 'death' ? 7 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
+  for (var n = 0; n < (k === 'death' || k === 'fallx' ? 7 : k === 'fuse' || k === 'ascend' ? 12 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
   var stage = '';
   if (k === 'wed') stage = face(por[0] || '', 'cl') + '<span class="cring" aria-hidden="true"><i></i><i></i></span>' + face(por[1] || '', 'cr');
   else if (k === 'birth') stage = (por[1] ? face(por[1], 'cp cl') : '') + face(por[0] || '<i class="cbaby"></i>', 'cb') + (por[2] ? face(por[2], 'cp cr') : '');
@@ -28979,6 +29600,15 @@ function play(ev) {
   else if (k === 'open') stage = '<span class="cflag" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew');
   else if (k === 'ticket') stage = '<span class="ctk" aria-hidden="true">' + (U.svg ? U.svg('ticket', 46) : '') + '</span>';
   else if (k === 'rank' || k === 'pit') stage = (por[0] ? face(por[0]) : '') + '<span class="cbadge" aria-hidden="true">' + (ev.crest || (U.svg ? U.svg('star', 34) : '')) + '</span>';
+  else if (k === 'fuse') {      // 2.2.9 합일: 세 얼굴이 가운데 빛으로 모인다 → 두 깃발은 내려가 흐려지고 대표 깃발이 오른다 → 8단 모습
+    var cr = ev.crests || [], fcs = ev.fcs || [];
+    stage = '<span class="cfz" aria-hidden="true"><i class="cfzl"></i>' + [0, 1, 2].map(function (i) { return '<span class="cfzb b' + i + '" style="--bc:' + (fcs[i] || ev.fc || '#f6cf57') + '"><i class="cfl">' + (cr[i] || '') + '</i></span>'; }).join('') + '</span>' +
+      [0, 1, 2].map(function (i) { return face(por[i] || '', 'cfzf f' + i); }).join('') + face(ev.neo || por[0] || '', 'cneo');
+  }
+  else if (k === 'ascend') stage = face(ev.old || '', 'cold') + face(por[0] || '', 'cneo') + (ev.skill ? '<span class="cskl" aria-hidden="true"><i>새 기술</i><b>' + esc(ev.skill) + '</b></span>' : '');      // 9 · 10단: 새 모습과 새 고유 기술
+  else if (k === 'fallx') stage = '<span class="cxr" aria-hidden="true"><i></i><i></i><i></i></span>' + face(por[0] || '', 'cxf') + (ev.names && ev.names.length ? '<span class="cx3">' + ev.names.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</span>' : '');      // 8단 위의 죽음: 금 테가 갈라지고 세 이름이 흩어진다
+  else if (k === 'wake') stage = '<span class="cwk" aria-hidden="true">' + (ev.crests || []).map(function (c, i) { return '<span class="cfzb w' + i + '" style="--bc:' + ((ev.fcs || [])[i] || '#f6cf57') + '"><i class="cfl">' + c + '</i></span>'; }).join('') + '</span>';      // 세대가 바뀌어 잠든 가문이 깨어난다
+  else if (k === 'reopen') stage = '<span class="cflag rx" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew');
   else stage = por.map(function (p, i) { return face(p, 'c' + i); }).join('');
   var el = U.h('<div class="cine ck-' + k + (calm ? ' calm' : '') + (md === 'short' ? ' short' : '') + (hold ? ' hold' : ' auto') + '" role="dialog" aria-live="assertive" aria-label="' + esc(ev.title || KINDS[k]) + '" style="--dur:' + Math.round(dur) + 'ms;--guard:' + C.guard + 'ms' + (ev.fc ? ';--fc:' + ev.fc : '') + '">' +
     '<div class="cbd"></div><div class="cfx" aria-hidden="true">' + fx + '</div><div class="cin"><p class="cey">' + esc(KINDS[k]) + '</p><div class="cst n' + Math.max(1, por.length) + '">' + stage + '</div>' +
@@ -29255,7 +29885,8 @@ DS.egStart = function (s) {
   e.gen += 1; e.on = 1; e.c = {}; e.t0 = Math.round(+s.time || 0);
   e.pass = { g: e.gen, y: 0, f: years ? 'years' : 'keep', y0: yr(s), L: [], dead: [], nl: 0, na: 0 };
   e.call = { g: e.gen, used: 0 };
-  return { g: e.gen, years: years };
+  var woke = DS.fzWakeTick ? DS.fzWakeTick(s) : [];      // 2.2.9: 지난 세대에 합일로 잠든 가문이 깨어난다 (영웅관에서 다시 열 수 있다 · 화면은 save.fzWake 를 연출로)
+  return { g: e.gen, years: years, woke: woke };
 };
 function passLine(ps, y, t) { var o = { y: y, t: t }; ps.L.push(o); if (ps.L.length > 120) ps.L.splice(0, ps.L.length - 120); return o; }
 // 한 해 (설계서 ③ 의사 코드): 멈춤(빈자리)이 있으면 흐르지 않고 그것을 돌려준다. 가주 자리가 먼저
@@ -30959,12 +31590,14 @@ DS.arenaChampSnap = function (s) {
   return { v: 1, name: clean(DS.charName ? DS.charName(hero) : s.name, 12) || '맹주', house: clean(houseOf(s), 16), cls: hero.cls, hs: hs, L: Math.max(1, Math.min(100, hero.L | 0)), g: Math.max(1, Math.min(5, (hero.ps && hero.ps.g) | 0 || 3)),
     pow: Math.max(0, Math.min(1e7, Math.round(DS.power(u)))), hp: u.mhp | 0, mp: u.mmp | 0, atk: Math.round(u.atk), def: Math.round(u.def), mag: Math.round(u.mag), res: Math.round(u.res),
     spd: Math.round((+u.spd || 10) * 100), cr: Math.round((+u.crit || 0) * 1000), dr: Math.round((+u.drain || 0) * 1000), r0: (u.rng && u.rng[0]) | 0, r1: (u.rng && u.rng[1]) | 0, bs: Math.round((+u.basic || 1) * 100),
-    sk: sk, ul: u.ult && own(DS.ULTS, u.ult) ? u.ult : '', up: Math.round((+u.ultP || 1) * 100), ur: Math.round((+u.ultR || 1) * 100), w: clean(hero.w || '', 40), a: clean(hero.a || '', 40), ver: String(DS.VERSION || '').slice(0, 16) };
+    sk: sk, ul: u.ult && own(DS.ULTS, DS.ultBaseOf ? DS.ultBaseOf(u.ult) : u.ult) ? (DS.ultBaseOf ? DS.ultBaseOf(u.ult) : u.ult) : '', up: Math.round((+u.ultP || 1) * 100), ur: Math.round((+u.ultR || 1) * 100), w: clean(hero.w || '', 40), a: clean(hero.a || '', 40), ver: String(DS.VERSION || '').slice(0, 16) };
 };
 // 남의 문서 → 안전한 줄 (모르는 병과·엉뚱한 칸이면 null, 숫자는 그 병과·레벨의 기준치로 묶는다)
 DS.arenaChampRow = function (id, d) {
   if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id) || !d || typeof d !== 'object' || d.v !== 1) return null;
   if (typeof d.cls !== 'string' || !own(DS.CLASSES, d.cls)) return null;
+  if (DS.OLD_MASTER && own(DS.OLD_MASTER, d.cls)) { var d2 = {}; for (var dk in d) if (own(d, dk)) d2[dk] = d[dk]; d2.cls = DS.oldMasterBase(d.cls, d.hs); d = d2; }      // 2.2.9: 옛 마스터 기록 → 그 묶음의 병과 (8단 위면 제 윗길)
+  if (DS.CLASSES[d.cls].rise) return null;      // 윗길 키는 병과가 아니다 (가문 병과로 올린다)
   var C = DS.CLASSES[d.cls], Lv = Math.round(num(d.L, 1, DS.LV_PER_TIER * DS.MAX_TIER, 1)), tier = DS.tierOfL(Lv);
   if (C.start && tier < C.start) return null;
   var ref = { cls: d.cls, L: Lv }, rs; try { DS.stdGear(ref, tier); rs = DS.charStats(ref); } catch (x) { return null; }
@@ -30976,7 +31609,7 @@ DS.arenaChampRow = function (id, d) {
     g: Math.round(num(d.g, 1, 5, 3)), hp: Math.round(num(d.hp, 1, rs.hp * 2.5, rs.hp)), mp: Math.round(num(d.mp, 0, Math.max(50, rs.mp * 3), rs.mp)),
     atk: Math.round(num(d.atk, 1, top * 3.5 + 20, rs.atk)), mag: Math.round(num(d.mag, 1, top * 3.5 + 20, rs.mag)), def: Math.round(num(d.def, 0, wall * 4 + 30, rs.def)), res: Math.round(num(d.res, 0, wall * 4 + 30, rs.res)),
     spd: num(+d.spd / 100, C.spd * 0.5, C.spd * 1.6, C.spd), crit: num(+d.cr / 1000, 0, 0.6, 0.06), drain: num(+d.dr / 1000, 0, 0.5, 0), rng: [r0, r1], basic: num(+d.bs / 100, 0.5, 3, C.basic || 1),
-    skills: sk, ult: typeof d.ul === 'string' && own(DS.ULTS, DS.skAlias(d.ul)) ? DS.skAlias(d.ul) : null, ultP: num(+d.up / 100, 1, 2.5, 1), ultR: num(+d.ur / 100, 0.5, 2.5, 1),
+    skills: sk, ult: typeof d.ul === 'string' && own(DS.ULTS, DS.skAlias(d.ul)) ? (DS.ultUp ? DS.ultUp(DS.skAlias(d.ul), Lv) : DS.skAlias(d.ul)) : null, ultP: num(+d.up / 100, 1, 2.5, 1), ultR: num(+d.ur / 100, 0.5, 2.5, 1),
     at: +d.at || 0, w: typeof d.w === 'string' && DS.gear && DS.gear(d.w) ? d.w : '', a: typeof d.a === 'string' && DS.gear && DS.gear(d.a) ? d.a : '' };
   if (!(row.at > 1.6e12 && row.at < Date.now() + 864e5)) row.at = 0;
   row.pow = DS.power(DS.arenaChampSpec(row));      // 올린 전투력은 믿지 않는다 — 걸러 낸 값으로 다시 잰다
