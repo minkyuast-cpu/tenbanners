@@ -284,13 +284,14 @@ module.exports = async (page, shot, L) => {
     var sim = DS.G.sim, u = sim.units.filter(function (x) { return x.hero && !x.dead; })[0], o = {}; if (!u) return { err: 'no hero' };
     DS.G.pause = true; var ua = DS.BAL.ultAuto; DS.BAL.ultAuto = false;
     var f = sim.units.filter(function (x) { return x.side === 'enemy' && !x.dead; })[0];
-    u.ult = 'u_ram'; u.uc = 100; u.gauge = 100; u.casting = null; u.order = null; u.busy = 0; u.fx = u.fx || {}; delete u.fx.seal; sim._ultT = null;
-    if (f) { sim.occ[f.y * sim.w + f.x] = null; var p = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(function (d) { return [u.x + d[0], u.y + d[1]]; }).filter(function (q) { return sim.pass(f.mt || 'foot', q[0], q[1]) && !sim.at(q[0], q[1]); })[0]; if (p) { f.x = p[0]; f.y = p[1]; } sim.occ[f.y * sim.w + f.x] = f; f.hp = f.mhp = 999999; f.aggro = true; }
+    u.ult = 'u_ram'; u.uc = 100; u.gauge = 100; u.casting = null; u.order = null; u.busy = 0; u.hp = u.mhp; u.holdT = 0; u.rsv = u.rsvU = null; u.dodgeT = 0; u.hero && (sim.leader = u.id);      // 약초 · 자리 지키기 · 예약 · 선두 따라가기가 앞서지 않게
+    u.fx = u.fx || {}; delete u.fx.seal; sim._ultT = null;
+    if (f) { sim.occ[f.y * sim.w + f.x] = null; var p = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(function (d) { return [u.x + d[0], u.y + d[1]]; }).filter(function (q) { return sim.pass(f.mt || 'foot', q[0], q[1]) && !sim.at(q[0], q[1]); })[0]; if (p) { f.x = p[0]; f.y = p[1]; } sim.occ[f.y * sim.w + f.x] = f; f.hp = f.mhp = 999999; f.aggro = true; var fr = f.role; f.role = 'boss'; }      // 보스 한 명이면 쓸 자리(둘 몫)가 된다 — 곁에 다른 적이 우연히 있느냐에 따라 갈리던 것
     u.auto = false; o.manual = sim.ultSelf(u);
     u.auto = true; o.auto = sim.ultSelf(u);
     var n0 = u.ultN || 0; sim.aiCmd(u); o.fired = (u.ultN || 0) > n0; o.uc = u.uc;
     u.uc = 100; u.gauge = 100; u.busy = 0; o.gap = sim.ultSelf(u);
-    DS.BAL.ultAuto = ua; DS.G.pause = false; return o;
+    if (f) f.role = fr; DS.BAL.ultAuto = ua; DS.G.pause = false; return o;
   });
   A(!au.err && au.manual === false && au.auto === true && au.fired && au.uc < 5 && au.gap === false, 'auto houses fire their own ultimate (manual waits; 3 s gap between self-fired ones) ' + JSON.stringify(au));
   await ev(() => DS.ui.closeAll());
