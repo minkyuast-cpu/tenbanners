@@ -873,7 +873,7 @@ function fuRepBox(s, pick) {
     var on = c === R, w = who[i], dis = !!lock && c !== lock;
     h += '<button class="furbb' + (on ? ' on' : '') + '" data-furep="' + c.id + '"' + (dis ? ' disabled aria-disabled="true"' : '') + ' aria-pressed="' + on + '" style="--fc:' + (DS.FLAG[c.cls] || '#c9a96a') + '">' + crestH(c, 22) + '<b>' + esc(hgShort(c)) + '</b><small>' + esc(c.id === s.hero ? '맹주' : (w.ttl || w.n || '')) + '</small><small>' + esc([fuAge(s, { role: c.id === s.hero ? 'hero' : 'bear', who: w }).replace(/, .*$/, ''), dft && c === dft && !lock ? '공훈 1위' : ''].filter(Boolean).join(', ')) + '</small>' + (on ? '<i class="furk">대표</i>' : '') + '</button>';
   });
-  h += '</div><ul class="fuout"><li class="up">' + crestH(R, 16) + '<span><b>' + esc(DS.flagName(R.cls, s)) + '</b> 가주가 8단 <b>' + esc(x.name || '') + '</b>에 오른다. 공훈 +' + fmtN(DS.FUSE_HX || 0) + '</span></li>' +
+  h += '</div><ul class="fuout"><li class="up">' + crestH(R, 16) + '<span><b>' + esc(DS.flagName(R.cls, s)) + '</b> 가주가 8단 <b>' + esc(x.name || '') + '</b>에 오른다. 공훈 +' + fmtN(DS.FUSE_HX || 0) + ', 수명 +' + DS.fuseLsGain(s, who, R.id) + '년</span></li>' +
     gone.map(function (c) { var w = who[hs.indexOf(c)]; return '<li class="dn">' + crestH(c, 16) + '<span><b>' + esc(DS.flagName(c.cls, s)) + '</b> 가주 ' + esc(josa(w.ttl || w.n || '', '은는')) + ' 흡수된다. 가문은 다음 세대까지 잠든다</span></li>'; }).join('') +
     '</ul><p class="hint sm">흡수된 가주의 장비는 가방으로 간다. 막사의 그 병과 사람은 기다린다</p></div>';
   return h;
@@ -2021,7 +2021,7 @@ function tabHelp() {
       '<b>가주는 제 모습과 능력치로 싸우고, 기술만 가문의 것을 쓴다.</b> 태생 병과가 가문과 맞으면 기술을 제대로 살린다.',
       '<b>합일</b>: 맹세의 깃대가 있으면 교회에서 <b>서로 다른 세 가문의 가주</b>(맹주 포함, 7단 Lv10) 셋을 고른다. 가문원과 막사의 사람은 합일하지 않는다.',
       '셋 가운데 <b>대표 가문</b>을 고른다. 처음은 공훈이 가장 큰 곳이고, 맹주가 들면 맹주 가문으로 정해진다. 대표의 가주가 그 가문의 8단에 올라 레벨 70을 넘어 자라고, 공훈 +' + DS.FUSE_HX + '을 받는다. 사람, 장비, 나이, 배우자는 그대로다.',
-      '나머지 두 가주는 대표에게 <b>흡수</b>된다. 가계도에는 합일로 남고, 든 장비는 가방으로 간다. 대표는 두 사람의 남은 해만큼 더 산다.',
+      '나머지 두 가주는 대표에게 <b>흡수</b>된다. 가계도에는 합일로 남고, 든 장비는 가방으로 간다. 대표의 수명은 30년에 두 사람의 남은 해를 더한 만큼 늘어난다 (많아야 ' + DS.FUSE_LS_MAX + '년).',
       '흡수된 두 가문은 <b>이번 세대가 끝날 때까지 잠든다</b>. 영웅관에서 그 병과가 나와도 열리지 않고, 막사의 그 병과 사람은 기다린다. 다음 세대의 장을 열면 깨어나 영웅관에서 다시 열 수 있다.',
       '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
       '8단 위의 가주가 쓰러지면 그대로 떠난다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',

@@ -933,7 +933,7 @@ DS.unionOf = function () { return null; };
 DS.unionName = function () { return ''; };
 DS.fuseState = function (save, fam) { return { done: false, have: [], miss: [], low: [], ok: false }; };
 DS.FUSE_HX = 1000;
-DS.FUSE_LS_MAX = 60;      // 2.2.9: 대표가 받는 두 넋의 남은 해 (많아야)
+DS.FUSE_LS = 30; DS.FUSE_LS_MAX = 80;      // 2.2.9: 합일한 넋은 오래 산다 — 대표의 수명이 30년에 흡수된 두 가주의 남은 해를 더한 만큼 늘어난다 (많아야 80년, 나이는 그대로)
 DS.houseCmp = function (a, b) { return (+(b && b.hx) || 0) - (+(a && a.hx) || 0) || DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 공훈 → 계급 → 합류 차례
 DS.houseOrd = function (a, b) { return DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 2.2.3: 보이는 차례 (부대 격자 · 칩 줄 · 결과 창) — 공훈 계급 → 합류 차례. 싸울 때마다 바뀌는 공훈 점수로는 줄을 섞지 않는다
 DS.houseSort = function (save, list) { return (list || DS.charList(save)).slice().sort(DS.houseOrd); };
@@ -954,6 +954,11 @@ DS.fzWakeTick = function (save) {
   if (out.length) save.fzWake = (save.fzWake || []).concat(out).filter(function (k, i, a) { return a.indexOf(k) === i; });
   return out;
 };
+DS.fuseLsGain = function (save, who, repId) {      // 미리 보기: 대표가 받는 수명 (년)
+  var hp = DS.heroPs(save), H = DS.fuseRep(save, who, repId), add = 0;
+  (who || []).forEach(function (w) { if (!w || DS.whoHouse(save, w) === H || !DS.ageLife) return; var L0 = DS.ageLife(save, w === hp ? save.chars[save.hero] : w); if (L0 && L0.left != null) add += Math.max(0, Math.round(L0.left)); });
+  return Math.min(DS.FUSE_LS_MAX, DS.FUSE_LS + add);
+};
 // 합일: ids = 사람 열쇠 셋 (가주). opt.rep = 대표 가문 번호. 돌려주는 것: 대표 가주. DS.lastFuse = { ids, who, names, rep, repWho, gone: [{ cls, name, hid }] … }
 DS.fuse = function (save, ids, opt) {
   ids = (ids || []).slice(); opt = opt || {};
@@ -963,9 +968,9 @@ DS.fuse = function (save, ids, opt) {
   var names = who.map(nameOf), houses = who.map(function (w) { return DS.whoHouse(save, w); }), ri = houses.indexOf(H), rw = who[ri], gen = DS.genNow(save);
   var trio = [names[ri]].concat(names.filter(function (n, i) { return i !== ri; }));
   rw.L = Math.max(DS.pL(rw), 71); rw.exp = 0; rw.fz = 1; rw.fu3 = trio.slice(); rw.fuG = gen;
-  // 두 넋의 남은 해: 흡수된 두 가주가 살 해를 대표가 받는다 (수명 +N년 — 나이는 그대로). 맹주는 대장 줄(ch.ls)에, 가주는 그 사람(m.ls)에
+  // 두 넋의 남은 해: 대표의 수명이 FUSE_LS(30)년에 흡수된 두 가주가 살 해를 더한 만큼 는다 (수명 +N년 — 나이는 그대로). 맹주는 대장 줄(ch.ls)에, 가주는 그 사람(m.ls)에
   var lsAdd = 0; who.forEach(function (w, i) { if (i === ri || !DS.ageLife) return; var e = w === hp ? save.chars[save.hero] : w, L0 = DS.ageLife(save, e); if (L0 && L0.left != null) lsAdd += Math.max(0, Math.round(L0.left)); });
-  lsAdd = Math.min(DS.FUSE_LS_MAX, lsAdd);
+  lsAdd = Math.min(DS.FUSE_LS_MAX, DS.FUSE_LS + lsAdd);
   var re = rw === hp ? save.chars[save.hero] : rw;
   if (lsAdd > 0 && re && +re.ls > 0) { re.ls = Math.round(+re.ls) + lsAdd; delete re.eld; var rp0 = re.pid && save.lin && save.lin.P && save.lin.P[re.pid]; if (rp0) rp0.ls = re.ls; }
   if (H) { if (DS.hAdd) DS.hAdd(save, H, DS.FUSE_HX); else H.hx = (+H.hx || 0) + DS.FUSE_HX; }

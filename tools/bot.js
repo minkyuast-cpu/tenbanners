@@ -107,10 +107,11 @@ function sendKin() {
 //   셋: 맹주가 들 수 있으면 맹주(대표는 맹주 가문으로 잠긴다) → 출전 중인 가주 → 쉬는 가주 가운데 공훈이 낮은 둘(잃어도 덜 아픈 가문)을 흡수한다.
 //   대표: 맹주 가문 · 아니면 출전 중인 가문 가운데 공훈이 가장 큰 곳 · 아니면 셋 가운데 공훈이 가장 큰 곳.
 //   더 하지 않는다: 남는 가문이 BOTKEEP(4) 밑이 되면 · 출전 셋이 모두 합일했으면 · 이번 세대에 이미 BOTFUSEMAX(3) 번 했으면. 단 문턱 앞인데 출전에 합일한 이가 없으면 가문이 셋 넘게 남는 한 한 번 더
-const FUSE_KEEP = +(process.env.BOTKEEP || 4), FUSE_MAX = +(process.env.BOTFUSEMAX || 3);
+const FUSE_KEEP = +(process.env.BOTKEEP || 4), FUSE_MAX = +(process.env.BOTFUSEMAX || 3), FUSE_TARGET = +(process.env.BOTFUSET || 3);
 function fusedIn() { return D.persons(s).filter(p => p.dep && p.who.fz).length; }
 function fuseGen() { return (st.fuseG || {})[D.genNow ? D.genNow(s) : 1] || 0; }
-function fuseWant() { return !OLD && !!s.crest && fuseGen() < FUSE_MAX && fusedIn() < 3 && D.charList(s).length - 2 >= FUSE_KEEP; }
+function fusedAll() { return D.persons(s).filter(p => (p.role === 'hero' || p.role === 'bear') && p.who.fz).length; }      // 살아 있는 합일한 가주 (쉬는 이 포함)
+function fuseWant() { return !OLD && !!s.crest && fuseGen() < FUSE_MAX && fusedAll() < FUSE_TARGET && D.charList(s).length - 2 >= FUSE_KEEP; }      // 2.2.9: 합일한 가주를 FUSE_TARGET 만큼 두고, 하나가 떠나면 다시 (가문이 KEEP 넘게 남는 동안)
 function lifeLeft(c) { const e = c.role === 'hero' ? s.chars[s.hero] : c.who, L = D.ageLife ? D.ageLife(s, e) : null; return L && L.left != null ? L.left : 99; }
 //   2.2.9: 대표는 남은 해가 가장 긴 가주 (늙은 이를 올리면 곧 천수를 다해 그 가문의 8단이 사라진다 — 다음 가주는 제 단으로 선다). 맹주가 늙었으면 셋에 넣지 않는다 (넣으면 맹주 가문이 대표로 잠긴다).
 //     흡수할 둘도 남은 해가 긴 이부터 (그 해를 대표가 받는다 — DS.fuse)
@@ -129,7 +130,7 @@ function fuseRepOf(sv, keys) {
 function fuseMaybe(gate) {
   if (OLD || !s.crest || D.fuseCands(s).length < D.FUSE_N) return 0;
   if (!(gate || fuseWant())) return 0;
-  if (!fuseWant() && !(gate && !fusedIn() && D.charList(s).length - 2 >= 3)) return 0;      // 문턱 앞인데 출전에 합일한 이가 없으면 가문이 셋 넘게 남는 한 한 번 더
+  if (!fuseWant() && !(gate && !fusedAll() && D.charList(s).length - 2 >= 2)) return 0;      // 문턱 앞인데 합일한 가주가 하나도 없으면 가문이 둘 남더라도 한 번 더 (다시 합일하지 않으면 나아가지 못한다)
   const n0 = D.charList(s).length, k = D.fuseAuto(s, 1, { pick: fusePick, rep: fuseRepOf });
   if (k) { const LF = D.lastFuse || {}, g = D.genNow ? D.genNow(s) : 1; st.fuse += k; st.fuseG = st.fuseG || {}; st.fuseG[g] = (st.fuseG[g] || 0) + k; st.fuseAt = (st.fuseAt || []).concat([Object.keys(s.cleared).length]); st.shut = (st.shut || []).concat((LF.gone || []).map(g => g.cls + '@' + Object.keys(s.cleared).length)); st.log.push('fuse @' + Object.keys(s.cleared).length + ' h' + ((st.simT + st.over) / 3600).toFixed(1) + ' left ' + (D.ageLife(s, LF.repWho === D.heroPs(s) ? s.chars[s.hero] : LF.repWho).left) + ' (+' + LF.ls + ') rep ' + LF.repCls + ' absorbs ' + (LF.gone || []).map(g => g.cls).join(',') + ' houses ' + n0 + '→' + D.charList(s).length); }
   return k;
@@ -157,7 +158,7 @@ function prep() {
   check('prep');
 }
 // 한 싸움: specs 를 starts(또는 x,y 근처)에 세우고 끝날 때까지. 돌려주는 것: 'win' | 'lose' | 'end'
-const RETREAT = process.env.BOTRETREAT !== '0', RETREAT_AT = +(process.env.BOTRETREAT || 2), RETREAT_HP = +(process.env.BOTRETHP || 0.25);      // 2.2.9: BOTRETREAT=0 이면 예전처럼 끝까지 싸운다 (수 = 몇째로 쓰러질 때 물러나는가)
+const RETREAT = process.env.BOTRETREAT !== '0', RETREAT_AT = +(process.env.BOTRETREAT || 2), RETREAT_HP = +(process.env.BOTRETHP || 0.15);      // 2.2.9: BOTRETREAT=0 이면 예전처럼 끝까지 싸운다 (수 = 몇째로 쓰러질 때 물러나는가)
 function run(sim, mode, zid, maxT) {
   let res = null, quiet = 0, fell = 0;
   const born = sim.t;
@@ -206,7 +207,7 @@ function run(sim, mode, zid, maxT) {
     }
     if (sim.result) res = sim.result;
     if (fell >= RETREAT_AT && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd')) { res = 'retreat'; st.retreats = (st.retreats || 0) + 1; }
-    if (RETREAT && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd' && u.tier >= 8 && u.hp < u.mhp * RETREAT_HP)) {      // 2.2.9: 합일한 가주(8단~)가 위태로우면 물러난다 — 시나리오는 퇴각(진 판), 들판은 싸움을 버리고 떠난다 (8단은 다시 얻기 어렵다)
+    if (RETREAT && !res && sim.units.some(u => !u.dead && u.side === 'ally' && u.role === 'cmd' && u.tier >= 8 && u.hp < u.mhp * RETREAT_HP * (u.hero ? 2 : 1))) {      // 합일한 맹주는 더 일찍 (맹주가 쓰러지면 퇴각해도 떠난다)      // 2.2.9: 합일한 가주(8단~)가 위태로우면 물러난다 — 시나리오는 퇴각(진 판), 들판은 싸움을 버리고 떠난다 (8단은 다시 얻기 어렵다)
       if (mode === 'scn') { res = 'retreat'; st.retreats = (st.retreats || 0) + 1; st.retX = (st.retX || 0) + 1; } else { res = 'end'; st.fieldRet = (st.fieldRet || 0) + 1; }
     }
     if (mode === 'zone' && !res) {
@@ -342,7 +343,7 @@ for (let n = 1; n <= 30 && !stuck; n++) {
     if (process.env.BOTSNAP && tries === 1 && !tag && (!FOCUS || FOCUS === n)) { require('fs').writeFileSync(require('path').join(process.env.BOTSNAP, cls + '_' + seed + '_' + n + '.json'), JSON.stringify(s)); if (FOCUS) process.exit(0); }      // 조율용(tools/calib.js): 시나리오 N 에 처음 들어가기 직전의 판
     const d0 = st.deaths, ok = scenario(sc);
     if (tries === 1) st.ft[n] = [ok ? 1 : 0, st.deaths - d0, D.partyL(s) >= 0 ? st.eL[n] : 0];      // 2.2.7: 처음 싸움 [이김, 쓰러진 수, 들어간 레벨]
-    if (!ok) { st.wipes++; st.wAt[n] = (st.wAt[n] || 0) + 1; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + target(sc)); if (tries > 20) { stuck = true; break; } }
+    if (!ok) { st.wipes++; st.wAt[n] = (st.wAt[n] || 0) + 1; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + target(sc)); if (tries > 40) { stuck = true; break; } }
   }
   if (process.env.BOTSAVE && !tag && n === +(process.env.BOTSAVEAT || 15)) { require('fs').writeFileSync(process.env.BOTSAVE, JSON.stringify(s)); console.log('saved', process.env.BOTSAVE); process.exit(0); }      // 화면 시험용: N번을 깬 판을 저장 글로
   st.perScn.push({ n: tag + n, h: +((st.simT + st.over) / 3600).toFixed(2), L: D.partyL(s), units: D.partySpecs(s).length, vac: D.bnEmpty(s).length, tries, houses: D.charList(s).length, fh: +(st.fieldT / 3600).toFixed(2), rec: target(sc), rL: D.recL(sc) });

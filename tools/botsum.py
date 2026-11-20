@@ -81,3 +81,20 @@ if rows:
     for d in rows:
         for k, v in (d.get('ft') or {}).items(): ft.setdefault(int(k), []).append(v)
     if ft: print('first try win%/no-death% (entry-rec), scenario 1..30: ' + ' '.join('%d:%d/%d' % (k, round(100 * sum(x[0] for x in v) / len(v)), round(100 * sum(1 for x in v if x[0] and x[1] == 0) / len(v))) for k, v in sorted(ft.items())))
+    # 2.2.9 합일: 판마다 합일 수 · 8단 위의 죽음(싸움 · 천수 · 30번 이름 지우기) · 퇴각 · 가문이 잠든 때(시나리오) · 다음 세대에 깨어나 다시 열린 수
+    if any('fuseAt' in d for d in rows):
+        fz = [d.get('fuse', 0) for d in rows]
+        print('fusions per run %.2f (min %d max %d) · 8+ deaths %.2f/run (of which erased at 30 by the herald %.2f) · 8+ natural deaths %.2f/run · retreats %.2f/run (8+ in danger %.2f) · field breakaways %.2f/run' % (
+            sum(fz) / n, min(fz), max(fz), sum(d.get('xDeaths', 0) for d in rows) / n, sum(min(d.get('xDeaths', 0), d.get('erased', 0)) for d in rows if d.get('erased')) / n,
+            sum(d.get('xNat', 0) for d in rows) / n, sum(d.get('retreats', 0) for d in rows) / n, sum(d.get('retX', 0) for d in rows) / n, sum(d.get('fieldRet', 0) for d in rows) / n))
+        fa = {}
+        for d in rows:
+            for x in d.get('fuseAt') or []: fa[x] = fa.get(x, 0) + 1
+        print('fusions after scenario (count): ' + ' '.join('%d:%d' % kv for kv in sorted(fa.items())) + ' · houses at end %.1f · fused alive at end %.1f' % (sum(d.get('houses', 0) for d in rows) / n, sum(d.get('fzEnd', 0) for d in rows) / n))
+        sh = {}
+        for d in rows:
+            for x in d.get('shut') or []: c, at = x.split('@'); sh.setdefault(c, []).append(int(at))
+        print('houses put to sleep (class: times, mean after scenario): ' + ' '.join('%s:%d@%.1f' % (k, len(v), sum(v) / len(v)) for k, v in sorted(sh.items())))
+        print('herald calls %d · covers %d · erased %d (batch)' % (sum(d.get('erCall', 0) for d in rows), sum(d.get('erCover', 0) for d in rows), sum(d.get('erased', 0) for d in rows)))
+        g2 = [d for d in rows if d.get('g2')]
+        if g2: print('2nd generation: woke %s · reopened %d · g2 cleared %s' % (' '.join(','.join(d.get('wake') or []) or '-' for d in g2), sum(d.get('reopens', 0) for d in g2), ' '.join(str(d['g2'].get('cleared')) for d in g2)))
