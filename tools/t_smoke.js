@@ -151,12 +151,12 @@ module.exports = async (page, shot, L) => {
   A(rg.ok && rg.cells >= 10, 'scenario result with many 가주: board, 「다음」 line and 계속 never overlap, all reachable (' + JSON.stringify(rg) + ')');
   if (process.env.V224) { fs.mkdirSync(process.env.V224, { recursive: true }); await page.screenshot({ path: path.join(process.env.V224, 'result_many.png') }); }
   await L.settle(page, 30000);
-  // 2.2.2 들판 무리는 싸우는 유닛 수만큼 불어난다
+  // 2.2.2 들판 무리는 싸우는 유닛 수만큼 불어난다 (2.2.7: 끝이 셋 배 — 세 마리 무리가 아홉까지)
   const pk = await ev(() => { var g = { id: 'g', x: 1, y: 1, L: 5, list: ['wolf', 'wolf', 'bat'] }, n = function (k) { return DS.packOf(g, k).list.length; };
     DS.ui.closeAll(); DS.enterZone('dawn'); var sim = DS.G.sim, z = DS.buildZone('dawn'), u = DS.partySpecs(DS.G.save).length, base = 0, now = 0;
     z.spawns.forEach(function (sp) { base += sp.list.length; }); sim.units.forEach(function (e) { if (e.side === 'enemy' && e.grp) now++; });
     return { n3: n(3), n6: n(6), n10: n(10), n16: n(16), ek: DS.packOf(g, 16).ek, u: u, base: base, now: now }; });
-  A(pk.n3 === 3 && pk.n6 > pk.n3 && pk.n10 > pk.n6 && pk.n16 >= pk.n10 && pk.n16 <= 8 && pk.ek < 1, 'field pack size scales with units: 3 mobs → ' + [pk.n3, pk.n6, pk.n10, pk.n16].join(' / ') + ' at 3 / 6 / 10 / 16 units (exp each ×' + pk.ek.toFixed(2) + ')');
+  A(pk.n3 === 3 && pk.n6 > pk.n3 && pk.n10 > pk.n6 && pk.n16 >= pk.n10 && pk.n16 <= 9 && pk.ek < 1, 'field pack size scales with units: 3 mobs → ' + [pk.n3, pk.n6, pk.n10, pk.n16].join(' / ') + ' at 3 / 6 / 10 / 16 units (exp each ×' + pk.ek.toFixed(2) + ')');
   A(pk.now > pk.base * 1.5, 'dawn field with ' + pk.u + ' units: ' + pk.now + ' mobs (unscaled ' + pk.base + ')');
   await ev(() => DS.ui.closeAll());
   // 2.2.5 승려(무투가): 기술 줄 · 옛 저장 옮김 · 기 전하기 · 되치기 · 예약 · 필살기 연출(병과마다 · 컷인 · 어둠) · 설정 「효과」
@@ -279,6 +279,20 @@ module.exports = async (page, shot, L) => {
     A(!r.err && !bad.length, c + ': every skill and ultimate casts with its effect (' + (r.list || []).length + ')' + (bad.length ? ' — ' + bad.join(', ') : '') + (r.err || ''));
   }
   A(nCast >= 70 && nUlt === 30, 'all classes: ' + nCast + ' skills and ultimates cast, ' + nUlt + ' ultimates');
+  // 2.2.7 자동 필살기: 조작이 자동인 가주는 게이지가 차고 쓸 자리가 나면 스스로 쓴다 · 수동이면 쓰지 않는다 · 스스로 쓰는 것은 우리 편 전체에서 3초에 하나
+  const au = await ev(() => {
+    var sim = DS.G.sim, u = sim.units.filter(function (x) { return x.hero && !x.dead; })[0], o = {}; if (!u) return { err: 'no hero' };
+    DS.G.pause = true; var ua = DS.BAL.ultAuto; DS.BAL.ultAuto = false;
+    var f = sim.units.filter(function (x) { return x.side === 'enemy' && !x.dead; })[0];
+    u.ult = 'u_ram'; u.uc = 100; u.gauge = 100; u.casting = null; u.order = null; u.busy = 0; u.fx = u.fx || {}; delete u.fx.seal; sim._ultT = null;
+    if (f) { sim.occ[f.y * sim.w + f.x] = null; var p = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(function (d) { return [u.x + d[0], u.y + d[1]]; }).filter(function (q) { return sim.pass(f.mt || 'foot', q[0], q[1]) && !sim.at(q[0], q[1]); })[0]; if (p) { f.x = p[0]; f.y = p[1]; } sim.occ[f.y * sim.w + f.x] = f; f.hp = f.mhp = 999999; f.aggro = true; }
+    u.auto = false; o.manual = sim.ultSelf(u);
+    u.auto = true; o.auto = sim.ultSelf(u);
+    var n0 = u.ultN || 0; sim.aiCmd(u); o.fired = (u.ultN || 0) > n0; o.uc = u.uc;
+    u.uc = 100; u.gauge = 100; u.busy = 0; o.gap = sim.ultSelf(u);
+    DS.BAL.ultAuto = ua; DS.G.pause = false; return o;
+  });
+  A(!au.err && au.manual === false && au.auto === true && au.fired && au.uc < 5 && au.gap === false, 'auto houses fire their own ultimate (manual waits; 3 s gap between self-fired ones) ' + JSON.stringify(au));
   await ev(() => DS.ui.closeAll());
   // ② 옛 저장: 병과마다 옛 필살기 이름(맹주 · 가주), 돌아온 이의 옛 깃발 기술(m.s), 연무장 기록(sk · ul)이 새 것으로
   const mig2 = await ev(() => {
@@ -330,6 +344,6 @@ module.exports = async (page, shot, L) => {
   A(f225.allies >= 5 && f225.t >= 4, '2.2.5 save fights in the field (' + f225.allies + ' houses, ' + f225.t + ' s)');
   await ev(() => { DS.G.sim.hunt = false; DS.G.save.opt.hunt = false; DS.ui.closeAll(); });
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.2\.6 [^/]+ \/ 2\.2\.6 \/ 7\.0\.6$/.test(notes), 'version ' + notes);
+  A(/^2\.2\.7 [^/]+ \/ 2\.2\.7 \/ 7\.0\.7$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };
