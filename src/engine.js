@@ -325,6 +325,7 @@ P.rouse = function (e) {
 P.hurt = function (v, dmg, src, o) {
   if (v.dead) return;
   o = o || {};
+  this._hv = (this._hv || 0) + 1;
   var sb = v.buffs && v.buffs.shd;      // 2.2.6 보호막 (버프 shd — p 가 남은 막는 양): 피해를 먼저 받아 낸다
   if (sb && dmg > 0 && dmg < v.mhp * 50) {
     var ab = Math.min(dmg, Math.max(0, sb.p)); sb.p -= ab; dmg -= ab;
@@ -353,6 +354,7 @@ P.hurt = function (v, dmg, src, o) {
 };
 P.heal = function (v, amt, quiet) {
   if (v.dead || amt <= 0) return 0;
+  this._hv = (this._hv || 0) + 1;
   var a = Math.min(v.mhp - v.hp, Math.round(amt)); v.hp += a;
   if (a > 0 && !quiet) this.emit({ t: 'heal', id: v.id, v: a });
   return a;
@@ -947,6 +949,10 @@ P.auraVal = function (u, e) {      // 2.2.5: 기공(aura)이 실제로 채울 �
   return out;
 };
 P.mendTgt = function (u, r) {      // 2.2.5: 기 전하기의 대상 — r 칸 안 우리 편 가운데 체력 비율이 가장 낮은 이 (90% 아래만 · 가주는 조금 먼저)
+  if (u._mtT === this.t && u._mtR === r && u._mtV === this._hv && !(u._mtB && (u._mtB.dead || u._mtB.hp >= u._mtB.mhp))) return u._mtB;      // 2.2.6: 같은 틱 · 같은 반경이면 다시 재지 않는다 (기술마다 살필 때)
+  var best = this._mendScan(u, r); u._mtT = this.t; u._mtR = r; u._mtV = this._hv; u._mtB = best; return best;
+};
+P._mendScan = function (u, r) {
   var best = null, lo = 0.9, us = this.units, f, rt;
   for (var i = 0; i < us.length; i++) { f = us[i]; if (f.dead || f.side !== u.side || dist(u, f) > r || f.hp >= f.mhp) continue; rt = f.hp / f.mhp - (f.role === 'cmd' ? 0.05 : 0); if (rt < lo) { lo = rt; best = f; } }
   return best;

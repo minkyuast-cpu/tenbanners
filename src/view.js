@@ -661,11 +661,11 @@ V.handle1 = function (e, sim) {
         self.rings.push({ x: mv2.x, y: mv2.y, t: 0, dur: 0.4, c: mc[1], r: 8, rise: true }); break;
       case 'shd':      // 2.2.6 보호막이 받아 낸 피해: 옅은 푸른 숫자 (작게) · 다 깨지면 조각
         if (!v || !on) break;
-        if (self.time - (v.shdT || -9) > 0.35) { v.shdT = self.time; self.float(u.x, u.y, '막음 ' + e.v, '#bfe8ff', { dy: -12, life: 0.7, s: 1 }); }
+        if (u.role === 'cmd' && self.time - (v.shdT || -9) > 0.9) { v.shdT = self.time; self.float(u.x, u.y, '막음 ' + e.v, '#bfe8ff', { dy: -12, life: 0.7, s: 1 }); }      // 가주만 · 0.9초에 한 번 (난전에서 글자가 쌓이지 않게)
         if (e.end) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.3, c: '#d6ecff', r: 10 }); self.burst(v.x, v.y, ['#d6ecff', '#ffffff'], 5, { spd: 30, life: 0.3 }); }
         break;
       case 'weak':      // 2.2.6 맞물림 (둔화 · 화상 · 젖음 · 표식을 노린 기술): 금빛 「약점」
-        if (!v || !on || self.time - (v.wkT || -9) < 0.6) break;
+        if (!v || !on || self.time - (v.wkT || -9) < 1.2) break;
         v.wkT = self.time; self.float(u.x, u.y, '약점', '#ffd75e', { dy: -14, life: 0.7 }); break;
       case 'chain':      // 2.2.6 연쇄 번개: 맞은 적에서 다음 적으로 번개 줄기
         var ca = self.vu[e.a], cb = self.vu[e.b]; if (!ca || !cb || !(self.onScreen(cb.u.x, cb.u.y))) break;
@@ -680,7 +680,10 @@ V.handle1 = function (e, sim) {
       case 'castEnd': delete self.tele[e.tid]; break;
       case 'buff': case 'status':
         if (!on) break;
-        if (self.spd >= 2 && u.role === 'merc' && e.t === 'buff') break;      // r36: 가장 빠른 배속(2): 용병마다 뜨는 버프 글자는 생략 (고리 연출은 기술 쪽에서 이미 나온다)
+        if (self.spd >= 2 && u.role === 'merc' && e.t === 'buff') break;
+        if (e.t === 'buff' && e.s === 'shd' && u.role !== 'cmd') break;      // 2.2.6: 보호막 글자는 가주에게만 (테가 이미 보인다)
+        if (e.t === 'buff' && e.p > 0 && v.bfT && v.bfT[e.s] && self.time - v.bfT[e.s] < 3) break;      // 같은 가호가 3초 안에 다시 걸리면 글자는 한 번만 (호령이 겹칠 때)
+        if (e.t === 'buff' && e.p > 0) (v.bfT || (v.bfT = {}))[e.s] = self.time;      // r36: 가장 빠른 배속(2): 용병마다 뜨는 버프 글자는 생략 (고리 연출은 기술 쪽에서 이미 나온다)
         var tn = self.time - v.tnT < 0.8 ? v.tn + 1 : 0;      // 글자도 한 줄씩 위로 쌓는다
         v.tn = tn; v.tnT = self.time;
         if (e.t === 'buff') self.float(u.x, u.y, (BUFFTXT[e.s] || e.s) + (e.p > 0 ? '↑' : '↓'), e.p > 0 ? '#f6cf57' : '#b181e6', { dy: -4 - Math.min(tn, 3) * 6, delay: 0.15 });

@@ -763,7 +763,7 @@ DS.enhSafe = function (g) { return !!g && (g.enh + 1 <= (DS.ENH.safe || 0) || !!
 // 무기: 한 단계마다 공격·마공 +6%, 치명타 +1% · 방어구(ad): 방어·마방·방어구 HP +6% (치명타 덤 없음)
 DS.enhTier = function (n) { return n >= 16 ? 4 : n >= 10 ? 3 : n >= 5 ? 2 : n >= 1 ? 1 : 0; };      // 이펙트 단계: 1~4 / 5~9 / 10~15 / 16~20
 DS.ENH_COL = ['', '#dff0ff', '#5fc4ff', '#c58cff', '#ffd75e'];
-DS.STATUS = { poison: { name: '중독' }, slow: { name: '둔화' } };
+DS.STATUS = { poison: { name: '중독' }, slow: { name: '둔화' }, burn: { name: '화상' }, mark: { name: '표식' }, wet: { name: '젖음' } };      // 2.2.6: 화상(법사) · 표식(궁병) · 젖음(해병)
 DS.PASSIVES = {
   marine:   { name: '수전', desc: '물 위에서 공격 +25%, 받는 피해 -25%.' },
   fireborn: { name: '화염의 몸', desc: '용암에서 화상을 입지 않는다.' },
