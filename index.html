@@ -1254,6 +1254,8 @@ html.calm body #app#app #s-game #bot.dock .arow.sk .act.ult.full { animation: no
 #ultcut .ucn { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
 #ultcut .ucn i { font: 700 11px/1 var(--f-head, sans-serif); font-style: normal; letter-spacing: .22em; color: #f0c860; }
 #ultcut .ucn b { font: 800 22px/1.05 var(--f-title, var(--f-head, sans-serif)); color: #fff6dc; text-shadow: 0 0 8px color-mix(in srgb, var(--fc, #ffc85a) 80%, transparent), 0 2px 0 #000; overflow: hidden; text-overflow: ellipsis; }
+#ultcut .uci { position: relative; margin-left: auto; flex: none; width: 40px; height: 40px; display: grid; place-items: center; color: #fff6dc; --ic-a: var(--fc, #f0c860); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--fc, #ffc85a) 80%, transparent)); opacity: .92; }      /* 2.2.6 필살기 그림 */
+#ultcut.on .uci { animation: ucPop calc(var(--ud) * .4) calc(var(--ud) * .14) cubic-bezier(.2, .9, .3, 1.3) both; }
 #ultcut.on .ucb { animation: ucIn var(--ud) cubic-bezier(.2, .8, .2, 1) both; }
 #ultcut.on .ucb::after { animation: ucShine calc(var(--ud) * .55) calc(var(--ud) * .12) ease-out both; }
 #ultcut.on .ucl { animation: ucLines var(--ud) linear both; }
@@ -4889,40 +4891,40 @@ DS.CLASSES = {
     tiers: ['파이터', '글라디에이터', '히어로', '킹', '카이저', '엠퍼러', '그레이트 엠퍼러'],
     base: { hp: 62, mp: 10, atk: 14, def: 10, mag: 3, res: 5 }, grow: { hp: 5.0, mp: 0.6, atk: 1.25, def: 1.0, mag: 0.3, res: 0.5 },
     spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys',
-    skills: [['cmd_inf', 3], ['bash', 2], ['attackUp', 4], ['protect', 5]], merc: 'm_sword',
-    blurb: '가까이에서 싸우는 튼튼한 전열. 4단 킹이 되면 「강화」, 5단 카이저가 되면 「수호」를 익힌다.' },
+    skills: [['cmd_inf', 3], ['inf_bash', 2], ['inf_wall', 4], ['inf_cover', 5]], merc: 'm_sword',
+    blurb: '방패를 든 전열. 적을 제게로 끌어 뒤를 지킨다. 4단 킹이 되면 「철벽」, 5단 카이저가 되면 「수호」를 익힌다.' },
   cav: { name: '기병', fam: 'battle', start: 1, kind: 'cav', mt: 'horse',
     tiers: ['나이트', '아크나이트', '실버나이트', '나이트마스터', '골드나이트', '로얄나이트', '로얄가드'],
     base: { hp: 56, mp: 14, atk: 15, def: 8, mag: 7, res: 4 }, grow: { hp: 4.6, mp: 0.9, atk: 1.35, def: 0.85, mag: 0.7, res: 0.45 },
     spd: 11, mv: 0.75, rng: [1, 2], atk: 'thrust', dtype: 'phys',
-    skills: [['cmd_cav', 3], ['thunder', 3], ['protect', 5], ['attackUp', 6]], merc: 'm_lancer',
-    blurb: '두 칸 앞까지 닿는 창과 번개 마법. 평지에서 빠르지만 숲과 고지에서는 느리다.' },
+    skills: [['cmd_cav', 3], ['cav_charge', 3], ['cav_trample', 5], ['cav_hunt', 6]], merc: 'm_lancer',
+    blurb: '말을 달려 적진을 꿰뚫는 돌격대. 두 칸 앞까지 닿는 창. 평지에서 빠르지만 숲과 고지에서는 느리다.' },
   fly: { name: '비병', fam: 'battle', start: 2, kind: 'fly', mt: 'fly', tags: ['fly'],
     tiers: ['호크나이트', '페가서스나이트', '유니콘나이트', '드래곤나이트', '드래곤로드', '드래곤마스터'],
     base: { hp: 50, mp: 10, atk: 14, def: 7, mag: 4, res: 6 }, grow: { hp: 4.2, mp: 0.6, atk: 1.3, def: 0.75, mag: 0.4, res: 0.55 },
     spd: 12, mv: 0.7, rng: [1, 2], atk: 'thrust', dtype: 'phys',
-    skills: [['cmd_fly', 3], ['dive', 3], ['whirl', 5]], merc: 'm_griffin',
-    blurb: '이동력이 가장 좋고 물과 산을 그냥 넘는다. 가호 기술은 없고 화살에 약하다.' },
+    skills: [['cmd_fly', 3], ['fly_dive', 3], ['fly_gale', 5]], merc: 'm_griffin',
+    blurb: '내리꽂고 다시 날아오르는 치고 빠지기. 물과 산을 그냥 넘는다. 화살에 약하다.' },
   mar: { name: '해병', fam: 'tactics', start: 2, kind: 'inf', mt: 'swim',
     tiers: ['캡틴', '서펜트나이트', '서펜트로드', '서펜트마스터', '크라켄나이트', '크라켄마스터'],
     base: { hp: 58, mp: 10, atk: 13, def: 9, mag: 5, res: 5 }, grow: { hp: 4.8, mp: 0.6, atk: 1.2, def: 0.95, mag: 0.45, res: 0.55 },
     spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys', passive: 'marine',
-    skills: [['cmd_mar', 3], ['harpoon', 2], ['tidal', 4]], merc: 'm_merman',
-    blurb: '보병과 닮았지만 물 위에서 멀리 움직이고, 물에 서면 강해진다.' },
+    skills: [['cmd_mar', 3], ['mar_hook', 2], ['mar_surge', 4]], merc: 'm_merman',
+    blurb: '작살로 끌어오고 물보라로 밀어낸다. 물 위에서 멀리 움직이고, 물에 서면 강해진다.' },
   pike: { name: '창병', fam: 'tactics', start: 2, kind: 'pike', mt: 'foot',
     tiers: ['로드', '하이로드', '제너럴', '하이랜더', '카운트', '듀크'],
     base: { hp: 54, mp: 16, atk: 14, def: 9, mag: 6, res: 5 }, grow: { hp: 4.5, mp: 1.0, atk: 1.25, def: 0.9, mag: 0.6, res: 0.5 },
     spd: 10, mv: 1, rng: [1, 2], atk: 'thrust', dtype: 'phys',
-    skills: [['cmd_pike', 3], ['slow', 2], ['pierce', 3], ['protect', 5]], merc: 'm_pike',
-    blurb: '두 칸 앞까지 찌르는 중거리 공격과 보조 마법. 기병에게 강하다.' },
+    skills: [['cmd_pike', 3], ['pike_pin', 2], ['pike_skewer', 3], ['pike_brace', 5]], merc: 'm_pike',
+    blurb: '두 칸 창끝으로 발을 묶고, 창벽을 세워 되찌른다. 기병에게 강하다.' },
   arc: { name: '궁병', fam: 'tactics', start: 2, kind: 'arc', mt: 'foot',
     tiers: ['스나이퍼', '레인저', '헌터', '보우로드', '보우마스터', '닌자마스터'],
     base: { hp: 44, mp: 12, atk: 14, def: 5, mag: 4, res: 5 }, grow: { hp: 3.6, mp: 0.7, atk: 1.3, def: 0.55, mag: 0.4, res: 0.5 },
     spd: 11, mv: 1, rng: [2, 4], atk: 'arrow', dtype: 'phys',
-    skills: [['charisma', 4], ['aimed', 2], ['arrowRain', 6]], merc: 'm_archer',
-    blurb: '멀리서 활을 쏜다. 「통솔」은 아군 모두를 북돋운다. 비병에게 강하다.' },
+    skills: [['charisma', 4], ['arc_mark', 2], ['arc_retreat', 6]], merc: 'm_archer',
+    blurb: '표식을 남기고 물러서며 쏜다. 표식이 있는 적은 누구에게나 더 아프게 맞는다. 비병에게 강하다.' },
   cle: { name: '승려', fam: 'magic', start: 1, kind: 'holy', mt: 'foot',
-    tiers: ['클레릭', '프리스트', '하이프리스트', '에이전트', '하이에이전트', '프린세스', '퀸'],
+    tiers: ['수련생', '권사', '무승', '철권', '권호', '권성', '무신'],      // 2.2.6: 무투가의 단 이름 (옛 클레릭 … 퀸)
     base: { hp: 54, mp: 24, atk: 13, def: 8, mag: 11, res: 9 }, grow: { hp: 4.6, mp: 1.5, atk: 1.15, def: 0.85, mag: 0.95, res: 0.85 },
     spd: 10, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys', martial: true,      // 2.2.5 무투가: 무기의 힘은 공격에도 기공(마공)에도 그대로 (DS.charStats)
     skills: [['cle_combo', 1], ['cmd_cle', 3], ['cle_kick', 3], ['cle_palm', 5]], merc: 'm_sister',
@@ -4931,38 +4933,38 @@ DS.CLASSES = {
     tiers: ['몽크', '비숍', '세이지', '패러딘', '세인트', '홀리마스터'],
     base: { hp: 48, mp: 28, atk: 9, def: 6, mag: 12, res: 10 }, grow: { hp: 4.0, mp: 1.9, atk: 0.75, def: 0.65, mag: 1.1, res: 1.0 },
     spd: 11, mv: 1, rng: [1, 1], atk: 'melee', dtype: 'phys',
-    skills: [['cmd_mon', 3], ['holy', 2], ['protect', 3], ['quick', 4], ['bless', 6]], merc: 'm_templar',
-    blurb: '가호를 거는 서포터. 4단 세이지가 되면 행동 소모를 줄여 주는 「신속」을 익힌다. 신성 마법은 망자에게 아프다.' },
+    skills: [['cmd_mon', 3], ['mon_smite', 2], ['mon_ward', 3], ['mon_sanct', 6], ['mon_haste', 4]], merc: 'm_templar',
+    blurb: '등불로 아군을 지키는 서포터. 보호막을 씌우고 상태 이상을 푼다. 4단 세이지가 되면 「신속」을 익힌다. 신성 마법은 망자에게 아프다.' },
   mag: { name: '법사', fam: 'magic', start: 1, kind: 'mage', mt: 'foot',
     tiers: ['매지션', '위저드', '하이위저드', '메이지', '아크메이지', '소서러', '로열위저드'],
     base: { hp: 38, mp: 34, atk: 5, def: 4, mag: 16, res: 9 }, grow: { hp: 3.2, mp: 2.3, atk: 0.4, def: 0.45, mag: 1.45, res: 0.85 },
     spd: 10, mv: 1, rng: [1, 3], atk: 'bolt', dtype: 'magic', basic: 0.75,
-    skills: [['cmd_mag', 3], ['fire', 1], ['ice', 3], ['blizzard', 5], ['meteor', 7]], merc: 'm_spirit',
-    blurb: '불과 얼음의 마법으로 여럿을 한꺼번에 태운다. 몸은 약하다.' },
+    skills: [['cmd_mag', 3], ['mag_ember', 1], ['mag_frost', 3], ['mag_bolt', 5], ['mag_meteor', 7]], merc: 'm_spirit',
+    blurb: '불, 얼음, 번개를 맞물려 쓴다. 불에 탄 적은 얼음에, 얼거나 젖은 적은 번개에 약하다. 몸은 약하다.' },
   sha: { name: '사교', fam: 'magic', start: 2, kind: 'mage', mt: 'foot',
     tiers: ['셔먼', '서머너', '워록', '네크로맨서', '일루저니스트', '다크마스터'],
     base: { hp: 42, mp: 32, atk: 6, def: 5, mag: 15, res: 10 }, grow: { hp: 3.5, mp: 2.2, atk: 0.5, def: 0.5, mag: 1.4, res: 0.9 },
     spd: 10, mv: 1, rng: [1, 3], atk: 'bolt', dtype: 'magic', basic: 0.75,
-    skills: [['cmd_sha', 3], ['drain', 2], ['summon', 3], ['curse', 4], ['deathCloud', 5]], merc: 'm_skeleton',
-    blurb: '생기를 빨고 망자를 불러낸다. 가장 마지막에 합류한다.' },
+    skills: [['cmd_sha', 3], ['sha_drain', 2], ['sha_raise', 3], ['sha_hex', 4], ['sha_plague', 5]], merc: 'm_skeleton',
+    blurb: '저주와 역병으로 적을 무르게 하고, 빨아들인 생기를 아군에게 나눈다. 망자를 불러낸다.' },
   // ── 합일 (8단~10단) ──
   bm: { name: '배틀마스터', short: '배틀', fam: 'battle', start: 8, kind: 'cav', mt: 'horse', master: true,
     tiers: ['배틀마스터', '그랑나이트', '그랜드나이트'],
     base: { hp: 80, mp: 16, atk: 17, def: 11, mag: 7, res: 6 }, grow: { hp: 5.6, mp: 0.9, atk: 1.5, def: 1.1, mag: 0.7, res: 0.6 },
     spd: 12, mv: 0.75, rng: [1, 2], atk: 'thrust', dtype: 'phys',
-    skills: [['cmd_bm', 8], ['bm_storm', 10], ['bm_charge', 9], ['bash', 8], ['thunder', 8], ['attackUp', 8], ['protect', 8], ['whirl', 8]], merc: 'm_lancer', mercs: ['m_sword', 'm_lancer', 'm_griffin'],
-    blurb: '보병, 기병, 비병이 하나로 합일한 전장의 주인. 9단에 「강철 돌격」, 10단에 「강철 폭풍」을 익힌다.' },
+    skills: [['cmd_bm', 8], ['bm_tempest', 10], ['bm_drive', 9], ['inf_bash', 8], ['cav_charge', 8], ['inf_wall', 8], ['inf_cover', 8], ['fly_gale', 8]], merc: 'm_lancer', mercs: ['m_sword', 'm_lancer', 'm_griffin'],
+    blurb: '보병, 기병, 비병이 하나로 합일한 전장의 주인. 9단에 「강철 돌파」, 10단에 「강철 폭풍」을 익힌다.' },
   tm: { name: '택틱스마스터', short: '택틱스', fam: 'tactics', start: 8, kind: 'arc', mt: 'swim', master: true,
     tiers: ['택틱스마스터', '그랑아처', '그랜드아처'],
     base: { hp: 66, mp: 16, atk: 17, def: 8, mag: 6, res: 6 }, grow: { hp: 4.8, mp: 0.9, atk: 1.5, def: 0.85, mag: 0.6, res: 0.6 },
     spd: 12, mv: 1, rng: [1, 4], atk: 'arrow', dtype: 'phys', passive: 'marine',
-    skills: [['charisma', 8], ['tm_rain', 10], ['tm_gale', 9], ['aimed', 8], ['slow', 8], ['tidal', 8], ['arrowRain', 8]], merc: 'm_archer', mercs: ['m_merman', 'm_pike', 'm_archer'],
+    skills: [['charisma', 8], ['tm_squall', 10], ['tm_hunt', 9], ['arc_mark', 8], ['pike_pin', 8], ['mar_surge', 8], ['arc_retreat', 8]], merc: 'm_archer', mercs: ['m_merman', 'm_pike', 'm_archer'],
     blurb: '해병, 창병, 궁병이 하나로 합일한 전술의 달인. 9단에 「바람길 화살」, 10단에 「소나기 화살」을 익힌다.' },
   mm: { name: '매직마스터', short: '매직', fam: 'magic', start: 8, kind: 'mage', mt: 'foot', master: true,
     tiers: ['매직마스터', '그랑메이지', '그랜드메이지'],
     base: { hp: 56, mp: 44, atk: 8, def: 6, mag: 19, res: 12 }, grow: { hp: 4.2, mp: 2.6, atk: 0.6, def: 0.65, mag: 1.65, res: 1.1 },
     spd: 11, mv: 1, rng: [1, 3], atk: 'bolt', dtype: 'magic', basic: 0.75,
-    skills: [['heal', 8], ['cmd_mm', 8], ['mm_dawn', 10], ['mm_grace', 9], ['quick', 8], ['fire', 8], ['blizzard', 8], ['healAll', 8], ['summon', 8], ['meteor', 8]], merc: 'm_spirit', mercs: ['m_sister', 'm_templar', 'm_spirit', 'm_skeleton'],
+    skills: [['mon_ward', 8], ['cmd_mm', 8], ['mm_sun', 10], ['mm_star', 9], ['mon_haste', 8], ['mag_ember', 8], ['mag_bolt', 8], ['cle_palm', 8], ['sha_raise', 8], ['mag_meteor', 8]], merc: 'm_spirit', mercs: ['m_sister', 'm_templar', 'm_spirit', 'm_skeleton'],
     blurb: '승려, 신관, 법사, 사교가 하나로 합일한 마도의 정점. 9단에 「별의 가호」, 10단에 「여명의 빛」을 익힌다.' }
 };
 
@@ -5000,21 +5002,62 @@ DS.SKILLS = {
   deathCloud:{ name: '독안개', mp: 14, tick: 60, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'poison', eff: [{ t: 'dmg', m: 1.1, type: 'magic' }, { t: 'status', s: 'poison', dur: 12, p: 4 }], desc: '십자 범위에 독안개. 피해와 중독.' },
   // ── 호령: 병과마다 하나인 지휘 기술 (궁병·택틱스마스터는 위의 「통솔」).
   //    2.2.0: 가솔이 없어져 모든 아군에게 걸린다 (예전 mercOnly — 세기는 절반). 자동 전투는 버프가 꺼진 아군이 둘 이상인 큰 싸움에서 쓴다.
-  cmd_inf:  { name: '방패 올려!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 18, dur: 15 }], desc: '호령 — 모든 아군의 방어 +18% (15초).' },
+  cmd_inf:  { name: '방패 올려!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 25 }, { t: 'taunt', to: 'foe', r: 2, dur: 6 }], desc: '호령 — 모든 아군의 방어 +15% (25초). 둘레 2칸 적은 6초 동안 나를 노린다.' },      // 2.2.6 보병: 방패 전열은 호령에도 도발이 붙는다
   cmd_cav:  { name: '돌격!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 12, dur: 12 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군의 공격 +12% (12초), 게이지 +40.' },
-  cmd_fly:  { name: '강습 신호', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 15 }], desc: '호령 — 모든 아군의 행동 소모 −15% (15초).' },
+  cmd_fly:  { name: '강습 신호', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 25 }, { t: 'gauge', v: 15 }], desc: '호령 — 모든 아군의 행동 소모 −15% (25초), 게이지 +15.' },
   cmd_mar:  { name: '버텨라!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 12, dur: 20 }, { t: 'gauge', v: 25 }], desc: '호령 — 모든 아군의 방어 +12% (20초), 게이지 +25.' },
-  cmd_pike: { name: '창벽 세워!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 15 }, { t: 'buff', s: 'atk', p: 5, dur: 15 }], desc: '호령 — 모든 아군의 방어 +15%, 공격 +5% (15초).' },
+  cmd_pike: { name: '창벽 세워!', mp: 8, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 15, dur: 25 }, { t: 'buff', s: 'atk', p: 5, dur: 25 }], desc: '호령 — 모든 아군의 방어 +15%, 공격 +5% (25초).' },
   cmd_cle:  { name: '호흡을 맞춰라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'chi', eff: [{ t: 'buff', s: 'def', p: 15, dur: 20 }, { t: 'heal', m: 0.7 }], desc: '호령 — 모든 아군의 방어 +15% (20초), 기를 고르게 돌려 모두 조금 회복.' },      // 2.2.5: 무투가가 맡던 치유 몫 일부
   cmd_mon:  { name: '축복의 구령', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 12, dur: 20 }, { t: 'buff', s: 'def', p: 8, dur: 20 }], desc: '호령 — 모든 아군의 행동 소모 −12%, 방어 +8% (20초).' },
-  cmd_mag:  { name: '마력을 받아라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 18, dur: 15 }], desc: '호령 — 모든 아군의 공격 +18% (15초).' },
-  cmd_sha:  { name: '피의 계약', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 22, dur: 12 }, { t: 'buff', s: 'def', p: -8, dur: 12 }], desc: '호령 — 모든 아군의 공격 +22%, 대신 방어 −8% (12초).' },
+  cmd_mag:  { name: '마력을 받아라', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 15, dur: 25 }], desc: '호령 — 모든 아군의 공격 +15% (25초).' },
+  cmd_sha:  { name: '피의 계약', mp: 10, tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 22, dur: 20 }, { t: 'buff', s: 'def', p: -8, dur: 20 }], desc: '호령 — 모든 아군의 공격 +22%, 대신 방어 −8% (20초).' },
   cmd_bm:   { name: '전군 돌격', mp: 12, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 15, dur: 20 }, { t: 'gauge', v: 40 }], desc: '호령 — 모든 아군의 행동 소모 −15% (20초), 게이지 +40.' },
   cmd_mm:   { name: '별빛 가호', mp: 14, tick: 45, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'atk', p: 15, dur: 20 }, { t: 'buff', s: 'quick', p: 15, dur: 20 }], desc: '호령 — 모든 아군의 공격 +15%, 행동 소모 −15% (20초).' },
   // ── 2.2.5 승려(무투가)의 기술: 맨손 · 발 · 기공. fist = 기술 칸의 주먹 그림 (game.js skType). aura = 쓰는 이 둘레 r칸 아군을 마공 × m 만큼 고친다 (우리 편 치유 배율 그대로)
   cle_combo: { name: '연환권', mp: 4, tick: 45, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.6 }, { t: 'dmg', m: 0.6 }, { t: 'dmg', m: 0.7 }, { t: 'mend', r: 4, m: 1.3 }], desc: '붙은 적을 주먹, 주먹, 발로 세 번 친다. 모두 190%. 기를 돌려 4칸 안에서 가장 다친 아군 하나(자신 포함)를 조금 회복.' },
   cle_kick:  { name: '비연각', mp: 5, tick: 50, rng: [2, 3], tg: 'enemy', leap: true, fx: 'kick', fist: true, eff: [{ t: 'dmg', m: 1.6 }, { t: 'gauge', v: -25 }], desc: '2~3칸 밖의 적에게 날아차기 160%, 게이지를 깎는다.' },
   cle_palm:  { name: '기공장', mp: 10, tick: 55, rng: [1, 2], tg: 'enemy', fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 1.8, type: 'magic', stat: 'mix' }, { t: 'knock', n: 1 }, { t: 'aura', r: 2, m: 1.2 }, { t: 'mend', r: 4, m: 1.0 }], desc: '2칸 안의 적 하나에 기공 180%(마법 저항으로 막는다), 1칸 밀어낸다. 둘레 2칸 아군을 회복하고, 4칸 안에서 가장 다친 아군은 더 회복.' },
+  // ── 2.2.6 병과마다 새 기술 (옛 기술은 아래에 그대로 둔다 — 장비 · 옛 기록이 쓴다. 옛 이름 → 새 이름은 DS.SK_OLD)
+  //   덧효과: taunt 도발(그 적이 dur 초 동안 나를 노린다) · pull 끌어오기 · buff s 'shd' 보호막(공격 · 마공 × m 을 먼저 막는다) · ward 4칸 안 가장 다친 아군에게 보호막 · share 준 피해의 몫으로 가장 다친 아군 회복
+  //           chain 곁의 적에게 옮겨 간다 · status mark 표식(누구에게나 받는 피해 +p%) · burn 화상(2초마다 최대 체력의 p%) · wet 젖음(번개에 약하다)
+  //   vs: 그 상태인 적에게 vx 배 (slow 둔화 · mark 표식 · burn 화상 · wet 젖음 · curse 저주(공격 · 방어가 깎임) · low 체력 절반 아래, '|' 는 「또는」)
+  //   to: 'foe' | 'ally' | 'self' — 그 덧효과만 다른 무리에게 (r 칸 안, at: 'tgt' 면 대상 둘레) · dash 직선 끝까지 달려 나간다 · back 쓰고 나서 n 칸 물러선다 · ic 기술 칸 그림
+  // 보병 (로저스): 방패 전열 — 도발 · 보호막 · 되치기
+  inf_bash:   { name: '방패 치기', mp: 3, tick: 45, rng: [1, 1], tg: 'enemy', fx: 'shield', ic: 'shieldbash', eff: [{ t: 'dmg', m: 2.6 }, { t: 'gauge', v: -30 }, { t: 'taunt', dur: 6 }], desc: '붙은 적을 방패로 쳐 260%, 게이지를 깎고 6초 동안 나를 노리게 한다.' },
+  inf_wall:   { name: '철벽', mp: 8, tick: 45, tg: 'self', side: 'ally', fx: 'guard', ic: 'bulwark', eff: [{ t: 'buff', s: 'def', p: 40, dur: 12 }, { t: 'buff', s: 'ctr', p: 100, dur: 12 }, { t: 'taunt', to: 'foe', r: 2, dur: 8 }], desc: '12초 동안 방어 +40%, 붙어 때린 적을 100%로 되친다. 둘레 2칸 적은 나를 노린다.' },
+  inf_cover:  { name: '수호', mp: 8, tick: 40, rng: [1, 3], tg: 'ally', fx: 'cover', ic: 'cover', eff: [{ t: 'buff', s: 'shd', m: 1.8, stat: 'atk', dur: 15 }, { t: 'taunt', to: 'foe', at: 'tgt', r: 1, dur: 6 }], desc: '3칸 안 아군 하나에게 방패를 대 준다. 보호막(공격의 180%, 15초), 그 곁의 적은 나를 노린다.' },
+  // 기병 (라니스터): 돌격 — 꿰뚫고 달려 나가기 · 짓밟기 · 추격
+  cav_charge: { name: '돌파', mp: 6, tick: 50, tg: 'dir', len: 4, dash: true, fx: 'charge', ic: 'charge', eff: [{ t: 'dmg', m: 1.5 }, { t: 'gauge', v: -20 }], desc: '직선 4칸을 꿰뚫고 달려 나간다. 길 위의 적에게 150%, 게이지를 깎는다.' },
+  cav_trample:{ name: '말발굽', mp: 7, tick: 50, tg: 'self', area: 'r1', side: 'enemy', fx: 'quake', ic: 'hoof', eff: [{ t: 'dmg', m: 1.35 }, { t: 'status', s: 'slow', dur: 6 }], desc: '말을 세워 둘레 1칸 적을 짓밟는다. 135%와 둔화.' },
+  cav_hunt:   { name: '추격', mp: 5, tick: 45, rng: [2, 4], tg: 'enemy', leap: true, fx: 'thrust', ic: 'hunt', eff: [{ t: 'dmg', m: 1.5, vs: 'low', vx: 1.5 }], desc: '2~4칸 밖의 적에게 달려들어 150%. 체력이 절반 아래인 적에게 1.5배.' },
+  // 비병 (스카이워커): 치고 빠지기 — 내리꽂고 날아오른다
+  fly_dive:   { name: '급강하', mp: 5, tick: 45, rng: [2, 4], tg: 'enemy', leap: true, back: 2, fx: 'dive', ic: 'dive', eff: [{ t: 'dmg', m: 1.4, vs: 'mark', vx: 1.5 }], desc: '2~4칸 밖의 적에게 내리꽂아 140%(표식이 있으면 1.5배), 두 칸 날아오른다.' },
+  fly_gale:   { name: '날개 바람', mp: 7, tick: 50, tg: 'self', area: 'adj', side: 'enemy', back: 2, fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 1.25 }, { t: 'knock', n: 1 }, { t: 'gauge', v: -25 }], desc: '둘레 적에게 125%, 밀어내고 게이지를 깎은 뒤 두 칸 날아오른다.' },
+  // 해병 (앗쎄이): 물길 — 끌어오고 밀어내고 젖게 한다
+  mar_hook:   { name: '갈고리 작살', mp: 4, tick: 45, rng: [2, 4], tg: 'enemy', fx: 'hook', ic: 'hook', eff: [{ t: 'dmg', m: 1.1 }, { t: 'pull', n: 2 }, { t: 'status', s: 'slow', dur: 6 }], desc: '2~4칸 밖의 적에게 작살 110%, 두 칸 끌어오고 둔화.' },
+  mar_surge:  { name: '파도 밀기', mp: 7, tick: 50, tg: 'dir', len: 3, fx: 'water', ic: 'wave', eff: [{ t: 'dmg', m: 1.5, type: 'magic', stat: 'atk' }, { t: 'knock', n: 1 }, { t: 'status', s: 'wet', dur: 12 }], desc: '직선 3칸에 물보라 150%, 밀어내고 젖게 한다. 젖은 적은 번개에 1.5배로 맞는다.' },
+  // 창병 (프레이): 창벽 — 발 묶기 · 꿰뚫기 · 되찌르기
+  pike_pin:   { name: '발 묶기', mp: 4, tick: 45, rng: [1, 2], tg: 'enemy', fx: 'thrust', ic: 'pin', eff: [{ t: 'dmg', m: 1.6 }, { t: 'status', s: 'slow', dur: 10 }, { t: 'gauge', v: -20 }], desc: '두 칸 창끝으로 160%, 10초 둔화, 게이지를 깎는다.' },
+  pike_skewer:{ name: '꿰뚫기', mp: 6, tick: 50, tg: 'dir', len: 3, fx: 'thrust', ic: 'skewer', eff: [{ t: 'dmg', m: 1.8, vs: 'slow', vx: 1.4 }], desc: '직선 3칸을 꿰뚫어 180%. 둔화된 적에게 1.4배.' },
+  pike_brace: { name: '창벽', mp: 8, tick: 45, tg: 'self', area: 'r1', side: 'ally', fx: 'brace', ic: 'brace', eff: [{ t: 'buff', s: 'def', p: 20, dur: 12 }, { t: 'buff', s: 'ctr', p: 50, dur: 12 }], desc: '나와 곁의 아군이 창을 세운다. 방어 +20%, 붙어 때린 적을 50%로 되찌른다 (12초).' },
+  // 궁병 (퀸): 표식 사냥 — 표식 · 물러서며 쏘기
+  arc_mark:   { name: '표식 사격', mp: 4, tick: 45, rng: [2, 5], tg: 'enemy', fx: 'mark', ic: 'mark', eff: [{ t: 'dmg', m: 1.2 }, { t: 'status', s: 'mark', dur: 12, p: 20 }], desc: '최대 5칸. 120%, 표식을 남긴다. 표식이 있는 적은 누구에게나 20% 더 아프게 맞는다 (12초).' },
+  arc_retreat:{ name: '뒷걸음 사격', mp: 5, tick: 45, rng: [1, 5], tg: 'enemy', back: 2, fx: 'arrow', ic: 'retreat', eff: [{ t: 'dmg', m: 1.7, vs: 'mark', vx: 1.3 }], desc: '쏘고 두 칸 물러선다. 170%, 표식이 있으면 1.3배.' },
+  // 신관 (카마도): 등불 가호 — 보호막 · 정화 · 신성
+  mon_smite:  { name: '등불 치기', mp: 5, tick: 45, rng: [1, 3], tg: 'enemy', fx: 'holy', ic: 'lamp', eff: [{ t: 'dmg', m: 2.4, type: 'holy' }, { t: 'ward', r: 4, m: 0.9 }], desc: '신성 240% (망자, 악마에게 1.5배). 그 빛이 4칸 안 가장 다친 아군에게 작은 보호막이 된다.' },
+  mon_ward:   { name: '등불 가호', mp: 7, tick: 40, rng: [0, 3], tg: 'ally', fx: 'ward', ic: 'ward', eff: [{ t: 'buff', s: 'shd', m: 2.2, dur: 15 }, { t: 'cleanse' }], desc: '아군 하나에게 보호막(마공의 220%, 15초)을 씌우고 상태 이상을 푼다.' },
+  mon_haste:  { name: '신속', mp: 10, tick: 40, rng: [0, 3], tg: 'ally', ai: 'boss', fx: 'buffGold', ic: 'haste', eff: [{ t: 'buff', s: 'quick', p: 35, dur: 20 }, { t: 'gauge', v: 30 }], desc: '아군 하나의 행동 소모 −35% (20초), 게이지 +30.' },
+  mon_sanct:  { name: '성역', mp: 14, tick: 55, tg: 'self', area: 'r2', side: 'ally', fx: 'sanct', ic: 'sanct', eff: [{ t: 'buff', s: 'shd', m: 1.2, dur: 15 }, { t: 'buff', s: 'def', p: 20, dur: 20 }, { t: 'heal', m: 0.5 }], desc: '둘레 2칸 아군에게 보호막(마공의 120%)과 방어 +20% (20초), 조금 회복.' },
+  // 법사 (그레인저): 원소 맞물림 — 불은 화상, 얼음은 화상 입은 적에게, 번개는 얼거나 젖은 적에게
+  mag_ember:  { name: '불씨', mp: 7, tick: 50, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'fire', ic: 'flame', eff: [{ t: 'dmg', m: 0.8, type: 'magic' }, { t: 'status', s: 'burn', dur: 8, p: 2 }], desc: '십자 범위에 불 80%, 8초 화상.' },
+  mag_frost:  { name: '얼음창', mp: 6, tick: 50, rng: [1, 4], tg: 'enemy', fx: 'frost', ic: 'frost', eff: [{ t: 'dmg', m: 1.5, type: 'magic', vs: 'burn', vx: 1.4 }, { t: 'status', s: 'slow', dur: 10 }], desc: '얼음 150%, 10초 둔화. 화상을 입은 적에게 1.4배.' },
+  mag_bolt:   { name: '연쇄 번개', mp: 12, tick: 55, rng: [1, 4], tg: 'enemy', fx: 'thunder', ic: 'bolt', eff: [{ t: 'dmg', m: 1.3, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.5 }, { t: 'chain', n: 2, r: 2, m: 0.7, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.5 }], desc: '번개 130%, 2칸 안의 두 적에게 옮겨 간다(70%). 얼거나(둔화) 젖은 적에게 1.5배.' },
+  mag_meteor: { name: '별똥별', mp: 20, tick: 70, rng: [2, 5], tg: 'tile', area: 'r1', fx: 'meteor', ic: 'meteor', eff: [{ t: 'dmg', m: 1.2, type: 'magic', vs: 'burn', vx: 1.3 }, { t: 'status', s: 'burn', dur: 6, p: 1.5 }], desc: '십자 범위에 운석 120%, 화상. 이미 화상을 입은 적에게 1.3배.' },
+  // 사교 (아담스): 저주와 망자 — 생기 나눔 · 저주 · 역병 · 부름
+  sha_drain:  { name: '생기 나눔', mp: 5, tick: 45, rng: [1, 3], tg: 'enemy', fx: 'dark', ic: 'drain', eff: [{ t: 'dmg', m: 1.6, type: 'magic', share: 0.6 }], desc: '흑마법 160%. 준 피해의 60%로 4칸 안 가장 다친 아군(자신 포함)을 고친다.' },
+  sha_raise:  { name: '망자 부름', mp: 12, tick: 55, cd: 14, tg: 'self', fx: 'dark', ic: 'skull', ai: 'summon', cap: 2, eff: [{ t: 'summon', type: 'm_skeleton', n: 1, dur: 40, k: 0.85, ka: 1.2, kh: 1.3, kd: 1.5 }], desc: '40초 동안 싸울 해골 병사를 부른다 (둘까지).' },
+  sha_hex:    { name: '저주', mp: 7, tick: 45, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'curse', ic: 'hex', eff: [{ t: 'dmg', m: 1.2, type: 'magic' }, { t: 'buff', s: 'def', p: -20, dur: 12 }, { t: 'buff', s: 'atk', p: -15, dur: 12 }], desc: '십자 범위에 120%, 방어 −20%, 공격 −15% (12초).' },
+  sha_plague: { name: '역병 안개', mp: 12, tick: 55, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'poison', ic: 'plague', eff: [{ t: 'dmg', m: 1.4, type: 'magic', vs: 'curse', vx: 1.4 }, { t: 'status', s: 'poison', dur: 12, p: 3 }], desc: '십자 범위에 독안개 140%, 12초 중독. 저주받은 적에게 1.4배.' },
   // ── 합일한 마스터의 고유 기술 (9단·10단). 자동 전투는 목록의 앞쪽 기술부터 살피므로 병과 표에서 앞에 둔다 ──
   bm_charge: { name: '강철 돌격', mp: 12, tick: 55, tg: 'dir', len: 4, fx: 'thrust', eff: [{ t: 'dmg', m: 1.6 }, { t: 'knock', n: 1 }], desc: '직선 4칸을 꿰뚫어 160%, 1칸 밀어낸다.' },
   bm_storm:  { name: '강철 폭풍', mp: 18, tick: 65, tg: 'self', area: 'r2', side: 'enemy', fx: 'slash', eff: [{ t: 'dmg', m: 1.7 }, { t: 'gauge', v: -30 }], desc: '둘레 2칸의 모든 적에게 170%, 게이지를 깎는다.' },
@@ -5022,6 +5065,13 @@ DS.SKILLS = {
   tm_rain:   { name: '소나기 화살', mp: 18, tick: 65, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', eff: [{ t: 'dmg', m: 1.5 }], desc: '2칸 반경에 화살 소나기 150%.' },
   mm_grace:  { name: '별의 가호', mp: 22, tick: 60, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'atk', p: 20, dur: 25 }, { t: 'heal', m: 1.0 }], desc: '모든 아군의 공격 +20% (25초), 조금 회복.' },
   mm_dawn:   { name: '여명의 빛', mp: 26, tick: 75, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'holy', eff: [{ t: 'dmg', m: 1.8, type: 'holy' }], desc: '2칸 반경에 신성 180%. 망자, 악마에게 1.5배.' },
+  // 2.2.6 합일한 마스터의 새 고유 기술 (옛 bm_charge · bm_storm · tm_gale · tm_rain · mm_grace · mm_dawn 은 위에 그대로 — DS.SK_OLD)
+  bm_drive:   { name: '강철 돌파', mp: 12, tick: 55, tg: 'dir', len: 5, dash: true, fx: 'charge', ic: 'charge', eff: [{ t: 'dmg', m: 1.8 }, { t: 'gauge', v: -30 }], desc: '직선 5칸을 꿰뚫고 달려 나간다. 길 위의 적에게 180%, 게이지를 깎는다.' },
+  bm_tempest: { name: '강철 폭풍', mp: 16, tick: 60, tg: 'self', area: 'r2', side: 'enemy', fx: 'slash', ic: 'bulwark', eff: [{ t: 'dmg', m: 1.7 }, { t: 'gauge', v: -30 }, { t: 'taunt', dur: 6 }], desc: '둘레 2칸의 모든 적에게 170%, 게이지를 깎고 나를 노리게 한다.' },
+  tm_hunt:    { name: '바람길 화살', mp: 10, tick: 50, rng: [2, 6], tg: 'enemy', fx: 'mark', ic: 'mark', eff: [{ t: 'dmg', m: 2.0, vs: 'mark', vx: 1.3 }, { t: 'status', s: 'slow', dur: 8 }, { t: 'status', s: 'mark', dur: 10, p: 20 }], desc: '최대 6칸. 200%(표식이 있으면 1.3배), 둔화와 표식.' },
+  tm_squall:  { name: '소나기 화살', mp: 16, tick: 60, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', ic: 'volley', eff: [{ t: 'dmg', m: 1.4, vs: 'mark', vx: 1.4 }], desc: '2칸 반경에 화살 소나기 140%. 표식이 있는 적에게 1.4배.' },
+  mm_star:    { name: '별의 가호', mp: 20, tick: 55, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', ic: 'star', eff: [{ t: 'buff', s: 'atk', p: 20, dur: 25 }, { t: 'heal', m: 1.0 }], desc: '모든 아군의 공격 +20% (25초), 조금 회복.' },
+  mm_sun:     { name: '여명의 빛', mp: 22, tick: 65, rng: [1, 5], tg: 'tile', area: 'r2', fx: 'holy', ic: 'sun', eff: [{ t: 'dmg', m: 1.7, type: 'holy' }, { t: 'ward', r: 4, m: 1.2 }], desc: '2칸 반경에 신성 170% (망자, 악마에게 1.5배). 가장 다친 아군에게 보호막.' },
   // ── 이름난 용병(영웅·전설)의 고유 기술: 마나 0, 재사용 시간(cd) ──
   ms_cleave: { name: '휩쓸기', mp: 0, tick: 50, cd: 9, tg: 'self', area: 'adj', side: 'enemy', fx: 'slash', eff: [{ t: 'dmg', m: 1.2 }], desc: '둘레의 적을 모두 벤다 (120%).' },
   ms_rush:   { name: '몸통 박치기', mp: 0, tick: 45, cd: 10, rng: [2, 4], tg: 'enemy', leap: true, fx: 'slash', eff: [{ t: 'dmg', m: 1.4 }, { t: 'gauge', v: -30 }], desc: '2~4칸 밖의 적에게 뛰어들어 140%, 게이지를 깎는다.' },
@@ -5083,8 +5133,7 @@ DS.SKILLS = {
 //   짧은 호령(12·15초): 싸움 내내 다시 외치느라 말풍선과 마나만 쓰던 것 → 20·25초. 효과 크기는 그대로.
 //     기병의 「돌격!」(12초)은 그대로 둔다 — 외칠 때마다 게이지 +40 을 주는 호령이라, 길게 잡으면 그만큼 덜 외쳐 약해진다.
 DS.SK_R8 = {
-  aimed: { tick: 45, desc: '최대 5칸. 180% 피해. 틱이 가벼운 견제 사격.' },
-  cmd_inf: { dur: 25 }, cmd_fly: { dur: 25 }, cmd_pike: { dur: 25 }, cmd_mag: { dur: 25 }, cmd_sha: { dur: 20 }
+  aimed: { tick: 45, desc: '최대 5칸. 180% 피해. 틱이 가벼운 견제 사격.' }      // 2.2.6: 호령의 늘린 지속은 기술 표에 바로 적었다 (도발 · 게이지 같은 덧효과의 시간은 따로)
 };
 DS.skTune = function (on) {
   var R = DS.SK_R8, id, S, T, k, d0;
@@ -5318,46 +5367,47 @@ DS.MERC_SK = {
 //   cls = 그 기술이 속한 태생 병과, pk = 성격 몫(누구나 쓸 수 있는 꼴). fl = 한 줄 내력.
 DS.ULT = { at: 280, charge: 60, hitGain: 0.4, hurtGain: 15, stars: [1000, 1500, 2000], starP: 0.08, starR: 0.12, gradeP: [0, 0, 0, 0, 0.08, 0.15] };
 DS.ULTS = {
+  // 2.2.6: 병과마다 새 필살기 셋 (자리 차례는 그대로 — 옛 것은 같은 자리의 새 것으로, DS.SK_ALIAS)
   // 보병 (로저스): 앞에 선다
-  u_wall:    { cls: 'inf', name: '방패 성벽', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 50, dur: 14 }, { t: 'gauge', v: 30 }], fl: '방패를 땅에 박고 뒤를 막는다.', desc: '둘레 2칸 아군의 방어 +50% (14초), 게이지 +30.' },
-  u_breach:  { cls: 'inf', name: '성문 깨기', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'slash', eff: [{ t: 'dmg', m: 3.0 }, { t: 'gauge', v: -50 }], fl: '문짝째 부수는 한 번의 내려침.', desc: '붙은 적 하나에 300%, 게이지를 크게 깎는다.' },
-  u_cyclone: { cls: 'inf', name: '강철 회오리', tick: 40, tg: 'self', area: 'adj', side: 'enemy', fx: 'wind', eff: [{ t: 'dmg', m: 2.0 }, { t: 'knock', n: 1 }], fl: '둘러싸였을 때 쓰라고 배운 칼.', desc: '둘레 모든 적에게 200%, 1칸 밀어낸다.' },
+  u_bastion: { cls: 'inf', name: '불락 성벽', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'guard', ic: 'bulwark', eff: [{ t: 'buff', s: 'def', p: 50, dur: 14 }, { t: 'buff', s: 'shd', m: 1.5, stat: 'atk', dur: 14 }, { t: 'taunt', to: 'foe', r: 3, dur: 8 }], fl: '이 뒤로는 한 걸음도 못 간다.', desc: '둘레 2칸 아군의 방어 +50%, 보호막(공격의 150%, 14초). 둘레 3칸 적은 나를 노린다.' },
+  u_ram:     { cls: 'inf', name: '성문 부수기', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'shield', ic: 'shieldbash', eff: [{ t: 'dmg', m: 3.2 }, { t: 'gauge', v: -60 }, { t: 'knock', n: 2 }], fl: '문짝째 부수는 한 번의 내려침.', desc: '붙은 적 하나에 320%, 게이지를 크게 깎고 2칸 밀어낸다.' },
+  u_riposte: { cls: 'inf', name: '반격의 회오리', tick: 40, tg: 'self', area: 'adj', side: 'enemy', fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 1.9 }, { t: 'knock', n: 1 }, { t: 'buff', s: 'ctr', p: 100, dur: 10, to: 'self' }], fl: '둘러싸였을 때 쓰라고 배운 칼.', desc: '둘레 모든 적에게 190%, 밀어낸다. 10초 동안 붙어 때린 적을 100%로 되친다.' },
   // 기병 (라니스터): 말은 제 주인을 안다
-  u_lance:   { cls: 'cav', name: '황금 창 돌격', tick: 40, tg: 'dir', len: 5, fx: 'thrust', eff: [{ t: 'dmg', m: 2.4 }, { t: 'knock', n: 1 }], fl: '금빛 말굽이 다섯 칸을 꿰뚫는다.', desc: '직선 5칸에 240%, 1칸 밀어낸다.' },
-  u_trample: { cls: 'cav', name: '말발굽 폭풍', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'quake', eff: [{ t: 'dmg', m: 1.8 }, { t: 'status', s: 'slow', dur: 8 }], fl: '말을 세우고 한 바퀴 돈다.', desc: '둘레 2칸 적에게 180%와 둔화.' },
-  u_debt:    { cls: 'cav', name: '빚은 갚는다', tick: 40, rng: [1, 2], tg: 'enemy', fx: 'thrust', eff: [{ t: 'dmg', m: 2.6, drain: 0.5 }], fl: '라니스터는 빚을 갚는다. 셈은 정확하다.', desc: '적 하나에 260%. 준 피해의 절반만큼 회복.' },
+  u_goldrush:{ cls: 'cav', name: '황금 돌격', tick: 40, tg: 'dir', len: 6, dash: true, fx: 'charge', ic: 'charge', eff: [{ t: 'dmg', m: 2.6 }, { t: 'gauge', v: -40 }], fl: '금빛 말굽이 여섯 칸을 꿰뚫는다.', desc: '직선 6칸을 꿰뚫고 달려 나간다. 길 위의 적에게 260%, 게이지를 깎는다.' },
+  u_stampede:{ cls: 'cav', name: '말발굽 폭풍', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'quake', ic: 'hoof', eff: [{ t: 'dmg', m: 1.8 }, { t: 'status', s: 'slow', dur: 8 }, { t: 'buff', s: 'quick', p: 30, dur: 10, to: 'self' }], fl: '말을 세우고 한 바퀴 돈다.', desc: '둘레 2칸 적에게 180%와 둔화. 10초 동안 내 행동 소모 −30%.' },
+  u_debt:    { cls: 'cav', name: '빚은 갚는다', tick: 40, rng: [1, 4], tg: 'enemy', leap: true, fx: 'thrust', ic: 'hunt', eff: [{ t: 'dmg', m: 2.7, drain: 0.5, vs: 'low', vx: 1.5 }], fl: '라니스터는 빚을 갚는다. 셈은 정확하다.', desc: '4칸 안의 적에게 달려들어 270%, 체력이 절반 아래면 1.5배. 준 피해의 절반만큼 회복.' },
   // 비병 (스카이워커): 먼저 본다
-  u_skyfall: { cls: 'fly', name: '하늘 낙하', tick: 40, rng: [2, 5], tg: 'enemy', leap: true, fx: 'wind', eff: [{ t: 'dmg', m: 2.8 }], fl: '구름 위에서 한 점을 고른다.', desc: '2~5칸 밖의 적에게 내리꽂아 280%.' },
-  u_gale:    { cls: 'fly', name: '돌개바람', tick: 40, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'wind', eff: [{ t: 'dmg', m: 1.8 }, { t: 'knock', n: 1 }], fl: '날개를 한 번 접었다 편다.', desc: '십자 범위에 180%, 1칸 밀어낸다.' },
-  u_wings:   { cls: 'fly', name: '날개 그늘', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 40, dur: 15 }, { t: 'gauge', v: 40 }], fl: '그늘 아래 선 이는 발이 가볍다.', desc: '둘레 2칸 아군의 행동 소모 −40% (15초), 게이지 +40.' },
+  u_stoop:   { cls: 'fly', name: '하늘 낙하', tick: 40, rng: [2, 6], tg: 'enemy', leap: true, back: 3, fx: 'dive', ic: 'dive', eff: [{ t: 'dmg', m: 3.0, vs: 'mark', vx: 1.5 }], fl: '구름 위에서 한 점을 고른다.', desc: '2~6칸 밖의 적에게 내리꽂아 300%(표식이 있으면 1.5배), 세 칸 날아오른다.' },
+  u_gale:    { cls: 'fly', name: '돌개바람', tick: 40, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'wind', ic: 'gust', eff: [{ t: 'dmg', m: 1.8 }, { t: 'knock', n: 1 }, { t: 'status', s: 'mark', dur: 10, p: 20 }], fl: '날개를 한 번 접었다 편다.', desc: '십자 범위에 180%, 밀어내고 표식을 남긴다.' },
+  u_canopy:  { cls: 'fly', name: '날개 그늘', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffGold', ic: 'haste', eff: [{ t: 'buff', s: 'quick', p: 40, dur: 15 }, { t: 'gauge', v: 40 }, { t: 'buff', s: 'shd', m: 1.0, stat: 'atk', dur: 12 }], fl: '그늘 아래 선 이는 발이 가볍다.', desc: '둘레 2칸 아군의 행동 소모 −40% (15초), 게이지 +40, 보호막(공격의 100%).' },
   // 해병 (앗쎄이): 물길을 연다
-  u_landing: { cls: 'mar', name: '해일 상륙', tick: 40, tg: 'dir', len: 5, fx: 'water', eff: [{ t: 'dmg', m: 2.2, type: 'magic', stat: 'atk' }, { t: 'knock', n: 1 }], fl: '파도와 함께 뭍에 오른다.', desc: '직선 5칸에 물보라 220%, 1칸 밀어낸다.' },
-  u_gihap:   { cls: 'mar', name: '기합 충전', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 30, dur: 15 }, { t: 'gauge', v: 30 }], fl: '악! 한 사람의 기합이 부대를 돈다.', desc: '모든 아군의 공격 +30% (15초), 게이지 +30.' },
-  u_anchor:  { cls: 'mar', name: '닻 내려찍기', tick: 40, rng: [1, 3], tg: 'tile', area: 'r1', fx: 'quake', eff: [{ t: 'dmg', m: 2.0 }, { t: 'status', s: 'slow', dur: 10 }], fl: '쇠닻을 던져 땅을 묶는다.', desc: '십자 범위에 200%와 둔화.' },
+  u_landing: { cls: 'mar', name: '해일 상륙', tick: 40, tg: 'dir', len: 5, dash: true, fx: 'water', ic: 'wave', eff: [{ t: 'dmg', m: 2.2, type: 'magic', stat: 'atk' }, { t: 'status', s: 'wet', dur: 12 }, { t: 'gauge', v: -30 }], fl: '파도와 함께 뭍에 오른다.', desc: '파도를 타고 직선 5칸을 달려 나간다. 물보라 220%, 젖게 하고 게이지를 깎는다.' },
+  u_warcry:  { cls: 'mar', name: '기합!', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffRed', ic: 'horn', eff: [{ t: 'buff', s: 'atk', p: 25, dur: 15 }, { t: 'gauge', v: 40 }, { t: 'cleanse' }], fl: '악! 한 사람의 기합이 부대를 돈다.', desc: '모든 아군의 공격 +25% (15초), 게이지 +40, 상태 이상을 털어 낸다.' },
+  u_moor:    { cls: 'mar', name: '닻 끌기', tick: 40, rng: [1, 4], tg: 'tile', area: 'r1', fx: 'hook', ic: 'hook', eff: [{ t: 'dmg', m: 2.0 }, { t: 'pull', n: 1 }, { t: 'status', s: 'slow', dur: 10 }], fl: '쇠닻을 던져 땅을 묶는다.', desc: '십자 범위에 200%, 한 칸 끌어오고 묶는다(둔화).' },
   // 창병 (프레이): 빗장은 안에서 건다
-  u_bolt:    { cls: 'pike', name: '빗장 꿰기', tick: 40, tg: 'dir', len: 4, fx: 'thrust', eff: [{ t: 'dmg', m: 2.5 }, { t: 'status', s: 'slow', dur: 8 }], fl: '문을 걸듯 한 줄을 꿴다.', desc: '직선 4칸을 꿰뚫어 250%와 둔화.' },
-  u_feast:   { cls: 'pike', name: '연회의 끝', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'thrust', eff: [{ t: 'dmg', m: 1.6 }, { t: 'buff', s: 'atk', p: -30, dur: 12 }], fl: '잔치는 끝났다. 문은 이미 닫혔다.', desc: '둘레 2칸 적에게 160%, 공격 −30% (12초).' },
-  u_keeper:  { cls: 'pike', name: '문지기', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffBlue', eff: [{ t: 'buff', s: 'def', p: 40, dur: 15 }, { t: 'buff', s: 'atk', p: 20, dur: 15 }], fl: '빗장 앞에 선 사람은 물러서지 않는다.', desc: '둘레 2칸 아군의 방어 +40%, 공격 +20% (15초).' },
+  u_crossbar:{ cls: 'pike', name: '빗장 꿰기', tick: 40, tg: 'dir', len: 4, fx: 'thrust', ic: 'skewer', eff: [{ t: 'dmg', m: 2.5, vs: 'slow', vx: 1.3 }, { t: 'status', s: 'slow', dur: 8 }, { t: 'gauge', v: -30 }], fl: '문을 걸듯 한 줄을 꿴다.', desc: '직선 4칸을 꿰뚫어 250%(둔화된 적에게 1.3배), 둔화와 게이지 깎기.' },
+  u_feast:   { cls: 'pike', name: '연회의 끝', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'thrust', ic: 'pin', eff: [{ t: 'dmg', m: 1.6 }, { t: 'buff', s: 'atk', p: -30, dur: 12 }, { t: 'status', s: 'slow', dur: 8 }], fl: '잔치는 끝났다. 문은 이미 닫혔다.', desc: '둘레 2칸 적에게 160%, 공격 −30% (12초)와 둔화.' },
+  u_gatekeep:{ cls: 'pike', name: '문지기', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'brace', ic: 'brace', eff: [{ t: 'buff', s: 'def', p: 40, dur: 15 }, { t: 'buff', s: 'atk', p: 20, dur: 15 }, { t: 'buff', s: 'ctr', p: 60, dur: 15 }], fl: '빗장 앞에 선 사람은 물러서지 않는다.', desc: '둘레 2칸 아군의 방어 +40%, 공격 +20%, 붙어 때린 적을 60%로 되찌른다 (15초).' },
   // 궁병 (퀸): 한 대면 된다
-  u_onearrow:{ cls: 'arc', name: '한 대면 된다', tick: 40, rng: [2, 7], tg: 'enemy', fx: 'arrow', eff: [{ t: 'dmg', m: 3.4 }], fl: '숨을 멈추고, 한 대.', desc: '최대 7칸. 적 하나에 340%.' },
-  u_downpour:{ cls: 'arc', name: '화살 폭우', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', eff: [{ t: 'dmg', m: 1.6 }], fl: '하늘이 잠깐 어두워진다.', desc: '2칸 반경에 화살 160%.' },
-  u_three:   { cls: 'arc', name: '세 갈래 화살', tick: 40, tg: 'multi', n: 3, area: 'single', fx: 'arrow', eff: [{ t: 'dmg', m: 1.9 }, { t: 'status', s: 'slow', dur: 6 }], fl: '시위 하나에 화살 셋.', desc: '적 셋에게 190%와 둔화.' },
+  u_oneshot: { cls: 'arc', name: '한 대면 된다', tick: 40, rng: [2, 7], tg: 'enemy', fx: 'mark', ic: 'mark', eff: [{ t: 'dmg', m: 3.4, vs: 'mark', vx: 1.4 }], fl: '숨을 멈추고, 한 대.', desc: '최대 7칸. 적 하나에 340%, 표식이 있으면 1.4배.' },
+  u_deluge:  { cls: 'arc', name: '화살 폭우', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'arrowRain', ic: 'volley', eff: [{ t: 'dmg', m: 1.5 }, { t: 'status', s: 'mark', dur: 10, p: 20 }], fl: '하늘이 잠깐 어두워진다.', desc: '2칸 반경에 화살 150%, 맞은 적 모두에게 표식.' },
+  u_three:   { cls: 'arc', name: '세 갈래 화살', tick: 40, tg: 'multi', n: 3, area: 'single', fx: 'arrow', ic: 'retreat', eff: [{ t: 'dmg', m: 1.8 }, { t: 'status', s: 'mark', dur: 8, p: 20 }, { t: 'status', s: 'slow', dur: 6 }], fl: '시위 하나에 화살 셋.', desc: '적 셋에게 180%, 표식과 둔화.' },
   // 승려 (센주): 가리지 않는다 — 2.2.5 무투가 (옛 흰 매듭 기도 · 가리지 않는 손 · 나무 울타리 → 차례대로 아래 셋, DS.SK_ALIAS)
   u_flurry:  { cls: 'cle', name: '백렬권', tick: 40, rng: [1, 1], tg: 'enemy', fx: 'fist', fist: true, eff: [{ t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.6, drain: 0.3 }, { t: 'gauge', v: -40 }], fl: '셀 수 없으면 막을 수도 없다.', desc: '붙은 적 하나에 여섯 번 몰아쳐 모두 335%, 게이지를 깎는다. 마지막 한 방의 피해 일부만큼 회복.' },
   u_stance:  { cls: 'cle', name: '부동심', tick: 40, tg: 'self', side: 'ally', fx: 'chi', fist: true, eff: [{ t: 'buff', s: 'def', p: 50, dur: 15 }, { t: 'buff', s: 'ctr', p: 90, dur: 15 }, { t: 'aura', r: 2, m: 1.6 }], fl: '산은 비켜서지 않는다.', desc: '15초 동안 자기 방어 +50%, 붙어서 때린 적을 90%로 되친다. 둘레 2칸 아군을 회복.' },
   u_palm:    { cls: 'cle', name: '파산장', tick: 40, tg: 'dir', len: 4, fx: 'palm', fist: true, eff: [{ t: 'dmg', m: 2.3, type: 'magic', stat: 'mix' }, { t: 'knock', n: 1 }, { t: 'aura', r: 2, m: 0.8 }], fl: '손바닥 하나로 산길을 연다.', desc: '직선 4칸에 기공 230%, 1칸 밀어낸다. 둘레 2칸 아군을 조금 회복.' },
   // 신관 (카마도): 불은 꺼뜨리지 않는다
-  u_lampdance:{ cls: 'mon', name: '등잔불 춤', tick: 40, tg: 'dir', len: 4, fx: 'fire', eff: [{ t: 'dmg', m: 2.3, type: 'holy' }], fl: '불씨를 들고 추는 집안의 춤.', desc: '직선 4칸에 신성 230%. 망자, 악마에게 1.5배.' },
-  u_ember:   { cls: 'mon', name: '감빛 등잔', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'buffGold', eff: [{ t: 'buff', s: 'quick', p: 35, dur: 18 }, { t: 'heal', m: 0.6 }], fl: '등잔 하나로 밤길을 다 건넜다.', desc: '모든 아군의 행동 소모 −35% (18초), 조금 회복.' },
-  u_dawn:    { cls: 'mon', name: '해 뜨는 쪽', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'holy', eff: [{ t: 'dmg', m: 1.9, type: 'holy' }], fl: '어둠은 늘 해 뜨는 쪽에서 물러난다.', desc: '둘레 2칸 적에게 신성 190%.' },
+  u_lampdance:{ cls: 'mon', name: '등잔불 춤', tick: 40, tg: 'dir', len: 4, fx: 'fire', ic: 'lamp', eff: [{ t: 'dmg', m: 2.3, type: 'holy' }, { t: 'status', s: 'burn', dur: 8, p: 2 }, { t: 'ward', r: 4, m: 1.5 }], fl: '불씨를 들고 추는 집안의 춤.', desc: '직선 4칸에 신성 230%와 화상 (망자, 악마에게 1.5배). 가장 다친 아군에게 보호막.' },
+  u_lantern: { cls: 'mon', name: '감빛 등잔', tick: 40, tg: 'self', area: 'all', side: 'ally', fx: 'ward', ic: 'haste', eff: [{ t: 'buff', s: 'quick', p: 35, dur: 18 }, { t: 'buff', s: 'shd', m: 0.9, dur: 15 }], fl: '등잔 하나로 밤길을 다 건넜다.', desc: '모든 아군의 행동 소모 −35% (18초), 보호막(마공의 90%).' },
+  u_sunrise: { cls: 'mon', name: '해 뜨는 쪽', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'holy', ic: 'sun', eff: [{ t: 'dmg', m: 1.9, type: 'holy' }, { t: 'cleanse', to: 'ally', r: 2 }, { t: 'buff', s: 'shd', m: 0.8, dur: 12, to: 'ally', r: 2 }], fl: '어둠은 늘 해 뜨는 쪽에서 물러난다.', desc: '둘레 2칸 적에게 신성 190%. 둘레 2칸 아군의 상태 이상을 풀고 보호막.' },
   // 법사 (그레인저): 모르면 적는다
-  u_starfall:{ cls: 'mag', name: '밤하늘 낙하', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'meteor', eff: [{ t: 'dmg', m: 2.1, type: 'magic' }], fl: '책 끝에 적어 둔 별 하나.', desc: '2칸 반경에 운석 210%.' },
-  u_notes:   { cls: 'mag', name: '적어 둔 주문', tick: 40, rng: [1, 5], tg: 'enemy', fx: 'thunder', eff: [{ t: 'dmg', m: 3.0, type: 'magic', stat: 'mix' }], fl: '밤새 외운 주문을 한 번에.', desc: '적 하나에 뇌격 300%. 마법 저항으로 막는다.' },
-  u_frost:   { cls: 'mag', name: '서리 감옥', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'water', eff: [{ t: 'dmg', m: 1.4, type: 'magic' }, { t: 'status', s: 'slow', dur: 12 }], fl: '숨까지 얼리는 겨울 한 장.', desc: '2칸 반경에 140%와 긴 둔화.' },
+  u_skyfire: { cls: 'mag', name: '밤하늘 낙하', tick: 40, rng: [2, 5], tg: 'tile', area: 'r2', fx: 'meteor', ic: 'meteor', eff: [{ t: 'dmg', m: 2.0, type: 'magic' }, { t: 'status', s: 'burn', dur: 10, p: 3 }], fl: '책 끝에 적어 둔 별 하나.', desc: '2칸 반경에 운석 200%, 긴 화상.' },
+  u_spellbook:{ cls: 'mag', name: '적어 둔 주문', tick: 40, rng: [1, 5], tg: 'enemy', fx: 'thunder', ic: 'bolt', eff: [{ t: 'dmg', m: 2.8, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.4 }, { t: 'chain', n: 3, r: 2, m: 0.6, type: 'magic', stat: 'mix', vs: 'wet|slow', vx: 1.4 }], fl: '밤새 외운 주문을 한 번에.', desc: '적 하나에 뇌격 280%, 곁의 셋에게 옮겨 간다(60%). 얼거나 젖은 적에게 1.4배.' },
+  u_icejail: { cls: 'mag', name: '서리 감옥', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'frost', ic: 'frost', eff: [{ t: 'dmg', m: 1.3, type: 'magic', vs: 'burn', vx: 1.4 }, { t: 'status', s: 'slow', dur: 12 }, { t: 'gauge', v: -40 }], fl: '숨까지 얼리는 겨울 한 장.', desc: '2칸 반경에 140%(화상 입은 적에게 1.4배), 긴 둔화, 게이지를 깎는다.' },
   // 사교 (아담스): 죽은 이도 편이 있다
-  u_legion:  { cls: 'sha', name: '그믐 군단', tick: 40, tg: 'self', fx: 'dark', ai: 'summon', cap: 2, eff: [{ t: 'summon', type: 'm_skeleton', n: 2, dur: 30 }], fl: '그믐밤에는 집안 어른들이 일어난다.', desc: '30초 동안 싸울 해골 병사 둘을 부른다.' },
-  u_veil:    { cls: 'sha', name: '자줏빛 장막', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'poison', eff: [{ t: 'dmg', m: 1.2, type: 'magic' }, { t: 'status', s: 'poison', dur: 12, p: 5 }], fl: '장막 안에서는 숨이 무겁다.', desc: '2칸 반경에 피해와 강한 중독.' },
-  u_supper:  { cls: 'sha', name: '망자의 저녁', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'dark', eff: [{ t: 'dmg', m: 1.6, type: 'magic', drain: 0.6 }], fl: '식탁에 빈자리는 없다.', desc: '둘레 2칸 적에게 흑마법 160%, 준 피해의 60% 회복.' },
+  u_newmoon: { cls: 'sha', name: '그믐 군단', tick: 40, tg: 'self', fx: 'dark', ic: 'skull', ai: 'summon', cap: 3, eff: [{ t: 'summon', type: 'm_skeleton', n: 3, dur: 30, k: 0.9, ka: 1.25, kh: 1.3, kd: 1.5 }], fl: '그믐밤에는 집안 어른들이 일어난다.', desc: '30초 동안 싸울 해골 병사 셋을 부른다.' },
+  u_violet:  { cls: 'sha', name: '자줏빛 장막', tick: 40, rng: [1, 4], tg: 'tile', area: 'r2', fx: 'poison', ic: 'plague', eff: [{ t: 'dmg', m: 1.2, type: 'magic' }, { t: 'status', s: 'poison', dur: 12, p: 5 }, { t: 'buff', s: 'def', p: -20, dur: 12 }], fl: '장막 안에서는 숨이 무겁다.', desc: '2칸 반경에 피해와 강한 중독, 방어 −20% (12초).' },
+  u_supper:  { cls: 'sha', name: '망자의 저녁', tick: 40, tg: 'self', area: 'r2', side: 'enemy', fx: 'dark', ic: 'drain', eff: [{ t: 'dmg', m: 1.6, type: 'magic', share: 0.6 }], fl: '식탁에 빈자리는 없다.', desc: '둘레 2칸 적에게 흑마법 160%. 준 피해의 60%로 가장 다친 아군들을 고친다.' },
   // 성격 몫 (누구의 몸에도 맞는 꼴)
   u_steady:  { pk: 'plain', name: '늘 하던 대로', tick: 40, tg: 'self', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 40, dur: 15 }, { t: 'buff', s: 'def', p: 30, dur: 15 }, { t: 'gauge', v: 50 }], fl: '특별한 건 없다. 그게 비결이다.', desc: '자기 공격 +40%, 방어 +30% (15초), 게이지 +50.' },
   u_rally:   { pk: 'chatty', name: '끝나고 한잔', tick: 40, tg: 'self', area: 'r2', side: 'ally', fx: 'buffRed', eff: [{ t: 'buff', s: 'atk', p: 30, dur: 15 }, { t: 'gauge', v: 30 }], fl: '술값은 이긴 쪽이 낸다.', desc: '둘레 2칸 아군의 공격 +30% (15초), 게이지 +30.' },
@@ -5368,7 +5418,42 @@ DS.ULTS = {
 };
 (function () { for (var k in DS.ULTS) { var U = DS.ULTS[k]; U.mp = 0; U.ult = true; DS.SKILLS[k] = U; } })();
 // 2.2.5: 없어진 기술 이름 → 새 이름. 옛 저장의 타고난 필살기(ps.ul) · 연무장 기록(ul · sk)을 읽을 때 옮긴다 (save.js DS.fixSave · arena.js). 승려의 치유 · 정화 · 모두 치유는 기술 표에 그대로 있다 (매직마스터 · 장비가 쓴다)
-DS.SK_ALIAS = { u_prayer: 'u_flurry', u_mercy: 'u_stance', u_grove: 'u_palm' };
+DS.SK_ALIAS = { u_prayer: 'u_flurry', u_mercy: 'u_stance', u_grove: 'u_palm',
+  // 2.2.6: 병과마다 새 필살기 — 같은 자리의 새 것으로 (타고난 굴림의 차례가 그대로라 같은 사람은 같은 자리를 지닌다)
+  u_wall: 'u_bastion', u_breach: 'u_ram', u_cyclone: 'u_riposte', u_lance: 'u_goldrush', u_trample: 'u_stampede', u_skyfall: 'u_stoop', u_wings: 'u_canopy',
+  u_gihap: 'u_warcry', u_anchor: 'u_moor', u_bolt: 'u_crossbar', u_keeper: 'u_gatekeep', u_onearrow: 'u_oneshot', u_downpour: 'u_deluge',
+  u_ember: 'u_lantern', u_dawn: 'u_sunrise', u_starfall: 'u_skyfire', u_notes: 'u_spellbook', u_frost: 'u_icejail', u_legion: 'u_newmoon', u_veil: 'u_violet' };
+// 2.2.6: 병과의 옛 보통 기술 → 새 기술 (병과마다 — 같은 옛 기술이 병과에 따라 다른 새 기술이 된다). 옛 기술은 기술 표에 그대로 있다 (장비의 기술 · 옮기기 전의 줄)
+//   쓰는 곳: 돌아온 이의 옛 깃발 기술(m.s · save.js) · 연무장 기록(sk · arena.js). 병과를 모르면 SK_OLD._ (가장 먼저 그 기술을 지녔던 병과의 것)
+DS.SK_OLD = {
+  inf: { bash: 'inf_bash', attackUp: 'inf_wall', protect: 'inf_cover' },
+  cav: { thunder: 'cav_charge', protect: 'cav_trample', attackUp: 'cav_hunt' },
+  fly: { dive: 'fly_dive', whirl: 'fly_gale' },
+  mar: { harpoon: 'mar_hook', tidal: 'mar_surge' },
+  pike: { slow: 'pike_pin', pierce: 'pike_skewer', protect: 'pike_brace' },
+  arc: { aimed: 'arc_mark', arrowRain: 'arc_retreat' },
+  cle: { heal: 'cle_combo', cure: 'cle_kick', healAll: 'cle_palm' },
+  mon: { holy: 'mon_smite', protect: 'mon_ward', quick: 'mon_haste', bless: 'mon_sanct' },
+  mag: { fire: 'mag_ember', ice: 'mag_frost', blizzard: 'mag_bolt', meteor: 'mag_meteor' },
+  sha: { drain: 'sha_drain', summon: 'sha_raise', curse: 'sha_hex', deathCloud: 'sha_plague' },
+  bm: { bash: 'inf_bash', thunder: 'cav_charge', attackUp: 'inf_wall', protect: 'inf_cover', whirl: 'fly_gale', bm_charge: 'bm_drive', bm_storm: 'bm_tempest' },
+  tm: { aimed: 'arc_mark', slow: 'pike_pin', tidal: 'mar_surge', arrowRain: 'arc_retreat', tm_gale: 'tm_hunt', tm_rain: 'tm_squall' },
+  mm: { heal: 'mon_ward', quick: 'mon_haste', fire: 'mag_ember', blizzard: 'mag_bolt', healAll: 'cle_palm', summon: 'sha_raise', meteor: 'mag_meteor', mm_grace: 'mm_star', mm_dawn: 'mm_sun' }
+};
+(function () {      // 병과를 모를 때: 그 옛 기술을 가장 먼저(병과 표 차례로) 지녔던 병과의 새 기술
+  var A = DS.SK_OLD._ = {}; for (var c in DS.SK_OLD) { if (c === '_') continue; var M = DS.SK_OLD[c]; for (var k in M) if (!Object.prototype.hasOwnProperty.call(A, k)) A[k] = M[k]; }
+  // 합일한 이(8단 위)의 9 · 10단 고유 기술은 병과가 아니라 묶음을 따른다 — 아홉 병과 표에도 그 묶음의 것을 넣는다
+  ['inf', 'cav', 'fly'].forEach(function (c) { DS.SK_OLD[c].bm_charge = 'bm_drive'; DS.SK_OLD[c].bm_storm = 'bm_tempest'; });
+  ['mar', 'pike', 'arc'].forEach(function (c) { DS.SK_OLD[c].tm_gale = 'tm_hunt'; DS.SK_OLD[c].tm_rain = 'tm_squall'; });
+  ['cle', 'mon', 'mag', 'sha'].forEach(function (c) { DS.SK_OLD[c].mm_grace = 'mm_star'; DS.SK_OLD[c].mm_dawn = 'mm_sun'; });
+})();
+DS.skOld = function (id, cls) {      // 옛 기술 id → 새 id (필살기는 DS.skAlias). 모르는 것 · 새것은 그대로
+  if (typeof id !== 'string') return id;
+  var own = Object.prototype.hasOwnProperty, M = cls && own.call(DS.SK_OLD, cls) ? DS.SK_OLD[cls] : null;
+  if (M && own.call(M, id)) return M[id];
+  if (own.call(DS.SK_OLD._, id)) return DS.SK_OLD._[id];
+  return DS.skAlias(id);
+};
 DS.skAlias = function (id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(DS.SK_ALIAS, id) ? DS.SK_ALIAS[id] : id; };
 // 등급: 이름, 능력 배율, 모집 확률(%), 색
 DS.GRADES = [null,
@@ -5515,14 +5600,19 @@ DS.GEAR_CAT = {
   staff: { name: '지팡이', slot: 'w', A: { n: '스태프', pow: 1 }, B: { n: '룬 스태프', pow: 0.85, mp: 0.25, note: '마나 +25%' } },
   heavy: { name: '중갑', slot: 'a', A: { n: '플레이트', def: 1, res: 0.5 }, B: { n: '체인메일', def: 0.8, res: 0.95, note: '마법에 강하다' } },
   light: { name: '경갑', slot: 'a', A: { n: '레더 아머', def: 1, res: 0.5 }, B: { n: '윙 가드', def: 0.8, res: 0.5, spd: 0.06, note: '행동 회복 +6%' } },
-  robe:  { name: '로브', slot: 'a', A: { n: '로브', def: 1, res: 0.5 }, B: { n: '실크 로브', def: 0.7, res: 1.0, mp: 0.15, note: '마방 중심, 마나 +15%' } }
+  robe:  { name: '로브', slot: 'a', A: { n: '로브', def: 1, res: 0.5 }, B: { n: '실크 로브', def: 0.7, res: 1.0, mp: 0.15, note: '마방 중심, 마나 +15%' } },
+  // 2.2.6 무투가(승려)의 장비: 권갑 · 도복 (수치의 크기는 다른 계열과 같다 — 위력 1 · 방어 1)
+  fist:  { name: '권갑', slot: 'w', A: { n: '너클', pow: 1 }, B: { n: '수투', pow: 0.85, spd: 0.06, note: '행동 회복 +6%' } },
+  gi:    { name: '도복', slot: 'a', A: { n: '도복', def: 1, res: 0.5 }, B: { n: '띠 도복', def: 0.8, res: 0.75, spd: 0.04, note: '행동 회복 +4%' } }
 };
 // 병과에 「맞는」 계열 (2.1.0: 입는 제한이 아니다 — 맞지 않는 계열은 능력치 −10%)
 DS.CLS_GEAR = {
   inf: { w: ['sword'], a: ['heavy'] }, cav: { w: ['lance'], a: ['heavy'] }, fly: { w: ['lance'], a: ['light'] }, mar: { w: ['lance'], a: ['heavy'] }, pike: { w: ['lance'], a: ['heavy'] },
-  arc: { w: ['bow'], a: ['light'] }, cle: { w: ['wand'], a: ['robe'] }, mon: { w: ['wand'], a: ['robe'] }, mag: { w: ['staff'], a: ['robe'] }, sha: { w: ['staff'], a: ['robe'] },
+  arc: { w: ['bow'], a: ['light'] }, cle: { w: ['fist'], a: ['gi'] }, mon: { w: ['wand'], a: ['robe'] }, mag: { w: ['staff'], a: ['robe'] }, sha: { w: ['staff'], a: ['robe'] },
   bm: { w: ['sword', 'lance'], a: ['heavy'] }, tm: { w: ['bow', 'lance'], a: ['light', 'heavy'] }, mm: { w: ['staff', 'wand'], a: ['robe'] }
 };
+// 2.2.6: 무투가가 되기 전에 승려가 들던 성구 · 로브도 맞는 계열로 친다 (가방 · 저장의 옛 장비가 깎이지 않게 — 떨어지는 장비는 권갑 · 도복)
+DS.GEAR_ALSO = { cle: { w: ['wand'], a: ['robe'] } };
 DS.GEAR_OFF = 0.9;      // 2.1.0: 병과에 맞지 않는 장비는 위력·방어·마방·HP 를 이만큼만 낸다 (사용자: 「불리하게」 — 맞는 장비에 덤은 없다)
 // 강화(무기·방어구): 대장간에서 골드를 내고 한 번 굴린다. rate[n] = +n 으로 올릴 때의 성공 확률(%).
 //   r37 확률: 사용자 「90%부터 10%씩」 + 「50프로를 하한으로」 — +1 90%, +2 80%, +3 70%, +4 60%, +5 부터 끝까지 50%. 실패하면 부서진다(강화 보호 부적이 있으면 그대로).
@@ -5540,7 +5630,7 @@ DS.enhSafe = function (g) { return !!g && (g.enh + 1 <= (DS.ENH.safe || 0) || !!
 // 무기: 한 단계마다 공격·마공 +6%, 치명타 +1% · 방어구(ad): 방어·마방·방어구 HP +6% (치명타 덤 없음)
 DS.enhTier = function (n) { return n >= 16 ? 4 : n >= 10 ? 3 : n >= 5 ? 2 : n >= 1 ? 1 : 0; };      // 이펙트 단계: 1~4 / 5~9 / 10~15 / 16~20
 DS.ENH_COL = ['', '#dff0ff', '#5fc4ff', '#c58cff', '#ffd75e'];
-DS.STATUS = { poison: { name: '중독' }, slow: { name: '둔화' } };
+DS.STATUS = { poison: { name: '중독' }, slow: { name: '둔화' }, burn: { name: '화상' }, mark: { name: '표식' }, wet: { name: '젖음' } };      // 2.2.6: 화상(법사) · 표식(궁병) · 젖음(해병)
 DS.PASSIVES = {
   marine:   { name: '수전', desc: '물 위에서 공격 +25%, 받는 피해 -25%.' },
   fireborn: { name: '화염의 몸', desc: '용암에서 화상을 입지 않는다.' },
@@ -5601,10 +5691,27 @@ DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.2.5';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.0.5';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.2.6';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.0.6';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.2.6', date: '2026-11-25', tag: '변경', title: '열 가문의 새 기술',
+    lead: '승려가 무투가다운 모습이 되었고, 다른 아홉 병과의 기술과 필살기도 모두 새로 짰습니다. 병과마다 싸우는 결이 다릅니다.',
+    items: [
+      ['변경', '승려가 도복을 입고 맨손으로 싸웁니다. 단 이름은 수련생, 권사, 무승, 철권, 권호, 권성, 무신입니다. 무기는 권갑, 방어구는 도복이 새로 나옵니다. 쓰던 성구와 로브도 그대로 맞습니다.'],
+      ['변경', '보병은 방패 전열입니다. 방패 치기와 철벽으로 적을 제게로 끌고, 수호로 아군에게 보호막을 대 줍니다.'],
+      ['변경', '기병은 돌격대입니다. 돌파로 적진을 꿰뚫고 달려 나가고, 추격은 다친 적에게 1.5배로 들어갑니다.'],
+      ['변경', '비병은 치고 빠집니다. 급강하와 날개 바람으로 치고 나서 날아오릅니다. 표식이 있는 적에게는 1.5배입니다.'],
+      ['변경', '해병은 작살로 적을 끌어오고, 파도 밀기로 밀어내며 젖게 합니다. 젖은 적은 번개에 약합니다.'],
+      ['변경', '창병은 두 칸 창으로 발을 묶고, 꿰뚫기는 둔화된 적에게 1.4배입니다. 창벽은 곁의 아군과 함께 되찌릅니다.'],
+      ['변경', '궁병은 표식을 남깁니다. 표식이 있는 적은 누구에게나 20% 더 아프게 맞습니다. 뒷걸음 사격으로 쏘고 물러섭니다.'],
+      ['변경', '신관은 등불로 지킵니다. 보호막을 씌우고 상태 이상을 풀며, 성역은 둘레를 함께 지킵니다.'],
+      ['변경', '법사는 불, 얼음, 번개를 맞물립니다. 불은 화상을 남기고, 얼음은 화상 입은 적에게, 연쇄 번개는 둔화되거나 젖은 적에게 강합니다.'],
+      ['변경', '사교는 저주와 역병으로 적을 무르게 하고, 생기 나눔으로 빨아들인 생기를 가장 다친 아군에게 나눕니다. 망자는 더 튼튼합니다.'],
+      ['변경', '합일한 마스터의 고유 기술도 새로 짰습니다. 강철 돌파, 강철 폭풍, 바람길 화살, 소나기 화살, 별의 가호, 여명의 빛입니다.'],
+      ['변경', '필살기도 병과마다 새로 짰습니다. 예전 필살기를 지닌 사람은 같은 자리의 새 필살기를 지닙니다. 연무장 기록도 새 기술로 옮깁니다.'],
+      ['새로', '기술 칸과 필살기 컷인에 기술마다 그림이 생겼습니다. 표식이 남은 적에게는 붉은 꺾쇠가, 보호막이 있는 아군에게는 체력 막대 위 흰 줄이 보입니다.']
+    ] },
   { ver: '2.2.5', date: '2026-11-24', tag: '변경', title: '맨손의 승려',
     lead: '승려가 맨손으로 싸웁니다. 필살기는 더 화려해졌고, 큰 일을 알리는 연출은 누를 때까지 기다립니다.',
     items: [
@@ -5908,7 +6015,7 @@ DS.gearTe = function (L) { return DS.GEAR_TE0 + (Math.max(1, Math.min(100, +L ||
 var refSave = null;      // 저장을 받는 장비 함수가 마지막으로 본 판 (화면 밖 — 봇·시험 — 의 기준 레벨)
 DS.gearRefSave = function (s) { if (s && s.chars) refSave = s; return refSave; };
 DS.gearRefL = function () { var s = (DS.G && DS.G.save) || refSave; return s && s.party && s.chars && DS.partyL ? DS.partyL(s) : 1; };
-DS.gearFits = function (cls, g) { var G = DS.CLS_GEAR[cls]; return !!(g && G && G[g.slot] && G[g.slot].indexOf(g.cat) >= 0); };
+DS.gearFits = function (cls, g) { var G = DS.CLS_GEAR[cls], X = DS.GEAR_ALSO && DS.GEAR_ALSO[cls]; return !!(g && G && ((G[g.slot] && G[g.slot].indexOf(g.cat) >= 0) || (X && X[g.slot] && X[g.slot].indexOf(g.cat) >= 0))); };      // 2.2.6: GEAR_ALSO (무투가의 옛 성구 · 로브)
 // 입은 사람 기준의 수치. L = 입은 사람의 레벨, cls = 그 병과 (없으면 깎지 않는다), te = 눈금을 바로 줄 때 (기본 장비 stdGear 의 단 — 용병·연무장 기준치)
 DS.gearAt = function (g, L, cls, te) {
   if (!g) return null;
@@ -6117,7 +6224,14 @@ DS.mercSkills = function (m, L) {
   list.forEach(function (k, i) { if (DS.SKILLS[k] && t >= (DS.MSK_AT[i] || 99) && out.indexOf(k) < 0) out.push(k); });
   return out;
 };
+// 2.2.6: 그 사람이 어느 병과의 기술을 지녔을까 (돌아온 이의 옛 깃발 · 가문을 맡은 이) — 받은 가문 병과 → 이야기의 집 → 종류가 맞는 병과
+DS.mClsOf = function (m) {
+  if (!m) return null; var k = m.nc || m.cast; if (k && DS.CLASSES[k]) return k;
+  var hit = null; Object.keys(DS.CLASSES).forEach(function (c) { if (!hit && !DS.CLASSES[c].master && ((DS.RET_KIND && DS.RET_KIND[c] === m.type) || DS.CLASSES[c].merc === m.type)) hit = c; });
+  return hit;
+};
 DS.mercSkill = function (m) {
+  if (m && m.s && DS.skOld) { var ns = DS.skOld(m.s, DS.mClsOf(m)); if (ns !== m.s && DS.SKILLS[ns]) m.s = ns; }      // 2.2.6: 옮기기 전의 옛 기술 이름 (관에서 꺼낸 줄 등)
   if (m && m.rv && m.s && DS.SKILLS[m.s]) return m.s;      // 3.3.0: 다시 부름으로 돌아온 이는 옛 깃발의 기술을 등급과 관계없이 지닌다
   if (!m || !(m.g >= 4)) return null;
   if (m.s && DS.SKILLS[m.s]) return m.s;
@@ -6921,6 +7035,7 @@ function pm(v) { return (Math.round(v * 1000) / 10).toFixed(1).replace(/\.0$/, '
 // 효과: powp 위력 % · amp 공격·마공 % · crit · spd · mp · defp/resp/hpp = 방어구 기준값(aDef)의 배수(계수에 더한다). 1 = 굴림값 그대로, 음수 = 고정된 대가
 //       drain·hpm·rng·trait·passive·mt·mvm·dtype·skill·lead·tags = 엔진이 이미 읽는 칸(사양에 직접 얹는다) · eng = 엔진이 읽는 fx 칸 (engine.js 의 2.1.0 장비 훅 포함)
 // 설명 글: {p} 굴림값 % · {n} 지금 부대 레벨 기준 실제 수치 · {g} 굴림값 그대로 · {m} 소수 한 자리 % · {q} (1 − 굴림값) %
+// 2.2.6: 권갑(fist) · 도복(gi)에도 맞는 옵션 — 별 스민 · 바람 탄 · 불꽃 튀는 · 쌍두 · 축성 · 메아리 · 자비 / 아지랑이
 var AFFIX = {
   keen:   [1, '날 선', 'w', [0.10, 0.30], { powp: 1 }, '위력 +{p}%'],
   honed:  [1, '벼린', 'w', [0.02, 0.08], { amp: 1 }, '공격, 마공 +{p}%'],
@@ -6931,8 +7046,8 @@ var AFFIX = {
   even:   [1, '고른', 'w', [0.05, 0.15], { powp: 1, crit: 0.4 }, '위력 +{p}%, 치명타 조금'],
   oiled:  [1, '기름 먹인', 'w', [0.02, 0.06], { spd: 1, crit: 1 }, '행동 회복, 치명타 +{p}%'],
   guard:  [1, '막아서는', 'w', [0.15, 0.45], { defp: 1 }, '방어 +{n}'],
-  star:   [1, '별 스민', ['wand', 'staff'], [0.06, 0.20], { mp: 1, powp: 0.5 }, '마나 +{p}%, 위력 조금'],
-  wind:   [1, '바람 탄', ['bow', 'lance'], [0.02, 0.07], { spd: 1 }, '행동 회복 +{p}%'],
+  star:   [1, '별 스민', ['wand', 'staff', 'fist'], [0.06, 0.20], { mp: 1, powp: 0.5 }, '마나 +{p}%, 위력 조금'],
+  wind:   [1, '바람 탄', ['bow', 'lance', 'fist'], [0.02, 0.07], { spd: 1 }, '행동 회복 +{p}%'],
   light:  [1, '가벼운', 'a', [0.02, 0.08], { spd: 1 }, '행동 회복 +{p}%'],
   hard:   [1, '단단한', 'a', [0.12, 0.40], { defp: 1 }, '방어 +{n}'],
   fine:   [1, '결 고운', 'a', [0.15, 0.55], { resp: 1 }, '마방 +{n}'],
@@ -6952,7 +7067,7 @@ var AFFIX = {
   greedy: [1, '탐욕스러운', 'w', [0.10, 0.25], { eng: 'goldUp' }, '쓰러뜨린 적의 골드 +{p}%'],
   spear:  [1, '꿰뚫는', ['bow', 'lance'], [0.20, 0.45], { eng: 'pierce' }, '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 {p}% 위력으로 꿰뚫는다'],
   quick:  [1, '재빠른', 'w', [0.05, 0.15], { eng: 'atkTick' }, '기본 공격에 드는 틱 −{p}%'],
-  spark:  [1, '불꽃 튀는', ['staff', 'wand'], [0.20, 0.40], { eng: 'splash' }, '기본 공격이 맞힌 적 둘레의 적에게도 {p}% 피해'],
+  spark:  [1, '불꽃 튀는', ['staff', 'wand', 'fist'], [0.20, 0.40], { eng: 'splash' }, '기본 공격이 맞힌 적 둘레의 적에게도 {p}% 피해'],
 
   fang:   [0, '늑대 이빨', 'w', [0.03, 0.08], { drain: 1 }, '준 피해의 {p}%만큼 HP 회복'],
   leech:  [0, '수렁 거머리', 'w', [0.08, 0.12], { drain: 1, hpm: 0.9 }, '준 피해의 {p}%만큼 HP 회복, 최대 HP −10%'],
@@ -6960,12 +7075,12 @@ var AFFIX = {
   brave:  [0, '투지', 'wa', null, { trait: 'brave' }, 'HP가 절반 아래면 공격 +20%'],
   last:   [0, '구사일생', 'a', null, { trait: 'survivor' }, '쓰러질 피해를 전투마다 한 번 버틴다', 1],
   hawk:   [0, '매의 눈', ['bow', 'staff', 'lance'], null, { rng: 1 }, '사거리 +1', 1],
-  twin:   [0, '쌍두', ['sword', 'lance'], null, { passive: 'twin' }, '기본 공격을 두 번 한다 (각 65%)'],
+  twin:   [0, '쌍두', ['sword', 'lance', 'fist'], null, { passive: 'twin' }, '기본 공격을 두 번 한다 (각 65%)'],
   moon:   [0, '물비늘', 'wa', null, { passive: 'marine' }, '물 위에서 공격 +25%, 받는 피해 −25%'],
   ember:  [0, '불목', 'a', null, { passive: 'fireborn' }, '용암에서 화상을 입지 않는다'],
   ford:   [0, '물길', 'a', null, { mt: 'swim' }, '물 위를 걷는다', 1],
   gale:   [0, '맞바람', 'a', [0.06, 0.18], { mvm: 1 }, '이동에 드는 틱 −{p}%'],
-  holy:   [0, '축성', ['wand'], null, { dtype: 'holy' }, '기본 공격이 신성 속성이 된다 (망자, 악마에게 1.5배)'],
+  holy:   [0, '축성', ['wand', 'fist'], null, { dtype: 'holy' }, '기본 공격이 신성 속성이 된다 (망자, 악마에게 1.5배)'],
   whirl:  [0, '회오리', ['sword', 'lance'], null, { skill: 'whirl' }, '기술 「선풍」을 쓸 수 있다'],
   bolt:   [0, '뇌운', ['lance', 'sword', 'bow'], null, { skill: 'thunder' }, '기술 「번개」를 쓸 수 있다'],
   hex:    [0, '둔화의 끈', 'w', null, { skill: 'slow' }, '기술 「둔화」를 쓸 수 있다'],
@@ -6981,12 +7096,12 @@ var AFFIX = {
   giant:  [0, '거인 잡이', 'w', [0.05, 0.12], { eng: 'bossDmg' }, '보스에게 주는 피해 +{p}%'],
   pure:   [0, '맑은 피', 'a', [0.30, 0.60], { eng: 'stRes' }, '중독, 둔화에 걸리는 시간 −{p}%'],
   // 2.1.0 새 접미 (엔진의 장비 훅)
-  echo:   [0, '메아리', ['staff', 'wand'], [0.06, 0.15], { eng: 'echo' }, '기술이 {p}% 확률로 한 번 더 나간다 (필살기 제외)'],
+  echo:   [0, '메아리', ['staff', 'wand', 'fist'], [0.06, 0.15], { eng: 'echo' }, '기술이 {p}% 확률로 한 번 더 나간다 (필살기 제외)'],
   thirst: [0, '피의 갈증', 'w', [0.010, 0.025], { eng: 'killDrain' }, '적을 쓰러뜨릴 때마다 흡혈 +{m}% (그 싸움 동안, 6번까지)'],
   regen:  [0, '아무는 살', 'a', [0.003, 0.008], { eng: 'hpRegen' }, '싸우는 동안 초마다 최대 HP의 {m}% 회복'],
   alone:  [0, '외톨이', 'a', [0.10, 0.25], { eng: 'lone' }, '2칸 안에 다른 가주가 없으면 받는 피해 −{p}%, 주는 피해 +{p}%'],
-  mercy:  [0, '자비', ['wand', 'staff'], [0.10, 0.30], { eng: 'healUp' }, '치유 기술의 회복량 +{p}%'],
-  blur:   [0, '아지랑이', ['light', 'robe'], [0.04, 0.12], { eng: 'eva' }, '적의 기본 공격을 {p}% 확률로 피한다'],
+  mercy:  [0, '자비', ['wand', 'staff', 'fist'], [0.10, 0.30], { eng: 'healUp' }, '치유 기술의 회복량 +{p}%'],
+  blur:   [0, '아지랑이', ['light', 'robe', 'gi'], [0.04, 0.12], { eng: 'eva' }, '적의 기본 공격을 {p}% 확률로 피한다'],
   feast:  [0, '잔치', 'a', [0.02, 0.06], { eng: 'killHp' }, '적을 쓰러뜨리면 HP {p}% 회복'],
   surge:  [0, '기세', 'wa', [0.15, 0.40], { eng: 'ultUp' }, '필살 게이지가 {p}% 빨리 찬다 (필살기가 깨어난 사람)']
 };
@@ -10386,6 +10501,38 @@ var P = {
   sk_attack: '<path d="M4 20l11-11"/><path d="M13.5 7.5l3-3 3 3-3 3"/><path d="M5 15.5L8.5 19M3 19.5l1.5 1.5"/><path' + AS + ' d="M10.5 3.5c4.5-.5 9 2.6 10 7.5M14.5 2.5c2.6.6 4.6 2.2 5.6 4"/>',
   sk_heal: '<path' + A + ' d="M9.5 3.5h5v6h6v5h-6v6h-5v-6h-6v-5h6z"/>',
   sk_fist: '<rect' + A + ' x="6.6" y="7" width="3.3" height="6" rx="1.6"/><rect' + A + ' x="10" y="6.5" width="3.3" height="6.5" rx="1.6"/><rect' + A + ' x="13.4" y="7" width="3.3" height="6" rx="1.6"/><rect' + A + ' x="16.8" y="8" width="3" height="5" rx="1.5"/><path d="M6.6 13h13.2v2.4a5.6 5.6 0 0 1-5.6 5.6h-2.8a4.8 4.8 0 0 1-4.8-4.8z"/><path d="M6.8 15.5h5.6"/><path' + AS + ' d="M2.5 10h2.2M2 13.5h2.8M2.5 17h2.2"/>',      // 2.2.5 무투가: 쥔 주먹(손가락 넷 · 엄지) · 기세 선
+  // ── 2.2.6 병과마다 기술 그림 (기술 표의 ic — 없으면 위의 종류 그림) ──
+  sk_shieldbash: '<path' + A + ' d="M10 3l6 2.2v5c0 4-2.7 6.8-6 7.8-3.3-1-6-3.8-6-7.8v-5z"/><path d="M10 6.5v8"/><path' + AS + ' d="M18.5 7.5l3-1.5M19 11.5h3M18.5 15.5l3 1.5"/>',
+  sk_bulwark: '<path' + A + ' d="' + SHIELD + '"/><path d="M12 5.5v13M7.5 10h9"/>',
+  sk_cover: '<circle cx="6.5" cy="7" r="2.6"/><path d="M2.5 20a4.5 4.5 0 0 1 8.5-2"/><path' + A + ' d="M16.5 6.5l5 1.8v4c0 3.4-2.2 5.8-5 6.7-2.8-.9-5-3.3-5-6.7v-4z"/>',
+  sk_charge: '<path d="M2.5 12h14"/><path' + A + ' d="M16 8.5l6 3.5-6 3.5z"/><path' + AS + ' d="M3 7h5M3 17h6M6 4.5h3"/>',
+  sk_hoof: '<path d="M6.5 4v6.5a5.5 5.5 0 0 0 11 0V4"/><path' + A + ' d="M4 3.5h5v2.5H4zM15 3.5h5v2.5h-5z" stroke-width="1.4"/><path' + AS + ' d="M3 21h18M6 18.5l-1.5 2.5M18 18.5l1.5 2.5"/>',
+  sk_hunt: '<path d="M3.5 20.5l12-12"/><path' + A + ' d="M13.5 4.5h6v6z"/><path' + AS + ' d="M3 11l3 3M7 6.5l3 3"/>',
+  sk_dive: '<path' + A + ' d="M2.5 5.5c4.5 0 7.5 2 9.5 5.5-3.2-1.2-6.4-1.2-9.5.8z"/><path d="M16 2.5v15"/><path' + AS + ' d="M12 14l4 5 4-5"/>',
+  sk_gust: '<path d="M3 8.5h11a3 3 0 1 0-3-3"/><path' + AS + ' d="M3 13h15a3 3 0 1 1-3 3"/><path d="M3 17.5h6"/>',
+  sk_hook: '<path d="M4.5 19.5l11-11"/><path' + A + ' d="M13 5l6-1-1 6z"/><path d="M14 9l-2.6-.4M10.6 12.4l-.4-2.6"/><path' + AS + ' d="M4.5 19.5c-2.2-2.6.4-5.2 3-4.2"/>',
+  sk_wave: '<path d="M2 15.5c3 0 3-4 6.5-4s3.5 4 6.5 4 3-4 6.5-4"/><path' + AS + ' d="M2 20c3 0 3-3 6.5-3s3.5 3 6.5 3 3-3 6.5-3"/><path' + A + ' d="M5.5 10.5c.6-4.5 6.5-6.5 9.5-3.5-2.5-.3-4.5 1-5.5 3.5z" stroke-width="1.4"/>',
+  sk_pin: '<path d="M12 2.5v14"/><path' + A + ' d="M9 6.5l3-4 3 4z"/><path d="M4 20.5h16"/><path' + AS + ' d="M7.5 17.5a4.5 2.4 0 0 0 9 0"/>',
+  sk_skewer: '<path d="M2 12h17"/><path' + A + ' d="M17 8.5l5 3.5-5 3.5z"/><circle' + AS + ' cx="6.5" cy="12" r="2.6"/><circle' + AS + ' cx="12.5" cy="12" r="2.6"/>',
+  sk_brace: '<path d="M4.5 20.5L17 8M19.5 20.5L7 8"/><path' + A + ' d="M15.5 6.5l5-3.5-2 5.5zM8.5 6.5l-5-3.5 2 5.5z"/><path' + AS + ' d="M3 21.5h18"/>',
+  sk_mark: '<circle cx="12" cy="12" r="7"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/><circle' + A + ' cx="12" cy="12" r="2.4" stroke="none"/>',
+  sk_retreat: '<path d="M9 12h12.5M18.5 9l3 3-3 3"/><path' + AS + ' d="M6.5 7l-4 5 4 5M10.5 8.5l-3 3.5 3 3.5"/>',
+  sk_lamp: '<path d="M4 15h13l-2 4H7.5z"/><path d="M17 15c2.5 0 3.5-1.4 3.5-3"/><path' + A + ' d="M10.5 3.5c2.2 2.6 3.2 4.6 1.6 7.2-1 1.5-3 1.5-4-.2-1-2 1-3.6 2.4-7z" stroke-width="1.4"/>',
+  sk_ward: '<path d="' + SHIELD + '"/><path' + A + ' d="M12 7c2 2.4 3 4 1.8 6.2-.8 1.4-2.8 1.4-3.6 0C9 11 10.2 9.6 12 7z" stroke-width="1.3"/>',
+  sk_haste: '<path' + A + ' d="M8.5 4.5v9l-3.5 4h11c2 0 3-1 3-2.8l-5-1.2V4.5z" stroke-width="1.6"/><path' + AS + ' d="M8.5 8C5.5 7 3 7.5 2 9M8.5 11c-3 0-4.8.6-6 2"/>',
+  sk_sanct: '<path d="M3 19.5h18"/><path' + A + ' d="M5 19.5a7 7 0 0 1 14 0z"/><path' + AS + ' d="M12 5.5V2.5M6.5 7.5L4.8 5.8M17.5 7.5l1.7-1.7"/>',
+  sk_flame: '<path' + A + ' d="M12 2.5c3 4 6.5 6.2 6.5 10.5a6.5 6.5 0 0 1-13 0c0-2.6 1.5-4.4 3.2-5.4 0 2 1 3.2 2.1 3.2 0-3.2-1-5.4 1.2-8.3z"/><path' + AS + ' d="M12 14c1.4 1.2 1.8 2.6.2 4.2"/>',
+  sk_frost: '<path d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6"/><path' + AS + ' d="M9.5 4l2.5 2 2.5-2M9.5 20l2.5-2 2.5 2"/>',
+  sk_bolt: '<path' + A + ' d="M13.5 2L5 13.5h6l-2 8.5 9.5-12.5h-6l2-7.5z"/><path' + AS + ' d="M19 15.5l2.5 1.5M2.5 6l2.5 1"/>',
+  sk_meteor: '<circle' + A + ' cx="15.5" cy="15.5" r="5"/><path' + AS + ' d="M3 3l8 8M8 2.5l5.5 5.5M2.5 8l5.5 5.5"/>',
+  sk_drain: '<path' + A + ' d="M12 3c3 4.5 6.5 7.5 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 10.5 9 7.5 12 3z"/><path' + AS + ' d="M9 14.5a3 3 0 1 0 3-3M12 9.5l.5 2-2 .5"/>',
+  sk_skull: '<path d="M12 3a7.5 7.5 0 0 0-7.5 7.5c0 2.6 1.3 4.4 3 5.5V19.5h9V16c1.7-1.1 3-2.9 3-5.5A7.5 7.5 0 0 0 12 3z"/><circle' + A + ' cx="9" cy="11" r="1.8" stroke="none"/><circle' + A + ' cx="15" cy="11" r="1.8" stroke="none"/><path d="M10.5 19.5v-2M13.5 19.5v-2"/>',
+  sk_hex: '<path d="M2 12c3-5 6.5-7 10-7s7 2 10 7c-3 5-6.5 7-10 7s-7-2-10-7z"/><circle' + A + ' cx="12" cy="12" r="3"/><path' + AS + ' d="M12 1.5v2M12 20.5v2M4 4.5l1.5 1.5M20 4.5L18.5 6"/>',
+  sk_plague: '<path' + A + ' d="M6.5 15.5a4 4 0 0 1 .4-8 5.2 5.2 0 0 1 10 .8 3.6 3.6 0 0 1 .6 7.2z"/><circle' + AS + ' cx="8" cy="19.5" r="1.4"/><circle' + AS + ' cx="13" cy="20.5" r="1"/><circle' + AS + ' cx="17" cy="19" r="1.2"/>',
+  sk_volley: '<path d="M6 3v12M12 3v14M18 3v12"/><path' + AS + ' d="M4 12.5l2 3 2-3M10 14.5l2 3 2-3M16 12.5l2 3 2-3"/><path d="M3 21h18" stroke-width="1.4"/>',
+  sk_star: '<path' + A + ' d="M12 2.5l2.8 6 6.5.6-4.9 4.3 1.5 6.4L12 16.5l-5.9 3.3 1.5-6.4-4.9-4.3 6.5-.6z"/>',
+  sk_sun: '<circle' + A + ' cx="12" cy="12" r="4.2"/><path' + AS + ' d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  sk_horn: '<path' + A + ' d="M3 9.5l4-.5 9-5v16l-9-5-4-.5z"/><path' + AS + ' d="M19 8.5c1.4 1 2 2.2 2 3.5s-.6 2.5-2 3.5"/>',
   sk_buff: '<path d="M6 12.5l6-6 6 6"/><path' + AS + ' d="M6 18.5l6-6 6 6"/>',
   sk_guard: '<path d="' + SHIELD + '"/><path' + AS + ' d="M8.5 11.8l2.5 2.5 4.6-4.6"/>',
   sk_magic: '<path' + A + ' d="M11 3l1.9 6.6L19.5 11.5l-6.6 1.9L11 20l-1.9-6.6-6.6-1.9 6.6-1.9z"/><path' + A + ' d="M18.5 2.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" stroke-width="1.2"/>',
@@ -11390,7 +11537,7 @@ DS.BARKS = {
   '앗쎄이': { start: ['악! 출격!', '기합 넣고 간다'], kill: ['악! 하나 처리!', '이게 기합이다'], low: ['악… 아직 선다', '눕는 건 기열이다'], down: ['악! 전우여!', '그 몫까지 기합!'], skill: ['기합!!', '악! 상륙한다!'], win: ['악! 임무 완수!', '짜세 들어갔다'] },
   '프레이': { start: ['빗장을 걸어라', '문은 안에서 건다'], kill: ['문 밖으로 하나', '빗장에 걸렸다'], low: ['문이 흔들린다', '아직 열리지 않는다'], down: ['자리를 메워라', '문 하나가 닫혔다'], skill: ['잔치는 끝났다', '꿰어라!'], win: ['문을 열어도 된다', '빗장 풀어라'] },
   '퀸': { start: ['한 대면 된다', '바람을 읽어라'], kill: ['한 대.', '빗나가지 않았다'], low: ['손이 떨린다', '거리를 벌린다'], down: ['화살 하나 줄었다', '…시위를 당긴다'], skill: ['숨 멈춰라', '쏴라!'], win: ['화살 주워라', '한 대씩이면 됐다'] },
-  '센주': { start: ['가리지 않는다', '다치면 내게 와라'], kill: ['편히 가라', '미안하다'], low: ['손은 아직 있다', '날 먼저 고친다'], down: ['안 돼, 눈 떠라', '매듭을 묶어 줄게'], skill: ['모두 일어나라', '흰 매듭이여'], win: ['다들 숨 쉬지?', '상처부터 보자'] },
+  '센주': { start: ['가리지 않는다', '다치면 내게 와라'], kill: ['편히 가라', '미안하다'], low: ['주먹은 아직 있다', '숨을 고른다'], down: ['안 돼, 눈 떠라', '매듭을 묶어 줄게'], skill: ['기를 모아라', '흰 매듭이여'], win: ['다들 숨 쉬지?', '상처부터 보자'] },      // 2.2.6: 무투가 결로 조금
   '카마도': { start: ['불을 지켜라', '등잔을 들어라'], kill: ['불씨 하나 꺼졌다', '해가 이긴다'], low: ['불은 안 꺼진다', '숨을 고른다'], down: ['등잔을 이어 들게', '불은 내가 지킨다'], skill: ['등잔불 춤!', '해 뜨는 쪽으로'], win: ['밤이 물러갔다', '등잔 기름 채우자'] },
   '그레인저': { start: ['책에 다 있다', '적어 둔 대로'], kill: ['예상한 대로', '한 줄 적어 둔다'], low: ['이건 책에 없었다', '잠깐, 다시 계산'], down: ['이름을 적어 둘게', '…기록해 둔다'], skill: ['외운 대로 간다!', '페이지를 넘겨라'], win: ['오늘 공부 끝', '다 적었다'] },
   '아담스': { start: ['죽은 이도 편이다', '그믐이 왔다'], kill: ['식구가 하나 늘었다', '어서 와라'], low: ['피가 좀 모자라군', '아직은 산 쪽이다'], down: ['저녁에 다시 보자', '자리 비워 두마'], skill: ['일어나라, 식구들', '장막을 쳐라'], win: ['저녁 먹으러 가자', '오늘은 조용하군'] },
@@ -11416,7 +11563,10 @@ var HELP = [
     '<b>틱(행동) 게이지</b>가 차 있어야 움직이고 때린다. 한 칸 이동 약 12, 공격 40, 기술은 버튼에 적힌 만큼 쓴다. 싸우지 않을 때는 닳지 않는다.',
     '<b>붉게 깜빡이는 칸</b>은 곧 공격이 떨어질 자리다. 틱이 남아 있으면 부대가 스스로 비킨다. 땅을 눌러 보낸 이동이 먼저이니, 그 칸으로 들여보내지만 말자.',
     '상성: 보병 ▶ 창병 ▶ 기병 ▶ 보병. 화살은 나는 적에게, 신성 공격은 망자, 악마에게 1.5배.',
-    '<b>승려</b>는 맨손 무투가다. 주먹과 발로 붙어 싸우고, 날아차기로 파고든다. 연환권과 기공장을 쓸 때마다 가장 다친 아군 하나가 조금 낫고, 기공장은 둘레 아군도 함께 고친다.',
+    '<b>병과마다 싸우는 결이 다르다.</b> 보병은 적을 끌고 막는다. 기병은 꿰뚫고 달려 나간다. 비병은 내리꽂고 날아오른다. 해병은 작살로 끌고 물보라로 민다. 창병은 발을 묶고 되찌른다.',
+    '궁병은 표식을 남기고 물러서며 쏜다. 승려는 맨손 무투가로 기공을 돌려 곁을 고친다. 신관은 보호막과 신속으로 지킨다. 법사는 불, 얼음, 번개를 맞물린다. 사교는 저주와 역병을 걸고 빨아들인 생기를 나눈다.',
+    '<b>표식</b>이 있는 적은 누구에게나 20% 더 아프게 맞는다. <b>화상</b>과 <b>중독</b>은 2초마다 체력을 깎는다. <b>젖은</b> 적과 <b>둔화</b>된 적은 번개에 약하고, 화상을 입은 적은 얼음에 약하다. 노린 약점을 치면 「약점」이 뜬다.',
+    '<b>보호막</b>은 피해를 먼저 받아 낸다. 체력 막대 위의 흰 줄이 남은 보호막이다. <b>도발</b>당한 적은 잠시 그 가문만 노린다.',
     '<b>필살기</b>를 쓰면 화면이 잠깐 어두워지고 위에 쓰는 이의 얼굴과 기술 이름이 지나간다. 싸움은 멈추지 않는다. 빛과 불티가 무겁게 느껴지면 설정의 <b>효과</b>를 「가볍게」로.',
     '혼인, 출생, 죽음, 가문이 열릴 때 같은 큰 일은 누를 때까지 화면에 남는다. 공훈, 모집권 같은 가벼운 소식은 몇 초 뒤 저절로 닫힌다. 설정의 <b>사건 연출</b>에서 짧게 하거나 끈다.',
     '싸움이 끝나도 <b>체력과 마나는 저절로 차지 않는다.</b> 약초와 마나초, 치유 기술, 교회의 치료로 채운다. 쉬면 아주 천천히 돌아온다.',
@@ -13221,7 +13371,7 @@ DS.fixSave = function (s) {
     if (m.L == null && m.o && own(s.chars, m.o)) { m.L = +s.chars[m.o].L || 1; if (m.L > 70) m.fz = 1; }      // 레벨 칸이 없는 줄(시험용 옛 저장): 선 가문의 레벨에서 (이어 하기는 Save.read 가 이미 막는다)
     if (m.fz != null) { if (m.fz) m.fz = 1; else delete m.fz; } m.L = Math.max(1, Math.min(m.fz ? 100 : 70, Math.round(+m.L || 1))); m.exp = Math.max(0, +m.exp || 0);      // r42: 개인 단·레벨
     if (m.q != null && !(DS.QUIRKS && own(DS.QUIRKS, m.q))) delete m.q;
-    if (m.s != null && !own(DS.SKILLS, DS.skAlias ? (m.s = DS.skAlias(m.s)) : m.s)) delete m.s;
+    if (m.s != null && !own(DS.SKILLS, DS.skOld ? (m.s = DS.skOld(m.s, DS.mClsOf ? DS.mClsOf(m) : null)) : DS.skAlias ? (m.s = DS.skAlias(m.s)) : m.s)) delete m.s;      // 2.2.6: 옛 깃발의 기술 → 그 병과의 새 기술 (DS.SK_OLD)
     if (m.ul != null) { m.ul = DS.skAlias ? DS.skAlias(m.ul) : m.ul; if (!own(DS.ULTS, m.ul)) delete m.ul; }      // 2.2.5: 옛 필살기 이름
     if (m.it != null && !(DS.MGEAR && own(DS.MGEAR, m.it))) delete m.it;
     if (m.bk != null) m.bk = Math.max(0, Math.round(+m.bk || 0)); if (m.sv != null) m.sv = Math.max(0, Math.round(+m.sv || 0));
@@ -13637,6 +13787,7 @@ P.calc = function (u, v, m, type, stat, flat) {
     if (u.fx.lone && this.alone(u)) dmg *= 1 + Math.min(0.5, u.fx.lone);
     if (u.fx.pair && this.paired(u)) dmg *= 1.15;
   }
+  if (v.st && v.st.mark) dmg *= 1 + (v.st.mark.p || 20) / 100;      // 2.2.6 표식 (궁병): 누구에게나 더 아프게 맞는다
   if (v.fx) {      // 2.1.0: 받는 쪽 장비 훅 (홀로·짝)
     if (v.fx.lone && this.alone(v)) dmg *= 1 - Math.min(0.5, v.fx.lone);
     if (v.fx.pair && this.paired(v)) dmg *= 0.9;
@@ -13689,6 +13840,14 @@ P.rouse = function (e) {
 P.hurt = function (v, dmg, src, o) {
   if (v.dead) return;
   o = o || {};
+  this._hv = (this._hv || 0) + 1;
+  var sb = v.buffs && v.buffs.shd;      // 2.2.6 보호막 (버프 shd — p 가 남은 막는 양): 피해를 먼저 받아 낸다
+  if (sb && dmg > 0 && dmg < v.mhp * 50) {
+    var ab = Math.min(dmg, Math.max(0, sb.p)); sb.p -= ab; dmg -= ab;
+    if (ab > 0) this.emit({ t: 'shd', id: v.id, v: Math.round(ab), end: sb.p <= 0 });
+    if (sb.p <= 0) { delete v.buffs.shd; this.emit({ t: 'buffEnd', id: v.id, s: 'shd' }); }
+    if (dmg <= 0) { if (src && src.ult && src !== v && o.type !== 'reflect') src.uc = Math.min(100, (src.uc || 0) + DS.ULT.hitGain * this.ultUp(src)); return; }
+  }
   v.hp -= dmg; this.lastHit = this.t;
   if (v.er && dmg < v.mhp) this.erHit(v);      // r17: 이름 지우기 문턱 (왕만). 최대 체력 이상 한 방(시험·연출의 즉사)은 건너뛴다 — 실제 싸움에는 없는 값
   if (src && src.side === 'enemy' && v.side === 'ally') src.prov = this.t + 6;      // 우리를 때린 적은 멀어도 내버려 두지 않는다
@@ -13710,6 +13869,7 @@ P.hurt = function (v, dmg, src, o) {
 };
 P.heal = function (v, amt, quiet) {
   if (v.dead || amt <= 0) return 0;
+  this._hv = (this._hv || 0) + 1;
   var a = Math.min(v.mhp - v.hp, Math.round(amt)); v.hp += a;
   if (a > 0 && !quiet) this.emit({ t: 'heal', id: v.id, v: a });
   return a;
@@ -13856,49 +14016,140 @@ P.cast = function (u, id, tgt, free) {
     return true;
   }
   this.resolve(u, id, tiles, tgt && tgt.id ? tgt : null);
+  if (S.dash && tiles && !u.dead) this.dashTo(u, tiles);      // 2.2.6 돌파 (기병): 길 위를 치고 그 끝까지 달려 나간다
+  if (S.back && !u.dead && !this.result) this.hopBack(u, S.back, tgt && tgt.id ? tgt : null);      // 2.2.6 치고 빠지기 (비병 · 궁병)
   u.busy = 0.55;
   return true;
 };
+// 2.2.6 돌파: 직선의 칸을 차례로 보며 지나갈 수 있는(땅) 데까지, 그 가운데 비어 있는 가장 먼 칸에 선다 (사람 위로는 지나간다)
+P.dashTo = function (u, tiles) {
+  var dest = null, i, t, oc;
+  for (i = 0; i < tiles.length; i++) { t = tiles[i]; if (!this.pass(u.mt, t[0], t[1])) break; oc = this.occ[t[1] * this.w + t[0]]; if (!oc || oc.dead) dest = t; }
+  if (!dest || (dest[0] === u.x && dest[1] === u.y)) return false;
+  this.occ[u.y * this.w + u.x] = null; u.x = dest[0]; u.y = dest[1]; this.occ[u.y * this.w + u.x] = u;
+  this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y, dash: 1 });
+  return true;
+};
+// 2.2.6 물러서기: 한 칸씩 n 번, 가장 가까운 적과 더 멀어지는 이웃 칸으로 (붉은 칸 · 용암은 피한다). 더 멀어질 데가 없으면 멈춘다
+P.hopBack = function (u, n, ref) {
+  var self = this, foes = this.units.filter(function (v) { return !v.dead && v.side !== u.side && v.side !== 'neutral' && dist(u, v) <= 8; }), moved = false, dz = this.dz[u.side], hot = this.burns(u);
+  if (!foes.length) return false;
+  function md(x, y) { var m = 99; for (var i = 0; i < foes.length; i++) { var d = Math.abs(foes[i].x - x) + Math.abs(foes[i].y - y); if (d < m) m = d; } return m; }
+  for (var k = 0; k < n; k++) {
+    var cur = md(u.x, u.y), best = null, bs = cur;
+    DIR.forEach(function (d) {
+      var x = u.x + d[0], y = u.y + d[1], j = y * self.w + x; if (!self.pass(u.mt, x, y) || self.occ[j] || dz[j] || (hot && self.kind[j] === 'lava')) return;
+      var sc = md(x, y) + (ref ? 0.01 * (Math.abs(ref.x - x) + Math.abs(ref.y - y)) : 0); if (sc > bs + 0.001) { bs = sc; best = [x, y]; }
+    });
+    if (!best) break;
+    this.occ[u.y * this.w + u.x] = null; u.x = best[0]; u.y = best[1]; this.occ[u.y * this.w + u.x] = u; moved = true;
+  }
+  if (moved) this.emit({ t: 'leap', id: u.id, x: u.x, y: u.y, back: 1 });
+  return moved;
+};
+// 2.2.6: vs — 그 상태인 적에게 더 (slow 둔화 · mark 표식 · burn 화상 · wet 젖음 · curse 저주 · low 체력 절반 아래, '|' 로 여럿)
+function vsHit(v, key) {
+  if (!key || !v) return false;
+  var ks = key.split('|');
+  for (var i = 0; i < ks.length; i++) {
+    var k = ks[i];
+    if (k === 'low') { if (v.hp < v.mhp * 0.5) return true; }
+    else if (k === 'curse') { if ((v.buffs.def && v.buffs.def.p < 0) || (v.buffs.atk && v.buffs.atk.p < 0)) return true; }
+    else if (v.st && v.st[k]) return true;
+  }
+  return false;
+}
+DS.vsHit = vsHit;
+// 보호막 · 기 전하기 · 생기 나눔의 양: 쓰는 이의 공격 또는 마공 × m (우리 편 보통 기술이면 치유 배율 — 보호막은 그 두 배를 쓴다: 막고 나면 사라진다)
+P.shdAmt = function (u, e, S, pw) { var base = e.stat === 'atk' ? u.atk : u.mag; return Math.round(base * e.m * (pw || 1) + 10); };
 P.resolve = function (u, id, tiles, unitTgt) {
   var S = SK[id], self = this, vs, pw = S.ult ? (u.ultP || 1) : 1;      // r32: 필살기의 세기 (별·등급)
   if ((S.tg === 'enemy' || S.tg === 'ally') && unitTgt) vs = unitTgt.dead ? [] : [unitTgt];
   else vs = this.victims(u, S, tiles);
   this.emit({ t: 'skill', id: u.id, sk: id, fx: S.fx, tiles: tiles || vs.map(function (v) { return [v.x, v.y]; }), from: [u.x, u.y] });
   if (this._er && u.side === 'ally' && S.tg === 'ally' && unitTgt && unitTgt.erM && S.eff.some(function (e) { return e.t === 'heal' || e.t === 'cleanse'; })) this.erSave(unitTgt, 'heal', u);      // r17: 한 사람에게 거는 치유·정화
+  var hk0 = u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1, hup = u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1, by = u.side === 'ally' ? u.id : null, ctr0 = vs[0] || null;
+  // 2.2.6 to: 그 덧효과만 다른 무리에게 — 'self' 쓰는 이 · 'ally' / 'foe' 쓰는 이(at: 'tgt' 면 첫 대상) 둘레 r 칸
+  function grp(e) {
+    if (!e.to) return vs;
+    if (e.to === 'self') return u.dead ? [] : [u];
+    var c = e.at === 'tgt' && ctr0 ? ctr0 : u, out = [], us = self.units, f;
+    for (var i = 0; i < us.length; i++) { f = us[i]; if (f.dead || (e.to === 'ally' ? f.side !== u.side : f.side === u.side || f.side === 'neutral')) continue; if (e.r == null || dist(c, f) <= e.r) out.push(f); }
+    return out;
+  }
+  function vsk(e, v) { return e.vs && vsHit(v, e.vs) ? (self.emit({ t: 'weak', id: v.id, k: e.vs }), e.vx || 1.5) : 1; }
   S.eff.forEach(function (e) {
+    var T = grp(e);
     switch (e.t) {
-      case 'dmg': vs.forEach(function (v) {
+      case 'dmg': T.forEach(function (v) {
         if (v.dead) return;
-        var d = self.calc(u, v, e.m * pw, e.type || (S.item ? 'magic' : null), e.stat, e.flat);
+        var d = self.calc(u, v, e.m * pw * vsk(e, v), e.type || (S.item ? 'magic' : null), e.stat, e.flat);
         if (self._tele && v.fx && v.fx.teleRes) d = Math.max(1, Math.round(d * (1 - Math.min(0.6, v.fx.teleRes))));      // 예고(붉은 칸) 기술을 덜 아프게 받는다
         self.hurt(v, d, u, { type: e.type || u.dtype });
         if (e.drain) self.heal(u, d * e.drain);
         else if (self.drainOf(u)) self.leech(u, d * self.drainOf(u));
+        if (e.share && !u.dead) { var st = self.mendTgt(u, 4); if (st) { self.emit({ t: 'mend', id: u.id, tid: st.id, dark: 1 }); self.heal(st, d * e.share * (u.side === 'ally' && !S.ult ? 1 : 1) * hup); } }      // 2.2.6 생기 나눔 (사교)
       }); break;
-      case 'heal': var hk = u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1; vs.forEach(function (v) { self.heal(v, (u.mag * e.m * pw + 8) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1) * hk); }); break;      // healUp: 자비의 홀 등
-      case 'buff': vs.forEach(function (v) {
+      case 'chain':      // 2.2.6 연쇄 (법사의 번개): 맞은 적 둘레 r 칸에서 아직 안 맞은 적 n 에게 차례로 옮겨 간다
+        var hit = vs.slice(), from = vs[vs.length - 1];
+        for (var cn = 0; cn < e.n && from; cn++) {
+          var nx = null, nd = 99;
+          for (var ci = 0; ci < self.units.length; ci++) { var cf = self.units[ci]; if (cf.dead || cf.side === u.side || cf.side === 'neutral' || hit.indexOf(cf) >= 0) continue; var cd = dist(from, cf); if (cd <= e.r && cd < nd) { nd = cd; nx = cf; } }
+          if (!nx) break;
+          hit.push(nx); self.emit({ t: 'chain', id: u.id, a: from.id, b: nx.id });
+          var cdm = self.calc(u, nx, e.m * pw * vsk(e, nx), e.type || null, e.stat, e.flat); self.hurt(nx, cdm, u, { type: e.type || u.dtype });
+          from = nx;
+        }
+        break;
+      case 'heal': T.forEach(function (v) { self.heal(v, (u.mag * e.m * pw + 8) * hup * hk0); }); break;      // healUp: 자비의 홀 등
+      case 'buff': T.forEach(function (v) {
         if (v.dead) return;
+        if (e.s === 'shd') { var amt = self.shdAmt(u, e, S, pw) * hup, ob = v.buffs.shd; v.buffs.shd = { p: Math.max(amt, ob ? ob.p : 0), t: e.dur, mx: amt }; self.emit({ t: 'buff', id: v.id, s: 'shd', p: Math.round(amt) }); return; }      // 2.2.6 보호막: 더 큰 쪽으로 (쌓이지 않는다)
         var p = e.p; if (p < 0 && v.role === 'boss') p = Math.round(p / 2);
+        var ob2 = v.buffs[e.s]; if (ob2 && ob2.p > 0 && p > 0 && ob2.p > p && ob2.t > 2) return;      // 2.2.6: 더 센 같은 가호가 남아 있으면 약한 것으로 덮지 않는다 (철벽 위에 호령)
         v.buffs[e.s] = { p: p, t: e.dur }; self.emit({ t: 'buff', id: v.id, s: e.s, p: p });
       }); break;
-      case 'status': vs.forEach(function (v) {
+      case 'status': T.forEach(function (v) {
         if (v.dead) return;
-        self.addStatus(v, e.s, e.dur, e.p);
+        self.addStatus(v, e.s, e.dur, e.p, by);
       }); break;
-      case 'gauge': vs.forEach(function (v) { if (!v.dead) v.gauge = Math.max(0, Math.min(100, v.gauge + (v.role === 'boss' && e.v < 0 ? e.v / 2 : e.v))); }); break;
-      case 'cleanse': vs.forEach(function (v) { v.st = {}; for (var k in v.buffs) if (v.buffs[k].p < 0) delete v.buffs[k]; }); break;
+      case 'gauge': T.forEach(function (v) { if (!v.dead) v.gauge = Math.max(0, Math.min(100, v.gauge + (v.role === 'boss' && e.v < 0 ? e.v / 2 : e.v))); }); break;
+      case 'cleanse': T.forEach(function (v) { v.st = {}; for (var k in v.buffs) if (v.buffs[k].p < 0) delete v.buffs[k]; }); break;
+      case 'taunt':      // 2.2.6 도발 (보병): 그 적은 dur 초 동안 쓰는 이를 노린다 (보스는 절반)
+        if (u.dead) break;
+        var tl = T.filter(function (v) { return !v.dead && v.side !== u.side && v.side !== 'neutral'; });
+        tl.forEach(function (v) { v.hate = u.id; v.hateT = self.t + (v.role === 'boss' ? e.dur / 2 : e.dur); v.hateP = e.p || 40; });
+        if (tl.length) self.emit({ t: 'taunt', id: u.id, n: tl.length, ids: tl.map(function (x) { return x.id; }), sk: 1 });
+        break;
+      case 'pull': T.forEach(function (v) {      // 2.2.6 끌어오기 (해병의 작살): 쓰는 이 쪽으로 n 칸 (붙으면 멈춘다 · 보스는 끌리지 않는다)
+        if (v.dead || v.role === 'boss' || v.side === u.side) return;
+        for (var n = 0; n < e.n; n++) {
+          if (dist(u, v) <= 1) break;
+          var dx = 0, dy = 0, ax = u.x - v.x, ay = u.y - v.y;
+          if (Math.abs(ax) >= Math.abs(ay)) dx = ax > 0 ? 1 : -1; else dy = ay > 0 ? 1 : -1;
+          var px = v.x + dx, py = v.y + dy;
+          if (!self.pass(v.mt, px, py) || self.occ[py * self.w + px]) { if (dx && ay) { dx = 0; dy = ay > 0 ? 1 : -1; } else if (dy && ax) { dy = 0; dx = ax > 0 ? 1 : -1; } else break; px = v.x + dx; py = v.y + dy; if (!self.pass(v.mt, px, py) || self.occ[py * self.w + px]) break; }
+          self.occ[v.y * self.w + v.x] = null; v.x = px; v.y = py; self.occ[py * self.w + px] = v;
+        }
+        self.emit({ t: 'knock', id: v.id, x: v.x, y: v.y, pull: 1 });
+      }); break;
+      case 'ward':      // 2.2.6 등불 (신관): r 칸 안 가장 다친 우리 편 하나에게 보호막
+        if (u.dead) break;
+        var wt = self.mendTgt(u, e.r);
+        if (wt) { var wa = self.shdAmt(u, e, S, pw) * hup, wb = wt.buffs.shd; wt.buffs.shd = { p: Math.max(wa, wb ? wb.p : 0), t: e.dur || 12, mx: wa }; self.emit({ t: 'mend', id: u.id, tid: wt.id, ward: 1 }); self.emit({ t: 'buff', id: wt.id, s: 'shd', p: Math.round(wa) }); }
+        break;
       case 'aura':      // 2.2.5 기공: 쓰는 이 둘레 e.r 칸의 우리 편을 마공 × m 만큼 (우리 편 치유 배율 · 자비 옵션 그대로)
         if (u.dead) break;
-        var ak = (u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1), aa = (u.mag * e.m * pw + 8) * ak;
+        var ak = hk0 * hup, aa = (u.mag * e.m * pw + 8) * ak;
         self.emit({ t: 'aura', id: u.id, r: e.r });
         self.units.forEach(function (f) { if (!f.dead && f.side === u.side && dist(u, f) <= e.r) self.heal(f, aa); });
         break;
       case 'mend':      // 2.2.5 기 전하기: 쓰는 이 e.r 칸 안에서 가장 많이 다친 우리 편 하나(자신 포함, 체력 90% 아래)를 마공 × m 만큼
         if (u.dead) break;
-        var mt = self.mendTgt(u, e.r), mk = (u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1) * (u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1);
+        var mt = self.mendTgt(u, e.r), mk = hk0 * hup;
         if (mt) { self.emit({ t: 'mend', id: u.id, tid: mt.id }); self.heal(mt, (u.mag * e.m * pw + 8) * mk); }
         break;
-      case 'knock': vs.forEach(function (v) {
+      case 'knock': T.forEach(function (v) {
         if (v.dead || v.role === 'boss') return;
         var dx = 0, dy = 0;
         if (e.dir === 'down') dy = 1; else if (Math.abs(v.x - u.x) >= Math.abs(v.y - u.y)) dx = v.x >= u.x ? 1 : -1; else dy = v.y > u.y ? 1 : -1;
@@ -13913,9 +14164,9 @@ P.resolve = function (u, id, tiles, unitTgt) {
         for (var n = 0; n < e.n; n++) {
           var s;
           if (u.side === 'ally') {
-            var m = DS.MERCS[e.type];
-            s = { side: 'ally', role: 'summon', owner: u.id, type: e.type, name: m.name, L: u.L, look: [e.type, 1], hp: Math.round(u.mhp * 0.7), mp: 0, mmp: 0,
-                  atk: Math.round(u.mag * 0.7), mag: Math.round(u.mag * 0.7), def: Math.round(u.def * 0.9), res: Math.round(u.res * 0.7), spd: m.spd, mv: m.mv, mt: m.mt,
+            var m = DS.MERCS[e.type], kk = e.k || 0.7;      // 2.2.6 k: 부른 것의 세기 (옛 망자 부름 0.7)
+            s = { side: 'ally', role: 'summon', owner: u.id, type: e.type, name: m.name, L: u.L, look: [e.type, 1], hp: Math.round(u.mhp * (e.kh || kk)), mp: 0, mmp: 0,      // kh · ka · kd: 체력 · 공격 · 방어만 따로
+                  atk: Math.round(u.mag * (e.ka || kk)), mag: Math.round(u.mag * kk), def: Math.round(u.def * (e.kd || kk + 0.2)), res: Math.round(u.res * kk), spd: m.spd, mv: m.mv, mt: m.mt,
                   rng: m.rng.slice(), atkKind: m.atk, dtype: m.dtype, kind: m.kind, tags: (m.tags || []).slice(), life: e.dur, x: u.x, y: u.y };
             s.mhp = s.hp;
           } else { s = self.mk(e.type, { x: u.x, y: u.y, grp: u.grp, L: Math.max(1, u.L - 2), expMul: 0.25 }); s.summoned = true; s.owner = u.id; }
@@ -13925,11 +14176,11 @@ P.resolve = function (u, id, tiles, unitTgt) {
       case 'blink':
         var best = null, bs = -1e9, foes = self.units.filter(function (v) { return !v.dead && v.side !== u.side; });
         for (var k = 0; k < 24; k++) {
-          var bx = u.x + Math.floor(self.rand() * 11) - 5, by = u.y + Math.floor(self.rand() * 11) - 5;
-          if (!self.pass('foot', bx, by) || self.occ[by * self.w + bx]) continue;
-          var md = 99; foes.forEach(function (f) { md = Math.min(md, Math.abs(f.x - bx) + Math.abs(f.y - by)); });
-          var sc = -Math.abs(md - 3) + self.rand() * 0.5 - (Math.abs(bx - u.home.x) + Math.abs(by - u.home.y) > 7 ? 5 : 0);
-          if (sc > bs) { bs = sc; best = [bx, by]; }
+          var bx = u.x + Math.floor(self.rand() * 11) - 5, by2 = u.y + Math.floor(self.rand() * 11) - 5;
+          if (!self.pass('foot', bx, by2) || self.occ[by2 * self.w + bx]) continue;
+          var md = 99; foes.forEach(function (f) { md = Math.min(md, Math.abs(f.x - bx) + Math.abs(f.y - by2)); });
+          var sc = -Math.abs(md - 3) + self.rand() * 0.5 - (Math.abs(bx - u.home.x) + Math.abs(by2 - u.home.y) > 7 ? 5 : 0);
+          if (sc > bs) { bs = sc; best = [bx, by2]; }
         }
         if (best) { self.occ[u.y * self.w + u.x] = null; u.x = best[0]; u.y = best[1]; self.occ[u.y * self.w + u.x] = u; self.emit({ t: 'blink', id: u.id, x: u.x, y: u.y }); }
         break;
@@ -13982,9 +14233,9 @@ P.attack = function (u, v) {
   return true;
 };
 // 상태이상을 건다. 면역이면 걸리지 않고, 저항만큼 짧아진다. (보스에게는 절반)
-P.addStatus = function (v, s, dur, p) {
+P.addStatus = function (v, s, dur, p, by) {
   if (v.fx) { if (v.fx.immune && v.fx.immune[s]) return false; if (v.fx.stRes) dur *= 1 - Math.min(0.7, v.fx.stRes); }
-  v.st[s] = { t: v.role === 'boss' ? dur * 0.5 : dur, p: p || 0, acc: 0 }; this.emit({ t: 'status', id: v.id, s: s });
+  v.st[s] = { t: v.role === 'boss' ? dur * 0.5 : dur, p: p || 0, acc: 0 }; if (by) v.st[s].by = by; this.emit({ t: 'status', id: v.id, s: s });      // by: 우리 편이 건 화상 · 중독은 그 사람이 준 피해로 친다 (2.2.6)
   return true;
 };
 // 흡혈 회복. 때릴 때마다 숫자를 띄우면 화면을 덮으므로 모아 두었다가 1초에 한 번 알린다 (tick 에서).
@@ -14180,7 +14431,8 @@ P.bestDebuff = 2;      // 피해 없는 약화 기술(둔화·저주)의 값: �
 P.bestSup = 8;         // 가호를 건 뒤 이 초 동안은(또는 공격 기술을 쓸 때까지) 다음 가호를 미룬다
 P.bestMin = 1.15;
 P.bestNoOwe = 1;      // 1: 치유를 맡은 지휘관은 치유·가호·소환 뒤에 평타를 빚지지 않고 바로 공격 기술을 모은다 (aiCmd) / 2: 모든 지휘관 / 0: 끔
-function isOff(S) { var t = S.eff[0].t; return !(t === 'heal' || t === 'cleanse' || t === 'summon' || (t === 'buff' && S.eff[0].p > 0)); }
+function posBuff(e) { return e.t === 'buff' && (e.p > 0 || e.s === 'shd'); }      // 2.2.6: 보호막(shd)은 p 대신 m 을 지닌 가호
+function isOff(S) { var t = S.eff[0].t; return !(t === 'heal' || t === 'cleanse' || t === 'summon' || posBuff(S.eff[0])); }
 // 어림 피해 (난수·지형 없이). e: { m, type, stat, flat }
 P.estDmg = function (u, v, e, item) {
   var type = e.type || (item ? 'magic' : null) || u.dtype || 'phys';
@@ -14194,7 +14446,17 @@ P.estDmg = function (u, v, e, item) {
   }
   if (type === 'holy' && (has(v, 'undead') || has(v, 'demon'))) d *= 1.5;
   if (u.fx && u.fx.bossDmg && v.role === 'boss') d *= 1 + u.fx.bossDmg;
+  if (v.st && v.st.mark) d *= 1 + (v.st.mark.p || 20) / 100;      // 2.2.6 표식
+  if (e.vs && vsHit(v, e.vs)) d *= e.vx || 1.5;      // 2.2.6 맞물림 (둔화 · 화상 · 젖음 · 표식 …)
   return d;
+};
+// 2.2.6: 화상 · 중독이 남은 시간 동안 깎을 어림 (보스는 4분의 1 · 시간도 절반)
+P.dotVal = function (v, e) { var bs = v.role === 'boss', n = Math.floor((bs ? e.dur * 0.5 : e.dur) / 2); return Math.min(v.hp, v.mhp * (e.p || 0) / 100 * (bs ? 0.25 : 1) * n); };
+// 2.2.6: 연쇄가 옮겨 갈 적의 어림 피해 (맞은 적 둘레 r 칸에서 가까운 차례로 n)
+P.chainVal = function (u, v0, e, foes) {
+  var hit = [v0], from = v0, out = 0, i, f, d, nx, nd;
+  for (var c = 0; c < e.n; c++) { nx = null; nd = 99; for (i = 0; i < foes.length; i++) { f = foes[i]; if (hit.indexOf(f) >= 0) continue; d = dist(from, f); if (d <= e.r && d < nd) { nd = d; nx = f; } } if (!nx) break; hit.push(nx); out += Math.min(nx.hp, this.estDmg(u, nx, e)) * (nx.role === 'boss' ? 1.5 : 1); from = nx; }
+  return out;
 };
 P.auraVal = function (u, e) {      // 2.2.5: 기공(aura)이 실제로 채울 체력의 합 (난수 없음)
   var amt = (u.mag * e.m + 8) * (u.side === 'ally' ? DS.BAL.healAlly : 1), out = 0, us = this.units, f;
@@ -14202,6 +14464,10 @@ P.auraVal = function (u, e) {      // 2.2.5: 기공(aura)이 실제로 채울 �
   return out;
 };
 P.mendTgt = function (u, r) {      // 2.2.5: 기 전하기의 대상 — r 칸 안 우리 편 가운데 체력 비율이 가장 낮은 이 (90% 아래만 · 가주는 조금 먼저)
+  if (u._mtT === this.t && u._mtR === r && u._mtV === this._hv && !(u._mtB && (u._mtB.dead || u._mtB.hp >= u._mtB.mhp))) return u._mtB;      // 2.2.6: 같은 틱 · 같은 반경이면 다시 재지 않는다 (기술마다 살필 때)
+  var best = this._mendScan(u, r); u._mtT = this.t; u._mtR = r; u._mtV = this._hv; u._mtB = best; return best;
+};
+P._mendScan = function (u, r) {
   var best = null, lo = 0.9, us = this.units, f, rt;
   for (var i = 0; i < us.length; i++) { f = us[i]; if (f.dead || f.side !== u.side || dist(u, f) > r || f.hp >= f.mhp) continue; rt = f.hp / f.mhp - (f.role === 'cmd' ? 0.05 : 0); if (rt < lo) { lo = rt; best = f; } }
   return best;
@@ -14218,7 +14484,11 @@ P.bestSkill = function (u, foes, ord, keep) {
       for (q = 0; q < S.eff.length; q++) {
         e = S.eff[q];
         if (e.t === 'dmg') { d = self.estDmg(u, x, e, S.item); one += Math.min(d, x.hp) + (e.drain ? b * 0.2 : 0); }
+        else if (e.t === 'status' && (e.s === 'burn' || e.s === 'poison')) one += x.st[e.s] ? 0 : self.dotVal(x, e) * 0.5;      // 2.2.6: 화상 · 중독은 깎을 만큼 (반쯤만 믿는다)
+        else if (e.t === 'status' && e.s === 'mark') one += x.st.mark ? 0 : b * (x.role === 'boss' ? 1.2 : 0.6);      // 표식: 모두가 더 아프게 친다
         else if (e.t === 'status') one += x.st[e.s] ? 0 : b * (dm ? 0.2 : self.bestDebuff);
+        else if (e.t === 'taunt' && !e.to) one += x.hate === u.id && x.hateT > self.t + 1 ? 0 : b * (u.hp > u.mhp * 0.5 ? 0.35 : 0.05);      // 도발: 튼튼할 때 값이 있다
+        else if (e.t === 'pull') one += dist(u, x) > 1 ? b * 0.2 : 0;
         else if (e.t === 'buff' && e.p < 0) one += b * (dm ? 0.1 : self.bestDebuff * 0.5);
         else if (e.t === 'gauge' && e.v < 0) one += b * 0.3;
       }
@@ -14239,6 +14509,8 @@ P.bestSkill = function (u, foes, ord, keep) {
         v = foes[i]; d = dist(u, v); if (d > r1 || d < r0) continue;
         if (e0.t !== 'dmg' && (v.role !== 'boss' || (v.buffs[e0.s] && v.buffs[e0.s].p < 0) || v.st[e0.s])) continue;
         var sc2 = (v.role === 'boss' ? 50 : 0) + v.hp / v.mhp * 10 + (holy && (has(v, 'undead') || has(v, 'demon')) ? 20 : 0);
+        if (e0.vs && vsHit(v, e0.vs)) sc2 += 30;      // 2.2.6: 맞물림을 노린다 (표식 · 둔화 · 화상 …)
+        if (S.eff.length > 1 && S.eff[1].t === 'status' && v.st[S.eff[1].s]) sc2 -= 12;      // 이미 그 상태인 적은 덜 (표식 · 둔화를 새 적에게)
         if (sc2 > bsc) { bsc = sc2; tgt = v; }
       }
       if (!tgt) continue;
@@ -14262,8 +14534,12 @@ P.bestSkill = function (u, foes, ord, keep) {
       if (!tgt) continue;
     } else continue;
     for (i = 0; i < S.eff.length; i++) {      // 2.2.5 기공: 둘레 아군이 다쳤으면 그만큼 값이 오른다
-      if (S.eff[i].t === 'aura') val += this.auraVal(u, S.eff[i]) * 0.6;
-      else if (S.eff[i].t === 'mend') { var mtg = this.mendTgt(u, S.eff[i].r); if (mtg) val += Math.min(mtg.mhp - mtg.hp, (u.mag * S.eff[i].m + 8) * (u.side === 'ally' ? DS.BAL.healAlly : 1)) * (mtg.hp < mtg.mhp * 0.5 ? 1.2 : 0.6); }
+      var ei = S.eff[i];
+      if (ei.t === 'aura') val += this.auraVal(u, ei) * 0.6;
+      else if (ei.t === 'mend') { var mtg = this.mendTgt(u, ei.r); if (mtg) val += Math.min(mtg.mhp - mtg.hp, (u.mag * ei.m + 8) * (u.side === 'ally' ? DS.BAL.healAlly : 1)) * (mtg.hp < mtg.mhp * 0.5 ? 1.2 : 0.6); }
+      else if (ei.t === 'ward') { var wtg = this.mendTgt(u, ei.r); if (wtg && !(wtg.buffs.shd && wtg.buffs.shd.p > 20)) val += Math.min(wtg.mhp - wtg.hp + 20, this.shdAmt(u, ei)) * (wtg.hp < wtg.mhp * 0.5 ? 0.9 : 0.4); }      // 2.2.6 등불: 가장 다친 아군의 보호막
+      else if (ei.t === 'chain' && S.tg === 'enemy' && tgt && tgt.id) val += this.chainVal(u, tgt, ei, foes);      // 2.2.6 연쇄 번개
+      else if (ei.t === 'dmg' && ei.share) { var stg = this.mendTgt(u, 4); if (stg) val += Math.min(stg.mhp - stg.hp, val * ei.share * 0.8) * (stg.hp < stg.mhp * 0.5 ? 1.0 : 0.5); }      // 2.2.6 생기 나눔
     }
     if (val / S.tick < this.bestMin * tp / ac) continue;      // 평타만 못하다
     var sc = val / (S.tick + (S.mp || 0) / mmp * this.bestMana * scarce);
@@ -14285,18 +14561,19 @@ P.aiSkill = function (u, foes, dry) {
   function cast(id, tgt) {
     if (dry) { dn = SK[id].tick * q; return true; }
     var ok = self.cast(u, id, tgt), e;
-    if (ok && bestOn) { e = SK[id].eff[0]; u.lastOff = isOff(SK[id]); if (e.t === 'buff' && e.p > 0) u.supT = self.t + self.bestSup; else if (u.lastOff) u.supT = 0; }
+    if (ok && bestOn) { e = SK[id].eff[0]; u.lastOff = isOff(SK[id]); if (posBuff(e)) u.supT = self.t + self.bestSup; else if (u.lastOff) u.supT = 0; }
     return ok;
   }
-  // 살피는 순서: 치유·정화 → 소환 → 나머지(목록 순서). 목록 앞의 공격 기술이 늘 먼저 나가서, 뒤에 붙은 치유·소환(장비·특성으로 얹은 기술 포함)이 한 번도 쓰이지 않던 문제.
+  // 살피는 순서: 치유·정화 → 소환 → 가호 → 나머지(목록 순서). 목록 앞의 공격 기술이 늘 먼저 나가서, 뒤에 붙은 치유·소환(장비·특성으로 얹은 기술 포함)이 한 번도 쓰이지 않던 문제.
+  //   2.2.6: 가호(버프 · 보호막)도 공격 묶음보다 먼저 살핀다 — 목록 뒤의 철벽 · 수호 · 창벽 · 신속이 공격 기술에 늘 밀리던 것 (걸고 나면 bestSup 초 동안은 공격 차례)
   var ord = [], pass, k0, S0, t0;
-  for (pass = 0; pass < 3; pass++) for (k0 = 0; k0 < u.skills.length; k0++) {
+  for (pass = 0; pass < 4; pass++) for (k0 = 0; k0 < u.skills.length; k0++) {
     S0 = SK[u.skills[k0]]; if (!S0) continue; t0 = S0.eff[0].t;
-    if ((t0 === 'heal' || t0 === 'cleanse' ? 0 : t0 === 'summon' ? 1 : 2) === pass) ord.push(u.skills[k0]);
+    if ((t0 === 'heal' || t0 === 'cleanse' ? 0 : t0 === 'summon' ? 1 : posBuff(S0.eff[0]) ? 2 : 3) === pass) ord.push(u.skills[k0]);
   }
   // cmdCast 일 때 치유를 맡은 지휘관은 치유 몫의 마나를 남긴다 (공격·가호로 마나를 다 쓰고 정작 쓰러져 가는 용병을 못 고치던 것). 끄면 0.
   var keep = 0;
-  if (u.role === 'cmd' && DS.BAL.cmdCast) for (k0 = 0; k0 < ord.length; k0++) { S0 = SK[ord[k0]]; if (S0.tg === 'ally' && S0.eff[0].t === 'heal') { keep = Math.max(S0.mp * 3, u.mmp * 0.3); break; } }
+  if (u.role === 'cmd' && DS.BAL.cmdCast) for (k0 = 0; k0 < ord.length; k0++) { S0 = SK[ord[k0]]; if (S0.tg === 'ally' && (S0.eff[0].t === 'heal' || (S0.eff[0].t === 'buff' && S0.eff[0].s === 'shd' && S0.eff[0].stat !== 'atk'))) { keep = Math.max(S0.mp * 3, u.mmp * 0.3); break; } }      // 2.2.6: 마공으로 보호막을 거는 신관도 (마나가 적은 보병의 수호는 빼고)
   if (bestOn) u.healer = keep > 0;
   for (var n = 0; n < ord.length; n++) {
     var id = ord[n], S = SK[id];
@@ -14310,7 +14587,7 @@ P.aiSkill = function (u, foes, dry) {
     }
     if (!S || (u.mp || 0) < S.mp || u.cd[id] > 0 || (!dry && u.gauge < S.tick * q)) continue;
     if (u.rsv && this.rsvBlocks(u, id)) continue;      // 2.2.3: 예약
-    if (keep && S.mp && S.eff[0].t !== 'heal' && S.eff[0].t !== 'cleanse' && u.mp - S.mp < keep) continue;
+    if (keep && S.mp && S.eff[0].t !== 'heal' && S.eff[0].t !== 'cleanse' && !(S.tg === 'ally' && S.eff[0].s === 'shd') && u.mp - S.mp < keep) continue;
     if (dry && S.item && !(this.inv[id.slice(2)] > 0)) continue;
     var e0 = S.eff[0], r1 = S.rng ? S.rng[1] : 0, r0 = S.rng ? S.rng[0] : 0, tgt = null, i, v, cnt;
     if (e0.t === 'heal' || e0.t === 'cleanse') {
@@ -14325,18 +14602,33 @@ P.aiSkill = function (u, foes, dry) {
       }
       continue;
     }
-    if (e0.t === 'buff' && e0.p > 0) {
-      if (!big) continue;
+    if (posBuff(e0)) {
+      if (S.ai === 'boss' && !(boss || foes.length >= 5)) continue;      // 2.2.6: 큰 싸움에서만 거는 가호 (신속)
+      var shd = e0.s === 'shd', all = S.area === 'all', lack = function (f) { var b = f.buffs[e0.s]; return !(b && (shd ? b.p > (b.mx || 0) * 0.35 : (all || b.p >= e0.p) && b.t > 3)); };      // 2.2.6: 더 약한 같은 가호만 있으면 받을 이로 친다 (모두에게 거는 호령은 예전처럼 — 서로 다시 외치지 않게)
+      if (S.tg === 'self' && (!S.area || S.area === 'single')) {      // 2.2.6 자기에게만 거는 가호 (철벽): 적이 붙어 있을 때
+        if (!lack(u)) continue;
+        var nf = 0, nb = false; foes.forEach(function (f) { if (dist(u, f) <= 2) { nf++; if (f.role === 'boss') nb = true; } });
+        if ((nf >= 2 || nb || (nf && u.hp < u.mhp * 0.7)) && cast(id, null)) return dry ? dn : true;
+        continue;
+      }
+      if (!big && !(shd && fr.some(function (f) { return f.hp < f.mhp * 0.6 && dist(u, f) <= Math.max(r1, 2); }))) continue;      // 보호막은 작은 싸움에서도 다친 이가 있으면
       if (bestOn && u.supT > this.t && getB()) continue;      // 방금 가호를 걸었다: 이번 차례는 공격 후보에게 (bestSup 초가 지나도록 못 썼으면 — 치유에 바쁜 지휘관 — 가호를 다시 살핀다)
       if (S.tg === 'self') {
-        var need = fr.filter(function (f) { return (!S.mercOnly || f.role === 'merc' || f.role === 'summon') && !(f.buffs[e0.s] && f.buffs[e0.s].t > 3); });
-        if (need.length >= 2 && cast(id, null)) return dry ? dn : true;
+        if (S.area === 'all') {
+          var need = fr.filter(function (f) { return (!S.mercOnly || f.role === 'merc' || f.role === 'summon') && lack(f); });
+          if (need.length >= 2 && cast(id, null)) return dry ? dn : true;
+        } else {      // 2.2.6 둘레에만 거는 가호 (성역 · 창벽): 둘레에 받을 이가 둘 이상이고 적이 가까이 있을 때
+          var inA = this.victims(u, S, this.areaTiles(u, S, u.x, u.y)).filter(lack), rr = S.area === 'r2' ? 3 : 2;
+          if (inA.length >= 2 && foes.some(function (f) { return dist(u, f) <= rr; }) && cast(id, null)) return dry ? dn : true;
+        }
         continue;
       }
       var bs = -1;
       fr.forEach(function (f) {
-        if (f.role !== 'cmd' || dist(u, f) > r1 || (f.buffs[e0.s] && f.buffs[e0.s].t > 3)) return;
-        var sc = e0.s === 'def' ? 200 - Math.min.apply(null, foes.map(function (x) { return dist(f, x); })) * 10 + f.def * 0.1 : Math.max(f.atk, f.mag);
+        if ((f.role !== 'cmd' && !(shd && f.role === 'merc')) || dist(u, f) > r1 || dist(u, f) < r0 || !lack(f)) return;
+        var sc;
+        if (shd) { var adj = 0; foes.forEach(function (x) { if (dist(f, x) <= 1) adj++; }); if (!(f.hp < f.mhp * 0.7 || adj >= 2 || (adj && f.hp < f.mhp * 0.9))) return; sc = (1 - f.hp / f.mhp) * 100 + adj * 12 + (f.role === 'cmd' ? 8 : 0); }      // 2.2.6 보호막: 다쳤거나 적이 붙은 이
+        else sc = e0.s === 'def' ? 200 - Math.min.apply(null, foes.map(function (x) { return dist(f, x); })) * 10 + f.def * 0.1 : Math.max(f.atk, f.mag);
         if (sc > bs) { bs = sc; tgt = f; }
       });
       if (tgt && cast(id, tgt)) return dry ? dn : true;
@@ -14433,7 +14725,7 @@ P.rsvTarget = function (u, S, foes) {
   }
   if (S.tg === 'self' || S.tg === 'multi') {
     if (e0.t === 'heal' || e0.t === 'cleanse') { fr = this.victims(u, S, this.areaTiles(u, S, u.x, u.y)); return fr.some(function (f) { return f.side === u.side && f.hp < f.mhp; }) ? { t: null } : null; }
-    if (e0.t === 'buff' && e0.p > 0) return foes.length ? { t: null } : null;
+    if (posBuff(e0)) return foes.length ? { t: null } : null;
     if (S.tg === 'multi') return foes.length ? { t: null } : null;
     return n(this.victims(u, S, this.areaTiles(u, S, u.x, u.y))) >= 1 ? { t: null } : null;
   }
@@ -14609,11 +14901,15 @@ P.mercRejoin = 2;      // fix28: 줄 끝에서 따라붙기 시작하면 줄 안
 var TAUNT0 = { m_sword: 1, m_spirit: 2, m2_ogre: 2 };
 function mercKey(u, k, def) { if (u[k] != null) return u[k]; var M = DS.MERCS && DS.MERCS[u.type]; return M && M[k] != null ? M[k] : def; }
 // 물러날 곳: 주인 4칸 안에서 치유 기술(마나가 남은)이 있는 지휘관이나 치유하는 용병. 가장 가까운 이.
+function healsOf(a) {      // 2.2.6: 곁을 고치는 기술(치유 · 기공 · 기 전하기 · 등불 · 보호막)을 지닌 지휘관 (한 번 재어 둔다)
+  if (a._hl == null) a._hl = (a.skills || []).some(function (k) { var S = SK[k]; return S && S.eff.some(function (e) { return e.t === 'heal' || e.t === 'aura' || e.t === 'mend' || e.t === 'ward' || (e.t === 'buff' && e.s === 'shd'); }); }) ? 1 : 0;
+  return !!a._hl;
+}
 P.healerNear = function (u, own) {
   var al = this.allies(), best = null, bd = 99, i, a, d;
   for (i = 0; i < al.length; i++) {
     a = al[i]; if (a === u || a.dead || a.back || dist(a, own) > 4) continue;
-    if (!(a.heal > 0 || (a.role === 'cmd' && a.mp >= 6 && a.skills.indexOf('heal') >= 0))) continue;
+    if (!(a.heal > 0 || (a.role === 'cmd' && a.mp >= 6 && healsOf(a)))) continue;
     d = dist(u, a); if (d < bd) { bd = d; best = a; }
   }
   return best;
@@ -14902,7 +15198,7 @@ P.tick = function (dt) {
     for (k in u.st) {
       var s = u.st[k]; s.t -= dt;
       if (k === 'slow') slow = true;
-      if (k === 'poison') { s.acc += dt; if (s.acc >= 2) { s.acc -= 2; this.hurt(u, Math.max(1, Math.round(u.mhp * s.p / 100 * (u.role === 'boss' ? 0.25 : 1))), null, { type: 'poison' }); if (u.dead) break; } }
+      if (k === 'poison' || k === 'burn') { s.acc += dt; if (s.acc >= 2) { s.acc -= 2; var dsrc = s.by ? this.byId[s.by] : null; this.hurt(u, Math.max(1, Math.round(u.mhp * s.p / 100 * (u.role === 'boss' ? 0.25 : 1))), dsrc && !dsrc.dead ? dsrc : null, { type: k, refl: true }); if (u.dead) break; } }      // 2.2.6 화상 (법사): 중독과 같은 셈, 따로 쌓인다
       if (s.t <= 0) { delete u.st[k]; this.emit({ t: 'statusEnd', id: u.id, s: k }); }
     }
     if (u.dead) continue;
@@ -15650,6 +15946,34 @@ var HEAD = {
     '...kssssssssk...',
     '...ksskssksSk...',
     '....kssssssk....'],
+  // 2.2.6 무투가: 이마 띠(뒤로 매듭) · 상투 · 금 테 머리띠
+  band: [
+    '................',
+    '.....kkkkkk.....',
+    '....khhhhhhk....',
+    '...khhhhhhhHk...',
+    '.rrkrrrrrrrrk...',
+    '.R.khssssssHk...',
+    '...khskssksHk...',
+    '....kssssssk....'],
+  knot: [
+    '.......kk.......',
+    '......khhk......',
+    '.....kkrrkk.....',
+    '....kssssssk....',
+    '...kssssssssk...',
+    '...kSssssssSk...',
+    '...ksskssksSk...',
+    '....kssssssk....'],
+  circlet: [
+    '................',
+    '.....kkkkkk.....',
+    '....khhhhhhk....',
+    '...khhhhhhhHk...',
+    '...kiiiiciiik...',
+    '...khssssssHk...',
+    '...khskssksHk...',
+    '....kssssssk....'],
   mitre: [
     '......kkkk......',
     '.....kwwwwk.....',
@@ -15725,6 +16049,15 @@ var BODY = {
     '....kOOkkOOk....',
     '....kkk..kkk....',
     '................'],
+  gi: [      // 2.2.6 무투가의 도복: 엇갈린 깃 · 띠 · 넓은 바지 · 맨발
+    '...kkaalsaakk...',
+    '..kaAaalsaaAak..',
+    '..kskaaalaaksk..',
+    '...kbbbbbbbbk...',
+    '....kaBkkAak....',
+    '....kAAkkAAk....',
+    '....kssk.kssk...',
+    '................'],
   bones: [
     '...kkllllllkk...',
     '..klkLlLLlLklk..',
@@ -15746,7 +16079,10 @@ var ITEM = {
   club:   [12, 3, ['.oo', 'ooo', 'ooO', '.oO', '.o.', '.o.', '.o.', '.o.']],
   axe:    [12, 2, ['.omm', '.ommm'.slice(0, 4), '.omM', '.om.', '.o..', '.o..', '.o..', '.o..', '.o..']],
   beads:  [5, 8, ['.l..l.', 'l....l', '.l..l.', '..ll..']],
-  fists:  [1, 9, ['.kk.........kk.', 'kssk.......kssk', '.kk.........kk.']]
+  fists:  [1, 9, ['.kk.........kk.', 'kssk.......kssk', '.kk.........kk.']],
+  wraps:  [2, 10, ['l..........l']],      // 2.2.6 무투가: 손에 감은 천
+  gaunt:  [2, 9, ['M..........M', 'm..........m']],      // 권갑
+  scarf:  [0, 8, ['.qq', 'qqk', 'qk.']]
 };
 
 function compose(head, body, items) {
@@ -16822,14 +17158,14 @@ var LOOKS = {
     L('horned', 'armor', ['cape', 'trident'], { a: '#7d55c0', A: '#4f3288', b: '#9fe8ec', q: '#2f86a6', Q: '#1f5d78', m: '#b181e6', M: '#7446ad' }),
     L('crown', 'armor', ['cape', 'trident'], { a: '#4b3a8a', A: '#2c2160', b: '#f6cf57', q: '#b181e6', Q: '#7446ad', h: '#2b2440', H: '#1b1626', m: '#f6cf57', M: '#c08f2c' })
   ],
-  cle: [
-    L('veil', 'robe', ['wand'], { a: '#f4efe2', A: '#cfc6ae', b: '#62b0ee' }),
-    L('veil', 'robe', ['wand'], { a: '#f4efe2', A: '#cfc6ae', b: '#f6cf57', l: '#62b0ee', L: '#3572b8' }),
-    L('veil', 'robe', ['cross'], { a: '#dfeaf6', A: '#a9bcd6', b: '#f6cf57', w: '#62b0ee', l: '#3572b8', L: '#24508a' }),
-    L('tiara', 'robe', ['cross'], { a: '#5b8fd6', A: '#3a62a8', b: '#f6cf57', h: '#d8b46a', H: '#a8843f' }),
-    L('tiara', 'robe', ['cape', 'cross'], { a: '#f4efe2', A: '#cfc6ae', b: '#e0525e', h: '#d8b46a', H: '#a8843f', q: '#5b8fd6', Q: '#3a62a8' }),
-    L('tiara', 'robe', ['cape', 'orb'], { a: '#ffb3d1', A: '#d6789e', b: '#f6cf57', h: '#f6cf57', H: '#c08f2c', q: '#f4efe2', Q: '#cfc6ae', c: '#ffffff', C: '#ff9de1' }),
-    L('crown', 'robe', ['cape', 'cross'], { a: '#f7f2e6', A: '#cfc6ae', b: '#f6cf57', h: '#f6cf57', H: '#c08f2c', q: '#5b8fd6', Q: '#3a62a8' })      // r8: 7단도 병과가 읽히게 — 신관은 흰 옷·푸른 망토·십자 지팡이 (구슬 지팡이는 법사만)
+  cle: [      // 2.2.6 무투가: 수련생 → 권사 → 무승 → 철권 → 권호 → 권성 → 무신 (도복 · 감은 천 → 권갑 · 목도리 → 금 테 머리띠)
+    L('knot', 'gi', ['wraps'], { a: '#d8c8a8', A: '#a89878', b: '#7a5a3a', B: '#5e4228', h: '#2b2440', r: '#8a5a36', l: '#efe6d0', p: '#8a7a5e' }),
+    L('band', 'gi', ['wraps'], { a: '#f4efe2', A: '#cfc6ae', b: '#3a3350', B: '#262036', r: '#e0525e', R: '#9c2f45', h: '#3a2a20', l: '#efe6d0', p: '#cfc6ae' }),
+    L('knot', 'gi', ['wraps', 'scarf'], { a: '#c0525e', A: '#8a3040', b: '#2b2440', B: '#1b1626', h: '#2b2440', r: '#f6cf57', l: '#efe6d0', q: '#f6cf57', Q: '#c08f2c', p: '#5e2a34' }),
+    L('band', 'gi', ['gaunt'], { a: '#3a3350', A: '#262036', b: '#e0525e', B: '#9c2f45', r: '#f6cf57', R: '#c08f2c', h: '#1b1626', l: '#d8d0bc', m: '#aab2c2', M: '#6a7488', p: '#2b2440' }),
+    L('band', 'gi', ['scarf', 'gaunt'], { a: '#e8bb45', A: '#b07f2a', b: '#3a3350', B: '#262036', r: '#3a3350', R: '#1b1626', h: '#3a2a20', l: '#f1ead9', q: '#e0525e', Q: '#9c2f45', m: '#cdd5e3', M: '#8f9ab3', p: '#7a5a2a' }),
+    L('knot', 'gi', ['cape', 'gaunt'], { a: '#f7f2e6', A: '#cfc6ae', b: '#f6cf57', B: '#c08f2c', h: '#2b2440', r: '#62b0ee', l: '#ffffff', q: '#3572b8', Q: '#24508a', m: '#f6cf57', M: '#c08f2c', p: '#3a4a6a' }),
+    L('circlet', 'gi', ['cape', 'scarf', 'gaunt'], { a: '#f7f2e6', A: '#cfc6ae', b: '#e0525e', B: '#9c2f45', h: '#1b1626', i: '#f6cf57', I: '#c08f2c', c: '#ff4d6d', l: '#ffffff', q: '#e0525e', Q: '#9c2f45', m: '#ffe27a', M: '#c08f2c', p: '#7a2a34' })
   ],
   mon: [
     L('bald', 'tunic', ['beads'], { a: '#f09a4a', A: '#b8642a', b: '#e0525e', B: '#f7e3bd', O: '#cf9670' }),
@@ -17201,7 +17537,7 @@ DS.unitSprite = function (u) {
 // ════════ r11 gfx: 옷차림 — 장비가 몸에 보이고, 나이가 몸에 보인다 (32px 원화 격자에 덧그린다) ════════
 // 이름 꼴: '병과_단#w=무기id,a=방어구id,g=나이,x=성별,f=1' (DS.dressName). 칸이 없으면 지금 모습 그대로다.
 //   g: child(아이·작은 몸) · teen(열다섯~열일곱) · youth(청년) · prime(장년) · elder(노년: 흰머리·굽은 자세) / f=1: 돌아온 이의 빛바랜 빛깔 한 점
-var WEAP_IT = { sword: 1, gsword: 1, spear: 1, halberd: 1, bow: 1, lbow: 1, staff: 1, sstaff: 1, wand: 1, cross: 1, orb: 1, trident: 1, mace: 1, kunai: 1, axe: 1, club: 1 };
+var WEAP_IT = { wraps: 0, sword: 1, gsword: 1, spear: 1, halberd: 1, bow: 1, lbow: 1, staff: 1, sstaff: 1, wand: 1, cross: 1, orb: 1, trident: 1, mace: 1, kunai: 1, axe: 1, club: 1 };
 DS.LOOKP = DS.LOOKP || {};
 for (cls in LOOKS) LOOKS[cls].forEach(function (l, n) { DS.LOOKP[cls + '_' + (n + DS.CLASSES[cls].start)] = l; });
 // 단(재질)마다 날의 빛깔 [밝음, 가운데, 그늘] — 청동·철·강철·은·미스릴·황금·용린·성은·창천·여명
@@ -17463,6 +17799,7 @@ var WCH = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1 };
 DS.dressPrep = function (name, s, d) {
   var o = typeof s === 'string' ? DS.dressParse(s) : s, look = DS.LOOKP[name], cls = name.split('_')[0];
   var W = gearOf(o.w), A = gearOf(o.a), out = { pal: {}, flat: {} }, age = o.g || '';
+  if (W && (W.cat === 'fist' || cls === 'cle')) W = null;      // 2.2.6 무투가: 권갑 · 옛 성구는 손에 감긴 꼴 그대로 (막대 무기를 그리지 않는다)
   var human = !!look || /_\d+_\d+$/.test(name) && d.size === 16;
   if (look && W && age !== 'child') out.rows = compose(look[0], look[1], look[2].filter(function (it) { return !WEAP_IT[it]; }));
   else if (look && age === 'child') out.rows = compose(look[0], look[1], look[2].filter(function (it) { return !WEAP_IT[it] && it !== 'shield'; }));
@@ -17767,10 +18104,16 @@ function human(g, S) {
   S.C = C;
   var items = S.items || [], has = function (n) { return items.indexOf(n) >= 0; };
   var w = child ? null : S.w ? gearW(S.w, S.cls) : itemW(items, S.tier || 1, pal);
+  // 2.2.6 무투가: 권갑 · 수투(또는 옛 성구)는 손에 감긴다 — 막대 무기로 그리지 않는다. 장비가 없으면 꼴의 wraps · gaunt
+  S._fist = null;
+  if (!child && (S.body === 'gi' || (w && w.cat === 'fist'))) {
+    if (w && (w.cat === 'fist' || (S.body === 'gi' && w.cat === 'wand'))) { S._fist = { metal: w.line === 'A' || w.cat === 'wand' || w.t >= 4 || w.grade >= 4, m: w.m, acc: w.acc, gem: w.gem, grade: w.grade, spike: w.cat === 'wand' && w.kind === 'mace' }; w = null; }
+    else if (!w || S.body === 'gi') { w = null; S._fist = has('gaunt') ? { metal: true, m: [mute(pal.m || '#cdd5e3'), mute(pal.m || '#cdd5e3'), mute(pal.M || '#8f9ab3')], acc: pal.i || '#d8b450', gem: pal.c || '#62b0ee', grade: 0 } : { metal: false }; }
+  }
   var shield = !child && has('shield') && !(S.w && S.w.cat !== 'sword' && S.w.cat !== 'wand');
   var bs = child ? 0.74 : age === 'teen' ? 0.9 : 1, hs = child ? 0.92 : age === 'teen' ? 0.96 : 1, bend = age === 'elder' ? 0.15 : 0;
   var lean = pose === 'atk' ? 0.12 : pose === 'hit' ? -0.17 : pose === 'cast' ? -0.05 : 0, dx = pose === 'hit' ? -1.6 : pose === 'atk' ? 1.2 : 0;
-  var robe = !S.ride && (S.body === 'robe' || (S.a && S.a.cat === 'robe'));
+  var robe = !S.ride && S.body !== 'gi' && (S.body === 'robe' || (S.a && S.a.cat === 'robe'));      // 2.2.6: 도복을 입은 무투가는 로브를 걸쳐도 도복 꼴
   var step = S.step || 0;
   g.save(); g.translate(32 + dx, 61.5); g.scale(bs, bs); g.translate(-32, -61.5);
   function upper(fn) { g.save(); g.translate(31, 51); g.rotate(lean + bend); g.translate(-31, -51); fn(); g.restore(); }
@@ -17787,18 +18130,20 @@ function human(g, S) {
     if (w.cat === 'bow' && pose === 'atk') hand = [50, 40];
   }
   S._hand = hand; S._ang = ang; S._wd = w;
-  if (S.maskOnly) { upper(function () { if (w) { g.save(); g.translate(hand[0], hand[1]); g.rotate(ang); weapon(g, w); g.restore(); } }); g.restore(); return; }
+  if (S.maskOnly) { upper(function () { if (w) { g.save(); g.translate(hand[0], hand[1]); g.rotate(ang); weapon(g, w); g.restore(); } else if (S._fist) fistP(g, S, hand, true); }); g.restore(); return; }
   // ── 뒤: 망토 · 날개 · 긴 머리
   upper(function () {
     if (has('mwing') || has('mwing2')) wings(g, C('w'), has('mwing2'), pose);
     if (S.a && S.a.sh === 'wings') wings(g, mute(S.a.m[1]), false, pose);
     if (has('cape')) cape(g, C('q'), C('b'), pose, step);
+    if (has('scarf')) scarf(g, C('q'), pose, step);      // 2.2.6 무투가: 뒤로 날리는 긴 목도리
     if (S.a && S.a.cat === 'light' && S.a.line === 'B') smallWings(g, mute(S.a.m[0]));
   });
   headT(function () { headBack(g, S); });
   // ── 다리
   if (S.bust) {}
   else if (S.ride) rideLeg(g, S);
+  else if (S.body === 'gi') giLegs(g, S, step);      // 2.2.6 도복 바지 · 맨발
   else if (!robe) legs(g, S, step);
   else robeFeet(g, S, step);
   upper(function () {
@@ -17810,6 +18155,7 @@ function human(g, S) {
   upper(function () {
     if (w) { g.save(); g.translate(hand[0], hand[1]); g.rotate(ang); weapon(g, w); g.restore(); }
     frontArm(g, S, hand, w);
+    if (S._fist) fistP(g, S, hand);      // 2.2.6 무투가의 주먹 (감은 천 · 권갑)
     if (has('beads')) for (var bi = 0; bi < 9; bi++) { var ba = 0.2 + bi / 8 * 2.7; part(g, circ(31 + Math.cos(ba) * 7, 37.6 + Math.sin(ba) * 4.6, bi === 4 ? 1.6 : 1.15), bi === 4 ? '#c0404c' : '#7a5034', { sd: 0.4, hl: 0.4, ln: 0.6 }); }
     if (has('kunai')) { part(g, function (g) { g.moveTo(22, 49); g.lineTo(18, 54.5); g.lineTo(19.5, 55); g.closePath(); }, '#c4ccd8', { sd: 0.3 }); }
   });
@@ -17817,6 +18163,41 @@ function human(g, S) {
 }
 DS.artHuman = human;
 
+// ── 2.2.6 무투가: 도복 바지 · 맨발 · 목도리 · 주먹 ──
+function giLegs(g, S, step) {
+  var C = S.C, pant = S.pal.p ? C('p') : sh1(C('a')), skin = C('s'), wrap = C('l');
+  [[27.2, step === 1 ? 2.4 : 0, -0.8], [35.2, step === 2 ? 2.4 : 0, 0.8]].forEach(function (L, i) {
+    var x = L[0], up = L[1], k = L[2];
+    part(g, function (g) { g.moveTo(x - 3, 48.4); g.lineTo(x + 3, 48.4); g.quadraticCurveTo(x + 4.6 + k, 52.6, x + 4 + k, 57 - up); g.lineTo(x - 4 + k, 57 - up); g.quadraticCurveTo(x - 4.4 + k, 52.6, x - 3, 48.4); g.closePath(); }, i ? pant : sh1(pant), { sd: 1.2 });
+    curve(g, x - 0.6 + k * 0.5, 50.5, x + 0.4 + k, 53.5, x - 0.2 + k, 56.4 - up, css(sh2(pant)), 0.5);
+    part(g, function (g) { RR(g, x - 2.7 + k, 56.4 - up, 5.4, 1.9, 0.8); }, wrap, { sd: 0.4, hl: 0.2 });
+    part(g, function (g) { g.moveTo(x - 2.4 + k, 58.1 - up); g.lineTo(x + 2.2 + k, 58.1 - up); g.quadraticCurveTo(x + 5.2 + k, 59.3 - up, x + 4.8 + k, 61.5 - up); g.lineTo(x - 2.6 + k, 61.5 - up); g.closePath(); }, i ? skin : sh1(skin), { sd: 0.7 });
+  });
+}
+function scarf(g, c, pose, step) {      // 목에서 뒤로 날리는 긴 천 두 가닥
+  var sw = pose === 'atk' ? -4 : pose === 'hit' ? 2 : step ? -1.5 : 0;
+  part(g, function (g) { g.moveTo(25, 37.5); g.quadraticCurveTo(17 + sw, 39, 10 + sw * 1.6, 44.5); g.quadraticCurveTo(13 + sw, 45.2, 15.5 + sw, 43.6); g.quadraticCurveTo(20 + sw * 0.6, 41.6, 27, 40.4); g.closePath(); }, c, { sd: 1.4 });
+  part(g, function (g) { g.moveTo(25.5, 39); g.quadraticCurveTo(19 + sw, 43, 14.5 + sw * 1.4, 50.5); g.quadraticCurveTo(17 + sw, 50.2, 18.6 + sw, 48.4); g.quadraticCurveTo(22, 44, 27.4, 41.4); g.closePath(); }, sh1(c), { sd: 1.2 });
+}
+function fistP(g, S, hand, maskOnly, back) {      // 감은 천(맨손) 또는 권갑 (쇠 · 장식 · 보석) — hand = 주먹 자리
+  var F = S._fist || {}, x = hand[0], y = hand[1], r = back ? 2.5 : 3.1;
+  if (maskOnly) { part(g, circ(x, y, r + 0.4), '#ffffff', { sd: 0, hl: 0 }); return; }
+  if (!F.metal) {
+    part(g, circ(x, y, r), S.C('l'), { sd: 0.9, hl: 0.5 });
+    line(g, [x - r * 0.8, y - 0.8, x + r * 0.8, y + 0.4], css(sh1(S.C('l'))), 0.5); line(g, [x - r * 0.7, y + 0.9, x + r * 0.7, y + 1.8], css(sh1(S.C('l'))), 0.5);
+    if (!back) part(g, function (g) { RR(g, x - 2.6, y + 1.6, 4.2, 2.6, 1); }, S.C('l'), { sd: 0.5, hl: 0 });      // 손목에 감은 끝
+    return;
+  }
+  var m = F.m || ['#d6dce6', '#9ea8ba', '#646d84'], mc = typeof m[1] === 'string' ? mute(m[1]) : m[1];
+  if (!back) part(g, function (g) { RR(g, x - 3.6, y + 0.8, 5.2, 4.6, 1.4); }, sh1(mc), { sd: 0.8, gl: function (g) { E(g, x - 2.2, y + 1.8, 0.7, 1.4); } });      // 팔목 가리개
+  part(g, function (g) { E(g, x, y, r + 0.3, r); }, mc, { sd: 1.1, hl: 0.8, gl: function (g) { E(g, x - 1, y - 1, 0.9, 0.6, -0.4); } });
+  if (!back) {
+    for (var i = 0; i < 3; i++) dot(g, x + 1.9, y - 1.6 + i * 1.6, 0.62, css(lt(mc, 0.45)));      // 주먹마디 돌기
+    if (F.spike) for (var j = 0; j < 3; j++) part(g, function (g) { var yy = y - 1.6 + j * 1.6; g.moveTo(x + 2.4, yy - 0.6); g.lineTo(x + 4.4, yy); g.lineTo(x + 2.4, yy + 0.6); g.closePath(); }, mc, { sd: 0.2, hl: 0, ln: 0.5 });
+    if (F.grade >= 4 || F.acc) line(g, [x - 3.4, y + 2.6, x + 1.4, y + 2.6], css(mute(F.acc || '#d8b450')), 0.7);
+    if (F.grade >= 4) dot(g, x - 1.2, y + 3.4, 0.8, css(mute(F.grade >= 5 ? (F.gem || '#62b0ee') : '#9a6ad0')));
+  }
+}
 function legs(g, S, step) {
   var C = S.C, armor = S.body === 'armor' || (S.a && S.a.cat === 'heavy'), bones = S.body === 'bones';
   var pant = bones ? C('l') : armor ? sh1(C('a')) : S.body === 'tunic' ? mute('#5a4a3e') : sh1(C('a')), boot = bones ? C('L') : armor ? (S.a ? mute(S.a.m[1]) : C('m')) : mute(BOOT);
@@ -17863,7 +18244,20 @@ function torso(g, S, robe) {
     part(g, function (g) { RR(g, 30, 37, 2.2, 14, 1); }, C('l'), { sd: 0.4, hl: 0, ln: 0.6 });
     part(g, el(31, 51, 6, 2.6), C('L'), { sd: 0.6 }); return;
   }
-  if (robe) {
+  if (body === 'gi') {      // 2.2.6 무투가의 도복: 넓은 어깨 · 엇갈린 깃 · 띠와 늘어진 띠 끝
+    var gm = main, inner = C('l'), sash = A && A.cat === 'gi' ? mute(A.acc) : C('b');
+    if (A && A.grade >= 5) gm = mix(gm, mute(A.m[1]), 0.5);
+    part(g, function (g) { g.moveTo(22.4, 37); g.lineTo(39.6, 37); g.quadraticCurveTo(42.8, 37.6, 42.4, 42); g.lineTo(41.2, 47); g.quadraticCurveTo(42.6, 50.6, 42.6, 53.6); g.quadraticCurveTo(31, 56, 19.6, 53.6); g.quadraticCurveTo(19.6, 50.6, 21, 47); g.lineTo(19.8, 42); g.quadraticCurveTo(19.4, 37.6, 22.4, 37); g.closePath(); }, gm, { sd: 3.2 });
+    part(g, function (g) { g.moveTo(27.4, 37); g.lineTo(34.8, 37); g.lineTo(31.2, 41.6); g.closePath(); }, S.tier >= 3 ? C('s') : inner, { sd: 0.6, hl: 0.3 });      // 목 아래 (높은 단은 가슴이 드러난다)
+    part(g, function (g) { g.moveTo(24.6, 37); g.lineTo(27.4, 37); g.lineTo(34.6, 46.6); g.lineTo(32, 46.6); g.closePath(); }, sh1(lt(gm, 0.2)), { sd: 0.5, hl: 0 });      // 안쪽 깃
+    part(g, function (g) { g.moveTo(34.8, 37); g.lineTo(37.8, 37.2); g.lineTo(29.8, 46.6); g.lineTo(26.8, 46.6); g.closePath(); }, lt(gm, 0.24), { sd: 0.6, hl: 0.3 });      // 겉 깃 (흰 테)
+    if (A && A.line === 'B') for (var gi = 0; gi < 3; gi++) curve(g, 22.5 + gi * 6.5, 40 + gi, 24 + gi * 6.5, 44 + gi, 23 + gi * 6.5, 46, css(lt(gm, 0.3), 0.6), 0.5);      // 띠 도복: 누빈 결
+    part(g, function (g) { RR(g, 20.6, 46, 21.2, 3.4, 1.4); }, sash, { sd: 0.8, hl: 0.4 });
+    part(g, el(25, 47.8, 1.9, 1.5), sh1(sash), { sd: 0.5 });      // 매듭
+    part(g, function (g) { g.moveTo(24.2, 48.6); g.quadraticCurveTo(22.6, 52, 22.8, 55.8); g.lineTo(24.4, 55.6); g.quadraticCurveTo(24.4, 52.4, 25.6, 49); g.closePath(); g.moveTo(25.4, 49); g.quadraticCurveTo(26.4, 52.4, 26.2, 55.2); g.lineTo(27.6, 55); g.quadraticCurveTo(27.6, 52, 26.4, 48.6); g.closePath(); }, sash, { sd: 0.6 });      // 늘어진 띠 끝
+    curve(g, 36, 50, 37.6, 52, 38.6, 54, css(sh1(gm)), 0.6); curve(g, 29.6, 50, 30.4, 52.4, 30.8, 54.6, css(sh1(gm)), 0.5);
+    if (S.tier >= 5 && !S.cls.indexOf('cle')) { dot(g, 38.6, 41.6, 0.85, css(mute(S.pal.i || '#d8b450'))); }
+  } else if (robe) {
     part(g, function (g) { g.moveTo(23.5, 37); g.lineTo(38.5, 37); g.quadraticCurveTo(42, 38, 42, 43); g.quadraticCurveTo(43.5, 53, 45, 60.3); g.quadraticCurveTo(31, 62.4, 17.5, 60.3); g.quadraticCurveTo(19.5, 52, 20, 43); g.quadraticCurveTo(20, 38, 23.5, 37); g.closePath(); }, main, { sd: 3.6 });
     curve(g, 27, 46, 25, 53, 23.5, 60, css(sh1(main)), 0.7); curve(g, 36, 47, 37.5, 54, 38.5, 60.5, css(sh1(main)), 0.7);
     part(g, function (g) { g.moveTo(17.6, 59); g.quadraticCurveTo(31, 61.2, 44.8, 59); g.lineTo(45.2, 61); g.quadraticCurveTo(31, 63.2, 17.3, 61); g.closePath(); }, trim, { sd: 0.5, hl: 0.3 });
@@ -17902,6 +18296,13 @@ function has2(S, n) { return (S.items || []).indexOf(n) >= 0; }
 function backArm(g, S, shield, pose) {
   var C = S.C, sl = C('a'), hd = pose === 'atk' ? [21.5, 45] : pose === 'hit' ? [17.5, 42] : [19.5, 47];
   if (S.body === 'bones') { part(g, cap(24, 39, hd[0], hd[1], 1.1), C('l'), { sd: 0.4 }); return; }
+  if (S.body === 'gi') {      // 2.2.6: 짧은 소매 · 맨 팔뚝 · 뒷주먹
+    var bm = [(23.4 + hd[0]) / 2, (39.5 + hd[1]) / 2];
+    part(g, cap(bm[0], bm[1], hd[0], hd[1], 2.1), sh1(C('s')), { sd: 0.8 });
+    part(g, cap(23.4, 39.5, bm[0], bm[1], 2.7), sh1(sl), { sd: 1 });
+    if (S._fist) fistP(g, S, [hd[0], hd[1] + 0.4], false, true); else part(g, circ(hd[0], hd[1] + 0.6, 2.1), sh1(C('s')), { sd: 0.6 });
+    return;
+  }
   part(g, cap(23.4, 39.5, hd[0], hd[1], 2.4), sh1(sl), { sd: 1 });
   if (!shield) part(g, circ(hd[0], hd[1] + 0.6, 2.1), sh1(C('s')), { sd: 0.6 });
 }
@@ -17909,6 +18310,12 @@ function frontArm(g, S, hand, w) {
   var C = S.C, sl = C('a'), pl = S.a && S.a.cat === 'heavy' ? mute(S.a.m[1]) : sl, sx = 39.2, sy = 39.6;
   if (S.body === 'bones') { part(g, cap(sx, sy, hand[0], hand[1], 1.1), C('l'), { sd: 0.4 }); part(g, circ(hand[0], hand[1], 1.6), C('l'), { sd: 0.4 }); return; }
   var mx = (sx + hand[0]) / 2 + 1, my = (sy + hand[1]) / 2;
+  if (S.body === 'gi') {      // 2.2.6: 짧은 소매 (소매 끝 테) · 맨 팔뚝 — 주먹은 fistP
+    part(g, cap(mx, my, hand[0], hand[1], 2.3), C('s'), { sd: 1 });
+    part(g, cap(sx, sy, mx, my, 2.8), sl, { sd: 1.1 });
+    part(g, circ(mx, my, 2.5), lt(sl, 0.22), { sd: 0.6, hl: 0.2 });
+    return;
+  }
   part(g, cap(sx, sy, mx, my, 2.5), sl, { sd: 1.1 });
   part(g, cap(mx, my, hand[0], hand[1], 2.2), sl, { sd: 1 });
   if (S.body === 'armor' || (S.a && S.a.cat === 'heavy')) { var big = S.a && S.a.cat === 'heavy' && S.a.line !== 'B' ? 1.25 : 1; part(g, el(40.2, 39.2, 4.8 * big, 3.6 * big, 0.2), S.grade >= 5 ? mute('#d8b450') : pl, { sd: 1.4, gl: function (g) { E(g, 38.8, 37.8, 1.2, 0.7); } }); }
@@ -17923,11 +18330,15 @@ function shieldP(g, S, pose) {
 }
 
 // ── 머리 ──
-var HAIRLESS = { helm: 1, plume: 1, horned: 1, hood: 1, mask: 1, veil: 1, darkhood: 1, skull: 1, bald: 1 };
+var HAIRLESS = { helm: 1, plume: 1, horned: 1, hood: 1, mask: 1, veil: 1, darkhood: 1, skull: 1, bald: 1, knot: 1 };
 function hairCol(S) { var h = S.head; if (S.age === 'elder') return mute('#e6e2da'); if (h === 'tricorn' || h === 'mitre' || h === 'wizhat') return mute(S.pal.hair || '#6b4a32'); return S.C('h'); }
 function isF(S) { return S.sx === 'f' || (!S.sx && (S.head === 'tiara' || S.head === 'veil')); }
 function headBack(g, S) {
   var C = S.C, h = S.head, hc = hairCol(S);
+  if (h === 'band') {      // 2.2.6 무투가의 이마 띠: 뒤로 날리는 띠 끝 둘
+    var bt = C('r'), sw = S.pose === 'atk' ? -2.5 : S.pose === 'hit' ? 1.5 : 0;
+    part(g, function (g) { g.moveTo(18.4, 19.6); g.quadraticCurveTo(12 + sw, 20.4, 7.6 + sw * 1.4, 25.6); g.lineTo(9.6 + sw, 26.4); g.quadraticCurveTo(13.4 + sw, 22.8, 18.6, 21.8); g.closePath(); g.moveTo(18.4, 20.8); g.quadraticCurveTo(13.6 + sw, 24.4, 11.6 + sw, 30.6); g.lineTo(13.6 + sw, 30.4); g.quadraticCurveTo(15.4 + sw, 25.4, 19, 22.4); g.closePath(); }, bt, { sd: 0.9 });
+  }
   if (h === 'veil') { part(g, function (g) { g.moveTo(17, 22); g.quadraticCurveTo(15, 34, 17.5, 42); g.quadraticCurveTo(24, 44, 29, 41); g.lineTo(40, 33); g.lineTo(44, 22); g.quadraticCurveTo(31, 6, 17, 22); g.closePath(); }, C('a'), { sd: 2.6 }); return; }
   if (h === 'hood' || h === 'mask' || h === 'darkhood') { var hcC = h === 'darkhood' ? C('a') : C('a'); part(g, function (g) { g.moveTo(15.5, 26); g.quadraticCurveTo(14, 14, 25, 10); g.quadraticCurveTo(38, 7, 45, 17); g.quadraticCurveTo(47.5, 28, 44, 36); g.quadraticCurveTo(32, 41, 18.5, 38); g.quadraticCurveTo(15, 34, 15.5, 26); g.closePath(); }, sh1(hcC), { sd: 2 }); return; }
   if (isF(S) && (h === 'helm' || h === 'plume' || h === 'horned')) { part(g, function (g) { g.moveTo(19, 22); g.quadraticCurveTo(9, 24, 10.6, 37); g.quadraticCurveTo(12.6, 42, 16.4, 41); g.quadraticCurveTo(13.6, 33, 21, 28); g.closePath(); }, hc, { sd: 1.4 }); return; }
@@ -17991,6 +18402,11 @@ function headFront(g, S) {
     if (f && S.head !== 'tiara' && S.head !== 'crown') part(g, function (g) { g.moveTo(18, 17); g.quadraticCurveTo(10, 18, 9.8, 26); g.quadraticCurveTo(12.6, 23, 16.6, 23.6); g.closePath(); }, hc, { sd: 1 });
   }
   if (h === 'bald') { g.fillStyle = css(lt(skin, 0.5), 0.8); g.beginPath(); E(g, 26, 14.6, 3.6, 1.6, -0.4); g.fill(); if (S.pal.b) dot(g, 33.5, 16.5, 0.95, css(mute(S.pal.b))); }
+  if (h === 'knot') {      // 2.2.6 무투가: 민머리 위 상투와 붉은 끈
+    g.fillStyle = css(lt(skin, 0.5), 0.8); g.beginPath(); E(g, 26, 14.8, 3.4, 1.5, -0.4); g.fill();
+    g.fillStyle = css(sh1(skin), 0.35); g.beginPath(); E(g, 31, 13.2, 11, 3.2); g.fill();
+    part(g, el2(30.6, 8.4, 4.2, 3.6), hc, { sd: 1.6, hl: 0.25 }); curve(g, 28, 7.2, 30.4, 5.8, 33, 7.4, css(lt(hc, 0.25)), 0.6); part(g, function (g) { RR(g, 27.2, 10.8, 6.6, 2, 0.9); }, C('r'), { sd: 0.4 });
+  }
   headGear(g, S, C);
 }
 function el2(x, y, rx, ry, a) { return function (g) { E(g, x, y, rx, ry, a); }; }
@@ -18013,6 +18429,11 @@ function headGear(g, S, C) {
     [[28.2, 6.4], [35.6, 6.6]].forEach(function (p) { dot(g, p[0], p[1], 0.85, css(lt(gold, 0.5))); });
     part(g, el2(31.6, 13.2, 1.5, 1.3), C('r'), { sd: 0.5, gl: function (g) { E(g, 31.1, 12.7, 0.45, 0.35); } }); part(g, el2(25, 13.6, 1.0, 1.0), '#5a8ac0', { sd: 0.3 });
     if (gc) part(g, el2(38.6, 13.6, 1.0, 1.0), gc, { sd: 0.3 });
+  } else if (h === 'band' || h === 'circlet') {      // 2.2.6 무투가: 이마 띠 (뒤로 매듭) · 높은 단은 금 테 머리띠와 보석
+    var bc = h === 'circlet' ? mute(S.pal.i || '#d8b450') : C('r');
+    part(g, function (g) { g.moveTo(17.2, 18.6); g.quadraticCurveTo(31, 12.6, 45.6, 16.6); g.lineTo(45.4, 19.4); g.quadraticCurveTo(31, 15.6, 17.4, 21.6); g.closePath(); }, bc, { sd: 0.8, hl: h === 'circlet' ? 0.8 : 0.3 });
+    if (h === 'circlet') { part(g, function (g) { g.moveTo(36.4, 13.4); g.lineTo(38.4, 16.2); g.lineTo(36.4, 19); g.lineTo(34.4, 16.2); g.closePath(); }, S.pal.c || '#e0525e', { sd: 0.6, gl: function (g) { E(g, 35.9, 15.4, 0.5, 0.7); } }); }
+    else part(g, el2(18.2, 20.2, 1.8, 1.5), sh1(bc), { sd: 0.4 });
   } else if (h === 'tiara') {
     var tg = mute(S.pal.i || '#d8b450');
     part(g, function (g) { g.moveTo(22, 14.8); g.quadraticCurveTo(31, 9.6, 41.8, 14.4); g.lineTo(41.4, 16.2); g.quadraticCurveTo(31, 12, 22.4, 16.6); g.closePath(); }, tg, { sd: 0.5 });
@@ -19469,18 +19890,26 @@ var FXC = {
   dark: ['#b181e6', '#7446ad', '#2b2440'], heal: ['#7fcf6a', '#d6ffb0'], healDark: ['#b181e6', '#e0525e'], poison: ['#9ccc3c', '#5a8a2a'],
   quake: ['#a8754a', '#6f4a2c', '#d8c39a'], meteor: ['#ff9a3c', '#ffd75e', '#7a1f1f'], wind: ['#ffffff', '#cdd5e3'], slash: ['#ffffff', '#fff0a0'],
   thrust: ['#ffffff'], arrow: ['#f1ead9'], arrowRain: ['#f1ead9', '#a8754a'], buffRed: ['#ff6a7a', '#ffd0d6'], buffBlue: ['#62b0ee', '#d6ecff'], buffGold: ['#f6cf57', '#fff6d0'],
-  fist: ['#ffb35a', '#fff0c0', '#f06a2a'], kick: ['#ffffff', '#ffd28a', '#f08a3a'], palm: ['#bfe8ff', '#ffffff', '#7fd0ff'], chi: ['#f6cf57', '#fff6d0', '#ffb35a']      // 2.2.5 승려(무투가): 주먹 · 날아차기 · 기공장 · 부동심
+  fist: ['#ffb35a', '#fff0c0', '#f06a2a'], kick: ['#ffffff', '#ffd28a', '#f08a3a'], palm: ['#bfe8ff', '#ffffff', '#7fd0ff'], chi: ['#f6cf57', '#fff6d0', '#ffb35a'],      // 2.2.5 승려(무투가): 주먹 · 날아차기 · 기공장 · 부동심
+  // 2.2.6 병과마다: 방패 치기 · 철벽 · 수호 · 돌파 · 급강하 · 작살 · 창벽 · 표식 · 등불 · 성역 · 얼음 · 저주
+  shield: ['#cfe3ff', '#ffffff', '#5b8fd6'], guard: ['#62b0ee', '#d6ecff', '#ffffff'], cover: ['#9fd0ff', '#ffffff', '#5b8fd6'], charge: ['#ffe27a', '#fff6d0', '#e8bb45'],
+  dive: ['#dff4ff', '#ffffff', '#62b0ee'], hook: ['#cdd5e3', '#8fd0ff', '#2f86a6'], brace: ['#bff0d8', '#ffffff', '#4c9a8a'], mark: ['#ff6a5a', '#ffd0c0', '#f1ead9'],
+  ward: ['#ffe0a0', '#fff6d0', '#f09a4a'], sanct: ['#fff0a0', '#ffffff', '#f09a4a'], frost: ['#d6fbff', '#9fe8ec', '#5fa8e6'], curse: ['#b181e6', '#e6d4ff', '#4b2c7a']
 };
+var DIRS4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+var STC = { poison: '#9ccc3c', slow: '#9fe8ec', burn: '#ff9a3c', mark: '#ff6a5a', wet: '#6fb0e6' };      // 2.2.6 상태 빛깔 (머리 위 점 · 글자)
 var FXS = { fire: 'fire', water: 'water', thunder: 'thunder', holy: 'holy', dark: 'dark', heal: 'heal', healDark: 'dark', poison: 'poison', quake: 'boom', meteor: 'boom',
-            wind: 'wind', slash: 'slash', thrust: 'slash', arrow: 'arrow', arrowRain: 'arrow', buffRed: 'buff', buffBlue: 'buff', buffGold: 'buff', fist: 'punch', kick: 'kick', palm: 'qi', chi: 'buff' };
+            wind: 'wind', slash: 'slash', thrust: 'slash', arrow: 'arrow', arrowRain: 'arrow', buffRed: 'buff', buffBlue: 'buff', buffGold: 'buff', fist: 'punch', kick: 'kick', palm: 'qi', chi: 'buff',
+            shield: 'shield', guard: 'guard', cover: 'guard', charge: 'charge', dive: 'leap', hook: 'hook', brace: 'guard', mark: 'arrow', ward: 'ward', sanct: 'ward', frost: 'frost', curse: 'curse' };
 // r7: 기술마다 빛 [색, 반지름, 세기, 시간]
 var LIGHTC = { fire: ['#ff8a2a', 20, 0.55, 0.5], meteor: ['#ff7a2a', 26, 0.6, 0.6], thunder: ['#cfe6ff', 22, 0.6, 0.25], holy: ['#fff0a0', 20, 0.5, 0.45],
   heal: ['#9ef08a', 14, 0.35, 0.45], dark: ['#b181e6', 16, 0.4, 0.45], water: ['#8fd0ff', 14, 0.3, 0.35], poison: ['#b6ff5a', 12, 0.28, 0.4], buffGold: ['#ffe27a', 14, 0.35, 0.4],
-  fist: ['#ffb35a', 12, 0.35, 0.25], palm: ['#bfe8ff', 18, 0.5, 0.4], chi: ['#ffd75e', 18, 0.45, 0.5] };
+  fist: ['#ffb35a', 12, 0.35, 0.25], palm: ['#bfe8ff', 18, 0.5, 0.4], chi: ['#ffd75e', 18, 0.45, 0.5],
+  frost: ['#bfefff', 14, 0.4, 0.35], ward: ['#ffe0a0', 14, 0.4, 0.45], sanct: ['#fff0a0', 18, 0.45, 0.5], guard: ['#9fd0ff', 14, 0.35, 0.4], charge: ['#ffe27a', 12, 0.35, 0.3], curse: ['#b181e6', 14, 0.35, 0.45] };
 // 2.2.5 필살기 연출: 병과마다 빛깔과 꼴이 다르다 (합일 마스터는 그 묶음의 주인공 병과 · 성격 몫 필살기는 쓰는 이의 병과)
 var ULTFX = {
-  inf: { c: ['#cfe3ff', '#ffffff', '#5b8fd6'], k: 'slash' }, cav: { c: ['#ffe27a', '#fff6d0', '#e8bb45'], k: 'thrust' }, fly: { c: ['#dff4ff', '#ffffff', '#62b0ee'], k: 'wind' },
-  mar: { c: ['#8fd0ff', '#d6fbff', '#2f86a6'], k: 'water' }, pike: { c: ['#bff0d8', '#ffffff', '#4c9a8a'], k: 'thrust' }, arc: { c: ['#d6f5b0', '#ffffff', '#5fae5a'], k: 'arrow' },
+  inf: { c: ['#cfe3ff', '#ffffff', '#5b8fd6'], k: 'shield' }, cav: { c: ['#ffe27a', '#fff6d0', '#e8bb45'], k: 'thrust' }, fly: { c: ['#dff4ff', '#ffffff', '#62b0ee'], k: 'wind' },
+  mar: { c: ['#8fd0ff', '#d6fbff', '#2f86a6'], k: 'water' }, pike: { c: ['#bff0d8', '#ffffff', '#4c9a8a'], k: 'brace' }, arc: { c: ['#d6f5b0', '#ffffff', '#5fae5a'], k: 'arrow' },
   cle: { c: ['#ffd28a', '#fff6d0', '#f08a3a'], k: 'fist' }, mon: { c: ['#ffe0a0', '#ffffff', '#f09a4a'], k: 'holy' }, mag: { c: ['#d8c8ff', '#ffffff', '#8d6be0'], k: 'arcane' },
   sha: { c: ['#d2a8ff', '#9a6ad0', '#3a2458'], k: 'dark' }
 };
@@ -19495,7 +19924,7 @@ function spotTex() {
 }
 // 2.2.5 설정 「효과」: 보통 · 가볍게 (가볍게 = 알갱이 절반 남짓 · 덧그림 없이). 느린 기기(lowFx)도 덧그림은 저절로 줄인다
 DS.fxLite = function () { var o = DS.G && DS.G.save && DS.G.save.opt; return !!(o && o.fxq === 'lite'); };
-var BUFFTXT = { atk: '공격', def: '방어', quick: '퀵', ctr: '되치기' };
+var BUFFTXT = { atk: '공격', def: '방어', quick: '퀵', ctr: '되치기', shd: '보호막' };
 var PMAX = 240, SMAX = 48;      // 입자·모양 이펙트 상한 (3배속 난전에서도 넘지 않는다) · 2.2.5: 입자는 다 쓴 것을 모아 다시 쓴다 (프레임마다 새로 만들지 않는다)
 // 지역의 공기: 테마마다 [종류, 개수(30 이하), 색] — 지도 바로 위, 예고 칸·유닛보다 아래에 그린다
 var AMB = {
@@ -19556,8 +19985,15 @@ function redVignette() {
   gr = g.createRadialGradient(32, 32, 14, 32, 32, 46); gr.addColorStop(0, 'rgba(170,0,24,0)'); gr.addColorStop(0.55, 'rgba(170,0,24,.25)'); gr.addColorStop(1, 'rgba(170,0,24,.95)');
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return cv;
 }
+function markBrk(g, x, y, w, t, still) {      // 2.2.6 표식이 남은 적: 칸 네 모서리의 붉은 꺾쇠 (천천히 숨 쉰다)
+  var p = still ? 0 : Math.round((Math.sin(t * 5) + 1) * 0.6), a = x - p, b = y - p, c = x + w - 1 + p, d = y + w - 1 + p;
+  g.fillStyle = '#ff6a5a'; g.globalAlpha = 0.9;
+  g.fillRect(a, b, 3, 1); g.fillRect(a, b, 1, 3); g.fillRect(c - 2, b, 3, 1); g.fillRect(c, b, 1, 3);
+  g.fillRect(a, d, 3, 1); g.fillRect(a, d - 2, 1, 3); g.fillRect(c - 2, d, 3, 1); g.fillRect(c, d - 2, 1, 3);
+  g.globalAlpha = 1;
+}
 function hexA(hex, a) { var h = String(hex).replace('#', ''); if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; var n = parseInt(h, 16); if (isNaN(n)) return 'rgba(255,255,255,' + a.toFixed(3) + ')'; return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + Math.max(0, a).toFixed(3) + ')'; }
-var HOSTILE_FX = { slash: 1, thrust: 1, fire: 1, thunder: 1, quake: 1, dark: 1, wind: 1, arrowRain: 1, poison: 1, arrow: 1, water: 1, holy: 1, meteor: 1, fist: 1, kick: 1, palm: 1 };
+var HOSTILE_FX = { slash: 1, thrust: 1, fire: 1, thunder: 1, quake: 1, dark: 1, wind: 1, arrowRain: 1, poison: 1, arrow: 1, water: 1, holy: 1, meteor: 1, fist: 1, kick: 1, palm: 1, shield: 1, charge: 1, dive: 1, hook: 1, mark: 1, frost: 1, curse: 1 };
 function vignette(theme) {
   var v = VIG[theme] || [0.2, null], cv, g, gr;
   try { cv = document.createElement('canvas'); cv.width = 64; cv.height = 64; g = cv.getContext('2d'); } catch (x) { return null; }
@@ -19872,6 +20308,38 @@ V.fx = function (name, tiles, from) {
       case 'chi':      // 부동심: 기가 몸으로 모였다가 금빛 고리로 선다
         self.rings.push({ x: x, y: y, t: 0, dur: 0.45, c: cols[2], r: 18, inv: true, w: 2 }); self.rings.push({ x: x, y: y, t: -0.3, dur: 0.6, c: cols[0], r: 12, rise: true });
         self.burst(x, y, cols, 10, { up: 32, grav: -24, spd: 10, life: 0.8 }); break;
+      // ── 2.2.6 병과마다 ──
+      case 'shield':      // 방패 치기: 둔탁한 충격 둘 · 푸른 테
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.22, c: cols[1], r: 9 }); self.shape({ k: 'impact', x: x, y: y, dur: 0.2, c: cols[0], r: 6, d: 0.06 });
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.3, c: cols[2], r: 12, w: 2 }); self.burst(x, y, cols, 6, { spd: 34, life: 0.22 }); break;
+      case 'guard': case 'brace':      // 철벽 · 창벽: 몸으로 모이는 테 · 위로 서는 빛 (창벽은 사방으로 창끝)
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.4, c: cols[0], r: 15, inv: true, w: 2 }); self.rings.push({ x: x, y: y, t: -0.18, dur: 0.5, c: cols[1], r: 10, rise: true });
+        if (name === 'brace') for (var bj = 0; bj < 4; bj++) self.shape({ k: 'thrust', x: x + DIRS4[bj][0] * 0.5, y: y + DIRS4[bj][1] * 0.5, a: Math.atan2(DIRS4[bj][1], DIRS4[bj][0]), dur: 0.22, c: cols[2], d: 0.08 });
+        self.burst(x, y, cols, 6, { up: 26, grav: -18, spd: 8, life: 0.6 }); break;
+      case 'cover': case 'ward':      // 수호 · 등불 가호: 쓰는 이에게서 대상까지 빛줄기 · 대상 둘레에 방패 테
+        if (from && (from[0] !== x || from[1] !== y)) self.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: x * 16 + 8, y1: y * 16 + 6, c: cols[0], life: 0.2, t: 0, w: 2 });
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.45, c: cols[2], r: 11, w: 2 }); self.rings.push({ x: x, y: y, t: -0.1, dur: 0.5, c: cols[1], r: 7, rise: true });
+        self.burst(x, y, cols, 6, { up: 22, grav: -20, spd: 8, life: 0.6 }); break;
+      case 'sanct':      // 성역: 넓은 금빛 둥근 지붕
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.55, c: cols[0], r: 13, rise: true, w: 2 }); self.burst(x, y, cols, 4, { up: 30, grav: -26, spd: 6, life: 0.8 }); break;
+      case 'charge':      // 돌파: 지나간 칸마다 금빛 흙먼지 · 찌르기
+        self.shape({ k: 'thrust', x: x, y: y, a: a, dur: 0.18, c: cols[1], big: true, d: n * 0.03 }); self.burst(x, y, ['#d8c39a', cols[0]], 5, { up: 14, grav: 60, spd: 24, life: 0.4 }); break;
+      case 'dive':      // 급강하: 위에서 내리꽂는 빛 · 흩어지는 깃
+        self.lines.push({ x0: x * 16 + 8, y0: y * 16 - 26, x1: x * 16 + 8, y1: y * 16 + 6, c: cols[1], life: 0.14, t: 0, w: 2 });
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.24, c: cols[0], r: 10, d: 0.04 }); self.rings.push({ x: x, y: y + 0.2, t: -0.04, dur: 0.32, c: cols[2], r: 13 });
+        self.burst(x, y, ['#ffffff', '#cdd5e3'], 7, { spd: 30, up: 16, grav: 20, life: 0.5 }); break;
+      case 'hook':      // 작살: 쇠사슬 줄 · 물방울
+        if (from) self.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: x * 16 + 8, y1: y * 16 + 7, c: cols[0], life: 0.3, t: 0, w: 1, zig: true });
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.2, c: cols[1], r: 7 }); self.burst(x, y, cols, 6, { up: 18, grav: 80, spd: 18, life: 0.45 }); break;
+      case 'mark':      // 표식 사격: 화살 · 붉은 겨냥 테가 조여든다
+        if (from) self.projs.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 5, x1: x * 16 + 8, y1: y * 16 + 6, t: 0, dur: 0.1, arrow: true });
+        self.rings.push({ x: x, y: y, t: -0.06, dur: 0.4, c: cols[0], r: 14, inv: true, w: 2 }); self.burst(x, y, cols, 4, { spd: 28, life: 0.22 }); break;
+      case 'frost':      // 얼음창: 날아가는 얼음 · 깨지는 조각
+        if (from) self.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: x * 16 + 8, y1: y * 16 + 7, c: cols[0], life: 0.12, t: 0, w: 2 });
+        self.shape({ k: 'impact', x: x, y: y, dur: 0.24, c: '#ffffff', r: 8, d: 0.05 }); self.rings.push({ x: x, y: y, t: -0.05, dur: 0.35, c: cols[2], r: 10 });
+        self.burst(x, y, cols, 9, { spd: 40, up: 10, grav: 70, life: 0.45, size: 2 }); break;
+      case 'curse':      // 저주: 보랏빛 테가 조여들고 검은 기운이 오른다
+        self.rings.push({ x: x, y: y, t: 0, dur: 0.45, c: cols[0], r: 12, inv: true }); self.burst(x, y, cols, 7, { up: 16, grav: -24, spd: 8, life: 0.8, spread: 12 }); break;
       default:
         self.shape({ k: 'slash', x: x, y: y, a: a, s: n % 2 ? 1 : -1, dur: 0.22, c: cols[1] || '#fff0a0', big: true });
         self.burst(x, y, cols, 5, { spd: 36, life: 0.22 });
@@ -19883,7 +20351,7 @@ V.fx = function (name, tiles, from) {
     }
   });
   // 2.2.5: 한 대상을 노린 기술은 쓰는 이에게서 대상까지 짧은 빛줄기
-  if (!this.lite && from && tiles && tiles.length === 1 && HOSTILE_FX[name] && name !== 'palm' && name !== 'arrow' && (Math.abs(tiles[0][0] - from[0]) + Math.abs(tiles[0][1] - from[1])) >= 1 && this.onScreen(tiles[0][0], tiles[0][1]))
+  if (!this.lite && from && tiles && tiles.length === 1 && HOSTILE_FX[name] && name !== 'palm' && name !== 'arrow' && name !== 'mark' && name !== 'hook' && name !== 'frost' && name !== 'charge' && name !== 'dive' && (Math.abs(tiles[0][0] - from[0]) + Math.abs(tiles[0][1] - from[1])) >= 1 && this.onScreen(tiles[0][0], tiles[0][1]))
     this.lines.push({ x0: from[0] * 16 + 8, y0: from[1] * 16 + 6, x1: tiles[0][0] * 16 + 8, y1: tiles[0][1] * 16 + 7, c: cols[0], life: 0.14, t: 0, w: 2 });
 };
 // ── 2.2.5 필살기: 쓰는 이 둘레만 밝게 (나머지는 잠깐 어둡게) · 병과 빛깔의 큰 고리와 불티 · 맞는 칸마다 충격 · 병과마다 다른 꼴 ──
@@ -19912,6 +20380,13 @@ V.ultBlast = function (e, S, u) {
     }
     if (i >= 6) return;
     switch (U.k) {
+      case 'shield':      // 2.2.6 보병: 맞는 칸마다 방패 충격 (막는 필살기는 아군 칸마다 푸른 방패 테)
+        if (hostile) { self.shape({ k: 'impact', x: x, y: y, dur: 0.3, c: c[1], r: 13, d: d }); self.shape({ k: 'slash', x: x, y: y, a: 0.75, s: 1, dur: 0.26, c: c[0], big: true, d: d + 0.05 }); }
+        else self.rings.push({ x: x, y: y, t: -d, dur: 0.55, c: c[2], r: 11, w: 2, inv: true });
+        break;
+      case 'brace':      // 2.2.6 창병: 사방에서 창끝이 엇갈린다
+        for (var bk = 0; bk < 4; bk++) self.shape({ k: 'thrust', x: x - DIRS4[bk][0] * 0.4, y: y - DIRS4[bk][1] * 0.4, a: Math.atan2(DIRS4[bk][1], DIRS4[bk][0]) + 0.6, dur: 0.24, c: bk % 2 ? c[1] : c[0], d: d + bk * 0.04 });
+        break;
       case 'slash': if (hostile) { self.shape({ k: 'slash', x: x, y: y, a: 0.75, s: 1, dur: 0.26, c: c[1], big: true, d: d }); self.shape({ k: 'slash', x: x, y: y, a: -0.75, s: -1, dur: 0.26, c: c[0], big: true, d: d + 0.07 }); } break;
       case 'water': self.burst(x, y, c, Math.round(9 * q), { up: 46, grav: 140, spd: 16, life: 0.6, spread: 10 }); break;
       case 'arrow': for (var k = 0; k < 4; k++) { var ox = Math.random() * 14 - 7; self.lines.push({ x0: x * 16 + 16 + ox, y0: y * 16 - 50 - k * 9, x1: x * 16 + 8 + ox, y1: y * 16 + 8, c: k % 2 ? c[1] : c[0], life: 0.16 + k * 0.05, t: 0, w: 1 }); } break;
@@ -19921,6 +20396,8 @@ V.ultBlast = function (e, S, u) {
     }
   });
   if (U.k === 'thrust' && far) { this.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: far[0] * 16 + 8, y1: far[1] * 16 + 7, c: c[0], life: 0.26, t: 0, w: 4 }); this.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: far[0] * 16 + 8, y1: far[1] * 16 + 7, c: '#ffffff', life: 0.18, t: 0, w: 1 }); }
+  if (U.k === 'shield') for (var sw = 0; sw < 3; sw++) this.rings.push({ x: v.x, y: v.y, t: -sw * 0.1, dur: 0.55, c: sw % 2 ? c[1] : c[2], r: 20 + sw * 8, w: 2, inv: sw === 0 });      // 2.2.6 보병: 겹겹이 서는 방패 벽
+  if (U.k === 'brace') { for (var bj = 0; bj < 8; bj++) { var ba = bj / 8 * 6.2832; this.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: v.x * 16 + 8 + Math.cos(ba) * 26, y1: v.y * 16 + 6 + Math.sin(ba) * 16, c: bj % 2 ? c[1] : c[0], life: 0.3, t: 0, w: 1 }); } }      // 창병: 여덟 갈래 창끝
   if (U.k === 'wind') for (var w = 0; w < 3; w++) this.rings.push({ x: v.x, y: v.y, t: -w * 0.08, dur: 0.45, c: w % 2 ? c[1] : c[0], r: 22 + w * 10 });
   if (U.k === 'arcane') this.shape({ k: 'sigil', x: far ? far[0] : v.x, y: far ? far[1] : v.y, dur: 0.7, c: c[0], r: hostile ? 24 : 20 });
   if (U.k === 'fist' && !hostile) for (var r2 = 0; r2 < 3; r2++) this.rings.push({ x: v.x, y: v.y, t: -r2 * 0.1, dur: 0.5, c: r2 % 2 ? c[1] : c[2], r: 16 + r2 * 6, rise: true });
@@ -19990,14 +20467,14 @@ V.handle1 = function (e, sim) {
         else if (lh && self.time - lh.t < 0.5) { kx = u.x - lh.x; ky = u.y - lh.y; }
         else if (self.lastSkill && self.time - self.lastSkill.t < 0.5) { kx = u.x - self.lastSkill.x; ky = u.y - self.lastSkill.y; }
         var kd = Math.sqrt(kx * kx + ky * ky);
-        if (e.type !== 'poison') v.hit = kd > 0 ? { dx: kx / kd, dy: ky / kd, t: -0.3, k: e.crit ? 4 : 2.5 } : { dx: 0, dy: -1, t: 0, k: 1.5 };
+        if (e.type !== 'poison' && e.type !== 'burn') v.hit = kd > 0 ? { dx: kx / kd, dy: ky / kd, t: -0.3, k: e.crit ? 4 : 2.5 } : { dx: 0, dy: -1, t: 0, k: 1.5 };
         if (!on) break;
         var ally = u.side === 'ally', fn = self.time - v.fnT < 0.5 ? v.fn + 1 : 0;      // 한 유닛에 숫자가 겹치지 않게 번갈아 비킨다
         v.fn = fn; v.fnT = self.time;
         // r26 숫자 v2: 색 = 누가 누구에게 (흰 = 보통 · 크림 = 고른 가문이 · 금 = 치명타 · 붉은 = 아군이 맞음 · 초록 = 독), 크기 = 무게. 튀었다가 호를 그리며 오른다
         var mineHit = !ally && !!e.by && e.by === self.sel;
-        var ncol = e.crit ? '#ffd24a' : e.type === 'poison' ? '#9ccc3c' : ally ? (self.hot ? '#ffe0e6' : '#ff5a6a') : mineHit ? '#fff3c4' : '#ffffff', lf = v.lastNum;      // r8: 붉은 땅에서는 아군 피해 숫자를 더 밝게 + 굵은 외곽선
-        var nS = e.crit ? 2.5 : e.type === 'poison' ? 1 : mineHit ? 1.75 : 1.5, nP = e.crit ? 3.4 : e.type === 'poison' ? 1 : mineHit ? 2.4 : ally ? 2 : 2.1;
+        var ncol = e.crit ? '#ffd24a' : e.type === 'poison' ? '#9ccc3c' : e.type === 'burn' ? '#ff9a3c' : ally ? (self.hot ? '#ffe0e6' : '#ff5a6a') : mineHit ? '#fff3c4' : '#ffffff', lf = v.lastNum;      // r8: 붉은 땅에서는 아군 피해 숫자를 더 밝게 + 굵은 외곽선
+        var nS = e.crit ? 2.5 : e.type === 'poison' || e.type === 'burn' ? 1 : mineHit ? 1.75 : 1.5, nP = e.crit ? 3.4 : e.type === 'poison' || e.type === 'burn' ? 1 : mineHit ? 2.4 : ally ? 2 : 2.1;
         var uh = !ally && self.ultHit && e.by === self.ultHit.id && self.time - self.ultHit.t < 0.3;      // 2.2.5: 필살기가 맞힌 숫자는 크게 · 충격 빛
         if (uh) { nS *= 1.4; nP *= 1.5; self.shape({ k: 'impact', x: u.x, y: u.y, dur: 0.26, c: self.ultHit.c || '#ffd24a', r: u.big ? 12 : 9 }); }
         // 3배속 난전: 같은 유닛에 아주 짧은 사이로 들어온 보통 피해는 숫자 하나로 합친다 (겹친 숫자 더미 대신 커지는 숫자 하나) — 합칠 때 다시 튄다
@@ -20032,10 +20509,23 @@ V.handle1 = function (e, sim) {
       case 'say': if (on) self.float(u.x, u.y, e.text, u.side === 'ally' ? '#fff3c4' : '#ffb0bc', { dy: -8, life: 1.1 }); break;
       case 'aura': if (v && on && (e.r || 2) < 2) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.4, c: '#9ef08a', r: 14 }); break; }      // 곁 1칸: 작은 고리만 (연환권마다 소리를 내지 않는다)
         if (v && on) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.55, c: '#9ef08a', r: (e.r || 2) * 15 }); self.rings.push({ x: v.x, y: v.y, t: -0.12, dur: 0.5, c: '#fff6d0', r: (e.r || 2) * 10 }); self.burst(v.x, v.y, ['#9ef08a', '#fff6d0'], 6, { up: 22, grav: -20, spd: 12, life: 0.7, spread: 20 }); self.sfx('heal'); } break;      // 2.2.5 기공: 둘레가 낫는다
-      case 'mend':      // 2.2.5 기 전하기: 쓰는 이에게서 다친 아군까지 옅은 초록 기 줄기 · 그 자리에 작은 고리
+      case 'mend':      // 2.2.5 기 전하기: 쓰는 이에게서 다친 아군까지 옅은 초록 기 줄기 · 그 자리에 작은 고리 (2.2.6: 등불은 금빛 · 생기 나눔은 자줏빛)
         var mv2 = self.vu[e.tid]; if (!v || !mv2 || !(on || self.onScreen(mv2.u.x, mv2.u.y))) break;
-        if (mv2 !== v) self.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: mv2.x * 16 + 8, y1: mv2.y * 16 + 6, c: '#b6f5a0', life: 0.22, t: 0, w: 1, zig: !self.lite });
-        self.rings.push({ x: mv2.x, y: mv2.y, t: 0, dur: 0.4, c: '#9ef08a', r: 8, rise: true }); break;
+        var mc = e.ward ? ['#ffe0a0', '#ffd27a'] : e.dark ? ['#d2a8ff', '#b181e6'] : ['#b6f5a0', '#9ef08a'];
+        if (mv2 !== v) self.lines.push({ x0: v.x * 16 + 8, y0: v.y * 16 + 6, x1: mv2.x * 16 + 8, y1: mv2.y * 16 + 6, c: mc[0], life: 0.22, t: 0, w: 1, zig: !self.lite });
+        self.rings.push({ x: mv2.x, y: mv2.y, t: 0, dur: 0.4, c: mc[1], r: 8, rise: true }); break;
+      case 'shd':      // 2.2.6 보호막이 받아 낸 피해: 옅은 푸른 숫자 (작게) · 다 깨지면 조각
+        if (!v || !on) break;
+        if (u.role === 'cmd' && self.time - (v.shdT || -9) > 0.9) { v.shdT = self.time; self.float(u.x, u.y, '막음 ' + e.v, '#bfe8ff', { dy: -12, life: 0.7, s: 1 }); }      // 가주만 · 0.9초에 한 번 (난전에서 글자가 쌓이지 않게)
+        if (e.end) { self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.3, c: '#d6ecff', r: 10 }); self.burst(v.x, v.y, ['#d6ecff', '#ffffff'], 5, { spd: 30, life: 0.3 }); }
+        break;
+      case 'weak':      // 2.2.6 맞물림 (둔화 · 화상 · 젖음 · 표식을 노린 기술): 금빛 「약점」
+        if (!v || !on || self.time - (v.wkT || -9) < 1.2) break;
+        v.wkT = self.time; self.float(u.x, u.y, '약점', '#ffd75e', { dy: -14, life: 0.7 }); break;
+      case 'chain':      // 2.2.6 연쇄 번개: 맞은 적에서 다음 적으로 번개 줄기
+        var ca = self.vu[e.a], cb = self.vu[e.b]; if (!ca || !cb || !(self.onScreen(cb.u.x, cb.u.y))) break;
+        self.lines.push({ x0: ca.x * 16 + 8, y0: ca.y * 16 + 6, x1: cb.x * 16 + 8, y1: cb.y * 16 + 6, c: '#fff0a0', life: 0.2, t: 0, w: 1, zig: true });
+        self.shape({ k: 'bolt', x: cb.x, y: cb.y, dur: 0.2, pts: boltPts(cb.x, cb.y) }); if (!self.lite) self.light(cb.x * 16 + 8, cb.y * 16 + 6, 14, '#cfe6ff', 0.4, 0.2); break;
       case 'ctr':      // 2.2.5 되치기 (부동심)
         var tv = self.vu[e.tid]; if (!v || !on) break;
         if (tv) self.shape({ k: 'impact', x: tv.x, y: tv.y, dur: 0.22, c: '#ffd28a', r: 8 });
@@ -20045,11 +20535,14 @@ V.handle1 = function (e, sim) {
       case 'castEnd': delete self.tele[e.tid]; break;
       case 'buff': case 'status':
         if (!on) break;
-        if (self.spd >= 2 && u.role === 'merc' && e.t === 'buff') break;      // r36: 가장 빠른 배속(2): 용병마다 뜨는 버프 글자는 생략 (고리 연출은 기술 쪽에서 이미 나온다)
+        if (self.spd >= 2 && u.role === 'merc' && e.t === 'buff') break;
+        if (e.t === 'buff' && e.s === 'shd' && u.role !== 'cmd') break;      // 2.2.6: 보호막 글자는 가주에게만 (테가 이미 보인다)
+        if (e.t === 'buff' && e.p > 0 && v.bfT && v.bfT[e.s] && self.time - v.bfT[e.s] < 3) break;      // 같은 가호가 3초 안에 다시 걸리면 글자는 한 번만 (호령이 겹칠 때)
+        if (e.t === 'buff' && e.p > 0) (v.bfT || (v.bfT = {}))[e.s] = self.time;      // r36: 가장 빠른 배속(2): 용병마다 뜨는 버프 글자는 생략 (고리 연출은 기술 쪽에서 이미 나온다)
         var tn = self.time - v.tnT < 0.8 ? v.tn + 1 : 0;      // 글자도 한 줄씩 위로 쌓는다
         v.tn = tn; v.tnT = self.time;
         if (e.t === 'buff') self.float(u.x, u.y, (BUFFTXT[e.s] || e.s) + (e.p > 0 ? '↑' : '↓'), e.p > 0 ? '#f6cf57' : '#b181e6', { dy: -4 - Math.min(tn, 3) * 6, delay: 0.15 });
-        else self.float(u.x, u.y, DS.STATUS[e.s].name, e.s === 'poison' ? '#9ccc3c' : '#62b0ee', { dy: -4 - Math.min(tn, 3) * 6, delay: 0.15 });
+        else self.float(u.x, u.y, DS.STATUS[e.s] ? DS.STATUS[e.s].name : e.s, STC[e.s] || '#62b0ee', { dy: -4 - Math.min(tn, 3) * 6, delay: 0.15 });
         break;
       case 'aggro':
         if (!on) break;
@@ -20852,7 +21345,8 @@ V.drawUnit = function (g, v) {
       if (cmd) { g.fillStyle = '#f6cf57'; g.fillRect(x0, top + 2, Math.ceil(w * u.gauge / 100), 1); g.fillStyle = '#62b0ee'; if (u.mmp) g.fillRect(x0, top + 3, Math.ceil(w * u.mp / u.mmp), 1); }
       else if (u.aggro) { g.fillStyle = '#f6cf57'; g.fillRect(x0, top + 2, Math.ceil(w * u.gauge / 100), 1); }
       for (k in u.buffs) { g.fillStyle = u.buffs[k].p < 0 ? '#b181e6' : k === 'atk' ? '#ff6a7a' : k === 'def' ? '#62b0ee' : '#f6cf57'; g.fillRect(x0 + n * 3, top - 4, 2, 2); n++; }
-      for (k in u.st) { g.fillStyle = k === 'poison' ? '#9ccc3c' : '#9fe8ec'; g.fillRect(x0 + n * 3, top - 4, 2, 2); n++; }
+      for (k in u.st) { g.fillStyle = STC[k] || '#9fe8ec'; g.fillRect(x0 + n * 3, top - 4, 2, 2); n++; }
+      if (u.buffs.shd && u.buffs.shd.p > 0) { g.fillStyle = '#d6ecff'; g.fillRect(x0, top - 1, Math.max(1, Math.min(w, Math.ceil(w * u.buffs.shd.p / u.mhp))), 1); }      // 2.2.6 보호막: 막대 위 흰 줄 (남은 양만큼)
     }
     if (u.side === 'enemy' && (u.elite != null || u.eliteCrew != null)) eliteMark(g, u.elite != null ? (show ? x0 - 10 : px + 4) : (show ? x0 - 6 : px + 6), u.elite != null ? (show ? top - 3 : top - 4) : (show ? top - 2 : top - 1), u.elite != null, t + v.bob);
     if (u.role === 'merc' && u.grade) {
@@ -20861,6 +21355,7 @@ V.drawUnit = function (g, v) {
       else gradeMark(g, px + 1, py + MARK_Y, u.grade, DS.GRADES[u.grade].col, t + v.bob);
     }
     if (boss) bossMark(g, px + 4, top - 9 - (n > 2 ? 4 : 0), t, this.hot);
+    if (u.st && u.st.mark) markBrk(g, px, py - (big ? 8 : 0), big ? 24 : 16, t + v.bob, this.calmN);      // 2.2.6 표식: 붉은 꺾쇠 넷
     if (u.side === 'ally' && !big) { if (!v.mdT || t - v.mdT > 1) { v.md = moodOf(u); v.mdT = t; if (cmd) { var wg = DS.unitDress ? DS.unitDress(u) : null, wgG = wg && wg.w && DS.gear ? DS.gear(wg.w) : null; v.leg = !!(wgG && wgG.grade >= 5); } } if (v.md) moodMark(g, x0 - 6, top - 1, v.md, t + v.bob); }      // r11: 비탄·노년 표식      // 버프·상태 점이 셋째부터 표식 자리에 닿는다 — 그때는 표식을 한 줄 올린다
   }
   g.globalAlpha = 1;
@@ -21243,6 +21738,8 @@ var T = {
   staff: ['.......c3...', '......c33c..', '......3113..', '.......33...', '.......o....', '......o.....', '.....o......', '....o.......', '...o........', '..o.........', '.o..........', 'o...........'],
   plate: ['............', '.333....333.', '.3113333113.', '.2111331112.', '..21133112..', '..21111112..', '..21g11g12..', '..21111112..', '..22111122..', '..21111112..', '..22222222..', '............'],
   vest: ['............', '..hh....hh..', '.h11h..h11h.', '.h111hh111h.', '..h111111h..', '..h1o11o1h..', '..h111111h..', '..hoooooooh.', '..h111111h..', '..h111111h..', '..hhhhhhhh..', '............'],
+  knuckle: ['............', '...33333....', '..3g3g3g3...', '..31111112..', '..311111112.', '..311111112.', '...21111112.', '....2111112.', '.....21112..', '.....2ggg2..', '.....22222..', '............'],      // 2.2.6 권갑: 주먹마디 돌기 · 손목 띠
+  gi: ['............', '..11.33.11..', '.111.33.111.', '.1113..3111.', '..11.33.11..', '..111..111..', '..gggggggg..', '..11g11g11..', '..111..111..', '..11....11..', '..22....22..', '............'],      // 2.2.6 도복: 엇갈린 깃 · 띠
   robe: ['....3333....', '...3....3...', '...111111...', '..11111111..', '..111gg111..', '..11111111..', '..1111111...', '.11111111...', '.111111111..', '.1111111111.', '.2222222222.', '............'],
   rope: ['....2222....', '..22311122..', '.2311..1132.', '.231....132.', '.21......12.', '.21......12.', '.231....122.', '..2311.122..', '...22312....', '.....312....', '.....3122...', '......22....'],
   cloak: ['....2222....', '...211112...', '..21kkkk12..', '..21kkkk12..', '..211gg112..', '.2111111112.', '.2131111112.', '.2131111112.', '213111111112', '213111111112', '211111111112', '22.22.22.22.'],
@@ -21299,7 +21796,7 @@ var ICON = {
     mg_whet: P('whet', 'stone'), mg_buckler: P('shield', 'wood'), mg_ration: P('sack', 'leather'), mg_boots: P('boot', 'leather'), mg_charm: P('talisman', 'red'), mg_plume: P('feather', 'red'),
     prot: P('talisman', 'gold')      // 2.1.0 강화 보호 부적
   },
-  gear: { sword: P('sword', 'steel'), lance: P('spear', 'steel'), bow: P('bow', 'wood'), wand: P('mace', 'steel', { m: '#f6cf57', 2: '#c08f2c' }), staff: P('staff', 'violet'), heavy: P('plate', 'steel'), light: P('vest', 'leather', { h: '#5e3a22' }), robe: P('robe', 'violet') },
+  gear: { sword: P('sword', 'steel'), lance: P('spear', 'steel'), bow: P('bow', 'wood'), wand: P('mace', 'steel', { m: '#f6cf57', 2: '#c08f2c' }), staff: P('staff', 'violet'), heavy: P('plate', 'steel'), light: P('vest', 'leather', { h: '#5e3a22' }), robe: P('robe', 'violet'), fist: P('knuckle', 'steel', { g: '#e0525e' }), gi: P('gi', 'white', { g: '#e0525e' }) },
   misc: { ticket: P('ticket', 'gold'), crest: P('banner', 'red'), gold: P('coinbag', 'leather'),
     coffin: P('coffin', 'wood'), rings: P('rings', 'gold'), cradle: P('cradle', 'wood'), fcrest: P('fcrest', 'red'), cane: P('cane', 'wood') }      // r8 가문 화면: DS.icon('misc', 'coffin'|'rings'|'cradle'|'fcrest'|'cane')
 };
@@ -22212,6 +22709,14 @@ var SFX = {
   punch:  function () { noise(0.07, 0.22, 500, 0.9); tone(160, 90, 0.08, 'square', 0.08); },
   kick:   function () { noise(0.12, 0.12, 2400, 1.2); noise(0.08, 0.24, 420, 0.9, 0.08); tone(190, 80, 0.1, 'square', 0.08, 0.08); },      // 2.2.5 날아차기: 바람 소리 뒤에 묵직한 한 방
   qi:     function () { tone(220, 660, 0.16, 'sine', 0.07); noise(0.18, 0.1, 900, 0.7, 0.04, 'lowpass'); tone(110, 70, 0.14, 'square', 0.06, 0.1); },      // 기공장: 기가 모였다가 터진다
+  // 2.2.6 병과마다: 방패 · 철벽 · 돌파 · 작살 · 등불 · 얼음 · 저주 (있는 소리 조각을 섞는다)
+  shield: function () { noise(0.08, 0.24, 700, 0.9); tone(330, 160, 0.12, 'square', 0.07); tone(1250, 900, 0.1, 'triangle', 0.035, 0.02); },      // 쇠가 맞부딪는 둔탁한 소리
+  guard:  function () { tone(196, 392, 0.18, 'triangle', 0.07); tone(784, 784, 0.16, 'sine', 0.035, 0.08); noise(0.08, 0.06, 1800, 0.8, 0.02); },      // 철벽 · 창벽: 몸을 세운다
+  charge: function () { [0, 0.07, 0.14, 0.21].forEach(function (d) { noise(0.05, 0.16, 380, 0.9, d); }); tone(240, 520, 0.22, 'sawtooth', 0.035, 0.05); },      // 말굽 넷 · 함성
+  hook:   function () { noise(0.1, 0.1, 3200, 1.6); tone(900, 420, 0.1, 'square', 0.035, 0.05); noise(0.12, 0.08, 1200, 1.0, 0.1); },      // 사슬이 풀렸다 감긴다
+  ward:   function () { [988, 1319, 1760].forEach(function (f, i) { tone(f, f * 1.01, 0.14, 'sine', 0.045, i * 0.05); }); },      // 등불 · 보호막: 맑은 종소리
+  frost:  function () { noise(0.12, 0.14, 5200, 2.2); tone(1760, 1320, 0.08, 'triangle', 0.04); noise(0.06, 0.12, 2600, 1.4, 0.07); },      // 얼음이 꽂히고 갈라진다
+  curse:  function () { tone(196, 147, 0.32, 'sawtooth', 0.045); tone(208, 139, 0.32, 'sawtooth', 0.04, 0.03); noise(0.3, 0.05, 600, 0.6, 0, 'lowpass'); },      // 낮은 웅얼거림
   arrow:  function () { noise(0.09, 0.12, 4200, 2); tone(1100, 700, 0.08, 'sine', 0.04); },
   magic:  function () { tone(480, 1250, 0.18, 'sine', 0.07); tone(960, 1900, 0.16, 'triangle', 0.03, 0.03); },
   skill:  function () { tone(440, 880, 0.12, 'square', 0.045); tone(660, 1320, 0.12, 'square', 0.035, 0.05); },
@@ -23253,9 +23758,12 @@ function useCtl(key) {
 DS.useCtl = useCtl;
 // r26 art: 기술 종류 → 아이콘·소켓 빛 (치유 · 지킴 · 강화 · 마법 · 원거리 · 공격)
 var ITEM_IC = { herb: 'herb', mana: 'mana', endo: 'stamina' };
+function skIcon(S, ty) { var k = S && S.ic && DS.ICONS.indexOf('sk_' + S.ic) >= 0 ? 'sk_' + S.ic : 'sk_' + (ty || skType(S)); return k; }      // 2.2.6: 기술마다 그림 (없으면 종류 그림)
+DS.skIcon = skIcon;
 function skType(S) {
   var ef = S.eff || [], t = function (k) { return ef.some(function (e) { return e.t === k; }); }, dmg = ef.filter(function (e) { return e.t === 'dmg'; })[0];
   if (S.fist) return 'fist';      // 2.2.5 승려(무투가)의 맨손 기술
+  if (!dmg && ef.some(function (e) { return e.t === 'buff' && e.s === 'shd'; })) return 'guard';      // 2.2.6 보호막
   if (t('heal') || t('cleanse')) return 'heal';
   if (!dmg && ef.some(function (e) { return e.t === 'buff' && e.p > 0 && e.s === 'def'; })) return 'guard';
   if (!dmg && ef.some(function (e) { return (e.t === 'buff' && e.p > 0) || e.t === 'gauge'; })) return 'buff';
@@ -23277,7 +23785,7 @@ function renderActs() {
       var S = SK[id];
       // r26 art: 둥근 소켓(종류 색 빛) + 충전 고리(--p) + 이름 · 위 모서리에 마나 보석과 틱 값
       var ty = skType(S);
-      var b = h('<button class="act" data-sk="' + id + '" style="--k:var(--sk-' + ty + ')" aria-label="' + esc(S.name + ', 마나 ' + S.mp + ', 틱 ' + S.tick) + '"><span class="sock"><i class="cring"></i>' + icon('sk_' + ty, 22) + '</span><b>' + esc(S.name) + '</b>' +
+      var b = h('<button class="act" data-sk="' + id + '" style="--k:var(--sk-' + ty + ')" aria-label="' + esc(S.name + ', 마나 ' + S.mp + ', 틱 ' + S.tick) + '"><span class="sock"><i class="cring"></i>' + icon(skIcon(S, ty), 22) + '</span><b>' + esc(S.name) + '</b>' +
         '<i class="mpb">' + icon('drop', 9) + '<span class="m">' + S.mp + '</span></i><i class="tkc">' + icon('tick', 9) + '<span class="t">' + S.tick + '</span></i><i class="rsvb" aria-hidden="true">예약</i></button>');
       b.addEventListener('click', function () {
         DS.Audio.unlock();
@@ -23391,7 +23899,7 @@ function ultBtn(row, u, me) {
   var i = ultInfo(u), id = i.id || i.born, S = id && SK[id], mine = me === u || (me && me.owner === u.id), lock = !i.id; if (!S && !lock) return;
   var ty = S ? skType(S) : 'attack', nm = S ? S.name : '필살기', who = DS.charName ? DS.charName(G.save.chars[u.ch]) : '';
   row.classList.add('hasult');
-  var b = h('<button class="act ult' + (mine ? '' : ' lord') + (lock ? ' lockd' : '') + '" data-sk="' + esc(id || '') + '"' + (lock ? ' aria-disabled="true"' : '') + ' style="--k:var(--sk-' + ty + ')" aria-label="' + esc(who + '의 필살기 ' + nm + (lock ? '. ' + i.lock : S ? '. ' + S.desc : '')) + '"><span class="usock"><i class="uring"></i>' + icon('sk_' + ty, 22) + '</span><b>' + esc(nm) + '</b><i class="ulab">' + (lock ? '5단부터' : mine ? '✦ 필살' : '✦ ' + esc(String(who).slice(0, 4))) + '</i><i class="upct num"></i><i class="rsvb" aria-hidden="true">예약</i></button>');
+  var b = h('<button class="act ult' + (mine ? '' : ' lord') + (lock ? ' lockd' : '') + '" data-sk="' + esc(id || '') + '"' + (lock ? ' aria-disabled="true"' : '') + ' style="--k:var(--sk-' + ty + ')" aria-label="' + esc(who + '의 필살기 ' + nm + (lock ? '. ' + i.lock : S ? '. ' + S.desc : '')) + '"><span class="usock"><i class="uring"></i>' + icon(S ? skIcon(S, ty) : 'sk_' + ty, 22) + '</span><b>' + esc(nm) + '</b><i class="ulab">' + (lock ? '5단부터' : mine ? '✦ 필살' : '✦ ' + esc(String(who).slice(0, 4))) + '</i><i class="upct num"></i><i class="rsvb" aria-hidden="true">예약</i></button>');
   b.addEventListener('click', function () {
     DS.Audio.unlock();
     var u2 = ultU(); if (!u2) { deny(b, '없음', '쓸 사람이 없다'); return; }
@@ -24163,7 +24671,7 @@ function ultCut(u, S) {
   var fc = ch ? (DS.FLAG[ch.cls] || '#c9a96a') : '#c9a96a', who = u.mn || u.name || '';
   var spd = DS.spdOf ? DS.spdOf(sv.opt && sv.opt.speed) : 1, ud = spd >= 2 ? 620 : spd >= 1.5 ? 720 : 850;      // 2.2.5: 빠른 배속이면 더 짧게 (싸움은 멈추지 않는다)
   el.style.setProperty('--fc', fc); el.style.setProperty('--ud', ud + 'ms'); el.dataset.k = DS.ultCls ? DS.ultCls(S, u) : '';
-  el.innerHTML = '<div class="ucb"><i class="ucl"></i><span class="ucp"></span><span class="uct"><small>' + esc([hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>필살</i><b>' + esc(S.name) + '</b></span></span></div>';      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
+  el.innerHTML = '<div class="ucb"><i class="ucl"></i><span class="ucp"></span><span class="uct"><small>' + esc([hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>필살</i><b>' + esc(S.name) + '</b></span></span>' + (S.ic && DS.ICONS.indexOf('sk_' + S.ic) >= 0 ? '<span class="uci">' + DS.icon('sk_' + S.ic, 30) + '</span>' : '') + '</div>';      // 2.2.6: 오른쪽 끝에 그 필살기의 그림      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
   try {
     var sp = DS.unitSprite(u), cv = DS.spriteCanvas(sp[0], sp[1], { hd: 1 }), c2 = document.createElement('canvas'), W = 72;
     c2.width = W; c2.height = W; var g = c2.getContext('2d'); g.imageSmoothingEnabled = false; var hh = W * cv.height / cv.width; g.drawImage(cv, 0, 0, cv.width, cv.height, 0, W - hh, W, hh);
@@ -28080,8 +28588,8 @@ function askGrand(tries) {
 DS.askGrand = askGrand;
 // r44: 첫 가문은 열 병과 가운데 아무것이나 (사용자 「보병 말고 다른 원하는 병과를 선택할 수 있게」). 카드 열 장(세로 2×5, 가로 5×2) + 고른 병과의 자세한 칸.
 //   그 병과를 데려오던 시나리오에서는 어느 시나리오도 주지 않던 집(보병 바우)이 대신 온다 — DS.joinOf / DS.startSwap. 열 집은 늘 한 번씩 모인다
-var START_LINE = { inf: '튼튼한 전열. 앞에서 버틴다', cav: '두 칸 창과 번개. 평지에서 빠르다', fly: '산과 물을 넘는다. 화살에 약하다', mar: '물에 서면 강해지는 전열',
-  pike: '두 칸 찌르기와 보조 마법', arc: '멀리서 쏜다. 몸이 약하다', cle: '맨손 무투가. 기공으로 곁을 돌본다', mon: '가호를 거는 서포터', mag: '여럿을 태우는 마법. 몸이 약하다', sha: '생기를 빨고 망자를 부른다' };
+var START_LINE = { inf: '방패 전열. 적을 끌어 지킨다', cav: '꿰뚫고 달려 나가는 돌격대', fly: '치고 빠진다. 화살에 약하다', mar: '작살로 끌고 물보라로 민다',
+  pike: '두 칸 창으로 묶고 되찌른다', arc: '표식을 남기고 물러서며 쏜다', cle: '맨손 무투가. 기공으로 곁을 돌본다', mon: '보호막과 신속으로 지킨다', mag: '불, 얼음, 번개를 맞물린다', sha: '저주와 역병, 생기를 나눈다' };      // 2.2.6: 병과마다 새 기술의 결
 DS.START_LINE = START_LINE;
 var START_HARD = { fly: '어려움' };      // r44: 봇 8판에서 대장이 가장 자주 쓰러진 병과 (화살에 약하고 보병이 11번에야 온다) — 카드에 꼬리표
 function startClasses() { return Object.keys(DS.CLASSES).filter(function (k) { return !DS.CLASSES[k].master; }); }
@@ -30212,8 +30720,8 @@ DS.arenaChampRow = function (id, d) {
   if (C.start && tier < C.start) return null;
   var ref = { cls: d.cls, L: Lv }, rs; try { DS.stdGear(ref, tier); rs = DS.charStats(ref); } catch (x) { return null; }
   var top = Math.max(rs.atk, rs.mag), wall = Math.max(rs.def, rs.res);
-  var OLDC = d.cls === 'cle' ? { heal: 'cle_combo', cure: 'cle_kick', healAll: 'cle_palm' } : {};      // 2.2.5: 옛 판이 올린 승려 기록의 치유 기술 → 무투가의 기술 (필살기 이름은 DS.skAlias)
-  var sk = (typeof d.sk === 'string' ? d.sk.slice(0, 200).split(',') : []).map(function (k) { return OLDC[k] || k; }).filter(function (k, i, a) { return a.indexOf(k) === i && skAllowed(k, tier); }).slice(0, 8);
+  // 2.2.5 · 2.2.6: 옛 판이 올린 기록의 기술 → 그 병과의 새 기술 (DS.SK_OLD — 승려의 치유 · 정화 · 모두 치유도), 필살기 이름은 DS.skAlias
+  var sk = (typeof d.sk === 'string' ? d.sk.slice(0, 200).split(',') : []).map(function (k) { return DS.skOld ? DS.skOld(k, d.cls) : k; }).filter(function (k, i, a) { return a.indexOf(k) === i && skAllowed(k, tier); }).slice(0, 8);
   var r1 = Math.round(num(d.r1, 1, 6, C.rng ? C.rng[1] : 1)), r0 = Math.round(num(d.r0, 0, r1, 1));
   var row = { id: id, name: clean(d.name, 12) || '이름 없는 맹주', house: clean(d.house, 16), cls: d.cls, hs: typeof d.hs === 'string' && own(DS.CLASSES, d.hs) ? d.hs : d.cls, L: Lv, tier: tier,
     g: Math.round(num(d.g, 1, 5, 3)), hp: Math.round(num(d.hp, 1, rs.hp * 2.5, rs.hp)), mp: Math.round(num(d.mp, 0, Math.max(50, rs.mp * 3), rs.mp)),
