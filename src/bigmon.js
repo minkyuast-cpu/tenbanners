@@ -104,6 +104,7 @@ var BIG_STORY = {
   duskking:  { sz: [2, 4], enr: ENR(['bu_dusk'], '문 너머가 열린다', 0.3) }
 };
 for (k in BIG_STORY) if (BO[k]) { var b0 = BO[k], X = BIG_STORY[k]; b0.sz = X.sz; if (X.skills) b0.skills = X.skills; b0.enr = X.enr; }
+if (BO.shara) { BO.shara.enr.atk = 0; BO.shara.mul.hp = 3.75; }      // 여왕 전갈: 큰 몸이 된 몫(권장 +4)을 되돌린다 — 격노는 빨라지기만, 체력 배율 4.2 → 3.75 (큰 몸 1.12 를 곱하면 예전과 같다)
 // 들판 보스 (field.js DS.FIELD_BOSS — 지역마다 하나, 드물게 나온다): 모두 큰 몸
 var BIG_FIELD = {
   dawn:   { sz: [2, 1], skills: ['bb_rush', 'b_pounce', 'b_howl'], enr: ENR(['bu_moon'], '외눈이 달을 본다') },
@@ -123,7 +124,7 @@ if (BO.fb_end) { BO.fb_end.mt = 'fly'; BO.fb_end.tags = ['fly']; }
 // 갱도 수문장 (5층마다 · 10층마다 밑바닥): 큰 몸 셋이 돈다 — 5 · 15 · 25 … 돌무쇠(2×2) · 10 · 30 … 거신(2×4) · 20 · 40 … 큰지렁이(4×2)
 BO.pitGolem = { name: '돌무쇠', title: '갱도 수문장', like: 'golem', sprite: 'bb_pitGolem', pal: '', sz: [2, 2], mul: { hp: 2.8, atk: 1.15, def: 1.15, res: 3.0, spd: 1.2 }, skills: ['b_cavein', 'bb_slam', 'bb_stomp', 'e_smash'], guard: 4, enr: ENR(['bu_cataclysm'], '갱도가 무너진다') };
 BO.pitWorm = { name: '바닥 큰지렁이', title: '갱도 밑바닥에 사는 것', like: 'sandworm', sprite: 'bb_pitWorm', pal: '', sz: [4, 2], mul: { hp: 2.8, atk: 1.15, def: 1.1, res: 2.4, spd: 1.1 }, skills: ['bb_burrow', 'bb_venombreath', 'bb_tail', 'b_cavein'], guard: 4, enr: ENR(['bu_plague'], '땅 밑이 꿈틀댄다') };
-BO.pitTitan = { name: '갱도 거신', title: '바닥 없는 갱도의 주인', like: 'golem', sprite: 'bb_pitTitan', pal: '', sz: [2, 4], mul: { hp: 2.9, atk: 1.2, def: 1.2, res: 3.0, spd: 1.1 }, skills: ['b_cavein', 'bb_rocks', 'bb_slam', 'b_gloom', 'e_smash'], guard: 4, enr: ENR(['bu_cataclysm'], '거신이 일어선다') };
+BO.pitTitan = { name: '갱도 거신', title: '바닥 없는 갱도의 주인', like: 'golem', sprite: 'bb_pitTitan', pal: '', sz: [2, 4], mul: { hp: 2.5, atk: 1.1, def: 1.15, res: 3.0, spd: 1.1 }, skills: ['b_cavein', 'bb_rocks', 'bb_slam', 'e_smash'], guard: 4, enr: ENR(['bu_cataclysm'], '거신이 일어선다') };
 DS.BIG_BOSSES = Object.keys(BO).filter(function (k) { return BO[k].sz && (BO[k].sz[0] > 1 || BO[k].sz[1] > 1); });
 
 // 이야기 글 (보스 카드 · 마지막 말)
