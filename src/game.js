@@ -1779,7 +1779,7 @@ function ultFx(u, sk) {
   A('ult');
   if (big && now - (G.ultCutT || 0) > 1400) { G.ultCutT = now; ultCut(u, S); }
   else G.view.float(u.x, u.y, S.name, '#f6cf57', { dy: -20, life: 1.3, call: true });
-  if (!calm()) { G.view.flashA = Math.max(G.view.flashA || 0, big ? 0.06 : 0.04); G.view.shake = Math.max(G.view.shake || 0, big ? 0.16 : 0.1); if (big && G.view.hitStop) G.view.hitStop(0.05); }      // r38: 번쩍임·흔들림은 가볍게, 멈춤은 50ms — 기술 그림이 그대로 보이게
+  if (!calm()) { var gx = S.grand ? 1.5 : 1; G.view.flashA = Math.max(G.view.flashA || 0, (big ? 0.06 : 0.04) * gx); G.view.shake = Math.max(G.view.shake || 0, (big ? 0.16 : 0.1) * gx); if (big && G.view.hitStop) G.view.hitStop(0.05); }      // 2.2.9: 윗길 필살기는 조금 더 세게      // r38: 번쩍임·흔들림은 가볍게, 멈춤은 50ms — 기술 그림이 그대로 보이게
   if (u.side === 'ally') setTimeout(function () { if (G.sim && G.sim.byId[u.id] && !u.dead) bark(u, 'skill'); }, 950);
 }
 function ultCut(u, S) {
@@ -1788,16 +1788,18 @@ function ultCut(u, S) {
   var sv = G.save, ch = u.role === 'cmd' ? sv.chars[u.ch] : (G.sim.byId[u.owner] ? sv.chars[G.sim.byId[u.owner].ch] : null);
   var hn = ch ? (ch.id === sv.hero ? (DS.houseName ? DS.houseName(sv) : '') : (DS.LIN_HOUSE && DS.LIN_HOUSE[ch.cls] ? DS.LIN_HOUSE[ch.cls] + ' 가문' : DS.flagName(ch.cls))) : '';
   var fc = ch ? (DS.FLAG[ch.cls] || '#c9a96a') : '#c9a96a', who = u.mn || u.name || '';
-  var spd = DS.spdOf ? DS.spdOf(sv.opt && sv.opt.speed) : 1, ud = spd >= 2 ? 620 : spd >= 1.5 ? 720 : 850;      // 2.2.5: 빠른 배속이면 더 짧게 (싸움은 멈추지 않는다)
+  var grand = !!(S.grand || (u.tier >= 8 && u.role === 'cmd'));      // 2.2.9: 8단 위 — 금 테 · 긴 이름 띠 · 더 큰 빛 (빠른 배속이면 그만큼 짧게)
+  var spd = DS.spdOf ? DS.spdOf(sv.opt && sv.opt.speed) : 1, ud = Math.round((spd >= 2 ? 620 : spd >= 1.5 ? 720 : 850) * (grand ? 1.18 : 1));      // 2.2.5: 빠른 배속이면 더 짧게 (싸움은 멈추지 않는다)
   el.style.setProperty('--fc', fc); el.style.setProperty('--ud', ud + 'ms'); el.dataset.k = DS.ultCls ? DS.ultCls(S, u) : '';
-  el.innerHTML = '<div class="ucb"><i class="ucl"></i><span class="ucp"></span><span class="uct"><small>' + esc([hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>필살</i><b>' + esc(S.name) + '</b></span></span>' + (S.ic && DS.ICONS.indexOf('sk_' + S.ic) >= 0 ? '<span class="uci">' + DS.icon('sk_' + S.ic, 30) + '</span>' : '') + '</div>';      // 2.2.6: 오른쪽 끝에 그 필살기의 그림      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
+  var tn = grand && ch ? u.tier + '단 ' + DS.tierName(ch.cls, u.tier) : '';
+  el.innerHTML = '<div class="ucb"><i class="ucl"></i>' + (grand ? '<i class="ucg"></i>' : '') + '<span class="ucp"></span><span class="uct"><small>' + esc([tn, hn, who].filter(Boolean).join(', ')) + '</small><span class="ucn"><i>' + (grand ? '오의' : '필살') + '</i><b>' + esc(S.name) + '</b></span></span>' + (S.ic && DS.ICONS.indexOf('sk_' + S.ic) >= 0 ? '<span class="uci">' + DS.icon('sk_' + S.ic, 30) + '</span>' : '') + '</div>';      // 2.2.6: 오른쪽 끝에 그 필살기의 그림      // 2.2.5: 위 막대 아래의 넓은 띠 — 큰 초상 · 가문과 이름 · 기술 이름 · 속도선
   try {
     var sp = DS.unitSprite(u), cv = DS.spriteCanvas(sp[0], sp[1], { hd: 1 }), c2 = document.createElement('canvas'), W = 72;
     c2.width = W; c2.height = W; var g = c2.getContext('2d'); g.imageSmoothingEnabled = false; var hh = W * cv.height / cv.width; g.drawImage(cv, 0, 0, cv.width, cv.height, 0, W - hh, W, hh);
     $('.ucp', el).appendChild(c2);
   } catch (x) {}
   var tp = $('#top'), sgr = sg.getBoundingClientRect(); if (tp) { var tr = tp.getBoundingClientRect(); el.style.top = Math.max(4, Math.round(tr.bottom - sgr.top + 4)) + 'px'; }      // r38: 위 막대 바로 아래에 붙는다 (전장 가운데를 가리지 않는다) · 2.2.5: 좌우 끝까지
-  el.classList.remove('on', 'calm'); void el.offsetWidth; if (calm()) el.classList.add('calm'); el.classList.add('on');
+  el.classList.remove('on', 'calm', 'grand'); void el.offsetWidth; if (calm()) el.classList.add('calm'); if (grand) el.classList.add('grand'); el.classList.add('on');
   clearTimeout(G.ultCutTm); G.ultCutTm = setTimeout(function () { el.classList.remove('on'); }, ud + 30);
 }
 DS.ultCut = ultCut;

@@ -196,7 +196,7 @@ module.exports = async (page, shot, L) => {
   // 2.2.6 모든 병과의 새 기술: ① 병과마다 모든 기술 · 필살기를 진짜 판(그림 · 소리 · 컷인)에서 한 번씩 — 오류 없이, 효과가 난다 ② 옛 저장 · 연무장 기록 옮김 (병과마다) ③ 새 기술의 예약
   await ev(() => { DS.ui.closeAll(); DS.G.quiet = true; DS.G.save.opt.speed = 1; if (DS.G.sim && DS.G.sim.result) DS.enterZone('windy'); }); await L.sleep(600); await L.skipStory(page, 2); await ev(() => DS.ui.closeAll());
   const CL = await ev(() => Object.keys(DS.CLASSES));
-  let nCast = 0, nUlt = 0;
+  let nCast = 0, nUlt = 0, nUx = 0;
   for (const c of CL) {
     const r = await ev((c) => {
       var sim = DS.G.sim, SK = DS.SKILLS, C = DS.CLASSES[c], u = sim.units.filter(function (x) { return x.hero && !x.dead; })[0], out = [], D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -205,7 +205,7 @@ module.exports = async (page, shot, L) => {
       var mv = function (w, x, y) { sim.occ[w.y * sim.w + w.x] = null; w.x = x; w.y = y; sim.occ[y * sim.w + x] = w; };
       var spot = function (cx, cy, rmin, rmax, mt) { for (var r = rmin; r <= rmax; r++) for (var dx = -r; dx <= r; dx++) { var dy = r - Math.abs(dx); for (var sg = -1; sg <= 1; sg += 2) { var x = cx + dx, y = cy + dy * sg; if (sim.pass(mt || 'foot', x, y) && !sim.at(x, y)) return [x, y]; } } return null; };
       var ch = { cls: c, L: 95, id: 999 }; DS.stdGear(ch, 10); var st = DS.charStats(ch);
-      var ids = C.skills.map(function (s) { return s[0]; }).concat(Object.keys(DS.ULTS).filter(function (k) { return DS.ULTS[k].cls === c; }));
+      var ids = C.skills.map(function (s) { return s[0]; }).concat(Object.keys(DS.ULTS).filter(function (k) { return DS.ULTS[k].cls === c; })).concat(C.rise ? Object.keys(DS.ULTX).filter(function (k) { return DS.ULTX[k].up === C.rise; }) : []);      // 2.2.9: 윗길은 고유 기술 · 바뀐 기술 · 윗길 필살기 셋
       ids.forEach(function (id) {
         var S = SK[id]; if (!S) { out.push(id + ':missing'); return; }
         sim.units.forEach(function (x) { if (x.side === 'enemy' && !x.dead && x.summoned) sim.kill(x); });
@@ -249,10 +249,10 @@ module.exports = async (page, shot, L) => {
     }, c);
     await L.sleep(450);      // 화면이 기술 · 필살기 연출을 그린다 (오류가 나면 shot.js 가 잡는다)
     const bad = (r.list || []).filter(x => /:/.test(x));
-    nCast += (r.list || []).length; nUlt += (r.list || []).filter(x => /^u_/.test(x)).length;
+    nCast += (r.list || []).length; nUlt += (r.list || []).filter(x => /^u_/.test(x)).length; nUx += (r.list || []).filter(x => /^ux_/.test(x)).length;
     A(!r.err && !bad.length, c + ': every skill and ultimate casts with its effect (' + (r.list || []).length + ')' + (bad.length ? ' — ' + bad.join(', ') : '') + (r.err || ''));
   }
-  A(nCast >= 70 && nUlt === 30, 'all classes: ' + nCast + ' skills and ultimates cast, ' + nUlt + ' ultimates');
+  A(nCast >= 150 && nUlt === 30 && nUx === 30, 'all classes: ' + nCast + ' skills and ultimates cast, ' + nUlt + ' ultimates, ' + nUx + ' 8단+ ultimates');
   // 2.2.7 자동 필살기: 조작이 자동인 가주는 게이지가 차고 쓸 자리가 나면 스스로 쓴다 · 수동이면 쓰지 않는다 · 스스로 쓰는 것은 우리 편 전체에서 3초에 하나
   const au = await ev(() => {
     var sim = DS.G.sim, u = sim.units.filter(function (x) { return x.hero && !x.dead; })[0], o = {}; if (!u) return { err: 'no hero' };
@@ -283,7 +283,7 @@ module.exports = async (page, shot, L) => {
       var s2 = DS.Save.read(JSON.stringify(raw)), m2 = s2 && m ? s2.mercs.filter(function (x) { return x.id === m.id; })[0] : null;
       var ul = s2 && s2.chars[s2.hero].ps.ul, msOk = !m || (m2 && m2.s === DS.SK_OLD[c][oldSk[c][0]]), mulOk = !m || (m2 && (m2.ul == null || DS.ULTS[m2.ul]));
       var row = DS.arenaChampRow('t' + c, { v: 1, cls: c, L: 75, name: 'x', sk: oldSk[c].concat(['cmd_' + c]).join(','), ul: old[c] || '' });
-      var arOk = row && row.skills.every(function (id) { return DS.SKILLS[id] && !/^(bash|attackUp|protect|thunder|dive|whirl|harpoon|tidal|slow|pierce|aimed|arrowRain|heal|cure|healAll|holy|quick|bless|fire|ice|blizzard|meteor|drain|summon|curse|deathCloud)$/.test(id); }) && row.skills.length >= 1 && (!old[c] || row.ult === A0[old[c]]);
+      var arOk = row && row.skills.every(function (id) { return DS.SKILLS[id] && !/^(bash|attackUp|protect|thunder|dive|whirl|harpoon|tidal|slow|pierce|aimed|arrowRain|heal|cure|healAll|holy|quick|bless|fire|ice|blizzard|meteor|drain|summon|curse|deathCloud)$/.test(id); }) && row.skills.length >= 1 && (!old[c] || row.ult === DS.ultUp(A0[old[c]], 75));      // 2.2.9: 8단 위 기록의 필살기는 윗길의 것
       out.push({ c: c, ok: !!(s2 && ul === (A0[old[c]] || 'u_flurry') && DS.ULTS[ul] && DS.ULTS[ul].cls === c && msOk && mulOk && arOk), ul: ul, ms: m2 ? m2.s : '-', ar: row ? row.skills.join('+') + '/' + row.ult : 'null' });
     });
     return out;
@@ -310,7 +310,7 @@ module.exports = async (page, shot, L) => {
     var hu = s2.chars[s2.hero].ps.ul; if (hu && !DS.ULTS[hu]) bad.push('hero ul ' + hu);
     s2.mercs.forEach(function (m) { if (m.ul && !DS.ULTS[m.ul]) bad.push('m.ul ' + m.ul); if (m.s && (!DS.SKILLS[m.s] || OLD.test(m.s))) bad.push('m.s ' + m.s); });
     DS.G.save = s2; DS.ui.persist(); var specs = DS.partySpecs(s2);
-    specs.forEach(function (u) { (u.skills || []).forEach(function (k) { if (!DS.SKILLS[k] || OLD.test(k)) bad.push(u.name + ' ' + k); }); if (u.ult && !DS.ULTS[u.ult]) bad.push('ult ' + u.ult); });
+    specs.forEach(function (u) { (u.skills || []).forEach(function (k) { if (!DS.SKILLS[k] || OLD.test(k)) bad.push(u.name + ' ' + k); }); if (u.ult && !DS.ULTS[u.ult] && !(DS.ULTX[u.ult] && u.tier >= 8)) bad.push('ult ' + u.ult); });      // 2.2.9: 8단 위는 윗길 필살기
     var ms = s2.mercs.filter(function (m) { return m.rv && m.s; }).map(function (m) { return m.s; });
     return { bad: bad, n: specs.length, hu: hu, ms: ms.join(',') };
   }, v225);

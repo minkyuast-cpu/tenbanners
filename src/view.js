@@ -412,6 +412,19 @@ function meteorEnd(p) {
   this.rings.push({ x: p.x, y: p.y, t: 0, dur: 0.35, c: '#ffd75e', r: 12 });
   this.shake = Math.max(this.shake, 0.4);
 }
+// 2.2.9 윗길(8단~)의 기술: 그 자리 위에 금빛 고리 · 빛 · 위로 오르는 불티를 덧그린다 (값싼 것만 — 칸이 많으면 가운데 몇 칸에만). 효과 「가볍게」면 고리 하나
+V.grandFx = function (tiles, from, S) {
+  var self = this, L = tiles || [], lite = !!self.lite, n = 0, cols = ['#ffe9a0', '#f6cf57', '#ffffff'];
+  if (!L.length && from) L = [from];
+  var step = Math.max(1, Math.ceil(L.length / (lite ? 2 : 5)));
+  for (var i = 0; i < L.length; i += step) {
+    var t = L[i]; if (!t || !self.onScreen(t[0], t[1])) continue;
+    self.rings.push({ x: t[0], y: t[1], t: -0.06, dur: 0.5, c: cols[1], r: S.ult ? 18 : 14, w: 2 });
+    if (!lite) { self.rings.push({ x: t[0], y: t[1], t: -0.16, dur: 0.45, c: cols[0], r: 9, rise: true }); self.burst(t[0], t[1], cols, S.ult ? 8 : 5, { up: 36, grav: -26, spd: 12, life: 0.75 }); }
+    if (n++ < 3) self.light(t[0] * 16 + 8, t[1] * 16 + 8, S.ult ? 26 : 20, cols[1], 0.55, 0.5);
+  }
+  if (S.ult && !lite) self.flashA = Math.max(self.flashA || 0, 0.05);
+};
 V.fx = function (name, tiles, from) {
   var cols = FXC[name] || FXC.slash, self = this, n = 0;
   this.sfx(FXS[name] || 'skill');
@@ -641,7 +654,7 @@ V.handle1 = function (e, sim) {
       case 'heal': if (on) { self.float(u.x, u.y, '+' + Math.round(e.v), '#7fe07a', { num: true, s: 1.5, pk: 2, slow: true, life: 1 }); } break;
       case 'mana': if (on) { self.float(u.x, u.y, '+' + Math.round(e.v), '#62b0ee', { num: true, s: 1.25, pk: 1.6, slow: true, life: 1 }); self.sfx('heal'); } break;
       case 'item': if (on) { self.burst(u.x, u.y, FXC.heal, 6, { up: 20, grav: -20, spd: 6 }); self.sfx(e.key === 'endo' ? 'buff' : 'heal'); if (e.key === 'endo') self.float(u.x, u.y, '기운초!', '#f6cf57', { life: 1 }); } break;
-      case 'skill': if (self.lastSk) self.lastSk[e.id] = { fx: e.fx, t: self.time }; self.fx(e.fx, e.tiles, e.from); if (v && on) { var cc = (FXC[e.fx] || FXC.slash)[0]; v.cast = { t: 0, c: cc }; self.light(v.x * 16 + 8, v.y * 16 + 6, 14, cc, 0.5, 0.45); }
+      case 'skill': if (self.lastSk) self.lastSk[e.id] = { fx: e.fx, t: self.time }; self.fx(e.fx, e.tiles, e.from); if (DS.SKILLS && DS.SKILLS[e.sk] && DS.SKILLS[e.sk].grand) self.grandFx(e.tiles, e.from, DS.SKILLS[e.sk]); if (v && on) { var cc = (FXC[e.fx] || FXC.slash)[0]; v.cast = { t: 0, c: cc }; self.light(v.x * 16 + 8, v.y * 16 + 6, 14, cc, 0.5, 0.45); }      // 2.2.9: 윗길 기술 · 필살기의 금빛 덧빛 (grandFx)
         var SU = DS.SKILLS && DS.SKILLS[e.sk]; if (SU && SU.ult && u && u.side === 'ally' && (on || u.role === 'cmd')) { try { self.ultBlast(e, SU, u); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'ultBlast'); } }      // 2.2.5 필살기 연출
         // r26: 내가 고른 가문(또는 수동 가문)의 기술은 더 무겁게 — 멈칫 · 흔들림 · 그 색의 번쩍임 · 머리 위 기술 이름 판
         if (v && on && u.side === 'ally' && u.role === 'cmd' && (e.id === self.sel || !u.auto) && !/^i_/.test(e.sk || '')) {

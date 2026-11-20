@@ -262,6 +262,7 @@ DS.fixSave = function (s) {
     if (m.kn != null) { if (m.kn) m.kn = 1; else delete m.kn; }      // 2.2.0: 맹주 집 사람 (가문원)
     if (m.nc != null && !(own(DS.CLASSES, m.nc) && !DS.CLASSES[m.nc].master)) delete m.nc;      // 2.2.0: 받은 가문 병과
     delete m.gm;
+    if (m.fu3 != null) { if (Array.isArray(m.fu3) && m.fz) m.fu3 = m.fu3.slice(0, 3).map(function (x) { return String(x == null ? '' : x).slice(0, 16); }); else delete m.fu3; }      // 2.2.9: 합일한 셋의 이름 (대표 가주에게만)
     mid = Math.max(mid, m.id);
     return m.id > 0;
   });
@@ -301,6 +302,8 @@ DS.fixSave = function (s) {
   if (DS.bnFix) DS.bnFix(s, wasBn);      // 4.0: 부대원 + 깃발 — 불변식 넷을 검사하고 어긴 줄만 변환한다 (두 번 돌려도 같다)
   if (DS.fuseUnions) DS.fuseUnions(s);      // r42: 옛 묶음 기록은 없어졌다 (비운다)
   if (DS.pSync) DS.pSync(s);      // r42: 가문 줄 ← 가주의 개인 레벨
+  if (DS.fzShutFix) { DS.fzShutFix(s); if (DS.fzWakeTick) DS.fzWakeTick(s); }      // 2.2.9: 합일로 잠든 가문 (세대가 이미 바뀌었으면 깨운다)
+  if (s.fzWake != null && !(Array.isArray(s.fzWake) && s.fzWake.every(function (k) { return typeof k === 'string' && own(DS.CLASSES, k) && !DS.CLASSES[k].master; }))) delete s.fzWake;
   if (soNew) s._soNew = 1;      // 2.2.8: 읽기(Save.read · peek)가 모든 정리(겉의 fixSave 들까지) 뒤에 출전을 새로 고른다 (soFresh)
   return s;
 };

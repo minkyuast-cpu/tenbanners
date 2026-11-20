@@ -238,7 +238,12 @@ function specOf(name, palKey, dress) {
   if ((m = /^([a-z]+)_(\d+)$/.exec(name))) {
     var cls = m[1], t = +m[2];
     look = (DS.LOOKP && DS.LOOKP[name]) || HUM[name];
-    if (look) return { kind: 'human', S: mx(base, { head: look[0], body: look[1], items: look[2], pal: look[3], cls: cls, tier: t }) };
+    if (look) return { kind: 'human', S: mx(base, { head: look[0], body: look[1], items: look[2], pal: look[3], cls: cls, tier: t }), aura: DS.auraOf ? DS.auraOf(look[2], look[3]) : null };      // 2.2.9: 윗길의 오라
+    if ((cls === 'xcav' || cls === 'xfly') && DS.RISE_ART) {      // 2.2.9 윗길: 뇌전기사(말) · 폭풍기수(용)
+      var X = DS.RISE_ART[cls === 'xcav' ? 'cav' : 'fly'][Math.max(0, Math.min(2, t - 8))], au = DS.auraOf(X.items, X.pal);
+      if (cls === 'xcav') return { kind: 'cav', S: mx(base, { head: X.head, body: 'armor', items: X.items, pal: X.pal, cls: 'cav', tier: t }), H: X.H, aura: au };
+      return { kind: 'fly', S: mx(base, { head: X.head, body: 'armor', items: X.items, pal: mx(X.pal, { r: X.pal.b }), cls: 'fly', tier: t }), F: X.F, aura: au };
+    }
     if (cls === 'cav') { var cp = mx(CAVP[t - 1] || CAVP[0], CAVQ[t - 1] || {}); return { kind: 'cav', S: mx(base, { head: t >= 7 ? 'crown' : t >= 2 ? 'plume' : 'helm', body: 'armor', items: t >= 5 ? ['cape', 'spear'] : ['spear'], pal: cp, cls: 'cav', tier: t }), H: { c: HORSE[t - 1], mane: MANE[t - 1], cloth: t >= 3 ? (cp.q || '#5b8fd6') : null, trim: '#d8b450', helm: t >= 4 ? (cp.m || '#cdd5e3') : null, horn: t >= 7 ? '#e8d8a8' : null } }; }
     if (cls === 'bm') { var bp = BMP[t - 8] || BMP[0]; return { kind: 'cav', S: mx(base, { head: 'crown', body: 'armor', items: ['cape', 'spear'], pal: bp, cls: 'bm', tier: t }), H: { c: bp.h, mane: bp.m, cloth: bp.q, trim: '#d8b450', helm: bp.m, horn: t >= 9 ? '#e8d8a8' : null, wings: bp.w } }; }
     if (cls === 'fly') { var fp = FLYP[t - 2] || FLYP[0]; return { kind: 'fly', S: mx(base, { head: t >= 7 ? 'crown' : 'plume', body: 'armor', items: t >= 6 ? ['cape', 'spear'] : ['spear'], pal: mx(fp, { r: fp.b, q: fp.A }), cls: 'fly', tier: t }), F: fp }; }
@@ -305,11 +310,21 @@ DS.artCanvas = function (name, palKey, opt) {
     for (var i = 3; i < d.length; i += 16) if (d[i] > 96) { any = 1; break; }
     if (any) { mg.globalCompositeOperation = 'source-in'; mg.fillStyle = '#ffffff'; mg.fillRect(0, 0, W, W); out = T.tag(lay, sp.lw || 16); } else out = null;
   } else if (opt.bust) out = DS.artBust ? DS.artBust(sp, opt) : null;
-  else out = T.finish(paint(sp, opt, false), sp.lw || 16, { rim: opt.rim, olw: sp.olw });
+  else out = withAura(T.finish(paint(sp, opt, false), sp.lw || 16, { rim: opt.rim, olw: sp.olw }), sp);
   if (out && !opt.tint && !opt.mask && !opt.step && !opt.pose && !opt.bust) reg(out, name, palKey, sp, !!opt.flip);
   T.stat.ms += performance.now() - t0;
   return (AC[key] = out);
 };
+// 2.2.9: 오라는 테두리 선을 그린 뒤 그림 뒤에 깐다 (빛의 가장자리에 선이 서지 않게). 자리는 탈것마다
+var AURA_AT = { human: [31, 42, 31, 20.5], cav: [33, 43, 29, 24], fly: [32, 41, 30, 22] };
+function withAura(out, sp, bust) {
+  if (!out || !sp || !sp.aura || !DS.artAura) return out;
+  var W = out.width, c = T.mk(W), g = c.getContext('2d'), at = AURA_AT[sp.kind] || AURA_AT.human;
+  if (bust) { var s = W / 50; g.scale(s, s); g.translate(-7, -3); } else { var k = W / ((sp.lw || 16) * 4); g.scale(k, k); if ((sp.lw || 16) !== 16) { g.translate(48, 95.5); g.scale(1.42, 1.42); g.translate(-32, -61.5); } }
+  DS.artAura(g, sp.aura, at[0], at[1], [at[2], at[3]]);
+  g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(out, 0, 0);
+  var r = T.tag(c, out.lw); if (out.bust) r.bust = 1; return r;
+}
 // ── 초상: 창 속 그림(<i data-spr> → canvas.px)은 굽힌 그림을 그대로 베낀 것이라, 화소 서명으로 어느 그림인지 알아내 가슴 위 큰 그림으로 바꾼다 ──
 var SIG = {};
 function sigOf(cv) {
@@ -325,7 +340,7 @@ DS.artBust = function (sp, opt) {
   DS.artHuman(g, S); S.bust = 0;
   g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-out';      // 가슴 아래는 부드럽게 스러진다
   var gr = g.createLinearGradient(0, Z * 0.8, 0, Z); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)'); g.fillStyle = gr; g.fillRect(0, Z * 0.8, Z, Z * 0.2);
-  var out = T.finish(cv, 16, { r: 1.3 * s });
+  var out = withAura(T.finish(cv, 16, { r: 1.3 * s }), sp, true);
   if (opt.flip) { var f = T.mk(Z), fg = f.getContext('2d'); fg.translate(Z, 0); fg.scale(-1, 1); fg.drawImage(out, 0, 0); out = T.tag(f, 16); }
   out.bust = 1; return out;
 };

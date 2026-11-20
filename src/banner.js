@@ -82,6 +82,7 @@ DS.cmdSpec = function (ch, hero, who) {
   if (!hero) {
     var nm = who.ttl || who.n; if (nm) u.name = nm; u.bear = who.id || 0; u.nat = who.type && DS.MERCS[who.type] ? (DS.bnNative(ch.cls, who) ? 1 : 0) : 1;
     var bl = DS.bearerLook(who);      // r27: 가주는 제 모습 그대로 — 생김새는 든 사람(부대원)의 것, 능력·기술은 가문(병과)의 것
+    if (bl && DS.pL(who) > 70 && DS.RISE_OF && DS.RISE_OF[ch.cls]) { bl = null; u.sx = u.sx || who.sx || ''; }      // 2.2.9: 8단부터는 가문 윗길의 모습 (look = [병과, 단] — DS.lookName 이 윗길로)
     if (bl) { u.look = bl.look; u.sprite = bl.sprite; u.pal = bl.pal; u.big = bl.big; u.plook = 1; }
   }
   u.bpct = Math.round((k0 - 1) * 100);

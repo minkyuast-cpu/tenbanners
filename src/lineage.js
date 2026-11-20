@@ -73,6 +73,7 @@ DS.LIN_TXT = {
   bury: ['{a}{을를} 해밀 언덕에 묻었다.'],
   hand: ['{a}{이가} {b}에게 집안을 맡겼다.'],
   fusepart: ['{b}{이가} 합일하던 날 곁을 떠나, {a}{은는} 곁을 지키던 날들을 마음에 묻었다.'],
+  fuseIn: ['{a}{이가} {b}에게 스며 하나가 되었다.'],
   gone: ['{a}{이가} 부대를 떠났다.'],
   house: ['이 대에 「{house}」 문패를 새로 걸었다.'],      // 4.0 ⑬·⑯
   castHeir: ['{house}의 가주를 {a}{이가} 이었다.']      // 4.0 ⑫-2
@@ -725,13 +726,19 @@ DS.linTidy = function (s) {
 // ── 합일: 조건·결과는 그대로. 4.0: 사람은 아무도 사라지지 않는다 — 합일체 P 를 만들지 않고, 연대기에 fuse 한 줄만 (meta.js 의 DS.fuse 가 사람을 옮긴다) ──
 var fuse0 = DS.fuse;
 // 1.0.1: 묶음은 자유 — 고른 세 가문(ids)과 묶음 이름(가주 공훈 1등 가문)을 연대기에 남긴다. 옛 꼴(fam 문자열)도 meta.js 가 받아 준다
-DS.fuse = function (s, ids, opt) {      // r42: 사람 셋 — 연대기에 셋의 이름으로 한 줄씩
+DS.fuse = function (s, ids, opt) {      // 2.2.9: 대표 가주 한 줄(fuse) + 흡수된 두 가주(fuseIn — 죽음이 아니다: 명부의 st 'fused', 배우자와는 「합일」로 헤어진다)
   var m = fuse0(s, ids, opt); if (!m) return m;
-  var LF = DS.lastFuse || {}, hp = DS.heroPs ? DS.heroPs(s) : null;
-  (LF.who || []).forEach(function (w) {
-    var p = w === hp ? charP(s, s.chars[s.hero]) : mercP(s, w, true);
-    logE(s, 'fuse', p ? p.id : 0, 0, { ids: (LF.ids || []).slice(), names: (LF.names || []).slice() });
+  var LF = DS.lastFuse || {}, hp = DS.heroPs ? DS.heroPs(s) : null, rw = LF.repWho;
+  var rp = rw ? (rw === hp ? charP(s, s.chars[s.hero]) : mercP(s, rw, true)) : null;
+  var ins = [];
+  (LF.gone || []).forEach(function (g) {
+    var q = g.m ? mercP(s, g.m, true) : null; if (!q) return;
+    q.snap = snapMerc(g.m); q.st = 'fused'; q.m = 0; q.into = rp ? rp.id : 0; q.fuAt = { s: scnN(s), tm: Math.round(s.time || 0), cls: g.cls, rep: LF.repCls || '' };
+    if (q.sp) part(s, q, '합일');
+    logE(s, 'fuseIn', q.id, rp ? rp.id : 0, { cls: g.cls, names: (LF.trio || []).slice() });
+    ins.push(q.id);
   });
+  if (rp) { rp.fu3 = (LF.trio || []).slice(); rp.fuIn = ins; logE(s, 'fuse', rp.id, 0, { ids: (LF.ids || []).slice(), names: (LF.trio || []).slice(), rep: LF.repCls || '', shut: (LF.gone || []).map(function (g) { return g.cls; }) }); }
   return m;
 };
 

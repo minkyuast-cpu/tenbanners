@@ -205,12 +205,14 @@ DS.arenaChampSnap = function (s) {
   return { v: 1, name: clean(DS.charName ? DS.charName(hero) : s.name, 12) || '맹주', house: clean(houseOf(s), 16), cls: hero.cls, hs: hs, L: Math.max(1, Math.min(100, hero.L | 0)), g: Math.max(1, Math.min(5, (hero.ps && hero.ps.g) | 0 || 3)),
     pow: Math.max(0, Math.min(1e7, Math.round(DS.power(u)))), hp: u.mhp | 0, mp: u.mmp | 0, atk: Math.round(u.atk), def: Math.round(u.def), mag: Math.round(u.mag), res: Math.round(u.res),
     spd: Math.round((+u.spd || 10) * 100), cr: Math.round((+u.crit || 0) * 1000), dr: Math.round((+u.drain || 0) * 1000), r0: (u.rng && u.rng[0]) | 0, r1: (u.rng && u.rng[1]) | 0, bs: Math.round((+u.basic || 1) * 100),
-    sk: sk, ul: u.ult && own(DS.ULTS, u.ult) ? u.ult : '', up: Math.round((+u.ultP || 1) * 100), ur: Math.round((+u.ultR || 1) * 100), w: clean(hero.w || '', 40), a: clean(hero.a || '', 40), ver: String(DS.VERSION || '').slice(0, 16) };
+    sk: sk, ul: u.ult && own(DS.ULTS, DS.ultBaseOf ? DS.ultBaseOf(u.ult) : u.ult) ? (DS.ultBaseOf ? DS.ultBaseOf(u.ult) : u.ult) : '', up: Math.round((+u.ultP || 1) * 100), ur: Math.round((+u.ultR || 1) * 100), w: clean(hero.w || '', 40), a: clean(hero.a || '', 40), ver: String(DS.VERSION || '').slice(0, 16) };
 };
 // 남의 문서 → 안전한 줄 (모르는 병과·엉뚱한 칸이면 null, 숫자는 그 병과·레벨의 기준치로 묶는다)
 DS.arenaChampRow = function (id, d) {
   if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id) || !d || typeof d !== 'object' || d.v !== 1) return null;
   if (typeof d.cls !== 'string' || !own(DS.CLASSES, d.cls)) return null;
+  if (DS.OLD_MASTER && own(DS.OLD_MASTER, d.cls)) { var d2 = {}; for (var dk in d) if (own(d, dk)) d2[dk] = d[dk]; d2.cls = DS.oldMasterBase(d.cls, d.hs); d = d2; }      // 2.2.9: 옛 마스터 기록 → 그 묶음의 병과 (8단 위면 제 윗길)
+  if (DS.CLASSES[d.cls].rise) return null;      // 윗길 키는 병과가 아니다 (가문 병과로 올린다)
   var C = DS.CLASSES[d.cls], Lv = Math.round(num(d.L, 1, DS.LV_PER_TIER * DS.MAX_TIER, 1)), tier = DS.tierOfL(Lv);
   if (C.start && tier < C.start) return null;
   var ref = { cls: d.cls, L: Lv }, rs; try { DS.stdGear(ref, tier); rs = DS.charStats(ref); } catch (x) { return null; }
@@ -222,7 +224,7 @@ DS.arenaChampRow = function (id, d) {
     g: Math.round(num(d.g, 1, 5, 3)), hp: Math.round(num(d.hp, 1, rs.hp * 2.5, rs.hp)), mp: Math.round(num(d.mp, 0, Math.max(50, rs.mp * 3), rs.mp)),
     atk: Math.round(num(d.atk, 1, top * 3.5 + 20, rs.atk)), mag: Math.round(num(d.mag, 1, top * 3.5 + 20, rs.mag)), def: Math.round(num(d.def, 0, wall * 4 + 30, rs.def)), res: Math.round(num(d.res, 0, wall * 4 + 30, rs.res)),
     spd: num(+d.spd / 100, C.spd * 0.5, C.spd * 1.6, C.spd), crit: num(+d.cr / 1000, 0, 0.6, 0.06), drain: num(+d.dr / 1000, 0, 0.5, 0), rng: [r0, r1], basic: num(+d.bs / 100, 0.5, 3, C.basic || 1),
-    skills: sk, ult: typeof d.ul === 'string' && own(DS.ULTS, DS.skAlias(d.ul)) ? DS.skAlias(d.ul) : null, ultP: num(+d.up / 100, 1, 2.5, 1), ultR: num(+d.ur / 100, 0.5, 2.5, 1),
+    skills: sk, ult: typeof d.ul === 'string' && own(DS.ULTS, DS.skAlias(d.ul)) ? (DS.ultUp ? DS.ultUp(DS.skAlias(d.ul), Lv) : DS.skAlias(d.ul)) : null, ultP: num(+d.up / 100, 1, 2.5, 1), ultR: num(+d.ur / 100, 0.5, 2.5, 1),
     at: +d.at || 0, w: typeof d.w === 'string' && DS.gear && DS.gear(d.w) ? d.w : '', a: typeof d.a === 'string' && DS.gear && DS.gear(d.a) ? d.a : '' };
   if (!(row.at > 1.6e12 && row.at < Date.now() + 864e5)) row.at = 0;
   row.pow = DS.power(DS.arenaChampSpec(row));      // 올린 전투력은 믿지 않는다 — 걸러 낸 값으로 다시 잰다

@@ -549,6 +549,7 @@ if (DS.BOSSES) for (var bk2 in BOSS_LOOK2) if (DS.BOSSES[bk2]) DS.BOSSES[bk2].sp
 // 유닛 → [스프라이트 이름, 보스 팔레트]
 DS.lookName = function (cls, tier) {
   var c = DS.CLASSES[cls]; if (!c) return cls + '_' + tier;
+  if (!c.master && tier >= 8 && DS.RISE_OF && DS.RISE_OF[cls] && DS.CLASSES[DS.RISE_OF[cls]]) { cls = DS.RISE_OF[cls]; c = DS.CLASSES[cls]; }      // 2.2.9: 8단부터 제 윗길의 모습
   var t = Math.max(c.start, Math.min(c.start + c.tiers.length - 1, tier));
   return cls + '_' + t;
 };
@@ -647,8 +648,9 @@ DS.charLook = function (ch, save, tier, who) {      // who: 그 사람을 직접
   if (!who) { try { who = DS.bearer(S, ch); } catch (x) { who = null; } }
   var bl = who && DS.bearerLook ? DS.bearerLook(who) : null; if (!bl) return null;
   var t = tier || (DS.tierOfL ? DS.tierOfL(ch.L) : 1);
-  if (bl.big) return [bl.sprite, bl.pal, 0.75];
   var p = linP(S, who);
+  if (t >= 8 && DS.RISE_OF && DS.RISE_OF[ch.cls]) return [DS.dressName(DS.lookName(ch.cls, t), { w: ch.w, a: ch.a, g: ageWord(S, who), x: (p && p.sx) || who.sx || '', f: !!(p && (p.rv || p.ret)) }), '', 1];      // 2.2.9: 8단부터는 가문 윗길의 모습 (장비 · 나이 · 성별은 그 사람의 것)
+  if (bl.big) return [bl.sprite, bl.pal, 0.75];
   return [DS.dressName(bl.look.join('_'), { g: ageWord(S, who), x: (p && p.sx) || '', f: !!(p && (p.rv || p.ret)), r: DS.rimOf ? DS.rimOf(t) : '' }), '', 1];
 };
 DS.charSprite = function (ch, save) {      // 화면(초상·가계도)용: 지휘관 한 사람의 옷 입은 모습 이름 (game.js charSpr 이 이것을 쓰면 장비·나이가 초상에도 보인다)

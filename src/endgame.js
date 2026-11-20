@@ -252,7 +252,8 @@ DS.egStart = function (s) {
   e.gen += 1; e.on = 1; e.c = {}; e.t0 = Math.round(+s.time || 0);
   e.pass = { g: e.gen, y: 0, f: years ? 'years' : 'keep', y0: yr(s), L: [], dead: [], nl: 0, na: 0 };
   e.call = { g: e.gen, used: 0 };
-  return { g: e.gen, years: years };
+  var woke = DS.fzWakeTick ? DS.fzWakeTick(s) : [];      // 2.2.9: 지난 세대에 합일로 잠든 가문이 깨어난다 (영웅관에서 다시 열 수 있다 · 화면은 save.fzWake 를 연출로)
+  return { g: e.gen, years: years, woke: woke };
 };
 function passLine(ps, y, t) { var o = { y: y, t: t }; ps.L.push(o); if (ps.L.length > 120) ps.L.splice(0, ps.L.length - 120); return o; }
 // 한 해 (설계서 ③ 의사 코드): 멈춤(빈자리)이 있으면 흐르지 않고 그것을 돌려준다. 가주 자리가 먼저

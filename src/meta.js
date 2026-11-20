@@ -29,12 +29,14 @@ DS.EXP_TIER = [1.1, 2.09, 2.62, 3.3, 4.2, 5.6, 6.8, 8.4, 9.4, 10.0, 10.8];      
 DS.expNeed = function (L) { return Math.round((30 + 17 * L) * DS.EXP_TIER[DS.tierOfL(L)]); };
 // ⑮ 합일: 7단 10레벨 가문 셋(1.0.1: 아무 셋)이 하나로 합쳐지지 않고 각각 8단(L71~)으로 함께 오른다. 8단 뒤의 모습·기술은 제 계열 마스터의 것. 「오른 깃발」 = 마스터 아닌 병과로 L > 70
 DS.risen = function (ch) { return !!ch && !DS.CLASSES[ch.cls].master && ch.L > 70; };
-DS.riseCls = function (ch) { var c = DS.CLASSES[ch.cls]; if (c.master || !(ch.L > 70)) return ch.cls; var F = DS.FAMILY[c.fam]; return F ? F.master : ch.cls; };      // 8단 뒤의 세기는 그 묶음 마스터의 것
+// 2.2.9: 8단 뒤의 세기 · 기술 · 단 이름 · 모습은 제 가문 병과의 윗길 (rise.js DS.RISE_OF — 성벽기사 · 뇌전기사 …). 옛 마스터 줄(ch.cls 가 bm · tm · mm)은 그대로
+DS.riseCls = function (ch) { var c = DS.CLASSES[ch.cls]; if (c.master || !(ch.L > 70)) return ch.cls; var x = DS.RISE_OF && DS.RISE_OF[ch.cls]; if (x && DS.CLASSES[x]) return x; var F = DS.FAMILY[c.fam]; return F ? F.master : ch.cls; };
+DS.lineCls = function (cls, tier) { var c = DS.CLASSES[cls]; if (!c || c.master || !(tier >= 8)) return cls; var x = DS.RISE_OF && DS.RISE_OF[cls]; return x && DS.CLASSES[x] ? x : DS.FAMILY[c.fam] ? DS.FAMILY[c.fam].master : cls; };      // 그 단의 길 (8단부터 윗길)
 DS.RISE = { mul: 1 };      // 오른 깃발의 세기 배율 (셋이 동시에 생기므로 21~30번을 다시 재어 맞춘다)
 DS.capL = function (ch) { return DS.CLASSES[ch.cls].master || ch.L > 70 ? 100 : 70; };
 DS.tierName = function (cls, tier) {
   var c = DS.CLASSES[cls];
-  if (!c.master && tier >= 8 && DS.FAMILY[c.fam]) c = DS.CLASSES[DS.FAMILY[c.fam].master];      // 8단부터는 마스터의 단 이름
+  if (!c.master && tier >= 8) c = DS.CLASSES[DS.lineCls(cls, tier)];      // 8단부터는 윗길의 단 이름 (2.2.9)
   var i = Math.max(0, Math.min(c.tiers.length - 1, tier - c.start));
   return c.tiers[i];
 };
@@ -172,7 +174,7 @@ DS.charStats = function (ch) {
     atk: c.base.atk + c.grow.atk * k, def: c.base.def + c.grow.def * k,
     mag: c.base.mag + c.grow.mag * k, res: c.base.res + c.grow.res * k
   };
-  if (DS.CLASSES[ch.cls].martial && c !== DS.CLASSES[ch.cls]) { s.atk = s.mag; s.mag *= 0.65; }      // 2.2.5: 8단 뒤 무투가는 마스터(매직마스터)의 마공 줄을 공격으로, 마공은 그 0.65 (주먹이 주무기다)
+  if (DS.CLASSES[ch.cls].martial && c !== DS.CLASSES[ch.cls] && !c.rise) { s.atk = s.mag; s.mag *= 0.65; }      // 2.2.5: 8단 뒤 무투가가 옛 마스터(매직마스터)의 줄을 쓸 때만 — 마공 줄을 공격으로 (2.2.9 윗길 금강권은 제 줄 그대로)
   if (rise !== 1) { s.hp = Math.round(s.hp * rise); s.atk *= rise; s.def *= rise; s.mag *= rise; s.res *= rise; }
   var c0 = DS.CLASSES[ch.cls]; if (c0 !== c) { magic = (c0.dtype === 'magic' || c0.kind === 'holy') && !c0.martial; c = { rng: c0.rng, spd: c.spd }; }      // 사거리·공격 결은 제 병과 그대로
   var W = DS.gearAt(DS.gear(ch.w), ch.L, ch.cls, ch.gt), A = DS.gearAt(DS.gear(ch.a), ch.L, ch.cls, ch.gt), w = W ? W.pow : 0, crit = 0.06, spd = 1, mp = 1;
@@ -188,7 +190,14 @@ DS.charStats = function (ch) {
 DS.charSkills = function (ch) {
   var c = DS.CLASSES[ch.cls], t = DS.tierOfL(ch.L);
   var out = c.skills.filter(function (s) { return t >= s[1]; }).map(function (s) { return s[0]; });
-  if (DS.risen(ch)) DS.CLASSES[DS.riseCls(ch)].skills.forEach(function (s) { if (s[1] >= 9 && t >= s[1] && out.indexOf(s[0]) < 0) out.push(s[0]); });      // ⑮ 9·10단에 마스터의 기술을 깃발마다
+  if (DS.risen(ch)) {
+    var X = DS.CLASSES[DS.riseCls(ch)];
+    if (X.rise) {      // 2.2.9 윗길: 8단에 대표 기술이 윗길 기술로 바뀌고(kit), 9 · 10단 고유 기술은 맨 앞에 (자동 전투가 앞쪽부터 살핀다)
+      out = out.map(function (k) { return X.kit && X.kit[k] ? X.kit[k] : k; });
+      var sig = X.skills.filter(function (s) { return s[1] >= 9 && t >= s[1] && out.indexOf(s[0]) < 0; }).map(function (s) { return s[0]; });
+      out = sig.concat(out);
+    } else X.skills.forEach(function (s) { if (s[1] >= 9 && t >= s[1] && out.indexOf(s[0]) < 0) out.push(s[0]); });      // ⑮ 옛 마스터의 9·10단 기술
+  }
   return out;
 };
 
@@ -362,12 +371,12 @@ DS.ultInnate = function (s) {      // 맹주가 타고난 필살기 (깨어나�
 };
 DS.heroUlt = function (s) { var p = DS.ultHeroWho(s); return DS.ultOpen(s) && DS.ultAwake(p) ? DS.ultInnate(s) : null; };
 DS.ultNeedPick = function () { return false; };
-DS.ultFor = function (s, who) { if (!who) return null; var hp = DS.ultHeroWho(s); if (hp && who === hp) { if (hp.ul && DS.ULTS[hp.ul]) return hp.ul; return DS.ultRoll(s, hp); } return DS.ultBorn(who); };      // 2.1.0: 그 사람이 타고난 필살기 (깨어나기 전에도)      // r38: 고르기는 없다 (봇·옛 호출이 부른다)
+DS.ultFor = function (s, who) { if (!who) return null; var hp = DS.ultHeroWho(s), id; if (hp && who === hp) id = hp.ul && DS.ULTS[hp.ul] ? hp.ul : DS.ultRoll(s, hp); else id = DS.ultBorn(who); return DS.ultUp ? DS.ultUp(id, DS.pL(who)) : id; };      // 2.2.9: 8단부터 윗길 필살기      // 2.1.0: 그 사람이 타고난 필살기 (깨어나기 전에도)      // r38: 고르기는 없다 (봇·옛 호출이 부른다)
 DS.ultNeedReveal = function (s) { var p = DS.ultHeroWho(s); return !!(p && DS.heroUlt(s) && !p.ulw && p.ulr); };      // 1.3.0 에서 고른 것(ulr 없음)은 이미 아는 것 — 깨어남 창을 띄우지 않는다
 DS.ultRevealed = function (s) { var p = DS.ultHeroWho(s); if (p) p.ulw = 1; };
 DS.ultCost = function (s) { var ch = s && s.chars && s.chars[s.hero]; return DS.ULT.cost * Math.max(1, ch ? DS.tierOfL(ch.L) : 1); };
 DS.ultPick = function (s, id) { var p = DS.ultHeroWho(s); if (!p || !DS.ultOpen(s) || DS.ultOpts(s).indexOf(id) < 0 && id !== p.ul) return false; p.ul = id; return true; };      // r38: 화면에서는 더 부르지 않는다 (옛 시험 도구용)
-DS.ultSpec = function (u, who, hero, cmd) { if (who && who.ul && DS.SK_ALIAS[who.ul]) who.ul = DS.skAlias(who.ul); var id = !(DS.BAL && DS.BAL.ult !== false) || !who || !DS.ultAwake(who) ? null : hero ? (who.ul && DS.ULTS[who.ul] ? who.ul : null) : cmd ? DS.ultOf(who) : null; u.ult = id; u.ultP = id ? DS.ultPow(who) : 1; u.ultR = id ? DS.ultRate(who) : 1; return u; };      // 2.1.0: 가주(지휘하는 사람)는 누구나 제 필살기 — 쓰는 것은 조작하는 사람만 (game.js 단추 · 엔진은 스스로 쓰지 않는다)
+DS.ultSpec = function (u, who, hero, cmd) { if (who && who.ul && DS.SK_ALIAS[who.ul]) who.ul = DS.skAlias(who.ul); var id = !(DS.BAL && DS.BAL.ult !== false) || !who || !DS.ultAwake(who) ? null : hero ? (who.ul && DS.ULTS[who.ul] ? who.ul : null) : cmd ? DS.ultOf(who) : null; if (id && DS.ultUp) id = DS.ultUp(id, DS.pL(who)); u.ult = id; u.ultP = id ? DS.ultPow(who) : 1; u.ultR = id ? DS.ultRate(who) : 1; return u; };      // 2.1.0: 가주(지휘하는 사람)는 누구나 제 필살기 — 쓰는 것은 조작하는 사람만 (game.js 단추 · 엔진은 스스로 쓰지 않는다)
 DS.mercKind = function (m) { return DS.GRADES[m.g].name + ' ' + DS.MERCS[m.type].name; };
 // ───────── 2.2.0 「한 사람 한 사람」: 사람의 자리는 셋뿐이다 ─────────
 //   가주(m.h, m.o = 가문) — 그 가문의 깃발 유닛으로 싸운다. 맹주는 대장 줄의 사람(ch.ps).
@@ -567,7 +576,7 @@ DS.heroRoom = function (save) {
   return DS.charList(save).filter(function (ch) { return !full || DS.vacant(save, ch); });
 };
 DS.closedCls = function (save) {      // 닫힌 가문의 병과 (병과 차례 그대로)
-  return Object.keys(DS.CLASSES).filter(function (k) { var C = DS.CLASSES[k], F = DS.FAMILY[C.fam]; return !C.master && !DS.hasClass(save, k) && !(F && DS.hasClass(save, F.master)); });
+  return Object.keys(DS.CLASSES).filter(function (k) { var C = DS.CLASSES[k], F = DS.FAMILY[C.fam]; return !C.master && !DS.hasClass(save, k) && !(F && DS.hasClass(save, F.master)) && !(DS.fzShut && DS.fzShut(save, k)); });      // 2.2.9: 합일로 잠든 가문은 이번 세대에는 열리지 않는다
 };
 // 다음 모집이 닫힌 가문을 열 확률 (0 ~ 1) · 반드시 열기까지 남은 모집 수 (닫힌 가문이 없으면 0)
 DS.openOdds = function (save) {
@@ -583,9 +592,11 @@ DS.recruitWhy = function (save) {
 // 닫힌 가문 cls 를 연다: 새 가문 + 그 가문의 가주 m (없으면 등급 g 로 하나 굴린다). 레벨은 모집한 영웅과 같다 (DS.recruitL — 부대 평균보다 조금 아래). 장비는 그 단 아래의 기본 차림
 DS.houseOpen = function (save, cls, m, g) {
   if (!DS.CLASSES[cls] || DS.closedCls(save).indexOf(cls) < 0) return null;
+  var woke = DS.fzWoke && DS.fzWoke(save, cls) ? save.fzShut[cls] : null;      // 2.2.9: 지난 세대에 합일로 잠들었던 가문이 다시 열린다
   m = m || DS.addMerc(save, DS.heroType(cls), g || 3, 0);
   var ch = DS.addChar(save, cls, DS.pL(m), '');
   m.nc = cls; m.o = ch.id; m.h = 1; delete m.sb; ch.Ls = ch.L; ch.op = 1;      // op: 영웅관에서 연 가문 (보이는 표시만)
+  if (woke) { ch.reop = { g: DS.genNow(save), from: woke.g, n: woke.n || '', rep: woke.rep || '' }; delete save.fzShut[cls]; }
   if (DS.nfGive) DS.nfGive(m);
   if (DS.mercTidy) DS.mercTidy(save);
   return ch;
@@ -611,7 +622,7 @@ DS.recruitHero = function (save, rnd, opt) {
   if (shut.length && !opt.ch) save.hpity = nc ? 0 : (+save.hpity || 0) + 1;
   if (nc) {
     var mo = DS.addMerc(save, DS.heroType(nc), g, 0), hc = DS.houseOpen(save, nc, mo);
-    return { m: mo, ch: hc, role: 'open', g: g };
+    return { m: mo, ch: hc, role: 'open', g: g, reopen: hc && hc.reop ? hc.reop : null };
   }
   var vac = DS.vacant(save, ch);
   var cls = DS.CLASSES[ch.cls].master && DS.FAMILY[DS.CLASSES[ch.cls].fam] ? DS.FAMILY[DS.CLASSES[ch.cls].fam].members[0] : ch.cls;
@@ -878,13 +889,35 @@ DS.pNative = function (s, who) {      // 그 사람의 태생 병과 (맹주 = �
   return hit || 'inf';
 };
 function fuEnt(s, p) { return { id: DS.pKey(s, p.who), key: DS.pKey(s, p.who), who: p.who, ch: p.ch, L: DS.pL(p.who), exp: +p.who.exp || 0, cls: p.ch ? p.ch.cls : DS.pNative(s, p.who), role: p.role, dep: p.dep }; }
-DS.fusePool = function (save) { return DS.persons(save).filter(function (p) { return !p.who.fz && DS.pL(p.who) <= 70 && !(DS.kidOf && false); }).map(function (p) { return fuEnt(save, p); }); };
+// ───────── 2.2.9 합일: 서로 다른 세 가문의 가주 셋 ─────────
+//   후보 = 가주(맹주 가문은 맹주)로 선 사람 가운데 합일하지 않은 7단 Lv10 (가문원 · 막사는 합일하지 않는다). 셋은 늘 서로 다른 가문이다 (가문마다 가주는 하나).
+//   대표 가문 = 고른 셋 가운데 플레이어가 고른 곳 (기본 = 공훈이 가장 큰 곳 · 맹주가 셋에 들면 늘 맹주 가문). 그 가주가 8단 1레벨(L71)로 올라 제 가문 윗길(DS.riseCls)로 자란다 — 사람 · 장비 · 나이 · 배우자 · 핏줄 그대로.
+//   나머지 두 가주는 대표에게 흡수된다: 명부에서 사라지고(가계도에는 「합일」로 남는다 — 죽음으로 세지 않는다), 든 장비는 가방으로, 든 물건은 소지품으로.
+//   그 두 가문은 이번 세대가 끝날 때까지 닫힌다 (save.fzShut[병과] = { g: 닫힌 세대, …}). 세대 = DS.egGen (1 = 첫 대 · 「다음 세대의 장」을 열 때마다 하나씩 — endgame.js DS.egStart).
+//   닫힌 동안은 영웅관이 그 병과로 가문을 열지 않고(DS.closedCls 에서 빠진다 · 천장 셈에도 들지 않는다), 다음 세대가 오면 보통의 닫힌 가문이 되어 다시 열 수 있다 (열 때 연출 'reopen').
+DS.fuseCan = function (p) { return !!p && (p.role === 'hero' || p.role === 'bear') && !!p.ch && !p.ch.vac && !p.ch.down && !p.who.fz && DS.pL(p.who) <= 70; };
+DS.fusePool = function (save) { return DS.persons(save).filter(DS.fuseCan).map(function (p) { return fuEnt(save, p); }); };
 DS.fuseCands = function (save) { return DS.fusePool(save).filter(function (c) { return c.L >= DS.FUSE_MIN; }); };
-DS.fuseOk = function (save, ids) {
-  if (!(ids instanceof Array) || ids.length !== DS.FUSE_N) return { ok: false, why: DS.FUSE_N + '사람을 고른다' };
-  var seen = {}, cand = {}; DS.fuseCands(save).forEach(function (c) { cand[c.key] = 1; });
-  for (var i = 0; i < ids.length; i++) { var w = DS.pByKey(save, ids[i]), k = DS.pKey(save, w); if (!w) return { ok: false, why: '찾을 수 없는 사람이 있다' }; if (seen[k]) return { ok: false, why: '같은 사람을 두 번 골랐다' }; seen[k] = 1; if (!cand[k]) return { ok: false, why: '7단 Lv10이 아닌 사람이 있다' }; }
+DS.fuseRepLock = function (save, who) { var hp = DS.heroPs(save); return hp && (who || []).indexOf(hp) >= 0 ? save.chars[save.hero] : null; };      // 맹주가 셋에 들면 대표는 맹주 가문 (바꿀 수 없다)
+DS.fuseRep = function (save, who, repId) {
+  var hs = []; (who || []).forEach(function (w) { var h = DS.whoHouse(save, w); if (h && hs.indexOf(h) < 0) hs.push(h); });
+  var lock = DS.fuseRepLock(save, who); if (lock) return lock;
+  var pick = repId != null ? hs.filter(function (h) { return h.id === +repId; })[0] : null;
+  return pick || hs.sort(DS.houseCmp)[0] || null;
+};
+DS.fuseOk = function (save, ids, opt) {
+  if (!(ids instanceof Array) || ids.length !== DS.FUSE_N) return { ok: false, why: '가주 ' + DS.FUSE_N + '명을 고른다' };
+  var seen = {}, cand = {}, hs = {}; DS.fuseCands(save).forEach(function (c) { cand[c.key] = 1; });
+  for (var i = 0; i < ids.length; i++) {
+    var w = DS.pByKey(save, ids[i]), k = DS.pKey(save, w); if (!w) return { ok: false, why: '찾을 수 없는 사람이 있다' };
+    if (seen[k]) return { ok: false, why: '같은 사람을 두 번 골랐다' }; seen[k] = 1;
+    if (!cand[k]) return { ok: false, why: DS.whoHouse(save, w) && (w === DS.heroPs(save) || w.h) ? '7단 Lv10이 아닌 가주가 있다' : '가주만 합일한다' };
+    var h = DS.whoHouse(save, w); if (!h || hs[h.id]) return { ok: false, why: '서로 다른 세 가문의 가주를 고른다' }; hs[h.id] = 1;
+  }
   if (!save.crest) return { ok: false, why: '맹세의 깃대가 없다' };
+  var rep = opt && opt.rep != null ? +opt.rep : null, lock = DS.fuseRepLock(save, ids.map(function (k) { return DS.pByKey(save, k); }));
+  if (rep != null && !hs[rep]) return { ok: false, why: '대표 가문은 고른 셋 가운데서 정한다' };
+  if (rep != null && lock && rep !== lock.id) return { ok: false, why: '맹주가 들면 맹주 가문이 대표다' };
   return { ok: true, why: '' };
 };
 DS.fuseProg = function (save) {
@@ -892,40 +925,83 @@ DS.fuseProg = function (save) {
   var need = function (c) { var n = 0; for (var L = c.L; L < DS.FUSE_MIN; L++) n += DS.expNeed(L) - (L === c.L ? Math.min(c.exp || 0, DS.expNeed(L)) : 0); return n; };
   var low = pool.filter(function (c) { return c.L < DS.FUSE_MIN; }).sort(function (a, b) { return (b.dep ? 1 : 0) - (a.dep ? 1 : 0) || need(a) - need(b) || b.L - a.L; });
   var done = DS.persons(save).filter(function (p) { return p.who.fz; }).length;
-  return { ready: ready, n: Math.min(DS.FUSE_N, ready.length), of: DS.FUSE_N, low: low, pool: pool, crest: !!save.crest, ok: ready.length >= DS.FUSE_N && !!save.crest, can: pool.length >= DS.FUSE_N, unions: Math.floor(done / DS.FUSE_N), fused: done };
+  return { ready: ready, n: Math.min(DS.FUSE_N, ready.length), of: DS.FUSE_N, low: low, pool: pool, crest: !!save.crest, ok: ready.length >= DS.FUSE_N && !!save.crest, can: pool.length >= DS.FUSE_N, unions: +save.fuN2 || 0, fused: done, shut: DS.fzShutList(save).length };
 };
 // 옛 묶음 기록(가문 셋의 대가문)은 없어졌다 — 옛 호출이 읽어도 비어 있게
 DS.fuseUnions = function (save) { if (save) save.fuU = []; return []; };
 DS.unionOf = function () { return null; };
 DS.unionName = function () { return ''; };
 DS.fuseState = function (save, fam) { return { done: false, have: [], miss: [], low: [], ok: false }; };
-// 합일: ids = 사람 열쇠 셋. 돌려주는 것: 첫 사람. DS.lastFuse = { ids, who: [사람 셋], names, id }
-// 2.1.0: 대표 가문 = 셋이 선 가문 가운데 공훈이 가장 큰 곳 (같으면 계급, 그다음 먼저 합류한 가문). 그 가문에 공훈 DS.FUSE_HX
-//   2.2.0: 아무도 제 가문을 떠나지 않는다 — 셋은 제자리에서 8단으로 오른다 (가주는 가주, 막사는 막사, 가문원은 가문원)
 DS.FUSE_HX = 1000;
+DS.FUSE_LS_MAX = 60;      // 2.2.9: 대표가 받는 두 넋의 남은 해 (많아야)
 DS.houseCmp = function (a, b) { return (+(b && b.hx) || 0) - (+(a && a.hx) || 0) || DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 공훈 → 계급 → 합류 차례
 DS.houseOrd = function (a, b) { return DS.hRank(b) - DS.hRank(a) || (a ? a.id : 0) - (b ? b.id : 0); };      // 2.2.3: 보이는 차례 (부대 격자 · 칩 줄 · 결과 창) — 공훈 계급 → 합류 차례. 싸울 때마다 바뀌는 공훈 점수로는 줄을 섞지 않는다
 DS.houseSort = function (save, list) { return (list || DS.charList(save)).slice().sort(DS.houseOrd); };
-DS.fuseRep = function (save, who) { var hs = []; (who || []).forEach(function (w) { var h = DS.whoHouse(save, w); if (h && hs.indexOf(h) < 0) hs.push(h); }); return hs.sort(DS.houseCmp)[0] || null; };
+// ── 합일로 잠든 가문 (세대가 바뀌면 깨어난다) ──
+DS.genNow = function (save) { return DS.egGen ? DS.egGen(save) : Math.max(1, +(save && save.eg && save.eg.gen) || 1); };
+DS.fzShutFix = function (save) {      // 저장 칸 다듬기: { 병과: { g, t, by, rep, n } } — 이미 선 가문의 병과 · 모르는 병과는 지운다
+  var z = save && save.fzShut; if (!z || typeof z !== 'object' || Array.isArray(z)) { if (save) delete save.fzShut; return {}; }
+  for (var k in z) { var C = DS.CLASSES[k]; if (!Object.prototype.hasOwnProperty.call(DS.CLASSES, k) || !C || C.master || !z[k] || typeof z[k] !== 'object' || DS.hasClass(save, k)) { delete z[k]; continue; } z[k].g = Math.max(1, Math.round(+z[k].g || 1)); }
+  return z;
+};
+DS.fzShut = function (save, cls) { var z = save && save.fzShut, e = z && Object.prototype.hasOwnProperty.call(z, cls) ? z[cls] : null; return !!(e && e.g >= DS.genNow(save) && !DS.hasClass(save, cls)); };      // 지금 잠들어 있는가
+DS.fzShutList = function (save) { var z = save && save.fzShut, out = []; if (z) for (var k in z) if (DS.fzShut(save, k)) out.push(k); return out; };
+DS.fzWoke = function (save, cls) { var z = save && save.fzShut, e = z && Object.prototype.hasOwnProperty.call(z, cls) ? z[cls] : null; return !!(e && e.g < DS.genNow(save) && !DS.hasClass(save, cls)); };      // 깨어났지만 아직 다시 열리지 않았다
+// 세대가 바뀌었다: 잠든 가문이 깨어난다 (돌려주는 것: 깨어난 병과 목록 — 한 번만. 화면은 save.fzWake 를 연출로 읽고 비운다)
+DS.fzWakeTick = function (save) {
+  var z = save && save.fzShut, g = DS.genNow(save), out = []; if (!z) return out;
+  for (var k in z) if (z[k] && z[k].g < g && !z[k].woke && !DS.hasClass(save, k)) { z[k].woke = g; out.push(k); }
+  if (out.length) save.fzWake = (save.fzWake || []).concat(out).filter(function (k, i, a) { return a.indexOf(k) === i; });
+  return out;
+};
+// 합일: ids = 사람 열쇠 셋 (가주). opt.rep = 대표 가문 번호. 돌려주는 것: 대표 가주. DS.lastFuse = { ids, who, names, rep, repWho, gone: [{ cls, name, hid }] … }
 DS.fuse = function (save, ids, opt) {
-  ids = (ids || []).slice();
-  if (!DS.fuseOk(save, ids).ok) return null;
-  var who = ids.map(function (k) { return DS.pByKey(save, k); }), hp = DS.heroPs(save), H = DS.fuseRep(save, who), keys = who.map(function (w) { return DS.pKey(save, w); });
-  var names = who.map(function (w) { return w === hp ? (save.chars[save.hero].name || save.name || '맹주') : (w.ttl || w.n || ''); });
-  who.forEach(function (w) { w.L = Math.max(DS.pL(w), 71); w.exp = 0; w.fz = 1; });
+  ids = (ids || []).slice(); opt = opt || {};
+  if (!DS.fuseOk(save, ids, opt).ok) return null;
+  var who = ids.map(function (k) { return DS.pByKey(save, k); }), hp = DS.heroPs(save), H = DS.fuseRep(save, who, opt.rep), keys = who.map(function (w) { return DS.pKey(save, w); });
+  var nameOf = function (w) { return w === hp ? (save.chars[save.hero].name || save.name || '맹주') : (w.ttl || w.n || ''); };
+  var names = who.map(nameOf), houses = who.map(function (w) { return DS.whoHouse(save, w); }), ri = houses.indexOf(H), rw = who[ri], gen = DS.genNow(save);
+  var trio = [names[ri]].concat(names.filter(function (n, i) { return i !== ri; }));
+  rw.L = Math.max(DS.pL(rw), 71); rw.exp = 0; rw.fz = 1; rw.fu3 = trio.slice(); rw.fuG = gen;
+  // 두 넋의 남은 해: 흡수된 두 가주가 살 해를 대표가 받는다 (수명 +N년 — 나이는 그대로). 맹주는 대장 줄(ch.ls)에, 가주는 그 사람(m.ls)에
+  var lsAdd = 0; who.forEach(function (w, i) { if (i === ri || !DS.ageLife) return; var e = w === hp ? save.chars[save.hero] : w, L0 = DS.ageLife(save, e); if (L0 && L0.left != null) lsAdd += Math.max(0, Math.round(L0.left)); });
+  lsAdd = Math.min(DS.FUSE_LS_MAX, lsAdd);
+  var re = rw === hp ? save.chars[save.hero] : rw;
+  if (lsAdd > 0 && re && +re.ls > 0) { re.ls = Math.round(+re.ls) + lsAdd; delete re.eld; var rp0 = re.pid && save.lin && save.lin.P && save.lin.P[re.pid]; if (rp0) rp0.ls = re.ls; }
   if (H) { if (DS.hAdd) DS.hAdd(save, H, DS.FUSE_HX); else H.hx = (+H.hx || 0) + DS.FUSE_HX; }
+  var gone = [], z = save.fzShut = save.fzShut && typeof save.fzShut === 'object' && !Array.isArray(save.fzShut) ? save.fzShut : {};
+  houses.forEach(function (h, i) {
+    if (h === H || !h) return;
+    var w = who[i];
+    ['w', 'a'].forEach(function (sl) { var id = h[sl]; if (id) { save.gear[id] = (save.gear[id] || 0) + 1; h[sl] = null; } });      // 든 장비는 가방으로
+    if (w.it && DS.giveMercItem) DS.giveMercItem(save, w.id, null);      // 든 물건은 소지품으로
+    gone.push({ cls: h.cls, name: names[i], hid: h.id, m: w, hx: +h.hx || 0 });
+    DS.loseMerc(save, w.id);
+    z[h.cls] = { g: gen, t: Math.round(+save.time || 0), by: H ? H.cls : '', rep: names[ri], n: names[i] };
+    delete save.chars[h.id];
+    save.party = (save.party || []).filter(function (id) { return id !== h.id; });
+    if (Array.isArray(save.sortie)) save.sortie = save.sortie.filter(function (e) { return e && e.h !== h.id; });
+  });
   if (DS.mercTidy) DS.mercTidy(save);
   DS.pSync(save);
-  DS.lastFuse = { ids: keys, who: who, names: names, id: keys[0], name: '', union: null, mercsBack: 0, over: 0, rep: H ? H.id : 0, repName: H ? DS.flagName(H.cls, save) : '', hx: H ? DS.FUSE_HX : 0, moved: 0, succ: [] };
+  if (DS.sortieFix) { var hold = DS.sortieHold; DS.sortieHold = null; try { DS.sortieFix(save); } finally { DS.sortieHold = hold; } }
+  if (DS.partySync) DS.partySync(save);
+  DS.lastFuse = { ls: lsAdd, ids: keys, who: who, names: names, trio: trio, id: keys[ri], name: '', union: null, mercsBack: 0, over: 0, rep: H ? H.id : 0, repCls: H ? H.cls : '', repWho: rw, repName: H ? DS.flagName(H.cls, save) : '', hx: H ? DS.FUSE_HX : 0, moved: 0, succ: [], gone: gone, gen: gen };
   save.fuN2 = (+save.fuN2 || 0) + 1;
-  return who[0];
+  return rw;
 };
 DS.fuseJoinable = function () { return null; };
 DS.fuseJoin = function () { return null; };
-// 봇·시험용: 후보에서 셋씩 차례로 (출전한 사람 먼저). 돌려주는 것: 이번에 오른 셋의 수
-DS.fuseAuto = function (save, max) {
-  var n = 0; max = max == null ? 99 : max;
-  while (n < max) { var c = DS.fuseCands(save).sort(function (a, b) { return (b.dep ? 1 : 0) - (a.dep ? 1 : 0) || (b.role === 'hero') - (a.role === 'hero'); }).map(function (c) { return c.key; }); if (c.length < DS.FUSE_N || !save.crest) break; if (!DS.fuse(save, c.slice(0, DS.FUSE_N))) break; n++; }
+// 봇·시험용: 후보에서 셋씩 차례로. opt.pick(cands) → 고른 열쇠 셋 (없으면 출전한 이 먼저), opt.rep(save, keys) → 대표 가문 번호. 돌려주는 것: 합일한 수
+DS.fuseAuto = function (save, max, opt) {
+  var n = 0; max = max == null ? 99 : max; opt = opt || {};
+  while (n < max) {
+    var cs = DS.fuseCands(save); if (cs.length < DS.FUSE_N || !save.crest) break;
+    var c = opt.pick ? opt.pick(cs) : cs.sort(function (a, b) { return (b.dep ? 1 : 0) - (a.dep ? 1 : 0) || (b.role === 'hero') - (a.role === 'hero'); }).map(function (x) { return x.key; }).slice(0, DS.FUSE_N);
+    if (!c || c.length < DS.FUSE_N) break;
+    var rep = opt.rep ? opt.rep(save, c) : null;
+    if (!DS.fuse(save, c.slice(0, DS.FUSE_N), rep != null ? { rep: rep } : null)) break; n++;
+  }
   return n;
 };
 // ⑮ 옛 저장의 합일 마스터 → 원래 세(네) 깃발로: 각각 마스터의 레벨 그대로(8단이면 8단, 9단이면 9단). 마스터 줄의 번호·장비·사람 칸은 대표 깃발(rep)이 잇고, 나머지는 빈 손의 새 줄.

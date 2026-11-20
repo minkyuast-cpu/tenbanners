@@ -4,17 +4,18 @@
 //     가벼운 것(공훈 · 모집권 · 갱도 · 성년)은 보통이면 5~6초 남짓(글 길이만큼 조금 더) 뒤에 저절로 닫힌다. 「짧게」는 모두 저절로, 3.5초 남짓.
 //     뜬 뒤 DS.CINE.guard(0.7초) 동안은 눌러도 닫히지 않는다 — 앞 화면에 누른 손이 연출을 곧장 넘기지 않게. 시험 손잡이 DS.cineSkip 은 막지 않는다.
 //   DS.cine(ev, cb): cb 가 있으면 흐름 안의 연출(창 사이 · 바로 다음에), 없으면 「한가할 때」 — 싸움이 끝나고 창이 모두 닫힌 뒤. 한가할 때의 것은 저장(save.cineQ, 많아야 6)에 남겨 다시 켜도 잃지 않는다.
-//   ev = { k: 'wed'|'birth'|'adult'|'death'|'succ'|'open'|'rank'|'ticket'|'pit', title, sub, say, note, por: [얼굴 sprTag …], old: 떠난 이 얼굴, fc: 깃발 색, crest: 문장 svg }
+//   ev = { k: 'wed'|'birth'|'adult'|'death'|'succ'|'open'|'rank'|'ticket'|'pit'|'fuse'|'ascend'|'fallx'|'wake'|'reopen', title, sub, say, note, por: [얼굴 sprTag …], old: 떠난 이 얼굴, fc: 깃발 색, crest: 문장 svg,
+//     2.2.9: crests · fcs (문장 여럿과 그 빛깔 — 합일 · 깨어남), neo (새 모습), skill (새 기술 이름), names (합일한 셋의 이름) }
 //   설정의 「사건 연출」: 보통 · 짧게 · 끔 (끄면 기록 · 알림 글만 남는다). 움직임 줄이기면 움직이지 않고 짧게. 싸움 중의 죽음은 따로 「죽음 연출」(death.js)이 보여 준다.
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
 var U = DS.ui; if (!U || typeof document === 'undefined') return;
 var G = DS.G, esc = U.esc;
-var KINDS = { wed: '혼인', birth: '출생', adult: '성년', death: '이별', succ: '잇다', open: '새 가문', rank: '공훈', ticket: '모집권', pit: '갱도' };
-var SND = { wed: 'wed', birth: 'birth', adult: 'level', death: 'cancel', succ: 'promo', open: 'promo', rank: 'level', ticket: 'coin', pit: 'star' };
+var KINDS = { wed: '혼인', birth: '출생', adult: '성년', death: '이별', succ: '잇다', open: '새 가문', rank: '공훈', ticket: '모집권', pit: '갱도', fuse: '합일', ascend: '승급', fallx: '합일한 넋', wake: '깨어남', reopen: '다시 열린 가문' };      // 2.2.9: 합일 · 9 · 10단 · 8단 위의 죽음 · 세대가 바뀌어 깨어남 · 잠들었던 가문이 다시 열림
+var SND = { wed: 'wed', birth: 'birth', adult: 'level', death: 'cancel', succ: 'promo', open: 'promo', rank: 'level', ticket: 'coin', pit: 'star', fuse: 'fuse', ascend: 'fuse', fallx: 'mourn', wake: 'holy', reopen: 'fuse' };
 var Q = [], cur = null, seenSave = null, tick = 0;
-DS.CINE = { full: 5000, fullMax: 6500, perCh: 28, short: 3500, shortMax: 4200, guard: 700, max: 6, wait: { wed: 1, birth: 1, death: 1, succ: 1, open: 1 } };      // 2.2.5: full · short = 저절로 닫히는 것의 시간(ms, 글자마다 perCh 더 · Max 까지) · wait = 누를 때까지 기다리는 종류
+DS.CINE = { full: 5000, fullMax: 6500, perCh: 28, short: 3500, shortMax: 4200, guard: 700, max: 6, wait: { wed: 1, birth: 1, death: 1, succ: 1, open: 1, fuse: 1, ascend: 1, fallx: 1, wake: 1, reopen: 1 } };      // 2.2.5: full · short = 저절로 닫히는 것의 시간(ms, 글자마다 perCh 더 · Max 까지) · wait = 누를 때까지 기다리는 종류
 function mode() { var o = G.save && G.save.opt; var m = o && o.cine; return m === 'short' || m === 'off' ? m : 'full'; }
 DS.cineMode = mode;
 var SPR = /^<i class="spr" data-spr="[\w-]+" data-pal="[^"<>&]*" data-px="[\d.]+"( data-flip="1")?><\/i>$/;
@@ -24,7 +25,9 @@ function str(x, n) { return typeof x === 'string' ? x.slice(0, n || 80) : ''; }
 function clean(ev, raw) {      // 저장에 남는 꼴 (얼굴은 sprTag 글만). raw: 흐름 안의 것(저장하지 않는다) — 얼굴 HTML 을 그대로 (가계도 얼굴 등)
   if (!ev || !KINDS[ev.k]) return null;
   var sp = raw ? function (x) { return typeof x === 'string' ? x : ''; } : okSpr;
-  return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: /^#[0-9a-f]{3,8}$/i.test(ev.fc || '') ? ev.fc : '', crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)) };
+  var col = function (c) { return /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : ''; };
+  return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: col(ev.fc), crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+    crests: (Array.isArray(ev.crests) ? ev.crests : []).map(okSvg).slice(0, 4), fcs: (Array.isArray(ev.fcs) ? ev.fcs : []).map(col).slice(0, 4), neo: sp(ev.neo), skill: str(ev.skill, 24), names: (Array.isArray(ev.names) ? ev.names : []).map(function (n) { return str(n, 16); }).filter(Boolean).slice(0, 3) };      // 2.2.9: 문장 여럿 · 그 빛깔 · 새 모습 · 새 기술 · 세 이름
 }
 function store() { var s = G.save; if (!s) return; var q = Q.filter(function (e) { return !e.now; }).slice(0, DS.CINE.max).map(function (e) { var c = clean(e); return c; }); if (q.length) s.cineQ = q; else delete s.cineQ; }
 function restore() {      // 저장을 불러온 뒤: 남아 있던 연출을 줄에 (같은 것은 한 번)
@@ -58,14 +61,23 @@ function pump() {
   var ev = Q.splice(i, 1)[0]; if (!ev.now) store();
   play(ev);
 }
-setInterval(function () { tick++; if (!cur && (Q.length || (G.save && G.save.cineQ && G.save !== seenSave))) pump(); }, 700);
+function wakeQ() {      // 2.2.9: 세대가 바뀌어 깨어난 가문 (save.fzWake — endgame.js DS.egStart · save.js 가 채운다) → 한가할 때 한 번
+  var s = G.save, w = s && s.fzWake; if (!w || !w.length || !quiet()) return;
+  delete s.fzWake;
+  if (mode() === 'off') return;
+  var ks = w.filter(function (k) { return DS.CLASSES[k]; }).slice(0, 4), nm = ks.map(function (k) { return String(DS.flagName ? DS.flagName(k) : k).replace(/ 가문$/, ''); });
+  if (!ks.length) return;
+  DS.cine({ k: 'wake', crests: ks.map(function (k) { return DS.houseCrest ? DS.houseCrest(k, 40) : ''; }), fcs: ks.map(function (k) { return DS.FLAG[k] || ''; }), title: '잠든 가문이 깨어난다', sub: nm.join(', ') + ' 가문', note: '영웅관에서 다시 열 수 있다' });
+  if (U.persist) try { U.persist(); } catch (x) {}
+}
+setInterval(function () { tick++; if (!cur) wakeQ(); if (!cur && (Q.length || (G.save && G.save.cineQ && G.save !== seenSave))) pump(); }, 700);
 function face(spr, cls) { return '<span class="cfa' + (cls ? ' ' + cls : '') + '">' + spr + '</span>'; }
 function play(ev) {
   var calm = U.calm && U.calm(), md = mode(), C = DS.CINE, k = ev.k, chars = ((ev.title || '') + (ev.sub || '') + (ev.say || '') + (ev.note || '')).length;
   var hold = md !== 'short' && !!(C.wait[k] || ev.say);      // 2.2.5: 읽을 것이 있으면 누를 때까지
   var dur = md === 'short' ? Math.min(C.shortMax, C.short + chars * C.perCh * 0.4) : Math.min(C.fullMax, C.full + chars * C.perCh);
   var por = ev.por || [], fx = '';
-  for (var n = 0; n < (k === 'death' ? 7 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
+  for (var n = 0; n < (k === 'death' || k === 'fallx' ? 7 : k === 'fuse' || k === 'ascend' ? 12 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
   var stage = '';
   if (k === 'wed') stage = face(por[0] || '', 'cl') + '<span class="cring" aria-hidden="true"><i></i><i></i></span>' + face(por[1] || '', 'cr');
   else if (k === 'birth') stage = (por[1] ? face(por[1], 'cp cl') : '') + face(por[0] || '<i class="cbaby"></i>', 'cb') + (por[2] ? face(por[2], 'cp cr') : '');
@@ -73,6 +85,15 @@ function play(ev) {
   else if (k === 'open') stage = '<span class="cflag" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew');
   else if (k === 'ticket') stage = '<span class="ctk" aria-hidden="true">' + (U.svg ? U.svg('ticket', 46) : '') + '</span>';
   else if (k === 'rank' || k === 'pit') stage = (por[0] ? face(por[0]) : '') + '<span class="cbadge" aria-hidden="true">' + (ev.crest || (U.svg ? U.svg('star', 34) : '')) + '</span>';
+  else if (k === 'fuse') {      // 2.2.9 합일: 세 얼굴이 가운데 빛으로 모인다 → 두 깃발은 내려가 흐려지고 대표 깃발이 오른다 → 8단 모습
+    var cr = ev.crests || [], fcs = ev.fcs || [];
+    stage = '<span class="cfz" aria-hidden="true"><i class="cfzl"></i>' + [0, 1, 2].map(function (i) { return '<span class="cfzb b' + i + '" style="--bc:' + (fcs[i] || ev.fc || '#f6cf57') + '"><i class="cfl">' + (cr[i] || '') + '</i></span>'; }).join('') + '</span>' +
+      [0, 1, 2].map(function (i) { return face(por[i] || '', 'cfzf f' + i); }).join('') + face(ev.neo || por[0] || '', 'cneo');
+  }
+  else if (k === 'ascend') stage = face(ev.old || '', 'cold') + face(por[0] || '', 'cneo') + (ev.skill ? '<span class="cskl" aria-hidden="true"><i>새 기술</i><b>' + esc(ev.skill) + '</b></span>' : '');      // 9 · 10단: 새 모습과 새 고유 기술
+  else if (k === 'fallx') stage = '<span class="cxr" aria-hidden="true"><i></i><i></i><i></i></span>' + face(por[0] || '', 'cxf') + (ev.names && ev.names.length ? '<span class="cx3">' + ev.names.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</span>' : '');      // 8단 위의 죽음: 금 테가 갈라지고 세 이름이 흩어진다
+  else if (k === 'wake') stage = '<span class="cwk" aria-hidden="true">' + (ev.crests || []).map(function (c, i) { return '<span class="cfzb w' + i + '" style="--bc:' + ((ev.fcs || [])[i] || '#f6cf57') + '"><i class="cfl">' + c + '</i></span>'; }).join('') + '</span>';      // 세대가 바뀌어 잠든 가문이 깨어난다
+  else if (k === 'reopen') stage = '<span class="cflag rx" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew');
   else stage = por.map(function (p, i) { return face(p, 'c' + i); }).join('');
   var el = U.h('<div class="cine ck-' + k + (calm ? ' calm' : '') + (md === 'short' ? ' short' : '') + (hold ? ' hold' : ' auto') + '" role="dialog" aria-live="assertive" aria-label="' + esc(ev.title || KINDS[k]) + '" style="--dur:' + Math.round(dur) + 'ms;--guard:' + C.guard + 'ms' + (ev.fc ? ';--fc:' + ev.fc : '') + '">' +
     '<div class="cbd"></div><div class="cfx" aria-hidden="true">' + fx + '</div><div class="cin"><p class="cey">' + esc(KINDS[k]) + '</p><div class="cst n' + Math.max(1, por.length) + '">' + stage + '</div>' +
