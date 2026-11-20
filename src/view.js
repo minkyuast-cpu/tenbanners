@@ -1546,6 +1546,12 @@ V.drawUnit = function (g, v) {
   g.globalAlpha = 1;
 };
 // ── 2.3.0 큰 몸 (여러 칸): 몸 크기 그대로 그린 큰 그림(art5 DS.bigCanvas), 발밑 그림자 · 보스 테 · 고른 표시 · 체력 막대가 몸 폭에 맞는다 ──
+// 큰 그림을 지금 배율로 미리 줄여 둔 한 장 (6배로 구운 큰 캔버스를 매 프레임 고품질로 줄여 그리면 느린 폰에서 무겁다). 배율이 바뀌면 다시
+function preScaled(cv, sc) {
+  if (!cv || !(sc > 0)) return cv;
+  if (cv._ps && Math.abs(cv._psS - sc) < 0.01) return cv._ps;
+  try { var w = Math.max(1, Math.round(cv.lw * sc)), h = Math.max(1, Math.round(cv.lh * sc)), c = document.createElement('canvas'); c.width = w; c.height = h; var g2 = c.getContext('2d'); g2.imageSmoothingEnabled = true; g2.imageSmoothingQuality = 'high'; g2.drawImage(cv, 0, 0, w, h); cv._ps = c; cv._psS = sc; return c; } catch (x) { return cv; }
+}
 V.drawBig = function (g, v) {
   var u = v.u, t = this.time, W = u.fw || 1, H = u.fh || 1, ax = (v.x - fox(u)) * 16, ay = (v.y - foy(u)) * 16, fwP = W * 16, fhP = H * 16;
   if (ax + fwP - this.cam.x < -56 || ay + fhP - this.cam.y < -24 || ax - this.cam.x > this.W / this.k + 56 || ay - this.cam.y > this.H / this.k + 80) return;
@@ -1581,12 +1587,12 @@ V.drawBig = function (g, v) {
   if (cv) {
     dx0 = Math.round(ax + lx) - cv.ox; dy0 = Math.round(ay + ly + bob) - cv.oy; cw = cv.lw; ch = cv.lh; top = dy0 + (cv.pad || 0);
     if (u.enraged && !white && dq < 0) {      // 격노: 붉은 윤곽이 숨 쉰다 (가볍게: 한 겹)
-      var rc = DS.bigCanvas(u, { pose: pose, flip: flip, tint: '#ff3a4a' });
+      var rc = preScaled(DS.bigCanvas(u, { pose: pose, flip: flip, tint: '#ff3a4a' }), this.k * this.dpr);
       if (rc) { g.globalAlpha = v.alpha * (0.45 + 0.25 * Math.sin(t * 6)); g.drawImage(rc, dx0 - 1.5, dy0 - 1.5, cw + 3, ch + 2); if (!lite) { g.globalAlpha *= 0.5; g.drawImage(rc, dx0 - 2.5, dy0 - 2.5, cw + 5, ch + 3); } }      // 한두 겹 (큰 그림을 네 번 그리면 느린 폰에서 무겁다)
     }
     g.globalAlpha = v.alpha;
-    var sq = dq >= 0.35 ? 1 - (dq - 0.35) / 0.65 * 0.5 : 1;
-    if (sq < 1) { var hh = ch * sq; g.drawImage(cv, dx0, dy0 + ch - hh, cw, hh); } else g.drawImage(cv, dx0, dy0, cw, ch);
+    var sq = dq >= 0.35 ? 1 - (dq - 0.35) / 0.65 * 0.5 : 1, pcv = preScaled(cv, this.k * this.dpr);
+    if (sq < 1) { var hh = ch * sq; g.drawImage(pcv, dx0, dy0 + ch - hh, cw, hh); } else g.drawImage(pcv, dx0, dy0, cw, ch);
   } else {      // 그림이 없으면 옛 큰 그림을 몸 폭으로 늘려 그린다
     var sp = DS.unitSprite(u), oc = DS.spriteCanvas(sp[0], sp[1], { flip: flip, tint: white ? '#ffffff' : null, hd: 1 }), sw = fwP + 8;
     dx0 = Math.round(ax + lx - 4); dy0 = Math.round(ay + fhP - sw + ly + bob - 2); cw = ch = sw; top = dy0 + sw * 0.15;
