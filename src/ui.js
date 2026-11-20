@@ -1060,6 +1060,12 @@ function takeSnap(s) {
   sv.mercs.forEach(function (m) { snap.mx[m.id] = DS.pL(m); snap.mt[m.id] = DS.mercTitle ? DS.mercTitle(m) || '' : ''; });      // 판 전의 별명 (결과 창이 새로 붙은 별명을 알린다)
   snap.P = {}; DS.persons(sv).forEach(function (p) { var k = DS.pKey(sv, p.who); if (k) snap.P[k] = { L: DS.pL(p.who), e: +p.who.exp || 0 }; });      // 2.2.2: 사람마다 레벨·경험치 — 결과 창의 경험치 막대가 정확히 그 자리에서 차오른다
 }
+// 2.3.0: 큰 몸 보스는 입구 창에 몸 크기와 격노를 한 줄로 (2단계 보스는 둘째 몸)
+function bigLine(B) {
+  var P2 = B && B.phase2 && DS.BOSSES[B.phase2], Z = B && (B.sz || (P2 && P2.sz)), E = B && (B.enr || (P2 && P2.enr));
+  if (!Z || (Z[0] < 2 && Z[1] < 2)) return '';
+  return '<p class="bigl"><i>큰 몸 ' + Z[0] + '×' + Z[1] + '</i>' + (E ? '<i>체력 ' + Math.round(E.th * 100) + '% 아래 격노</i>' : '') + (P2 ? '<i>두 번째 몸</i>' : '') + '</p>';
+}
 DS.openGate = function (s, lock) {
   var sv = G.save, B = s.boss ? DS.BOSSES[s.boss] : null, pl = DS.partyL(sv), rec = DS.recLOf ? DS.recLOf(s) : s.L, low = DS.recLow ? !!DS.recLow(sv, s) : pl < rec - 2, rtg = DS.recTag ? DS.recTag(sv, s) : { tag: '', cls: '', tc: '' };      // 2.2.3: 잰 값으로 — 반반 아래 「위험」 · 권장 아래 「권장 미달」 · 넉넉하면 「여유」
   var foes = s.mobs.map(function (m) { return sprTag(DS.ENEMIES[m].sprite, '', 2); }).join('');
@@ -1068,7 +1074,7 @@ DS.openGate = function (s, lock) {
   var empt = DS.bnEmpty ? DS.bnEmpty(sv).length : 0, hp = partyHp();      // 2.2.0: 빈 가문 (가주도 막사의 같은 병과도 없다)
   // r12 screen: 흐름 창 — 닫기 | 입장(금) 아래 한 줄. 경고는 한 줄씩, 권유는 그 자리의 단추로
   var o = overlay('<header class="sh"><h3>' + (s.pit ? esc(s.name) : '시나리오 ' + s.id) + '</h3></header><div class="sb gate">' +
-    '<div class="gate-head">' + (B ? sprTag(B.sprite, B.pal, 3) : '<span class="noboss">방어전</span>') + '<div><h2>' + esc(s.name) + '</h2><p>' + (B ? '<b class="boss">' + esc(B.name) + '</b>' + (title ? ', ' + esc(title) : '') : '세 차례 습격을 모두 막아라') + '</p></div></div>' +
+    '<div class="gate-head">' + (B ? sprTag(B.sprite, B.pal, 3) : '<span class="noboss">방어전</span>') + '<div><h2>' + esc(s.name) + '</h2><p>' + (B ? '<b class="boss">' + esc(B.name) + '</b>' + (title ? ', ' + esc(title) : '') : '세 차례 습격을 모두 막아라') + '</p>' + bigLine(B) + '</div></div>' +
     '<dl class="facts"><dt>권장</dt><dd>' + lv(rec) + (s.tier ? ', ' + s.tier + '단 전용' : '') + (rec !== s.L ? ' <small class="dim">적 ' + lv(s.L) + '</small>' : '') + '</dd><dt>우리 부대</dt><dd class="' + rtg.cls + '">' + (DS.partySpecs ? DS.partySpecs(sv).length + '명, ' : '') + '평균 ' + lv(pl) + (rtg.tag ? ' <i class="tagw ' + rtg.tc + '">' + rtg.tag + '</i>' : '') + '</dd>' +
     '<dt>적</dt><dd class="foes">' + foes + '</dd>' + (moves.length ? '<dt>보스의 기술</dt><dd class="moves">' + moves.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</dd>' : '') + '<dt>보상</dt><dd>' + esc(rewardText(s)) + '</dd></dl>' +
     sortieBar(sv, 'gate') +      // 2.2.8: 출전 셋 · 바꾸기

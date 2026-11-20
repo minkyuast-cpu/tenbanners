@@ -44,4 +44,12 @@ module.exports = async (page, shot, L) => {
   console.log('PERF ults', JSON.stringify(await measure(+process.env.SEC || 10)));
   await shot('perf_ults');
   await ev(() => clearInterval(window.__ultT));
+  // ④ 2.3.0 큰 보스 싸움: 29번 용암용(4×2) — 숨결 · 불비의 땅 위험 · 꼬리 · 격노 뒤 비기(겁화). 부대가 버티도록 레벨을 올리고, 보스는 체력을 넉넉히 · 격노를 일찍
+  if (process.env.NOBOSS) return;
+  await ev(() => clearInterval(window.__ultT)); await out(); await lv(92);
+  await scn(29);
+  await ev(() => { var sim = DS.G.sim, b = sim.units.filter(function (u) { return u.role === 'boss'; })[0]; b.mhp = b.hp = b.mhp * 6; if (b.enr) b.enr.th = 0.97; sim.rouse(b); DS.G.view.focus = b.id; sim.hunt = true; });
+  await L.sleep(4000);
+  console.log('PERF boss', JSON.stringify(await measure(+process.env.SEC || 10)));
+  await shot('perf_boss');
 };

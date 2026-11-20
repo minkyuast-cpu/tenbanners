@@ -579,7 +579,7 @@ function nearUnit(t, side, cmdOnly) {
   var best = null, bd = 9;
   G.sim.units.forEach(function (v) {
     if (v.dead || v.side !== side || (cmdOnly && v.role !== 'cmd')) return;
-    var dx = Math.abs(v.x - t.x), dy = Math.abs(v.y - t.y); if (dx > 1 || dy > 1) return;
+    var vn = DS.fpNear ? DS.fpNear(v, t.x, t.y) : v, dx = Math.abs(vn.x - t.x), dy = Math.abs(vn.y - t.y); if (dx > 1 || dy > 1) return;      // 2.3.0: 큰 몸은 가장 가까운 칸으로
     if (dx + dy < bd) { bd = dx + dy; best = v; }
   });
   return best;
@@ -971,14 +971,15 @@ function ultInfo(u) {      // { id: 쓸 수 있는 필살기, born: 타고난 �
 }
 function ultSig() { var u = ultU(); if (!u) return ''; var i = ultInfo(u); return u.id + ':' + (u.dead ? 'x' : (i.id || '') + '/' + (i.born || '') + (i.lock ? 'l' : '')); }
 function ultTarget(u, S) {      // 겨누지 않는다: 보스 → 가장 가까운 적 (치유·가호는 저 스스로나 가장 다친 가주)
-  var foes = G.sim.units.filter(function (v) { return !v.dead && v.side !== u.side && v.side !== 'neutral'; }), d = function (v) { return Math.abs(v.x - u.x) + Math.abs(v.y - u.y); };
+  var foes = G.sim.units.filter(function (v) { return !v.dead && v.side !== u.side && v.side !== 'neutral'; }), d = function (v) { return DS.fpDist ? DS.fpDist(v, u) : Math.abs(v.x - u.x) + Math.abs(v.y - u.y); };      // 2.3.0: 큰 몸은 가장 가까운 칸까지
   if (S.tg === 'self' || S.tg === 'multi') return {};
   if (S.tg === 'ally') { var al = G.sim.units.filter(function (v) { return !v.dead && v.side === u.side && v.role === 'cmd'; }).sort(function (a, b) { return a.hp / a.mhp - b.hp / b.mhp; })[0]; return { tid: (al || u).id }; }
   if (!foes.length) return null;
   var boss = foes.filter(function (v) { return v.role === 'boss'; }).sort(function (a, b) { return d(a) - d(b); })[0], f = boss && d(boss) <= 12 ? boss : foes.sort(function (a, b) { return d(a) - d(b); })[0];
   if (S.tg === 'enemy') return { tid: f.id };
-  if (S.tg === 'dir') { var dx = f.x - u.x, dy = f.y - u.y; return Math.abs(dx) >= Math.abs(dy) ? { x: u.x + (dx > 0 ? 1 : -1), y: u.y } : { x: u.x, y: u.y + (dy > 0 ? 1 : -1) }; }
-  return { x: f.x, y: f.y };
+  var fn = DS.fpNear ? DS.fpNear(f, u.x, u.y) : f;
+  if (S.tg === 'dir') { var dx = fn.x - u.x, dy = fn.y - u.y; return Math.abs(dx) >= Math.abs(dy) ? { x: u.x + (dx > 0 ? 1 : -1), y: u.y } : { x: u.x, y: u.y + (dy > 0 ? 1 : -1) }; }
+  return { x: fn.x, y: fn.y };
 }
 // ───────── 2.2.3 기술 예약 ─────────
 // 자동 전투 중(고른 사람이 자동) 지금 못 쓰는 기술(마나 · 틱 · 재사용 · 닿는 대상 · 시전 중)을 누르면 예약 — 엔진(DS.Sim.rsvTry)이 쓸 수 있게 되는 대로 무엇보다 먼저 쓴다.

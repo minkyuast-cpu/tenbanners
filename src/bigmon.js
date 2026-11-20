@@ -7,7 +7,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 var SK = DS.SKILLS, EN = DS.ENEMIES, BO = DS.BOSSES; if (!SK || !EN || !BO) return;
 
 // 큰 몸의 체력 배율 (차지하는 칸 수 → 배율). 둘레에 붙어 때릴 자리가 넓어진 몫을 되돌린다 (봇 · 권장 재기로 맞춘 값)
-DS.BIG_HP = { 2: 1.08, 4: 1.18, 8: 1.32 };
+DS.BIG_HP = { 2: 1.05, 4: 1.12, 8: 1.2 };
 
 // ───────── 기술 ─────────
 var NEW_SK = {
@@ -41,12 +41,12 @@ var NEW_SK = {
   bb_venombreath:{ name: '독숨', tick: 50, tg: 'dir', len: 4, cone: true, cast: 1.8, fx: 'poison', cd: 11, minN: 1, eff: [{ t: 'dmg', m: 1.1, type: 'magic', stat: 'atk' }, { t: 'status', s: 'poison', dur: 10, p: 4 }, { t: 'hazard', k: 'poison', dur: 6, p: 3, every: 2 }] },
   bb_bonebreath: { name: '망자의 숨', tick: 50, tg: 'dir', len: 4, cone: true, cast: 1.8, fx: 'dark', cd: 11, minN: 1, eff: [{ t: 'dmg', m: 1.4, type: 'magic' }, { t: 'buff', s: 'atk', p: -20, dur: 10 }] },
   bb_wing:     { name: '날갯짓', tick: 45, tg: 'self', area: 'r2', side: 'enemy', cast: 1.4, fx: 'wind', ai: 'near', near: 2, cd: 12, eff: [{ t: 'dmg', m: 0.8 }, { t: 'knock', n: 2 }, { t: 'gauge', v: -30 }] },
-  bb_burrow:   { name: '땅굴', tick: 50, rng: [2, 7], tg: 'unit', area: 'r1', cast: 1.6, fx: 'quake', ai: 'far', cd: 14, eff: [{ t: 'emerge' }, { t: 'dmg', m: 1.4 }, { t: 'gauge', v: -25 }] },
+  bb_burrow:   { name: '땅굴', tick: 50, rng: [2, 7], tg: 'unit', area: 'r1', cast: 1.6, fx: 'quake', ai: 'far', cd: 14, eff: [{ t: 'emerge' }, { t: 'dmg', m: 1.2 }, { t: 'gauge', v: -20 }] },
   // ── 비기 (격노한 뒤에만 · 보스 컷인) ──
   bu_cataclysm: { name: '대지 붕괴', tick: 60, tg: 'self', area: 'r4', side: 'enemy', cast: 3.0, fx: 'quake', ai: 'enr', near: 6, bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.8 }, { t: 'knock', n: 2 }, { t: 'gauge', v: -40 }] },
   bu_inferno:   { name: '겁화', tick: 60, tg: 'multi', n: 9, area: 'r1', cast: 3.0, fx: 'meteor', ai: 'enr', bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.55, type: 'magic' }, { t: 'hazard', k: 'fire', dur: 6, p: 3, s: 'burn', every: 2 }] },
   bu_glacier:   { name: '얼음 시대', tick: 60, tg: 'self', area: 'r4', side: 'enemy', cast: 3.0, fx: 'frost', ai: 'enr', near: 6, bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.5, type: 'magic' }, { t: 'status', s: 'slow', dur: 10 }, { t: 'gauge', v: -50 }] },
-  bu_plague:    { name: '죽음의 안개', tick: 60, tg: 'multi', n: 9, area: 'r1', cast: 3.0, fx: 'poison', ai: 'enr', bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.2, type: 'magic' }, { t: 'status', s: 'poison', dur: 12, p: 4 }, { t: 'hazard', k: 'poison', dur: 6, p: 3, every: 2 }] },
+  bu_plague:    { name: '죽음의 안개', tick: 60, tg: 'multi', n: 9, area: 'r1', cast: 3.0, fx: 'poison', ai: 'enr', bult: true, cd: 22, eff: [{ t: 'dmg', m: 1.05, type: 'magic' }, { t: 'status', s: 'poison', dur: 10, p: 3 }, { t: 'hazard', k: 'poison', dur: 6, p: 3, every: 2 }] },
   bu_horn:      { name: '뿔 폭풍', tick: 60, tg: 'dir', len: 8, cast: 2.2, dash: true, fx: 'thrust', ai: 'enr', bult: true, cd: 18, eff: [{ t: 'dmg', m: 1.9 }, { t: 'knock', n: 1, dir: 'side' }, { t: 'gauge', v: -30 }] },
   bu_moon:      { name: '달 울음', tick: 60, tg: 'self', area: 'r3', side: 'enemy', cast: 2.4, fx: 'wind', ai: 'enr', near: 5, bult: true, cd: 20, eff: [{ t: 'dmg', m: 1.4 }, { t: 'gauge', v: -40 }, { t: 'status', s: 'slow', dur: 6 }] },
   bu_tomb:      { name: '왕의 저주', tick: 60, tg: 'multi', n: 8, area: 'single', cast: 2.6, fx: 'dark', ai: 'enr', bult: true, cd: 20, eff: [{ t: 'dmg', m: 1.5, type: 'magic' }, { t: 'buff', s: 'atk', p: -20, dur: 12 }] },
@@ -94,7 +94,7 @@ var BIG_STORY = {
   tormak:    { sz: [1, 2], skills: ['bb_rush', 'b_quake', 'e_smash'], enr: ENR(['bu_horn'], '뿔이 달아오른다!') },
   twinsnake: { sz: [2, 1], skills: ['b_venom', 'bb_pool', 'bb_tail'], enr: ENR(['bu_plague'], '두 머리가 한꺼번에 운다') },
   warden:    { sz: [2, 2], skills: ['b_boulder', 'b_harden', 'bb_slam', 'e_smash'], enr: ENR(['bu_cataclysm'], '돌 눈이 붉게 탄다') },
-  shara:     { sz: [2, 2], skills: ['b_spikes', 'bb_burrow', 'b_sumScorp', 'bb_tail'], enr: ENR(['bu_plague'], '여왕이 집게를 든다') },
+  shara:     { sz: [2, 2], skills: ['b_spikes', 'bb_burrow', 'bb_tail'], enr: ENR(['bu_plague'], '여왕이 집게를 든다') },
   king:      { sz: [1, 2], skills: ['b_sumSkel', 'b_curse', 'b_dark'], enr: ENR(['bu_tomb'], '무덤이 운다') },
   gatekeeper:{ sz: [2, 2], skills: ['b_quake', 'b_sumImp', 'bb_rocks', 'e_smash'], enr: ENR(['bu_cataclysm'], '문이 무너진다') },
   swarm:     { sz: [2, 2], skills: ['b_sumImp', 'b_cloud', 'bb_wing', 'e_smash'], enr: ENR(['bu_plague'], '파리 떼가 하늘을 덮는다', 0.35) },
@@ -111,7 +111,7 @@ var BIG_FIELD = {
   stone:  { sz: [2, 2], skills: ['b_boulder', 'bb_slam', 'b_harden'], enr: ENR(['bu_cataclysm'], '돌 눈이 불타오른다') },
   coast:  { sz: [4, 2], skills: ['b_tide', 'bb_venombreath', 'bb_tail'], enr: ENR(['bu_plague'], '비늘이 곤두선다') },
   isle:   { sz: [2, 2], skills: ['b_quake', 'b_boulder', 'bb_slam'], enr: ENR(['bu_cataclysm'], '섬이 흔들린다') },
-  desert: { sz: [2, 2], skills: ['b_spikes', 'bb_burrow', 'bb_rush'], enr: ENR(['bu_plague'], '모래가 끓는다') },
+  desert: { sz: [2, 2], skills: ['b_spikes', 'bb_burrow', 'b_sumScorp', 'bb_rush'], enr: ENR(['bu_plague'], '모래가 끓는다') },
   mire:   { sz: [2, 2], skills: ['b_dark', 'b_scythe', 'bb_pool'], enr: ENR(['bu_plague'], '물이 검어진다') },
   spire:  { sz: [1, 2], skills: ['b_cross', 'b_dark', 'bb_rush'], enr: ENR(['bu_tomb'], '첨탑이 사냥감을 고른다') },
   ash:    { sz: [2, 2], skills: ['b_erupt', 'bb_slam', 'bb_firebreath'], enr: ENR(['bu_inferno'], '재가 불이 된다') },
@@ -149,8 +149,8 @@ var ZONE_MOBS = {
 };
 if (DS.ZONES) for (k in ZONE_MOBS) if (DS.ZONES[k] && DS.ZONES[k].mobs) DS.ZONES[k].mobs = ZONE_MOBS[k].filter(function (m) { return EN[m]; });
 // 시나리오: 1~20 은 하나를 더하고, 21~30 은 비슷한 세기의 하나를 바꾼다 (2.2.9 에 이미 출렁이는 판 — 세기를 더 얹지 않는다)
-var SCN_ADD = { 3: 'boomer', 4: 'gobShaman', 6: 'gobShaman', 7: 'skelGuard', 8: 'stormcaller', 10: 'stormcaller', 11: 'sandworm', 12: 'skelGuard', 14: 'toad', 15: 'banshee', 17: 'shade', 19: 'shade' };
-var SCN_SWAP = { 21: ['imp', 'frostWisp'], 22: ['darkMage', 'cultist'], 23: ['imp', 'boomer'], 25: ['ghost', 'banshee'], 26: ['scorpion', 'sandworm'], 27: ['salamander', 'hellhound'], 28: ['ghost', 'frostWisp'], 29: ['gargoyle', 'hellhound'] };
+var SCN_ADD = { 3: 'boomer', 4: 'gobShaman', 6: 'gobShaman', 7: 'skelGuard', 8: 'stormcaller', 10: 'stormcaller', 12: 'sandworm', 14: 'toad', 15: 'banshee', 17: 'shade' };
+var SCN_SWAP = { 22: ['darkMage', 'cultist'], 23: ['imp', 'boomer'], 25: ['ghost', 'banshee'], 26: ['scorpion', 'sandworm'], 27: ['salamander', 'hellhound'], 29: ['gargoyle', 'hellhound'] };
 if (DS.SCENARIOS) DS.SCENARIOS.forEach(function (s) {
   if (!s || !s.mobs) return;
   if (SCN_ADD[s.id] && s.mobs.indexOf(SCN_ADD[s.id]) < 0) s.mobs = s.mobs.concat([SCN_ADD[s.id]]);
