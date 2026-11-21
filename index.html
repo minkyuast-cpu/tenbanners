@@ -5036,6 +5036,12 @@ html body #app#app #vban.rage b { font-size: 30px; background: linear-gradient(1
 
 .gate-head .bigl { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 0; }
 .gate-head .bigl i { font: 600 11px/1 var(--f-ui); font-style: normal; color: #ffd0d6; background: rgba(160, 30, 50, .35); box-shadow: inset 0 0 0 1px rgba(255, 77, 109, .45); padding: 3px 6px; border-radius: 8px; }
+
+/* 2.3.4: 기운초 쉬는 시간 — 어둡게 덮고 남은 초 (아래에서부터 걷힌다) */
+#acts .act.item { position: relative; }
+#acts .act.item.cool { filter: saturate(.4); }
+#acts .act.item .cdn { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: linear-gradient(to top, rgba(0, 0, 0, .62) var(--cdp, 0%), rgba(0, 0, 0, .25) var(--cdp, 0%)); color: #fff; font: 700 15px/1 var(--f-ui); font-style: normal; text-shadow: 0 1px 2px #000; pointer-events: none; }
+#acts .act.item:not(.cool) .cdn { display: none; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -5072,6 +5078,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 
 DS.LV_PER_TIER = 10;      // 단마다 레벨 1~10
 DS.MAX_TIER = 10;
+DS.ENDO = { gauge: 50, cd: 15 };      // 2.3.4: 기운초 — 게이지 +50 (예전 100으로 채움), 부대가 함께 15초 쉰다 (예전엔 쉼 없이 거듭 먹어 기술을 끝없이 썼다)
 DS.TICK = { regen: 11, attack: 40, item: 25, step: 12, quick: 0.65 };   // 틱(행동) 게이지 규칙
 DS.PARTY_MAX = 3;         // 2.2.8: 출전은 셋 — 맹주 + 고른 가주 둘 (meta.js DS.sortieFix · s.party 는 저절로 맞춘 목록). 맹주 가문의 가문원은 따로 함께 싸운다
 
@@ -5787,7 +5794,7 @@ DS.TERRAIN = {
 DS.ITEMS = {
   herb:  { name: '약초', price: 30, desc: 'HP +40% (아군 하나, 가문원 포함)' },
   mana:  { name: '마나초', price: 50, desc: '마나 +50% (가주 하나)' },
-  endo:  { name: '기운초', price: 80, desc: '틱 게이지 100%' }
+  endo:  { name: '기운초', price: 80, desc: '틱 게이지 +50%. 쓰고 나면 15초 쉰다 (부대 함께)' }
 };
 DS.gearPrice = function (tier) { return Math.round(10 * Math.pow(tier, 1.9)) * 10; };      // 정가의 바탕 — 2.1.0: 장비에 단이 없어 「단」 자리에 지금 부대 레벨의 눈금(DS.gearTe)을 넣는다. 되팔 값에만 쓴다
 // 장비는 적이 떨어뜨린다(r37: 무기점·방어구점 없음). 가방에 넣고 가문에 입힌다. 2.1.0: 누구나 무엇이든 입는다 — 병과에 맞지 않으면 능력치가 조금 깎인다(DS.GEAR_OFF).
@@ -6043,10 +6050,16 @@ for (var ux in DS.ULT_BASE) DS.SK_ALIAS[ux] = DS.ULT_BASE[ux];
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.3.3';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.1.3';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.3.4';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.1.4';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.3.4', date: '2026-11-21', tag: '변경', title: '기운초 손질',
+    lead: '기운초가 너무 셌습니다. 덜 채우고, 쓰고 나면 잠시 쉽니다.',
+    items: [
+      ['변경', '기운초는 틱 게이지를 100%까지 채우던 것에서 50%만 더합니다.'],
+      ['변경', '기운초를 쓰면 부대 모두 15초 동안 다시 쓸 수 없습니다. 단추에 남은 초가 보입니다.']
+    ] },
   { ver: '2.3.3', date: '2026-11-21', tag: '변경', title: '바로 먹는 약초',
     lead: '약초와 마나초를 누르면 겨누지 않고 지금 조작하는 사람이 바로 먹습니다.',
     items: [
@@ -15137,7 +15150,7 @@ var ITEM_FX = { herb: 1, mana: 1, endo: 1 };      // 엔진이 효과를 아는 
 P.useItem = function (u, key, tgt) {
   if (!(this.inv[key] > 0)) return false;
   if (DS.BAL.fix28 && !ITEM_FX[key]) { this.say(u, '여기서는 쓸 수 없다'); return false; }      // 효과 없이 개수만 깎이던 것 (귀환 두루마리·모닥불 꾸러미가 전투 막대로 들어오면)
-  if (key === 'endo') { this.inv.endo--; u.gauge = 100; this.emit({ t: 'item', id: u.id, key: key, tid: u.id }); this.emit({ t: 'inv' }); u.busy = 0.2; return true; }
+  if (key === 'endo') { var EN = DS.ENDO || { gauge: 50, cd: 15 }; if (this.t < (this.endoT || 0)) { this.say(u, '기운초는 ' + Math.ceil(this.endoT - this.t) + '초 뒤'); return false; } this.endoT = this.t + EN.cd; this.inv.endo--; u.gauge = Math.min(100, u.gauge + EN.gauge); this.emit({ t: 'item', id: u.id, key: key, tid: u.id }); this.emit({ t: 'inv' }); u.busy = 0.2; return true; }
   var c = TK.item * this.q(u); if (u.gauge < c) return false;
   tgt = tgt || u; this.inv[key]--; u.gauge -= c;
   this.emit({ t: 'item', id: u.id, key: key, tid: tgt.id }); this.emit({ t: 'inv' });
@@ -25602,6 +25615,7 @@ function renderActs() {
       if (into === tray && tray) { G.itemsOpen = null; cancelAim(); if (!DS.ITEMS[key].ctl) { if (SK['i_' + key]) startAim('i_' + key); else if (ITEM_AIM[key]) giveItem(me2, key, me2); else { order(me2, { t: 'item', key: key }); A('ok'); } } else useCtl(key); renderActs(); return; }
       if (DS.ITEMS[key].ctl) { useCtl(key); return; }      // 귀환 두루마리·모닥불 꾸러미: 전투 밖에서 컨트롤러가 처리 (전엔 엔진에 넘어가 개수만 깎였다)
       if (SK['i_' + key]) { startAim('i_' + key); return; }      // 폭탄처럼 기술로 풀리는 소모품 (엔진이 일반 처리)
+      if (key === 'endo' && G.sim.t < (G.sim.endoT || 0)) { deny(b, Math.ceil(G.sim.endoT - G.sim.t) + '초', '기운초는 ' + Math.ceil(G.sim.endoT - G.sim.t) + '초 뒤에 다시 쓴다'); return; }      // 2.3.4: 부대가 함께 쉰다
       if (!ITEM_AIM[key]) { cancelAim(); order(me2, { t: 'item', key: key }); A('ok'); return; }      // 기운초처럼 바로 쓰는 것
       // 2.3.3: 약초·마나초는 겨누지 않는다 — 누르면 조작하는 이가 바로 먹는다
       cancelAim(); giveItem(me2, key, me2);
@@ -25723,6 +25737,7 @@ function updateActs() {
     } else {
       var n = G.save.items[e.key] || 0;
       if (n !== e.cnt) { e.cnt = n; e.n.textContent = n; e.b.classList.toggle('off', n <= 0); e.b.setAttribute('aria-label', DS.ITEMS[e.key].name + ' ' + n + '개'); }
+      if (e.key === 'endo') { var cl = Math.max(0, Math.ceil((G.sim.endoT || 0) - G.sim.t)); if (cl !== e.cl) { e.cl = cl; e.b.classList.toggle('cool', cl > 0); var ce = e.b.querySelector('.cdn'); if (!ce && cl) { ce = document.createElement('i'); ce.className = 'cdn num'; ce.setAttribute('aria-hidden', 'true'); e.b.appendChild(ce); } if (ce) ce.textContent = cl ? cl : ''; e.b.style.setProperty('--cdp', (cl / ((DS.ENDO || {}).cd || 15) * 100) + '%'); } }      // 2.3.4: 기운초 쉬는 시간
       if (e.key === 'herb') e.b.classList.toggle('hint', (G.herbHint || 0) > performance.now());      // r8 hud: 지휘관이 위태로울 때 약초 단추가 깜빡인다
       e.b.classList.toggle('queued', !!(o && (o.t === 'item' ? o.key === e.key : o.t === 'skill' && o.id === 'i_' + e.key)));
     }
