@@ -4875,6 +4875,11 @@ html body #app#app .result.rsplit > .rfoot { position: relative; bottom: auto; f
 .cine .cx3 i:nth-child(1) { animation-delay: 1.1s; } .cine .cx3 i:nth-child(2) { animation-delay: 1.35s; } .cine .cx3 i:nth-child(3) { animation-delay: 1.6s; }
 .cine.ck-fallx .crib b { color: #e6dcc6; text-shadow: none; }
 .cine.ck-fallx .cfx i { top: -4%; width: 3px; height: 3px; background: #c8b48a; box-shadow: none; animation: cnAsh 3s linear calc(var(--i) * .25s) both; }
+/* 2.3.1: 8단 위가 남긴 모집권 — 잿빛 연출 속 하나의 금빛 */
+.cine .cgift { display: inline-flex; align-items: center; gap: 8px; margin: 10px auto 0; padding: 6px 14px; border: 1px solid #c9a24a; border-radius: 999px; background: linear-gradient(180deg, rgba(90, 66, 22, .55), rgba(40, 28, 10, .55)); font: 700 14px/1.2 var(--f-ui); color: #ffe39a; text-shadow: 0 0 8px rgba(255, 200, 90, .45); animation: cnUp .5s ease-out 1.6s both, cnGift 2.4s ease-in-out 2.1s infinite; }
+.cine .cgift .cgi { width: 22px; height: 14px; border-radius: 3px; background: linear-gradient(135deg, #ffe7a3, #d6a640); box-shadow: inset 0 0 0 1.5px #8a6420; -webkit-mask: radial-gradient(circle at 0 50%, transparent 3px, #000 3.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 3px, #000 3.5px) right / 51% 100% no-repeat; mask: radial-gradient(circle at 0 50%, transparent 3px, #000 3.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 3px, #000 3.5px) right / 51% 100% no-repeat; }
+@keyframes cnGift { 50% { box-shadow: 0 0 14px rgba(255, 200, 90, .45); } }
+html.calm .cine .cgift, .cine.calm .cgift { animation: cnUp .3s ease-out .6s both; }
 .cine.ck-wake { --fc: #9fe8ec; --cr: linear-gradient(180deg, #3f7a8a, #1e3f4a); }
 .cine.ck-wake .cst { min-height: 120px; align-items: flex-end; gap: 14px; }
 .cine .cwk { display: flex; gap: 14px; }
@@ -6013,10 +6018,16 @@ for (var ux in DS.ULT_BASE) DS.SK_ALIAS[ux] = DS.ULT_BASE[ux];
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.3.0';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.1.0';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.3.1';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.1.1';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.3.1', date: '2026-11-21', tag: '선물', title: '남긴 뜻',
+    lead: '8단 위의 영웅이 쓰러지면 영웅 모집권 10장을 남깁니다. 죽음 연출에 함께 보입니다.',
+    items: [
+      ['새로', '8단, 9단, 10단의 영웅이 어떤 까닭으로든 죽으면 영웅 모집권 10장을 받습니다. 한 사람에 한 번입니다.'],
+      ['새로', '합일한 넋의 죽음 연출 아래에 금빛으로 「남긴 뜻, 영웅 모집권 10장」이 뜹니다.']
+    ] },
   { ver: '2.3.0', date: '2026-11-20', tag: '새로', title: '큰 몸의 보스',
     lead: '여러 칸을 차지하는 큰 보스와 새 몬스터 열둘이 들판, 시나리오, 갱도에 나옵니다. 큰 보스는 기술을 쓰기 전에 땅을 붉게 물들이고, 체력이 줄면 격노합니다.',
     items: [
@@ -9135,6 +9146,9 @@ DS.linAfterScn = function (s, o, rnd) {
 };
 
 // ── 죽음 ──
+// 2.3.1: 8단 위(합일한 넋)가 죽으면 영웅 모집권을 남긴다 (한 사람에 한 번, p.tk10)
+DS.FALLX_TK = 10;
+function fallTk(s, p) { var sn = p && p.snap || {}; if (!p || p.tk10 || !(+sn.L > 70 || sn.fz)) return; p.tk10 = DS.FALLX_TK; s.tickets = (s.tickets || 0) + DS.FALLX_TK; }
 function snapMerc(m) { var o = { id: m.id, type: m.type, g: m.g, t: m.t, v: m.v || 0, L: DS.pL(m), k: m.k || 0, b: m.b || 0 }; if (m.fz) o.fz = 1; ['q', 'bk', 'sv', 'it', 's', 'nk', 'ttl', 'pk', 'rv', 'lw'].forEach(function (k) { if (m[k] != null) o[k] = m[k]; }); var tt = DS.mercTitle ? DS.mercTitle(m) : ''; if (tt) o.title = tt; return o; }
 function emptyCoffins(s) { var c = s.coffins; return c ? Math.max(0, c.have - c.list.length) : 0; }
 // 용병(아이 포함)이 죽었다 (DS.loseMerc 뒤에 부른다: m = 잃은 용병). 가계도에 오른 이거나 빈 관이 있으면 사람으로 남긴다.
@@ -9144,6 +9158,7 @@ DS.linMercDied = function (s, m, at, why) {
   if (!p && !emptyCoffins(s) && !(s.eg && s.eg.pass)) return evs;      // ⑰-1: 관은 누구나 (빈 관이 있을 때 임시 사람)      // 3.3.0: 스무 해 창 동안은 빈 관이 없어도 사람으로 남긴다 (끝 면에서 내려 묻고 모실 수 있게)
   if (!p) { mercFix(m); p = mkP(s, { k: 'm', sn: m.sn, n: m.n, sx: m.sx, type: m.type, g: m.g, m: 0, gv: 1, ttl: m.ttl }); }
   p.type = m.type; p.g = m.g; p.n = m.n; p.st = 'dead'; p.m = 0; p.snap = snapMerc(m); if (m.lw) p.lw = String(m.lw).slice(0, 24);      // r32: 마지막 한마디
+  fallTk(s, p);
   p.d = { at: at || '', why: why || '전사', s: scnN(s), tm: Math.round(s.time || 0), fr: 1 };
   if (fb) p.d.fb = fb;
   griefFam(s, p, evs);
@@ -9161,6 +9176,7 @@ DS.linSettle = function (s, at) {
     p.snap = { cls: ch.cls, L: ch.L, w: ch.w || null, a: ch.a || null };
     if (ch.id === s.hero) p.ttl = DS.charName(ch);      // 3.3.0: 가주였던 이의 호 (「한울 2세」) — 태어날 때 받은 호 대신
     p.st = 'dead'; p.c = 0; p.seat = ch.id;
+    fallTk(s, p);
     p.d = { at: at || '', why: '전사', s: scnN(s), tm: Math.round(s.time || 0), fr: 1 };
     var e1 = logE(s, 'death', p.id, 0, { at: at || '', why: '전사', k: 'c', cls: ch.cls });
     ch.vac = { pid: p.id, at: at || '' }; ch.pid = 0; ch.down = true; delete ch.gr;
@@ -29033,7 +29049,7 @@ function tabHelp() {
       '나머지 두 가주는 대표에게 <b>흡수</b>된다. 가계도에는 합일로 남고, 든 장비는 가방으로 간다. 대표의 수명은 30년에 두 사람의 남은 해를 더한 만큼 늘어난다 (많아야 ' + DS.FUSE_LS_MAX + '년).',
       '흡수된 두 가문은 <b>이번 세대가 끝날 때까지 잠든다</b>. 영웅관에서 그 병과가 나와도 열리지 않고, 막사의 그 병과 사람은 기다린다. 다음 세대의 장을 열면 깨어나 영웅관에서 다시 열 수 있다. 선 가문이 셋 밑으로 줄면(더 합일할 수 없으면) 일찍 깨어난다.',
       '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
-      '8단 위의 가주가 쓰러지면 그대로 떠난다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',
+      '8단 위의 가주가 쓰러지면 그대로 떠난다. 영웅 모집권 10장을 남긴다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
@@ -29810,12 +29826,12 @@ function lgBig(spr) { return String(spr || '').replace(/data-px="[\d.]+"/, 'data
 function lgFallX(d) {
   var r = d && LS() && LS().P[d.id], sn = r && r.snap || {}; if (!r || !(+sn.L > 70 || sn.fz)) return null;
   var nm = (r.fu3 || []).filter(Boolean); if (!nm.length) nm = [d.name];
-  return { sub: '합일한 넋이 졌다. ' + (+sn.L > 70 ? DS.tierOfL(sn.L) + '단' : '8단') + '은 잇지 않는다', names: nm.slice(0, 3), note: nm.length > 1 ? '셋이 하나였던 이' : '' };
+  return { sub: '합일한 넋이 졌다. ' + (+sn.L > 70 ? DS.tierOfL(sn.L) + '단' : '8단') + '은 잇지 않는다', names: nm.slice(0, 3), note: nm.length > 1 ? '셋이 하나였던 이' : '', gift: r.tk10 ? '남긴 뜻, 영웅 모집권 ' + r.tk10 + '장' : '' };      // 2.3.1: 모집권 10장
 }
 function lgRite(ev, cb, griefs, seen) {
   var s = G.save, d = lgP(ev.a), chId = ev.ch;
   if (!d || !chId || !s.chars[chId]) { if (cb) cb(); return; }
-  if (DS.cine && !seen) { var fx0 = lgFallX(d); DS.cine(fx0 ? { k: 'fallx', por: [lgBig(d.spr)], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note } : { k: 'death', por: [d.spr || ''], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', ') }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
+  if (DS.cine && !seen) { var fx0 = lgFallX(d); DS.cine(fx0 ? { k: 'fallx', por: [lgBig(d.spr)], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note, gift: fx0.gift } : { k: 'death', por: [d.spr || ''], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', ') }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
   var step = 'mourn', pick = null, more = false, lock = 0, HO = { k: 'new', t: '' };      // 4.0 ⑬: 가문이 옮겨 갈 때의 호 (확인 걸음)
   var canE = DS.linEntomb && DS.linCanEntomb ? lgTry(function () { return DS.linCanEntomb(s, d.id); }) : null, cf = lgCoffins();
   var body = canE && canE.ok ? 'keep' : 'bury', nat = agNatural(d, ev);      // r6 나이: 천수를 누린 이는 이야기 창부터 조용히
@@ -29982,7 +29998,7 @@ function nfLater(ref, head, n) {
 function lgMournOthers(evs, cb, griefs, seen) {
   var all = lgAll(), ds = evs.map(function (e) { return all[e.a]; }).filter(Boolean); if (!ds.length) { if (cb) cb(); return; }
   var fxs = ds.map(lgFallX), fxi = fxs.findIndex ? fxs.findIndex(Boolean) : -1;
-  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [lgBig(dx.spr)], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
+  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [lgBig(dx.spr)], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note, gift: fq.gift }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
   if (DS.cine && !seen) { DS.cine({ k: 'death', por: ds.slice(0, 3).map(function (d) { return d.spr || ''; }), title: ds.length > 1 ? ds.length + '명이 잠들었다' : ds[0].name, sub: ds.length > 1 ? ds.slice(0, 3).map(function (d) { return d.name; }).join(', ') + (ds.length > 3 ? ' 외' : '') : [ds[0].role, lgDiedTxt(ds[0])].filter(Boolean).join(', ') }, function () { lgMournOthers(evs, cb, griefs, true); }); return; }      // 2.2.4: 먼저 조용한 연출
   var C = LGU().coffin || {}, kept = {};
   A2('mourn', 'lose');
@@ -30532,7 +30548,7 @@ function clean(ev, raw) {      // 저장에 남는 꼴 (얼굴은 sprTag 글만)
   if (!ev || !KINDS[ev.k]) return null;
   var sp = raw ? function (x) { return typeof x === 'string' ? x : ''; } : okSpr;
   var col = function (c) { return /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : ''; };
-  return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: col(ev.fc), crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+  return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), gift: str(ev.gift, 40), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: col(ev.fc), crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
     crests: (Array.isArray(ev.crests) ? ev.crests : []).map(okSvg).slice(0, 4), fcs: (Array.isArray(ev.fcs) ? ev.fcs : []).map(col).slice(0, 4), neo: sp(ev.neo), skill: str(ev.skill, 24), names: (Array.isArray(ev.names) ? ev.names : []).map(function (n) { return str(n, 16); }).filter(Boolean).slice(0, 3) };      // 2.2.9: 문장 여럿 · 그 빛깔 · 새 모습 · 새 기술 · 세 이름
 }
 function store() { var s = G.save; if (!s) return; var q = Q.filter(function (e) { return !e.now; }).slice(0, DS.CINE.max).map(function (e) { var c = clean(e); return c; }); if (q.length) s.cineQ = q; else delete s.cineQ; }
@@ -30579,7 +30595,7 @@ function wakeQ() {      // 2.2.9: 세대가 바뀌어 깨어난 가문 (save.fzW
 setInterval(function () { tick++; if (!cur) wakeQ(); if (!cur && (Q.length || (G.save && G.save.cineQ && G.save !== seenSave))) pump(); }, 700);
 function face(spr, cls) { return '<span class="cfa' + (cls ? ' ' + cls : '') + '">' + spr + '</span>'; }
 function play(ev) {
-  var calm = U.calm && U.calm(), md = mode(), C = DS.CINE, k = ev.k, chars = ((ev.title || '') + (ev.sub || '') + (ev.say || '') + (ev.note || '')).length;
+  var calm = U.calm && U.calm(), md = mode(), C = DS.CINE, k = ev.k, chars = ((ev.title || '') + (ev.sub || '') + (ev.say || '') + (ev.note || '') + (ev.gift || '')).length;
   var hold = md !== 'short' && !!(C.wait[k] || (ev.say && k !== 'boss'));      // 2.2.5: 읽을 것이 있으면 누를 때까지 (2.3.0 강적 등장은 싸움 한가운데라 저절로 닫힌다)
   var dur = md === 'short' ? Math.min(C.shortMax, C.short + chars * C.perCh * 0.4) : Math.min(C.fullMax, C.full + chars * C.perCh);
   if (k === 'boss') dur = md === 'short' || calm ? 2400 : 3800;
@@ -30605,7 +30621,7 @@ function play(ev) {
   else stage = por.map(function (p, i) { return face(p, 'c' + i); }).join('');
   var el = U.h('<div class="cine ck-' + k + (calm ? ' calm' : '') + (md === 'short' ? ' short' : '') + (hold ? ' hold' : ' auto') + '" role="dialog" aria-live="assertive" aria-label="' + esc(ev.title || KINDS[k]) + '" style="--dur:' + Math.round(dur) + 'ms;--guard:' + C.guard + 'ms' + (ev.fc ? ';--fc:' + ev.fc : '') + '">' +
     '<div class="cbd"></div><div class="cfx" aria-hidden="true">' + fx + '</div><div class="cin"><p class="cey">' + esc(KINDS[k]) + '</p><div class="cst n' + Math.max(1, por.length) + '">' + stage + '</div>' +
-    '<p class="crib"><b>' + esc(ev.title || KINDS[k]) + '</b></p>' + (ev.sub ? '<p class="csub">' + esc(ev.sub) + '</p>' : '') + (ev.say ? '<q class="csay">' + esc(ev.say) + '</q>' : '') + (ev.note ? '<small class="cnote">' + esc(ev.note) + '</small>' : '') +
+    '<p class="crib"><b>' + esc(ev.title || KINDS[k]) + '</b></p>' + (ev.sub ? '<p class="csub">' + esc(ev.sub) + '</p>' : '') + (ev.say ? '<q class="csay">' + esc(ev.say) + '</q>' : '') + (ev.note ? '<small class="cnote">' + esc(ev.note) + '</small>' : '') + (ev.gift ? '<p class="cgift"><span class="cgi" aria-hidden="true"></span>' + esc(ev.gift) + '</p>' : '') +
     '<small class="ctap">누르면 닫힌다</small></div>' + (hold ? '' : '<i class="cbar" aria-hidden="true"></i>') + '</div>');
   var app = document.getElementById('app') || document.body; app.appendChild(el);
   try { U.hydrate(el); } catch (x) {}
