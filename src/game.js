@@ -559,7 +559,7 @@ function rangeTiles(u, S) {
   return out;
 }
 function cancelAim() { G.aim = null; if (G.view) G.view.aim = null; $$('#acts .act.on').forEach(function (b) { b.classList.remove('on'); }); var cb = $('#chips'); if (cb) cb.classList.remove('pick'); setInfo(); }
-// 아군에게 건네는 아이템은 기술처럼 겨눈다 (약초는 용병에게도 먹일 수 있다)
+// 약초·마나초 (2.3.3: 겨누지 않고 조작하는 이가 바로 먹는다 — 이 표는 이름 · 건넬 거리만 남는다)
 var ITEM_AIM = { herb: { name: '약초', tg: 'ally', rng: [0, 2], give: 'herb' }, mana: { name: '마나초', tg: 'ally', rng: [0, 2], give: 'mana', cmdOnly: true } };
 function aimDef(id) { return SK[id] || ITEM_AIM[id]; }
 function startAim(id, who) {      // r36: who = 쓰는 이 (맹주의 필살기는 다른 가문을 고른 채로도 맹주가 쓴다)
@@ -935,14 +935,12 @@ function renderActs() {
       var me2 = G.sim.byId[G.sel]; if (!me2) return;
       if (!(G.save.items[key] > 0)) { deny(b, '없음', josa(nm, '이가') + ' 없다. 잡화점에서 판다'); return; }
       // 펼친 판에서 고르면 판부터 닫는다 — 겨누는 동안 판이 전장 아래쪽을 덮어 칸을 볼 수도 누를 수도 없었다 (겨눈 물건 이름은 「더 보기」 단추에 남는다)
-      if (into === tray && tray) { G.itemsOpen = null; cancelAim(); if (!DS.ITEMS[key].ctl) { if (SK['i_' + key]) startAim('i_' + key); else { order(me2, { t: 'item', key: key }); A('ok'); } } else useCtl(key); renderActs(); return; }
+      if (into === tray && tray) { G.itemsOpen = null; cancelAim(); if (!DS.ITEMS[key].ctl) { if (SK['i_' + key]) startAim('i_' + key); else if (ITEM_AIM[key]) giveItem(me2, key, me2); else { order(me2, { t: 'item', key: key }); A('ok'); } } else useCtl(key); renderActs(); return; }
       if (DS.ITEMS[key].ctl) { useCtl(key); return; }      // 귀환 두루마리·모닥불 꾸러미: 전투 밖에서 컨트롤러가 처리 (전엔 엔진에 넘어가 개수만 깎였다)
       if (SK['i_' + key]) { startAim('i_' + key); return; }      // 폭탄처럼 기술로 풀리는 소모품 (엔진이 일반 처리)
       if (!ITEM_AIM[key]) { cancelAim(); order(me2, { t: 'item', key: key }); A('ok'); return; }      // 기운초처럼 바로 쓰는 것
-      // 약초·마나초: 급하면(절반 아래) 바로 자신에게. 아니면 누구에게 줄지 고르고, 겨눈 채 한 번 더 누르면 자신에게.
-      if (G.aim && G.aim.id === key) { cancelAim(); giveItem(me2, key, me2); return; }
-      if ((key === 'herb' ? me2.hp / me2.mhp : me2.mmp ? me2.mp / me2.mmp : 1) < 0.5) { cancelAim(); giveItem(me2, key, me2); return; }
-      startAim(key);
+      // 2.3.3: 약초·마나초는 겨누지 않는다 — 누르면 조작하는 이가 바로 먹는다
+      cancelAim(); giveItem(me2, key, me2);
     });
     var lp2 = null; b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     b.addEventListener('pointerdown', function () { lp2 = setTimeout(function () { toast(nm + ': ' + (DS.ITEMS[key].desc || ''), 3500); }, 480); });
@@ -1355,7 +1353,7 @@ function cmdLow(u) {
   if (r >= 0.35 || u.lowInfo) return;
   u.lowInfo = true;
   if (herb > 0) G.herbHint = now + 6000;
-  var nm = u.name, how = herb > 0 ? (sel ? '약초를 누른다' : '약초를 누른 뒤 초상화를 누른다') : '약초 없음. 퇴각한다';
+  var nm = u.name, how = herb > 0 ? (sel ? '약초를 누른다' : '초상화를 눌러 고른 뒤 약초를 누른다') : '약초 없음. 퇴각한다';
   setInfo(nm + ' 위험. ' + how, 3600);
   if (!sv.seen.cdanger && !G.quiet) {
     sv.seen.cdanger = 1; softPause(9000);
@@ -1528,7 +1526,7 @@ function onEvents(evs) {
           else if (u.hp < u.mhp * 0.3) {
             if (!u.lowSaid && mercTalk(u, 'low')) u.lowSaid = true;
             // 고른 지휘관의 용병이 위태로우면 정보 줄에 한 번: 무엇을 하면 되는지까지 (약초는 용병에게도 건넬 수 있다)
-            if (!u.lowInfo && u.owner === G.sel) { u.lowInfo = true; var lm = mercOf(u.mid); setInfo((lm && lm.n ? lm.n : u.name) + ' 위험. 약초를 쓰거나 치유한다', 3200); }
+            if (!u.lowInfo && u.owner === G.sel) { u.lowInfo = true; var lm = mercOf(u.mid); setInfo((lm && lm.n ? lm.n : u.name) + ' 위험. 치유 기술로 돌본다', 3200); }
           }
         }
         break;

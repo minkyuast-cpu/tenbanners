@@ -257,6 +257,18 @@ module.exports = async (page, shot, L) => {
     A(!r.err && !bad.length, c + ': every skill and ultimate casts with its effect (' + (r.list || []).length + ')' + (bad.length ? ' — ' + bad.join(', ') : '') + (r.err || ''));
   }
   A(nCast >= 150 && nUlt === 30 && nUx === 30, 'all classes: ' + nCast + ' skills and ultimates cast, ' + nUlt + ' ultimates, ' + nUx + ' 8단+ ultimates');
+  // 2.3.3: 약초는 겨누지 않는다 — 누르면 고른 이가 바로 먹는다 (가득하면 흔들림만)
+  const hb = await ev(async () => {
+    var sim = DS.G.sim, u = sim.byId[DS.G.sel]; if (!u) return { none: 1 };
+    DS.G.save.items.herb = Math.max(3, DS.G.save.items.herb || 0); u.hp = Math.max(1, Math.round(u.mhp * 0.8)); u.order = null;
+    if (DS.renderActs) DS.renderActs();
+    var b = document.querySelector('#acts .act[data-it="herb"]'); if (!b) return { nobtn: 1 };
+    b.click();
+    var o = u.order || {}, aim = !!DS.G.aim;
+    u.hp = u.mhp; u.order = null; b.click();
+    return { t: o.t, key: o.key, tid: o.tid, me: u.id, aim: aim, aim2: !!DS.G.aim, full: !u.order };
+  });
+  A(hb.t === 'item' && hb.key === 'herb' && hb.tid === hb.me && !hb.aim && !hb.aim2 && hb.full, 'herb: tap = the selected one drinks at once, no aiming; full HP = no use (' + JSON.stringify(hb) + ')');
   // 2.2.7 자동 필살기: 조작이 자동인 가주는 게이지가 차고 쓸 자리가 나면 스스로 쓴다 · 수동이면 쓰지 않는다 · 스스로 쓰는 것은 우리 편 전체에서 3초에 하나
   const au = await ev(() => {
     var sim = DS.G.sim, u = sim.units.filter(function (x) { return x.hero && !x.dead; })[0], o = {}; if (!u) return { err: 'no hero' };
@@ -329,6 +341,6 @@ module.exports = async (page, shot, L) => {
   A(f225.allies === 3 && f225.t >= 4, '2.2.5 save fights in the field with 3 out (' + f225.allies + ' houses, ' + f225.t + ' s)');
   await ev(() => { DS.G.sim.hunt = false; DS.G.save.opt.hunt = false; DS.ui.closeAll(); });
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.3\.2 [^/]+ \/ 2\.3\.2 \/ 7\.1\.2$/.test(notes), 'version ' + notes);
+  A(/^2\.3\.3 [^/]+ \/ 2\.3\.3 \/ 7\.1\.3$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };
