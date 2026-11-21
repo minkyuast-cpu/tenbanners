@@ -355,6 +355,7 @@ function markPois() {
     }
   });
 }
+DS.markPois = function () { if (G.zone && G.zone.pois && G.save && !G.scn) { markPois(); updateQuest(); } };      // 2.3.2: 대가 끊겨 깬 시나리오가 사라지면 이 지역 입구 표시를 곧바로 다시
 function lvText(L) { return DS.tierOfL(L) + '단 Lv' + DS.lvOfL(L); }
 // 권장 레벨(화면 표시용): 기획팀의 DS.recL(scn) 이 있으면 그 값(실제 승률 기준), 없으면 시나리오의 적 레벨 s.L. 화면의 「권장」은 모두 이것을 읽는다.
 function recL(s) { if (!s) return 1; var v = null; if (DS.recL) { try { v = DS.recL(s); } catch (e) { v = null; } } return v > 0 ? Math.round(v) : s.L; }
@@ -487,7 +488,7 @@ function linEnd(win) {
 // 쌓인 가계도 사건을 화면에 넘긴다. lineage_ui 의 DS.openLineageRite(queue, done) 가 있으면 그 창(후계 의식·관·출생 알림)이, 없으면 자동으로 후계를 정하고 토스트로.
 function lineageFlush(cb) {
   if (DS.egPassOn && DS.egPassOn(G.save)) { if (cb) cb(); return; }      // 3.3.0: 스무 해 창 동안은 그 창이 다룬다
-  var sv = G.save, q = G.lineageQ || [], fin = function () { G.riteBusy = false; if (DS.linVacant && DS.linVacant(sv).length) (DS.linAutoAll(sv) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(sv, e.ev), 4200); }); persist(); if (cb) cb(); };
+  var sv = G.save, q = G.lineageQ || [], fin = function () { G.riteBusy = false; if (DS.linVacant && DS.linVacant(sv).length) (DS.linAutoAll(sv) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(sv, e.ev), 4200); }); if (sv.runs && sv.runs.n !== G.runsN) { G.runsN = sv.runs.n; DS.markPois(); } persist(); if (cb) cb(); };      // 2.3.2: 대가 끊겨 깬 시나리오가 사라졌으면 입구 표시 · 목표 줄을 곧바로
   G.lineageQ = [];
   q.filter(function (e) { return e && e.t === 'streak'; }).forEach(function (e) { later(e.text, 5200); }); q = q.filter(function (e) { return !(e && e.t === 'streak'); });      // 나선 방지: 토스트 한 줄
   var AGEV = { adult: 1, elder: 1, mnat: 1, adultWait: 1 }, ag = q.filter(function (e) { return e && AGEV[e.t]; });      // 나이 소식: age_ui 의 DS.openAgeNews(목록) 가 있으면 그 창, 없으면 토스트

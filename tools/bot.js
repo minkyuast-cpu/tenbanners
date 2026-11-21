@@ -3,6 +3,8 @@
 //   BOTCHECK=1: 싸움 밖마다 자리 불변식 검사(tools/inv.js) — 어김은 「INV …」 줄, 요약의 inv 칸에 수
 //   BOTPIT=1: 5단부터는 들판 대신 바닥 없는 갱도에서 키를 다진다 (DS.pitFarm 층 — 갱도 농사가 캠페인을 너무 빠르게 하지 않는지 보는 용도)
 //   BOTSNAP=폴더: 시나리오마다 처음 들어가기 직전의 판을 <폴더>/<병과>_<씨앗>_<번호>.json 으로 (tools/calib.js 의 재료)
+//   BOTLAPSE=n (2.3.2): n번을 깬 뒤 한 번 대를 일부러 끊는다 — 대가 끊기면 깬 시나리오가 모두 사라지니(DS.lapseRestart) 봇은 1번부터 다시 걷는다.
+//     요약의 lapses: [{ lost 잃은 시나리오 수, top, h 끊긴 때(시간), back 그 번호까지 되찾는 데 든 시간, forced }] · 저절로 끊긴 대도 같은 칸에 (forced 0)
 //   BOTSAVE=파일 BOTSAVEAT=15: 그 시나리오를 깬 판을 저장 글(JSON)로 쓰고 끝낸다 (화면 시험용 중반 저장)
 //   끝에 한 줄 요약과 「BOT {json}」 (hours · cleared · wipes · deaths · vacancies · recruits …).
 //
@@ -74,10 +76,29 @@ function tidy() {
     const ch3 = D.linChoices(s, s.hero).sort((a, b) => (b.nL || b.pL || 0) - (a.nL || a.pL || 0) || a.opt - b.opt)[0];
     if (ch3 && D.linSucceed(s, s.hero, ch3, {})) { st['pick' + ch3.opt] = (st['pick' + ch3.opt] || 0) + 1; st.log.push('pick' + ch3.opt + ' @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' L' + (ch3.nL || ch3.pL) + ' → ' + (s.chars[s.hero] || {}).cls); }
   }
-  if (D.linVacant(s).length) { const ev = D.linAutoAll(s) || []; ev.forEach(e => { if (e.t === 'lapse') { st.lapse++; st.log.push('LAPSE @h' + ((st.simT + st.over) / 3600).toFixed(1) + ' houses ' + (D.sortieCands ? D.sortieCands(s) : D.partyIds(s)).length + ' kin ' + D.mercsOf(s, s.hero).length); } }); }
+  if (D.linVacant(s).length) { const ev = D.linAutoAll(s) || []; ev.forEach(e => { if (e.t === 'lapse') lapsed(e); }); }
   const seat = D.sbTick(s); st.sbSeat += seat.length;
   D.mercTidy(s); D.pSync(s);
   const v = D.bnEmpty(s).length; st.vacMax = Math.max(st.vacMax, v); st.vacSum += v; st.vacN++;
+}
+// 2.3.2 대가 끊기면 이야기는 처음으로 (DS.lapseRestart): 깬 시나리오가 모두 사라진다 → 캠페인을 1번부터 다시 (st.restart). 잃은 길을 되찾는 데 든 시간을 lapses 에
+function lapsed(e, forced) {
+  const H = (st.simT + st.over) / 3600, top = s.runs && s.runs.hist && s.runs.hist.length ? s.runs.hist[s.runs.hist.length - 1].top : 0;
+  st.lapse++; st.restart = 1;
+  st.lapses = (st.lapses || []).concat([{ lost: e.scn || 0, top: top, h: +H.toFixed(2), g: D.genNow ? D.genNow(s) : 1, forced: forced ? 1 : 0 }]);
+  st.log.push('LAPSE @h' + H.toFixed(1) + ' lost ' + (e.scn || 0) + ' houses ' + (D.sortieCands ? D.sortieCands(s) : D.partyIds(s)).length + ' kin ' + D.mercsOf(s, s.hero).length);
+}
+// BOTLAPSE=n: n번을 처음 깬 뒤(그때 어른 자식이 다른 가문의 가주로 있으면 그다음 판들에서) 한 번, 대를 일부러 끊는다 (맹주의 가문원 · 막사의 같은 병과를 떠나보내고 맹주가 쓰러진다 — 다시 걷는 데 드는 시간을 재는 용도)
+function forceLapse() {
+  const h = s.chars[s.hero]; if (!h || h.vac) return false;
+  if (D.linHeirs(s, s.hero).some(x => !x.young && x.blood && x.h)) return false;      // 다른 가문의 가주로 간 어른 자식이 있으면 끊기지 않는다 — 다음 판에 다시 본다
+  s.mercs.slice().forEach(m => { if ((m.o === s.hero && !m.h) || (D.isSb(m) && D.sbFits(h, m))) D.loseMerc(s, m.id); });
+  D.linTidy(s); D.mercTidy(s);
+  h.down = true; D.linSettle(s, '봇');
+  const ev = D.linAutoAll(s) || [];
+  ev.forEach(e => { if (e.t === 'lapse') lapsed(e, true); });
+  tidy();
+  return ev.some(e => e.t === 'lapse');
 }
 function heal(pay) { const fee = 20 * D.heroTier(s); if (pay && s.gold >= fee) s.gold -= fee; D.charList(s).forEach(c => { if (!c.down) { c.hp = 1; c.mp = 1; } }); s.mercs.forEach(m => { m.hp = 1; }); }
 function shop() {
@@ -332,11 +353,13 @@ function replay() { const L = D.partyL(s), ks = Object.keys(s.cleared).map(Numbe
 function farm() { if (NOFIELD) return replay(); const f = process.env.BOTPIT && D.partyTier(s) >= 5 && D.pitFarm ? D.pitFarm(s) : 0; return f ? pitFight(f) : fieldFight(); }
 const t0 = Date.now();
 let stuck = false;
+const FORCE_AT = +(process.env.BOTLAPSE || 0); let forced = false;
 function campaign(getSc, done, tag) {
 for (let n = 1; n <= 30 && !stuck; n++) {
+  if (st.restart) { st.restart = 0; if (tag) return 'lapse'; n = 0; continue; }      // 2.3.2: 대가 끊겼다 — 1번부터 다시 (다음 세대의 장이었으면 그 장은 닫혔다: 밖에서 본편을 다시)
   const sc = getSc(n); let tries = 0, fields = 0; if (!sc) continue;
-  while (!done(n)) {
-    prep();
+  while (!done(n) && !st.restart) {
+    prep(); if (st.restart) break;
     if (sc.tier > partyTier()) {
       if (fuseMaybe(true)) continue;
       farm(); fields++; if (fields > MAX_FIELD) { stuck = true; break; } continue;
@@ -347,15 +370,19 @@ for (let n = 1; n <= 30 && !stuck; n++) {
     if (!NOFIELD && D.partyL(s) < Math.min(target(sc) + (D.partySpecs(s).length < 3 ? 3 : 0) + learn, capL()) && fields < MAX_FIELD) { farm(); fields++; continue; }      // 2.2.9: 출전한 이가 모두 제 상한(합일 전 70)이면 더 다지지 못한다 — 그 자리에서 들어간다      // 싸우는 이가 셋보다 적으면 권장보다 세 레벨 더 (사람이 하듯 조심스럽게)
     tries++; curTries = tries; if (tries === 1) st.eL[n] = D.partyL(s);
     if (process.env.BOTSNAP && tries === 1 && !tag && (!FOCUS || FOCUS === n)) { require('fs').writeFileSync(require('path').join(process.env.BOTSNAP, cls + '_' + seed + '_' + n + '.json'), JSON.stringify(s)); if (FOCUS) process.exit(0); }      // 조율용(tools/calib.js): 시나리오 N 에 처음 들어가기 직전의 판
-    const d0 = st.deaths, ok = scenario(sc);
+    const d0 = st.deaths, ok = scenario(sc); if (st.restart) break;
     if (tries === 1) st.ft[n] = [ok ? 1 : 0, st.deaths - d0, D.partyL(s) >= 0 ? st.eL[n] : 0];      // 2.2.7: 처음 싸움 [이김, 쓰러진 수, 들어간 레벨]
     if (!ok) { st.wipes++; st.wAt[n] = (st.wAt[n] || 0) + 1; st.log.push('wipe @' + n + ' try ' + tries + ' L' + D.partyL(s) + '/' + target(sc)); if (tries > 40) { stuck = true; break; } }
   }
+  if (st.restart) { n--; continue; }      // 위 for 머리에서 1번으로
+  if (FORCE_AT && !forced && !tag && n >= FORCE_AT) { if (forceLapse()) { forced = true; n--; continue; } }      // n번부터, 끊을 수 있는 첫 판에서
   if (process.env.BOTSAVE && !tag && n === +(process.env.BOTSAVEAT || 15)) { require('fs').writeFileSync(process.env.BOTSAVE, JSON.stringify(s)); console.log('saved', process.env.BOTSAVE); process.exit(0); }      // 화면 시험용: N번을 깬 판을 저장 글로
+  { const Hn = (st.simT + st.over) / 3600; (st.lapses || []).forEach(L => { if (L.back == null && !tag && n >= L.top) { L.back = +(Hn - L.h).toFixed(2); L.backAt = +Hn.toFixed(2); } }); }      // 2.3.2: 잃은 길(top 번까지)을 되찾은 데 든 시간
   st.perScn.push({ n: tag + n, h: +((st.simT + st.over) / 3600).toFixed(2), L: D.partyL(s), units: D.partySpecs(s).length, vac: D.bnEmpty(s).length, tries, houses: D.charList(s).length, fh: +(st.fieldT / 3600).toFixed(2), rec: target(sc), rL: D.recL(sc) });
 }
 }
 campaign(n => D.scn(n), n => !!s.cleared[n], '');
+st.restart = 0;
 const main = { hours: +((st.simT + st.over) / 3600).toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths };
 let g2 = null;
 if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 창을 정책대로 치르고(DS.egRunAuto) 2대째 1~30번
@@ -365,14 +392,15 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
     st.wake = (s.fzWake || []).slice();      // 2.2.9: 세대가 바뀌어 깨어난 가문
     const r = D.egRunAuto(s, { heir: 'first', keep: 'light', hand: true, call: 'heavy' }); tidy();
     const w0 = st.wipes, d0 = st.deaths, h0 = (st.simT + st.over) / 3600;
-    campaign(n => D.egScn(n, s.eg.gen, s), n => !!(s.eg && s.eg.c && s.eg.c[n]), 'g2.');
+    const g2r = campaign(n => D.egScn(n, s.eg.gen, s), n => !!(s.eg && s.eg.c && s.eg.c[n]), 'g2.');
+    if (g2r === 'lapse') { st.g2lapse = 1; st.restart = 0; campaign(n => D.scn(n), n => !!s.cleared[n], ''); st.restart = 0; }      // 2.3.2: 장 안에서 대가 끊기면 장이 닫힌다 — 본편 1~30 을 다시
     g2 = { gen: s.eg.gen, pass: r, cleared: Object.keys((s.eg && s.eg.c) || {}).length, hours: +((st.simT + st.over) / 3600 - h0).toFixed(2), wipes: st.wipes - w0, deaths: st.deaths - d0, units: D.partySpecs(s).length };
   }
 }
 const H = (st.simT + st.over) / 3600;
 const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
-  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, openGold: st.openGold || 0, xDeaths: st.xDeaths || 0, xNat: st.xNat || 0, erCall: st.erCall || 0, erCover: st.erCover || 0, erased: st.erased || 0, retreats: st.retreats || 0, retX: st.retX || 0, fieldRet: st.fieldRet || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
+  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, lapses: st.lapses || [], g2lapse: st.g2lapse || 0, runs: s.runs || null, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, openGold: st.openGold || 0, xDeaths: st.xDeaths || 0, xNat: st.xNat || 0, erCall: st.erCall || 0, erCover: st.erCover || 0, erased: st.erased || 0, retreats: st.retreats || 0, retX: st.retX || 0, fieldRet: st.fieldRet || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
 console.log(`${cls} seed${seed}: ${out.cleared}/30 in ${out.hours}h, wipes ${out.wipes}, deaths ${out.deaths} (hero ${out.heroDeaths}, bearer ${out.bearDeaths}, kin ${out.kinDeaths}), recruits ${out.recruits}, kin sent ${out.kinSent}, vacancies max ${out.vacMax}/avg ${out.vacAvg}`);

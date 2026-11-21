@@ -1046,7 +1046,7 @@ function rewardText(s) {
   if (sv.cleared[s.id]) return Math.round(DS.scnGold(s) * 0.35) + ' 골드 (다시 도전)';
   out.push(DS.scnGold(s) + ' 골드');
   if (r.gear && DS.gear(r.gear)) out.push('전설 「' + DS.gear(r.gear).short + '」');      // 2.1.0: 정해진 보상 전설 장비
-  if (r.crest) out.push('맹세의 깃대');
+  if (r.crest && !sv.crest) out.push('맹세의 깃대');      // 2.3.2: 이미 가진 깃대는 보상으로 적지 않는다
   if (r.items) for (var k in r.items) out.push(DS.ITEMS[k].name + ' ×' + r.items[k]);
   var tk = DS.scnTickets ? DS.scnTickets(s) : s.id % (DS.TICKET_EVERY || 10) === 0 ? 1 : 0; if (tk) out.push('영웅 모집권 ×' + tk);      // r35 · 2.2.0: 열 번째마다 · 2.2.4: 가문이 오던 시나리오는 한 장 더
   return out.join(', ');
@@ -1083,6 +1083,7 @@ DS.openGate = function (s, lock) {
     (low ? '<p class="lock">자동 전투: 기운초 안 씀. 위험하면 퇴각</p>' : '') +      // r8 hud (fun 6 · newbie 1d)
     (!low && pl < rec && !sv.cleared[s.id] && s.id <= 3 ? '<p class="soft">권장: 들판에서 ' + lv(rec) + '까지</p>' : '') +      // 첫 판들: 안내대로 곧장 들어가 지는 일이 많았다 (QA K9)
     (lock ? '<p class="lock">' + esc(lock) + '</p>' : '') +
+    (!s.pit && DS.linHeirRisk && Object.keys(sv.cleared || {}).length >= 5 && DS.linHeirRisk(sv) ? '<p class="soft">맹주의 뒤를 이을 어른 자식도, 막사의 같은 병과도 없다. 다 쓰러지면 대가 끊기고 1번 시나리오부터 다시 걷는다</p>' : '') +      // 2.3.2
     '</div><div class="sfoot two"><button class="btn" data-close>닫기</button><button class="btn gold" id="goScn"' + (lock ? ' disabled' : '') + '>입장</button></div>');
   o.addEventListener('click', function (e) { if (e.target.closest('[data-go="party"]')) { A('tap'); o.close(); DS.openMenu('party'); } if (e.target.closest('[data-sopick]')) { A('tap'); sortiePick(function () { o.close(); DS.openGate(s, lock); }); } });      // 2.2.8: 바꾸면 창을 새로 (평균 · 꼬리표)
   $('#goScn', o).addEventListener('click', function () {
@@ -1368,6 +1369,7 @@ DS.showRecord = function (cb, ending) {
   var html = '<div class="result record"><p class="eyebrow">' + (ending ? '엔딩' : '기록') + '</p>' + (ending ? scene('ending') : '') + '<h2>' + esc(sv.name) + '의 가문</h2><dl class="rec">' +
     (t >= 60 ? '<dt>플레이 시간</dt><dd><b class="num">' + (t >= 3600 ? Math.floor(t / 3600) + '</b>시간 <b class="num">' : '') + Math.floor(t % 3600 / 60) + '</b>분</dd>' : '') +
     '<dt>끝낸 시나리오</dt><dd><b class="num">' + cleared + '</b> / ' + DS.SCENARIOS.length + (sv.pitBest > 0 ? ', 갱도 최고 ' + sv.pitBest + '층' : '') + '</dd>' +
+    (sv.runs && sv.runs.n ? '<dt>다시 걸은 길</dt><dd>대가 끊겨 <b class="num">' + sv.runs.n + '</b>번 처음부터, 가장 멀리 <b class="num">' + sv.runs.best + '</b>번</dd>' : '') +      // 2.3.2
     '<dt>쓰러뜨린 적</dt><dd><b class="num">' + (sv.kills || 0) + '</b></dd>' +
     '<dt>합일한 사람</dt><dd>' + (fz ? '<b class="num">' + fz + '</b>명' : '아직 없음') + '</dd>' +
     '<dt>최고 강화</dt><dd>' + (be ? '<span class="' + enhCls(be.enh) + '">' + esc(be.name) + '</span>' : '아직 없음') + '</dd></dl>';
@@ -1906,7 +1908,7 @@ function tabMap() {
     return '<button class="msl' + (isNext ? ' next' : ' done') + (why ? ' off' : '') + '" data-scn="' + sc.id + '"><i class="num">' + sc.id + '</i><span class="tx"><b>' + esc(sc.name) + '</b><small>' + esc(z.name) + ', ' + (isNext ? '권장 ' + lv(DS.recLOf ? DS.recLOf(sc) : sc.L) : '완료 (다시 도전)') + (why && isNext ? '<em>' + esc(why.replace(z.name + ' — ', '')) + '</em>' : '') + '</small></span>' +
       '<span class="go">' + (why ? '잠김' : hereG ? '입구로' : '바로 가기') + '</span></button>';
   }
-  html += '<h4>시나리오</h4><div class="mslist">';
+  html += '<h4>시나리오</h4>' + (s.runs && s.runs.n ? '<p class="msl-run">' + (s.runs.n + 1) + '번째 걸음. 대가 끊겨 처음부터 다시 걷는다. 지난 길은 ' + s.runs.best + '번까지 갔다</p>' : '') + '<div class="mslist">';      // 2.3.2
   if (next) rows += scRow(next, true);
   else rows += '<p class="hint">모든 시나리오를 마쳤다.</p>';
   var pz = mapPitZone();
@@ -1982,7 +1984,7 @@ function tabHelp() {
       '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람이다. 빈 가문(영웅관이 열 수 있는 닫힌 가문과 가주가 없는 가문)이 많을수록 싸고, 하나뿐이거나 없으면 넷일 때의 네 배다. 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장, 예전에 가문이 합류하던 시나리오(2, 3, 4, 5, 6, 7, 9, 11, 13번)는 처음 깨면 한 장 더 준다.',
       '병과는 무작위다. 닫힌 가문의 병과가 선 가문보다 ' + DS.HOUSE_OPEN.w + '배 잘 나오고, ' + DS.HOUSE_OPEN.pity + '번 연달아 못 열면 다음 모집은 반드시 닫힌 가문을 연다. 선 가문의 병과가 나오면 그 가문이 비어 있을 때 곧바로 가주, 아니면 막사로 간다. 맹주와 같은 병과면 막사에서 맹주의 뒤를 받친다. 막사는 ' + DS.MERC_MAX + '명까지다.',
       '막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 같은 병과 가주와 자리를 바꿀 수 있고, 물러난 가주는 막사로 간다. 막사의 사람은 방출할 수 있다. 가주를 그냥 내리는 길은 없다.',
-      '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. <b>맹주가 쓰러지면 누가 이을지 고른다.</b> 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 하나다. 고를 이가 없으면 대가 끊기고 스무 해가 흐른다.',
+      '혼인, 아이, 입양, 가계도는 <b>맹주의 계보</b>에만 있다. <b>맹주가 쓰러지면 누가 이을지 고른다.</b> 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 하나다. 고를 이가 없으면 대가 끊기고 스무 해가 흐른다. <b>깬 시나리오는 사라져 1번부터 다시 걷는다</b>(처음 깬 보상은 다시 받는다).',
       '<b>쓰러진 사람은 돌아오지 않는다.</b> 가주도, 가문원도 그렇다. 많이 다치면 스스로 물러난다. 한 사람 한 사람이 귀하다.']],
     ['등급, 단, 가문 공훈', 0, [
       '<b>등급</b>은 타고난 그릇이다. 모집하거나 태어날 때 정해지고 바뀌지 않는다. 등급이 높은 사람이 가주가 되면 가문이 더 강해진다. 맹주 자리는 희귀 밑으로 치지 않는다. 등급이 높을수록 경험치도 빨리 쌓인다.' +      // r45 표 · r44 숫자
@@ -2034,7 +2036,7 @@ function tabHelp() {
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
-      '맹주가 쓰러지면 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 뒤를 고른다. 막사에서 이은 이는 제 레벨 그대로다. 다른 가문의 가주를 고르면 맹주 자리가 그 가문으로 간다. 그 가문의 장비와 공훈은 그대로다.', '옛 맹주 가문은 보통 가문이 된다. 어른 자식 가운데 레벨이 가장 높은 이가 가주가 되고, 없으면 막사의 같은 병과가, 그도 없으면 빈 가문이 된다. 남은 가족은 그 가문의 병과로 막사에 가고, 아이는 자라면 막사로 간다. 새 맹주를 따르지 않는다. 고를 이가 아무도 없으면 대가 끊기고 스무 해가 흐른다.']],
+      '맹주가 쓰러지면 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 뒤를 고른다. 막사에서 이은 이는 제 레벨 그대로다. 다른 가문의 가주를 고르면 맹주 자리가 그 가문으로 간다. 그 가문의 장비와 공훈은 그대로다.', '옛 맹주 가문은 보통 가문이 된다. 어른 자식 가운데 레벨이 가장 높은 이가 가주가 되고, 없으면 막사의 같은 병과가, 그도 없으면 빈 가문이 된다. 남은 가족은 그 가문의 병과로 막사에 가고, 아이는 자라면 막사로 간다. 새 맹주를 따르지 않는다. 고를 이가 아무도 없으면 대가 끊기고 스무 해가 흐른다. 깬 시나리오는 모두 사라지고 1번부터 다시다. 가문과 사람, 레벨, 장비는 남고, 다시 깨면 처음 깬 보상을 또 받는다.']],
     ['혼인과 아이', '혼인', [
       '혼인은 <b>맹주만</b> 할 수 있다. 성별이 다른 가주나 막사의 사람을 배우자로 맞는다. 막사에 있던 배우자는 맹주 가문의 가문원이 되어 함께 싸운다. 시나리오와 전투 밖이면 어디서나 「마을 일」에서 한다.',
       '<b>인물 탭</b>의 「배우자 후보」 필터에서 혼인할 수 있는 사람과 아이의 예상 등급을 볼 수 있다.',
@@ -2802,6 +2804,12 @@ function lgHeirKind(c) {      // 설계서 linHeirs: kind 'kid' | 'adopt' | 'kin
   if (c.kin === 1 || (c.blood && c.kind === 'adopt')) return 'adkid';      // (kin 2 막사 용병 · 3 출전 중인 용병 · 4 먼 친척)
   return 'merc';
 }
+// 2.3.2 깬 시나리오 띠: 1~30 칸, 깬 것(1~top)은 금빛. anim: 연출(cine 'lapse')에서 끝에서부터 하나씩 꺼지고 1번 칸만 다시 빛난다 (총 길이 약 2.4초)
+U.lpStrip = function (top, anim) {
+  var n = DS.SCENARIOS.length, st = top > 0 ? Math.min(0.16, 2.2 / top) : 0, out = '';
+  for (var i = 1; i <= n; i++) out += '<i class="' + (i <= top ? 'on' : '') + (i === 1 ? ' one' : '') + '"' + (anim && i <= top ? ' style="--d:' + ((top - i) * st).toFixed(2) + '"' : '') + '>' + i + '</i>';
+  return '<span class="clp' + (anim ? ' anim' : '') + '" style="--e:' + (top * st).toFixed(2) + '" aria-hidden="true">' + out + '</span>';
+};
 // 2.2.9: 8단 위(합일한 넋)의 죽음 — 셋의 이름과 함께. 그 가문의 다음 가주는 제 단으로 선다 (8단은 잇지 않는다)
 function lgBig(spr) { return String(spr || '').replace(/data-px="[\d.]+"/, 'data-px="4"'); }      // 연출 얼굴은 크게
 function lgFallX(d) {
@@ -2825,11 +2833,12 @@ function lgRite(ev, cb, griefs, seen) {
   function lpYoung() { var l = DS.linHeirs ? lgTry(function () { return DS.linHeirs(s, chId); }) || [] : []; return l.filter(function (c) { return c.young && c.blood && (c.inY == null || c.inY <= DS.LAPSE.years); })[0] || null; }
   function lpV(x) { var o = { b: d.name, house: LS().hn || DS.houseOf(LS().sur || '') || '가문', y1: ((agCal() || {}).yr || 0) + DS.LAPSE.years }; for (var k in x || {}) o[k] = x[k]; return o; }
   var LPH = { k: 'keep', n: '' };
+  function lpCleared() { var n = 0; for (var k in s.cleared || {}) if (s.cleared[k]) n++; return n; }      // 2.3.2: 대가 끊기면 사라질 깬 시나리오 수
   function lapsePass() {
     var LT = DS.LAPSE_TXT, yk = lpYoung(), v = lpV();
     if (!LPH.n) { var yp = yk && LS().P[yk.pid]; LPH.n = (yp && yp.n) || lgTry(function () { return DS.pickMercName(s, Math.random); }) || ''; }
     A2('mourn', 'lose');
-    story(LT.fall.concat(LT.pass, yk ? LT.kid : LT.stranger).map(function (l) { return lgFill(l, v); }), function () { step = 'lname'; draw(); }, '스무 해');
+    story(LT.fall.concat(LT.pass, lpCleared() ? [LT.forget] : [], yk ? LT.kid : LT.stranger).map(function (l) { return lgFill(l, v); }), function () { step = 'lname'; draw(); }, '스무 해');      // 2.3.2: 깃발이 걸은 길도 잊힌다
   }
   function lapseGo() {
     var inp = $('#lpName', o), nm = inp ? DS.rnClean(inp.value) : LPH.n;
@@ -2845,8 +2854,12 @@ function lgRite(ev, cb, griefs, seen) {
     if (res.lost) lines.push(LT.cost + ' ' + U.fmtN(res.lost) + '골드.');
     if (res.gone) lines.push(lgFill(LT.gone, v));
     if (res.tickets) lines.push(lgFill(LT.call, { t: res.tickets }));
-    A('level');
-    story(lines, function () { if (cb) cb(); }, '스무 해 뒤');
+    if (res.scn) lines.push(LT.again);      // 2.3.2: 이야기는 처음으로 (연출을 꺼도 글로 남는다)
+    if (res.eg) lines.push(lgFill(LT.egEnd, { g: res.eg }));
+    if (DS.markPois) lgTry(function () { DS.markPois(); });      // 입구 표시 · 다음 목표를 1번으로
+    var rise = function () { A('level'); story(lines, function () { if (cb) cb(); }, '스무 해 뒤'); };
+    if (res.scn && DS.cine) DS.cine({ k: 'lapse', n: res.top, title: LT.backT || '이야기는 처음으로', sub: LT.back, note: lgFill(LT.lost, { c: res.scn }) + ' ' + (LT.backN || ''), gift: LT.backG || '' }, rise);      // 2.3.2: 깬 시나리오가 끝에서부터 하나씩 꺼지고 1번만 남는다
+    else rise();
   }
   function draw() {
     var box = $('.lgrite', o), H = LGU().heir || {}, C = LGU().coffin || {}, html = '', at = (d.died && d.died.at) || (ev.x && ev.x.at) || '';
@@ -2865,7 +2878,8 @@ function lgRite(ev, cb, griefs, seen) {
       var LT = DS.LAPSE_TXT, lost = Math.floor((s.gold || 0) * DS.LAPSE.gold / 10) * 10, yk = lpYoung();
       html = '<p class="eyebrow">가문이 끊겼다</p><h2>이을 사람이 없다</h2><p class="rn">' + esc(d.name) + '의 자리, ' + esc(d.role) + '</p>' +
         '<p class="ep">' + LT.fall.map(function (l) { return esc(lgFill(l, lpV())); }).join('<br>') + '</p>' +
-        '<ul class="lgafter"><li>스무 해가 흐른다. 모두 스무 살을 더 먹는다</li><li>깬 시나리오, 깃발과 레벨, 장비, 관은 남는다</li><li>금고의 절반을 잃는다' + (lost ? ' (' + U.fmtN(lost) + '골드)' : '') + '</li><li>빈 깃발은 다시 세워야 한다. 모집권 ' + DS.LAPSE.tickets + '장을 받는다</li>' +
+        (lpCleared() ? '<div class="lpscn"><p><b>깬 시나리오 ' + lpCleared() + '개</b>가 사라진다. 1번부터 다시</p>' + U.lpStrip(DS.scnTop ? DS.scnTop(s) : lpCleared()) + '</div>' : '') +      // 2.3.2
+        '<ul class="lgafter"><li>스무 해가 흐른다. 모두 스무 살을 더 먹는다</li>' + (lpCleared() ? '<li class="lploss">깬 시나리오는 사라진다. 1번 시나리오부터 다시 걷는다</li>' + (DS.egActive && DS.egActive(s) ? '<li class="lploss">' + DS.egGen(s) + '대째의 장도 닫힌다. 30번을 다시 깨면 다음 장이 열린다</li>' : '') + '<li>다시 깨면 처음 깬 보상(골드, 장비, 모집권)을 또 받는다</li>' : '') + '<li>가문과 사람, 레벨, 장비, 가방, 깃대, 관은 남는다</li><li>금고의 절반을 잃는다' + (lost ? ' (' + U.fmtN(lost) + '골드)' : '') + '</li><li>빈 깃발은 다시 세워야 한다. 모집권 ' + DS.LAPSE.tickets + '장을 받는다</li>' +
         '<li>' + (yk ? esc(josa(yk.name, '이가')) + ' 자라 뒤를 잇는다' : '새 대장이 옛 깃발을 든다. 이름과 가문 이름을 고른다') + '</li></ul>' +
         '<button class="btn gold wide" data-lgstep="lpass">스무 해를 보낸다</button><button class="btn wide" data-lgstep="mourn">← 추도로</button>';
     } else if (step === 'lname') {
@@ -3331,7 +3345,7 @@ function renderTitle() {
   if (!s && !r && !meta.seenVer) meta = DS.Save.setMeta({ seenVer: DS.VERSION });     // 처음 온 분께는 NEW 표시를 띄우지 않는다
   var fresh = meta.seenVer !== DS.VERSION, nv = !s && DS.Save.newerLocal ? DS.Save.newerLocal() : 0;      // 더 새 판의 저장: 읽지 않고, 덮어쓸 「새로 시작」도 내지 않는다
   // 제목 「전민 戰民」, 부제 「열 개의 깃발」. 맺음(30번)을 본 저장이면 한자가 「傳民」(전할 전)으로 바뀐다 — 싸우던 백성이 다음 대에 전하는 백성이 된다.
-  var passed = !!(s && s.cleared && s.cleared[30]);
+  var passed = DS.passedEver ? DS.passedEver(s) : !!(s && s.cleared && s.cleared[30]);      // 2.3.2: 대가 끊겨 처음부터 다시 걸어도 한 번 본 맺음은 남는다
   var arch = !s && DS.Save.archNote && DS.Save.archNote();      // r42: 처음 한 번 「새 시대가 열렸다」 (옛 저장은 보관만 한다)
   el.innerHTML = '<div class="title-top pad">' +
     '<h1 class="logo" aria-label="전민 ' + (passed ? '傳民' : '戰民') + '"><span class="lg-ko" data-t="전민">전민</span><span class="lg-han' + (passed ? ' passed' : '') + '">' + (passed ? '傳民' : '戰民') + '</span></h1>' +

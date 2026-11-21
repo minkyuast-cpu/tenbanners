@@ -557,7 +557,35 @@ DS.applyClear = function (save, s) {
   // 2.2.4: 시나리오를 깨도 가문은 오지 않는다 — 가문은 영웅관에서 그 병과의 영웅이 와야 열린다 (DS.recruitHero · DS.houseOpen). out.joins 는 늘 비어 있다 (옛 결과 창 칸)
   if (r.items) for (var k in r.items) { save.items[k] = (save.items[k] || 0) + r.items[k]; out.items[k] = r.items[k]; }
   if (r.gear && DS.gear(r.gear)) { if (DS.lootPut) DS.lootPut(save, r.gear, { at: s.name }); else save.gear[r.gear] = (save.gear[r.gear] || 0) + 1; out.gear = r.gear; }      // 2.1.0: 정해진 보상 전설 (맹세의 검 · 용뼈 창 — 옛 유물 자리)
-  if (r.crest) { save.crest = true; out.crest = true; }
+  if (r.crest) { out.crest = !save.crest; save.crest = true; }      // 2.3.2: 대가 끊겨 다시 깨도 깃대는 이미 있다 (다시 「얻었다」고 하지 않는다)
   return out;
+};
+// 2.3.2 대가 끊기면 이야기는 처음으로: 깬 시나리오(save.cleared)를 모두 지운다 — 다음 시나리오 · 지도 표시 · 처음 깬 보상(골드 · 장비 · 모집권)은
+//   모두 save.cleared 를 읽으니, 다시 깨면 처음 깬 보상을 또 받는다. 가문 · 사람 · 레벨 · 단 · 장비 · 가방 · 깃대 · 관 · 가계도 · 갱도 기록 · 본 막간(seen)은 그대로.
+//   다음 세대의 장(endgame)이 진행 중이었으면 그 장도 닫힌다 (30번 맺음을 다시 보아야 장이 열린다) — 세대 수(eg.gen)는 그대로라 다음에 여는 장은 그다음 대.
+//   save.runs = { n: 다시 시작한 수, best: 가장 멀리 간 시나리오 번호, hist: [{ c: 잃은 시나리오 수, top: 가장 뒤 번호, y: 가문력, tm: 플레이 초, g: 닫힌 장의 대(있으면) }] (많아야 20) }
+DS.RUNS_MAX = 20;
+DS.runsFix = function (r) {
+  if (!r || typeof r !== 'object' || Array.isArray(r)) return null;
+  var n = Math.max(0, Math.round(+r.n || 0)), best = Math.max(0, Math.min(DS.SCENARIOS.length, Math.round(+r.best || 0)));
+  var hist = (Array.isArray(r.hist) ? r.hist : []).filter(function (h) { return h && typeof h === 'object'; }).slice(-DS.RUNS_MAX).map(function (h) {
+    var o = { c: Math.max(0, Math.round(+h.c || 0)), top: Math.max(0, Math.round(+h.top || 0)), y: Math.round(+h.y || 0), tm: Math.max(0, Math.round(+h.tm || 0)) }; if (+h.g >= 2) o.g = Math.round(+h.g); return o;
+  });
+  return n || best || hist.length ? { n: n, best: best, hist: hist } : null;
+};
+DS.scnTop = function (save) { var t = 0; for (var k in (save && save.cleared) || {}) if (save.cleared[k] && +k > t) t = +k; return t; };
+DS.passedEver = function (save) { return !!(save && ((save.cleared && save.cleared[DS.SCENARIOS.length]) || (save.runs && save.runs.best >= DS.SCENARIOS.length))); };      // 맺음(30번)을 한 번이라도 보았는가 (제목 글씨)
+DS.lapseRestart = function (save) {
+  if (!save) return null;
+  var ids = Object.keys(save.cleared || {}).filter(function (k) { return save.cleared[k]; }), top = DS.scnTop(save);
+  var R = DS.runsFix(save.runs) || { n: 0, best: 0, hist: [] };
+  var h = { c: ids.length, top: top, y: DS.calNow ? DS.calNow(save).yr : 0, tm: Math.round(+save.time || 0) };
+  var e = save.eg && typeof save.eg === 'object' ? save.eg : null, wasEg = !!(e && e.on);
+  if (wasEg) { h.g = e.gen; e.on = 0; e.c = {}; if (e.call && e.call.used === 0) e.call.used = 2; }      // 진행 중인 장은 닫힌다 (세대 수는 그대로)
+  R.n++; R.best = Math.max(R.best, top); R.hist = R.hist.concat([h]).slice(-DS.RUNS_MAX);
+  save.runs = R; save.cleared = {};
+  if (!DS.ZONES[save.zone]) { save.zone = 'haemil'; save.pos = null; }      // 지역은 시나리오로 잠기지 않는다 (단 경고만) — 엉뚱한 칸만 바로잡는다
+  if (!DS.ZONES[save.town] || !DS.ZONES[save.town].town) save.town = 'haemil';
+  return { c: ids.length, top: top, run: R.n + 1, best: R.best, eg: wasEg ? h.g : 0 };
 };
 })();

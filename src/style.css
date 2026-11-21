@@ -4877,6 +4877,31 @@ html.calm .cine .cgift, .cine.calm .cgift { animation: cnUp .3s ease-out .6s bot
 .cine.ck-reopen .cfa.cnew { animation: cnStep .6s cubic-bezier(.2, .9, .3, 1.15) .6s both; border-color: #f6cf57; }
 .cine.calm .cfa.cneo::before { display: none; }
 @media (max-height: 640px) { .cine.ck-fuse .cst { height: 180px; } .cine .cfa.cneo { width: 92px; height: 92px; } .cine.ck-fuse .cfa.cneo { margin-left: -46px; top: 70px; } }
+/* 2.3.2 대가 끊겨 이야기가 처음으로: 깬 시나리오 띠(1~30)가 끝에서부터 하나씩 꺼지고, 다 꺼진 뒤 1번 칸에만 빛 고리가 돈다 */
+.clp { display: grid; grid-template-columns: repeat(10, 26px); gap: 5px; justify-content: center; }
+.clp i { position: relative; display: grid; place-items: center; width: 26px; height: 26px; font: 700 11px/1 var(--f-ui, inherit); font-style: normal; color: #5d5446; background: #15120e; border: 1px solid #3a342a; border-radius: 4px; }
+.clp i.on { color: #2a1d08; background: linear-gradient(180deg, #f6d77a, #c99a3a); border-color: #f0cf72; box-shadow: 0 0 8px rgba(246, 207, 87, .4); }
+.clp.anim i.on { animation: cnLpOff .9s ease-in calc(1s + var(--d, 0) * 1s) both; }
+.clp.anim i.one::after { content: ""; position: absolute; inset: -4px; border: 2px solid #f6cf57; border-radius: 6px; opacity: 0; animation: cnLpOne 1.3s ease-in-out calc(2.1s + var(--e, 0) * 1s) infinite alternate; }
+@keyframes cnLpOff { 0% { filter: none; } 35% { filter: brightness(1.6); transform: scale(1.08); } 100% { color: #5d5446; background: #15120e; border-color: #3a342a; box-shadow: none; filter: none; transform: scale(.94); } }
+@keyframes cnLpOne { from { opacity: .15; transform: scale(.92); } to { opacity: 1; transform: scale(1.06); } }
+.cine.ck-lapse { --fc: #b9a37a; --cr: linear-gradient(180deg, #3d352a, #16120d); }
+.cine.ck-lapse .cbd { background: radial-gradient(ellipse at 50% 40%, rgba(80, 66, 44, .28), transparent 60%), rgba(0, 0, 0, .97); animation-duration: 1s; }
+.cine.ck-lapse .cst { min-height: 0; margin: 12px 0 8px; animation: cnUp .5s ease-out .3s both; }
+.cine.ck-lapse .crib b { color: #e6dcc6; text-shadow: none; }
+.cine.ck-lapse .csub { animation-delay: .9s; }
+.cine.ck-lapse .cnote { animation-delay: 2.6s; }
+.cine.ck-lapse .cgift { animation-delay: 3.2s, 3.8s; }
+.cine.ck-lapse .cfx i { top: -4%; width: 3px; height: 3px; background: #c8b48a; box-shadow: none; animation: cnAsh 3.4s linear calc(var(--i) * .3s) both; }
+.cine.calm .clp i.on { color: #5d5446; background: #15120e; border-color: #3a342a; box-shadow: none; }      /* 움직임 줄이기: 처음부터 꺼진 띠 · 1번 칸에 고리 */
+.cine.calm .clp i.one::after { opacity: .9; }
+.lpscn { width: 100%; display: grid; gap: 6px; justify-items: center; padding: 8px 0 4px; }
+.lpscn p { margin: 0; font-size: var(--fs-m); font-family: var(--f-11); color: var(--bone); }
+.lpscn p b { color: #e8806a; }
+.lpscn .clp { grid-template-columns: repeat(10, 22px); gap: 4px; }
+.lpscn .clp i { width: 22px; height: 22px; font-size: 10px; }
+.lgafter li.lploss { color: #e8806a; border-left-color: #e8806a; }
+.msl-run { margin: 2px 0 6px; font-size: var(--fs-s); color: var(--mute); }
 
 /* 2.2.4 부대 격자: 칸 안의 장비 (초상 오른쪽 세로 줄 · 가문 창과 같은 그림 · 빈 칸은 흐리게). 칸 전체가 그대로 누르는 자리 */
 html body #app#app .hk .hkg { position: absolute; top: 25px; right: 5px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; }

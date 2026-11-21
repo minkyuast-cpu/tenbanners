@@ -269,9 +269,12 @@ function pickLine(key, list) {
   var k = TALK[key] || 0; TALK[key] = k + 1;
   return list[k % list.length];
 }
+var LAPSE_RUMOR = ['스무 해 전에도 그 깃발이 이 길을 걸었다지. 어디까지 갔는지는 아무도 기억 못 하네.', '대가 끊겼던 집이 다시 깃발을 들었다더군. 길은 처음부터라네.'];      // 2.3.2: 대가 끊겨 처음부터 다시 걷는 동안
 function rumor(save) {
   var n = DS.nextScn(save);
   if (!n) return [RUMOR.end];
+  var rr = save && save.runs;
+  if (rr && rr.n && !(DS.egActive && DS.egActive(save)) && n.id <= rr.best && n.tier <= DS.partyTier(save)) return [RUMOR[n.id] || RUMOR.end, LAPSE_RUMOR[(rr.n - 1) % LAPSE_RUMOR.length]];
   if (n.tier > DS.partyTier(save)) {
     var masters = DS.charList(save).filter(function (c) { return DS.CLASSES[c.cls].master || c.L > 70; }).sort(function (a, b) { return b.L - a.L; });
     if (masters.length && DS.tierOfL(masters[0].L) >= n.tier) return ['합일한 집을 앞에 세우게. 변경 성주들은 8단이 아니면 상대도 안 한다네.'];
@@ -462,7 +465,7 @@ var HELP = [
   { h: '나이와 세월', short: '나이', items: [
     '세상에는 <b>달력</b>이 있다. 싸우고 걷는 동안 시간이 흘러 <b>1배속으로 10분이 한 해</b>다(빨리 감으면 세월도 빨리 가고, 멈춤, 창이 열린 동안은 흐르지 않는다). 위 띠의 지역 이름 옆과 부대 탭 맨 위에 「가문력 3년 가을」처럼 보인다. 계절이 바뀌면 그 자리에서 짧게 알린다.',
     '맹주, 가주, 가문원, 아이 모두 <b>함께 늙는다.</b> 이름 옆의 「34살」이 나이이고, 사람마다 타고난 <b>수명</b>이 다르다. 운이 좋으면 더 오래 산다. 돌 정령, 해골 병사, 인어, 와이번은 사람보다 오래 사는 대신 더디게 큰다.',
-    '맹주가 쓰러졌는데 이을 사람이 아무도 없으면 <b>대가 끊긴다</b>. 스무 해가 흐르고, 남겨진 아이가 자랐으면 그 아이가, 없으면 낯선 이가 옛 깃발을 든다. 깬 판과 깃발, 장비는 남고 금고의 절반은 흩어진다.',
+    '맹주가 쓰러졌는데 이을 사람이 아무도 없으면 <b>대가 끊긴다</b>. 스무 해가 흐르고, 남겨진 아이가 자랐으면 그 아이가, 없으면 낯선 이가 옛 깃발을 든다. 깃발과 레벨, 장비는 남고 금고의 절반은 흩어진다. <b>깬 시나리오는 모두 사라져 1번부터 다시 걷는다.</b> 다시 깨면 처음 깬 보상을 또 받는다.',
     '수명이 가까워지면 <b>노년</b>(은빛 나이)에 들어 공격, 마공이 조금 줄어든다. 맹주라면 이을 사람을 생각해 둘 때다.',
     '수명이 다한 이는 싸움이 없는 때에 <b>천수를 누리고</b> 잠든다. 맹주라면 쓰러졌을 때처럼 뒤를 이을 사람을 정하고, 누구든 관에 모실 수 있다.',
     '맹주가 혼인하면 해마다 아이가 태어날 수 있다. 해가 갈수록, 아이가 늘수록 드물어진다. 아이는 가계도에서 자라 <b>15살에 성년</b>이 되면 가문원으로 맹주를 따라 싸운다. 빈 가문의 가주로 보낼 수도 있다.'] },

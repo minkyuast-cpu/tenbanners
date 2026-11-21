@@ -287,6 +287,7 @@ DS.fixSave = function (s) {
   s.party = (Array.isArray(s.party) ? s.party : []).map(function (p) { return +p; }).filter(function (p, i, a) { return own(s.chars, p) && a.indexOf(p) === i; });
   if (!s.party.length) s.party = [s.hero];      // 2.2.0: 끝의 DS.pSync → DS.partySync 가 가주가 선 가문 모두로 맞춘다
   for (k in s.cleared) if (!(+k >= 1 && +k <= DS.SCENARIOS.length)) delete s.cleared[k];
+  if (s.runs != null) { var rr = DS.runsFix ? DS.runsFix(s.runs) : null; if (rr) s.runs = rr; else delete s.runs; }      // 2.3.2: 대가 끊겨 처음부터 다시 걸은 기록 (옛 저장에는 없다)
   if (!own(DS.ZONES, s.town) || !DS.ZONES[s.town].town) s.town = 'haemil';
   if (!own(DS.ZONES, s.zone)) { s.zone = s.town; s.pos = null; }
   if (!s.pos || typeof s.pos !== 'object' || !int(s.pos.x) || !int(s.pos.y) || s.pos.x < 0 || s.pos.y < 0) s.pos = null;      // 자리가 숫자 칸이 아니면 지역 입구에서 다시 선다 (그대로 두면 이어하기에서 넘어진다)

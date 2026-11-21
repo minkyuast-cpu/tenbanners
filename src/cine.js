@@ -5,17 +5,17 @@
 //     뜬 뒤 DS.CINE.guard(0.7초) 동안은 눌러도 닫히지 않는다 — 앞 화면에 누른 손이 연출을 곧장 넘기지 않게. 시험 손잡이 DS.cineSkip 은 막지 않는다.
 //   DS.cine(ev, cb): cb 가 있으면 흐름 안의 연출(창 사이 · 바로 다음에), 없으면 「한가할 때」 — 싸움이 끝나고 창이 모두 닫힌 뒤. 한가할 때의 것은 저장(save.cineQ, 많아야 6)에 남겨 다시 켜도 잃지 않는다.
 //   ev = { k: 'wed'|'birth'|'adult'|'death'|'succ'|'open'|'rank'|'ticket'|'pit'|'fuse'|'ascend'|'fallx'|'wake'|'reopen', title, sub, say, note, por: [얼굴 sprTag …], old: 떠난 이 얼굴, fc: 깃발 색, crest: 문장 svg,
-//     2.2.9: crests · fcs (문장 여럿과 그 빛깔 — 합일 · 깨어남), neo (새 모습), skill (새 기술 이름), names (합일한 셋의 이름) }
+//     2.2.9: crests · fcs (문장 여럿과 그 빛깔 — 합일 · 깨어남), neo (새 모습), skill (새 기술 이름), names (합일한 셋의 이름) · 2.3.2 'lapse' + n (깬 시나리오 가운데 가장 뒤 번호) }
 //   설정의 「사건 연출」: 보통 · 짧게 · 끔 (끄면 기록 · 알림 글만 남는다). 움직임 줄이기면 움직이지 않고 짧게. 싸움 중의 죽음은 따로 「죽음 연출」(death.js)이 보여 준다.
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
 var U = DS.ui; if (!U || typeof document === 'undefined') return;
 var G = DS.G, esc = U.esc;
-var KINDS = { wed: '혼인', birth: '출생', adult: '성년', death: '이별', succ: '잇다', open: '새 가문', rank: '공훈', ticket: '모집권', pit: '갱도', fuse: '합일', ascend: '승급', fallx: '합일한 넋', wake: '깨어남', reopen: '다시 열린 가문', boss: '강적' };      // 2.3.0 boss: 큰 몸의 보스가 처음 깨어날 때      // 2.2.9: 합일 · 9 · 10단 · 8단 위의 죽음 · 세대가 바뀌어 깨어남 · 잠들었던 가문이 다시 열림
-var SND = { wed: 'wed', birth: 'birth', adult: 'level', death: 'cancel', succ: 'promo', open: 'promo', rank: 'level', ticket: 'coin', pit: 'star', fuse: 'fuse', ascend: 'fuse', fallx: 'mourn', wake: 'holy', reopen: 'fuse', boss: 'bossIn' };
+var KINDS = { wed: '혼인', birth: '출생', adult: '성년', death: '이별', succ: '잇다', open: '새 가문', rank: '공훈', ticket: '모집권', pit: '갱도', fuse: '합일', ascend: '승급', fallx: '합일한 넋', wake: '깨어남', reopen: '다시 열린 가문', boss: '강적', lapse: '스무 해' };      // 2.3.2 lapse: 대가 끊겨 이야기가 처음으로 (깬 시나리오 띠가 끝에서부터 꺼진다)      // 2.3.0 boss: 큰 몸의 보스가 처음 깨어날 때      // 2.2.9: 합일 · 9 · 10단 · 8단 위의 죽음 · 세대가 바뀌어 깨어남 · 잠들었던 가문이 다시 열림
+var SND = { wed: 'wed', birth: 'birth', adult: 'level', death: 'cancel', succ: 'promo', open: 'promo', rank: 'level', ticket: 'coin', pit: 'star', fuse: 'fuse', ascend: 'fuse', fallx: 'mourn', wake: 'holy', reopen: 'fuse', boss: 'bossIn', lapse: 'mourn' };
 var Q = [], cur = null, seenSave = null, tick = 0;
-DS.CINE = { full: 5000, fullMax: 6500, perCh: 28, short: 3500, shortMax: 4200, guard: 700, max: 6, wait: { wed: 1, birth: 1, death: 1, succ: 1, open: 1, fuse: 1, ascend: 1, fallx: 1, wake: 1, reopen: 1 } };      // 2.2.5: full · short = 저절로 닫히는 것의 시간(ms, 글자마다 perCh 더 · Max 까지) · wait = 누를 때까지 기다리는 종류
+DS.CINE = { full: 5000, fullMax: 6500, perCh: 28, short: 3500, shortMax: 4200, guard: 700, max: 6, wait: { wed: 1, birth: 1, death: 1, succ: 1, open: 1, fuse: 1, ascend: 1, fallx: 1, wake: 1, reopen: 1, lapse: 1 } };      // 2.2.5: full · short = 저절로 닫히는 것의 시간(ms, 글자마다 perCh 더 · Max 까지) · wait = 누를 때까지 기다리는 종류
 function mode() { var o = G.save && G.save.opt; var m = o && o.cine; return m === 'short' || m === 'off' ? m : 'full'; }
 DS.cineMode = mode;
 var SPR = /^<i class="spr" data-spr="[\w-]+" data-pal="[^"<>&]*" data-px="[\d.]+"( data-flip="1")?><\/i>$/;
@@ -27,7 +27,7 @@ function clean(ev, raw) {      // 저장에 남는 꼴 (얼굴은 sprTag 글만)
   var sp = raw ? function (x) { return typeof x === 'string' ? x : ''; } : okSpr;
   var col = function (c) { return /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : ''; };
   return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), gift: str(ev.gift, 40), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: col(ev.fc), crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
-    crests: (Array.isArray(ev.crests) ? ev.crests : []).map(okSvg).slice(0, 4), fcs: (Array.isArray(ev.fcs) ? ev.fcs : []).map(col).slice(0, 4), neo: sp(ev.neo), skill: str(ev.skill, 24), names: (Array.isArray(ev.names) ? ev.names : []).map(function (n) { return str(n, 16); }).filter(Boolean).slice(0, 3) };      // 2.2.9: 문장 여럿 · 그 빛깔 · 새 모습 · 새 기술 · 세 이름
+    crests: (Array.isArray(ev.crests) ? ev.crests : []).map(okSvg).slice(0, 4), fcs: (Array.isArray(ev.fcs) ? ev.fcs : []).map(col).slice(0, 4), neo: sp(ev.neo), skill: str(ev.skill, 24), names: (Array.isArray(ev.names) ? ev.names : []).map(function (n) { return str(n, 16); }).filter(Boolean).slice(0, 3), n: Math.max(0, Math.min(99, Math.round(+ev.n || 0))) };      // 2.3.2 n: 깬 시나리오 가운데 가장 뒤 번호 (lapse)      // 2.2.9: 문장 여럿 · 그 빛깔 · 새 모습 · 새 기술 · 세 이름
 }
 function store() { var s = G.save; if (!s) return; var q = Q.filter(function (e) { return !e.now; }).slice(0, DS.CINE.max).map(function (e) { var c = clean(e); return c; }); if (q.length) s.cineQ = q; else delete s.cineQ; }
 function restore() {      // 저장을 불러온 뒤: 남아 있던 연출을 줄에 (같은 것은 한 번)
@@ -78,7 +78,7 @@ function play(ev) {
   var dur = md === 'short' ? Math.min(C.shortMax, C.short + chars * C.perCh * 0.4) : Math.min(C.fullMax, C.full + chars * C.perCh);
   if (k === 'boss') dur = md === 'short' || calm ? 2400 : 3800;
   var por = ev.por || [], fx = '';
-  for (var n = 0; n < (k === 'death' || k === 'fallx' ? 7 : k === 'fuse' || k === 'ascend' ? 12 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
+  for (var n = 0; n < (k === 'death' || k === 'fallx' || k === 'lapse' ? 7 : k === 'fuse' || k === 'ascend' ? 12 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
   var stage = '';
   if (k === 'wed') stage = face(por[0] || '', 'cl') + '<span class="cring" aria-hidden="true"><i></i><i></i></span>' + face(por[1] || '', 'cr');
   else if (k === 'birth') stage = (por[1] ? face(por[1], 'cp cl') : '') + face(por[0] || '<i class="cbaby"></i>', 'cb') + (por[2] ? face(por[2], 'cp cr') : '');
@@ -95,6 +95,7 @@ function play(ev) {
   else if (k === 'fallx') stage = '<span class="cxr" aria-hidden="true"><i></i><i></i><i></i></span>' + face(por[0] || '', 'cxf') + (ev.names && ev.names.length ? '<span class="cx3">' + ev.names.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</span>' : '');      // 8단 위의 죽음: 금 테가 갈라지고 세 이름이 흩어진다
   else if (k === 'wake') stage = '<span class="cwk" aria-hidden="true">' + (ev.crests || []).map(function (c, i) { return '<span class="cfzb w' + i + '" style="--bc:' + ((ev.fcs || [])[i] || '#f6cf57') + '"><i class="cfl">' + c + '</i></span>'; }).join('') + '</span>';      // 세대가 바뀌어 잠든 가문이 깨어난다
   else if (k === 'boss') stage = '<span class="cbsr" aria-hidden="true"><i></i><i></i><i></i></span>' + face(por[0] || '', 'cbsf');      // 2.3.0 강적: 붉은 땅울림 고리 위로 큰 몸이 솟는다
+  else if (k === 'lapse') stage = U.lpStrip ? U.lpStrip(ev.n || 0, true) : '';      // 2.3.2: 깬 시나리오가 끝에서부터 하나씩 꺼지고, 1번 칸만 다시 빛난다
   else if (k === 'reopen') stage = '<span class="cflag rx" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew');
   else stage = por.map(function (p, i) { return face(p, 'c' + i); }).join('');
   var el = U.h('<div class="cine ck-' + k + (calm ? ' calm' : '') + (md === 'short' ? ' short' : '') + (hold ? ' hold' : ' auto') + '" role="dialog" aria-live="assertive" aria-label="' + esc(ev.title || KINDS[k]) + '" style="--dur:' + Math.round(dur) + 'ms;--guard:' + C.guard + 'ms' + (ev.fc ? ';--fc:' + ev.fc : '') + '">' +

@@ -654,12 +654,17 @@ DS.linSeatMove = seatMove;
 // r35 「가문이 끊겼다」: 대장이 쓰러졌는데 이을 어른이 아무도 없다 (값없는 모집 줄과 미성년 아이만 남았다).
 //   이때는 값없이 한 사람을 보내는 대신 스무 해가 흐르고(나이·천수·성년은 age.js 의 해마다 판정 그대로), 새 대장이 옛 깃발을 든다.
 //   자란 핏줄이 있으면 그 아이가, 없으면 낯선 이가 잇는다. 이름은 고를 수 있다. 가문 이름은 옛 이름을 잇거나 여덟 큰 가문 가운데 하나.
-//   남는 것: 깬 시나리오·깃발과 레벨·장비·관. 잃는 것: 금고의 절반, 스무 해 동안 천수를 누린 이들.
+//   남는 것: 깃발과 레벨·장비·관. 잃는 것: 금고의 절반, 스무 해 동안 천수를 누린 이들, 2.3.2: 깬 시나리오 모두 (이야기는 1번부터 — DS.lapseRestart, 처음 깬 보상은 다시 받는다).
 DS.LAPSE = { years: 20, gold: 0.5, minG: 3, tickets: 2 };      // tickets: 옛 이름을 듣고 찾아올 이들 (빈 깃발을 다시 세울 실마리 — 갇히지 않게)
 DS.linEnded = function (s, chId) {
   var ch = s && s.chars && s.chars[chId]; if (!ch || !ch.vac || +chId !== +s.hero) return false;
   if (DS.egPassOn && DS.egPassOn(s)) return false;      // 스무 해 창(다음 세대의 장) 안에서는 그 창이 다룬다
   return !DS.linHeirs(s, chId).some(function (h) { return !h.young && (h.blood || h.sb); });      // 2.2.0: 어른 핏줄도 막사의 같은 병과도 없으면 끊긴다
+};
+// 2.3.2 입구 창의 알림: 맹주가 지금 쓰러지면 이을 어른 핏줄도 막사의 같은 병과도 없는가 (DS.linEnded 와 같은 셈 — 맹주가 살아 있을 때)
+DS.linHeirRisk = function (s) {
+  var ch = s && s.chars && s.chars[s.hero]; if (!ch || ch.vac || (DS.egPassOn && DS.egPassOn(s))) return false;
+  return !DS.linHeirs(s, s.hero).some(function (h) { return !h.young && (h.blood || h.sb); });
 };
 // opt: { name: 새 대장 이름, house: 'keep' | 여덟 큰 가문 이름, rnd, at }. 돌려주는 값: { evs, y0, y1, lost, kid, name, house, old, gone } 또는 null
 DS.linLapse = function (s, chId, opt) {
@@ -694,10 +699,13 @@ DS.linLapse = function (s, chId, opt) {
   }
   p.sn = Lr.sur; var hm = null; if (p.m) hm = merc(s, p.m); if (hm) hm.sn = Lr.sur;
   var y1 = DS.calNow ? DS.calNow(s).yr : y0 + X.years;
-  var ev = logE(s, 'lapse', p.id, dp ? dp.id : 0, { y0: y0, y1: y1, n: X.years, gold: lost, kid: kid ? 1 : 0, house: DS.houseName(s), old: oldHn, osn: sur0 !== Lr.sur ? sur0 : '' });
-  evs.push({ t: 'lapse', a: p.id, b: dp ? dp.id : 0, ev: ev });
+  var lx = { y0: y0, y1: y1, n: X.years, gold: lost, kid: kid ? 1 : 0, house: DS.houseName(s), old: oldHn, osn: sur0 !== Lr.sur ? sur0 : '' };
+  if (DS.lapseRestart) { lx.scn = scnN(s); lx.run = ((s.runs && s.runs.n) || 0) + 2; }
+  var ev = logE(s, 'lapse', p.id, dp ? dp.id : 0, lx);      // 사건의 때(s)는 깬 시나리오를 지우기 전 — 「시나리오 12 뒤」
+  var rs = DS.lapseRestart ? DS.lapseRestart(s) : null;      // 2.3.2: 이야기는 처음으로 — 깬 시나리오가 모두 사라진다
+  evs.push({ t: 'lapse', a: p.id, b: dp ? dp.id : 0, ev: ev, scn: rs ? rs.c : 0 });
   s.lapse = (s.lapse || 0) + 1;
-  return { evs: evs, y0: y0, y1: y1, lost: lost, tickets: X.tickets, kid: !!kid, name: nm, house: DS.houseName(s), old: oldHn, gone: gone, dead: dp ? DS.linName(s, dp.id) : '' };
+  return { evs: evs, y0: y0, y1: y1, lost: lost, tickets: X.tickets, kid: !!kid, name: nm, house: DS.houseName(s), old: oldHn, gone: gone, dead: dp ? DS.linName(s, dp.id) : '', scn: rs ? rs.c : 0, top: rs ? rs.top : 0, run: rs ? rs.run : 1, eg: rs ? rs.eg : 0 };
 };
 // 이야기 줄 (lore.js LINEAGE.lapse 가 있으면 그쪽). {house} 옛 가문 · {a} 새 대장 · {b} 떠난 대장 · {y1} 새 해 · {new} 새 가문
 DS.LAPSE_TXT = {
@@ -710,9 +718,18 @@ DS.LAPSE_TXT = {
   renew: '옛 깃발에 새 이름 {new}{을를} 건다.',
   cost: '금고의 절반이 흩어졌다.',
   call: '옛 이름을 듣고 찾아올 이들이 있다. 모집권 {t}장.',
-  gone: '그 사이 {n}명이 천수를 누리고 떠났다.'
+  gone: '그 사이 {n}명이 천수를 누리고 떠났다.',
+  // 2.3.2 이야기는 처음으로: 연출(cine 'lapse')과 「스무 해 뒤」 글
+  back: '스무 해, 이야기는 처음으로 돌아간다.',
+  backT: '이야기는 처음으로',
+  backN: '깃발과 레벨, 장비는 남았다.',
+  backG: '처음 깬 보상은 다시 받는다',
+  forget: '사람들은 그 깃발이 걸어온 길을 잊었다.',
+  lost: '깬 시나리오 {c}개가 잊혔다.',
+  again: '1번 시나리오부터 다시 걷는다. 처음 깬 보상은 다시 받는다.',
+  egEnd: '{g}대째의 장도 닫혔다. 30번을 다시 깨면 다음 장이 열린다.'
 };
-DS.LIN_TXT.lapse = ['{house}의 대가 끊기고 스무 해가 흘렀다. {a}{이가} 옛 깃발을 다시 들었다.'];
+DS.LIN_TXT.lapse = ['{house}의 대가 끊기고 스무 해가 흘렀다. {a}{이가} 옛 깃발을 다시 들었다. 이야기는 처음으로 돌아갔다.'];
 DS.linAutoHeir = function (s, chId, opt) { if (DS.linEnded(s, chId)) { var lp = DS.linLapse(s, chId, opt); if (lp) return lp.evs; } return DS.linSucceed(s, chId, DS.linAutoPick(s, chId, opt), opt); };      // r35: 가문이 끊겼으면 스무 해가 흐른다 (화면 없이도 갇히지 않게)
 DS.linAutoAll = function (s) { var evs = []; DS.linVacant(s).forEach(function (ch) { evs = evs.concat(DS.linAutoHeir(s, ch.id) || []); }); return evs; };
 // 4.0: 생전 입양은 넣지 않는다 (설계서 ④-2)
