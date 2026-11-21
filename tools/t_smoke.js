@@ -198,7 +198,9 @@ module.exports = async (page, shot, L) => {
   const CL = await ev(() => Object.keys(DS.CLASSES));
   let nCast = 0, nUlt = 0, nUx = 0;
   for (const c of CL) {
-    const r = await ev((c) => {
+    let r;
+    for (let tr = 0; tr < 3; tr++) {      // 2.3.1: 판의 땅과 무리가 매번 달라 (돌파 뒤 연쇄가 튈 적이 곁에 없는 등) 어긋나면 다시 세워 본다 — 세 번 모두 어긋나야 실패
+    r = await ev((c) => {
       var sim = DS.G.sim, SK = DS.SKILLS, C = DS.CLASSES[c], u = sim.units.filter(function (x) { return x.hero && !x.dead; })[0], out = [], D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
       if (!u) return { err: 'no hero' };
       DS.G.pause = true;
@@ -248,6 +250,8 @@ module.exports = async (page, shot, L) => {
       return { list: out };
     }, c);
     await L.sleep(450);      // 화면이 기술 · 필살기 연출을 그린다 (오류가 나면 shot.js 가 잡는다)
+    if (!r.err && !(r.list || []).some(x => /:/.test(x))) break;
+    }
     const bad = (r.list || []).filter(x => /:/.test(x));
     nCast += (r.list || []).length; nUlt += (r.list || []).filter(x => /^u_/.test(x)).length; nUx += (r.list || []).filter(x => /^ux_/.test(x)).length;
     A(!r.err && !bad.length, c + ': every skill and ultimate casts with its effect (' + (r.list || []).length + ')' + (bad.length ? ' — ' + bad.join(', ') : '') + (r.err || ''));
@@ -325,6 +329,6 @@ module.exports = async (page, shot, L) => {
   A(f225.allies === 3 && f225.t >= 4, '2.2.5 save fights in the field with 3 out (' + f225.allies + ' houses, ' + f225.t + ' s)');
   await ev(() => { DS.G.sim.hunt = false; DS.G.save.opt.hunt = false; DS.ui.closeAll(); });
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.3\.0 [^/]+ \/ 2\.3\.0 \/ 7\.1\.0$/.test(notes), 'version ' + notes);
+  A(/^2\.3\.1 [^/]+ \/ 2\.3\.1 \/ 7\.1\.1$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };

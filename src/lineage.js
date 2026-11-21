@@ -377,6 +377,9 @@ DS.linAfterScn = function (s, o, rnd) {
 };
 
 // ── 죽음 ──
+// 2.3.1: 8단 위(합일한 넋)가 죽으면 영웅 모집권을 남긴다 (한 사람에 한 번, p.tk10)
+DS.FALLX_TK = 10;
+function fallTk(s, p) { var sn = p && p.snap || {}; if (!p || p.tk10 || !(+sn.L > 70 || sn.fz)) return; p.tk10 = DS.FALLX_TK; s.tickets = (s.tickets || 0) + DS.FALLX_TK; }
 function snapMerc(m) { var o = { id: m.id, type: m.type, g: m.g, t: m.t, v: m.v || 0, L: DS.pL(m), k: m.k || 0, b: m.b || 0 }; if (m.fz) o.fz = 1; ['q', 'bk', 'sv', 'it', 's', 'nk', 'ttl', 'pk', 'rv', 'lw'].forEach(function (k) { if (m[k] != null) o[k] = m[k]; }); var tt = DS.mercTitle ? DS.mercTitle(m) : ''; if (tt) o.title = tt; return o; }
 function emptyCoffins(s) { var c = s.coffins; return c ? Math.max(0, c.have - c.list.length) : 0; }
 // 용병(아이 포함)이 죽었다 (DS.loseMerc 뒤에 부른다: m = 잃은 용병). 가계도에 오른 이거나 빈 관이 있으면 사람으로 남긴다.
@@ -386,6 +389,7 @@ DS.linMercDied = function (s, m, at, why) {
   if (!p && !emptyCoffins(s) && !(s.eg && s.eg.pass)) return evs;      // ⑰-1: 관은 누구나 (빈 관이 있을 때 임시 사람)      // 3.3.0: 스무 해 창 동안은 빈 관이 없어도 사람으로 남긴다 (끝 면에서 내려 묻고 모실 수 있게)
   if (!p) { mercFix(m); p = mkP(s, { k: 'm', sn: m.sn, n: m.n, sx: m.sx, type: m.type, g: m.g, m: 0, gv: 1, ttl: m.ttl }); }
   p.type = m.type; p.g = m.g; p.n = m.n; p.st = 'dead'; p.m = 0; p.snap = snapMerc(m); if (m.lw) p.lw = String(m.lw).slice(0, 24);      // r32: 마지막 한마디
+  fallTk(s, p);
   p.d = { at: at || '', why: why || '전사', s: scnN(s), tm: Math.round(s.time || 0), fr: 1 };
   if (fb) p.d.fb = fb;
   griefFam(s, p, evs);
@@ -403,6 +407,7 @@ DS.linSettle = function (s, at) {
     p.snap = { cls: ch.cls, L: ch.L, w: ch.w || null, a: ch.a || null };
     if (ch.id === s.hero) p.ttl = DS.charName(ch);      // 3.3.0: 가주였던 이의 호 (「한울 2세」) — 태어날 때 받은 호 대신
     p.st = 'dead'; p.c = 0; p.seat = ch.id;
+    fallTk(s, p);
     p.d = { at: at || '', why: '전사', s: scnN(s), tm: Math.round(s.time || 0), fr: 1 };
     var e1 = logE(s, 'death', p.id, 0, { at: at || '', why: '전사', k: 'c', cls: ch.cls });
     ch.vac = { pid: p.id, at: at || '' }; ch.pid = 0; ch.down = true; delete ch.gr;

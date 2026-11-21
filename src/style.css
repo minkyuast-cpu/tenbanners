@@ -4859,6 +4859,11 @@ html body #app#app .result.rsplit > .rfoot { position: relative; bottom: auto; f
 .cine .cx3 i:nth-child(1) { animation-delay: 1.1s; } .cine .cx3 i:nth-child(2) { animation-delay: 1.35s; } .cine .cx3 i:nth-child(3) { animation-delay: 1.6s; }
 .cine.ck-fallx .crib b { color: #e6dcc6; text-shadow: none; }
 .cine.ck-fallx .cfx i { top: -4%; width: 3px; height: 3px; background: #c8b48a; box-shadow: none; animation: cnAsh 3s linear calc(var(--i) * .25s) both; }
+/* 2.3.1: 8단 위가 남긴 모집권 — 잿빛 연출 속 하나의 금빛 */
+.cine .cgift { display: inline-flex; align-items: center; gap: 8px; margin: 10px auto 0; padding: 6px 14px; border: 1px solid #c9a24a; border-radius: 999px; background: linear-gradient(180deg, rgba(90, 66, 22, .55), rgba(40, 28, 10, .55)); font: 700 14px/1.2 var(--f-ui); color: #ffe39a; text-shadow: 0 0 8px rgba(255, 200, 90, .45); animation: cnUp .5s ease-out 1.6s both, cnGift 2.4s ease-in-out 2.1s infinite; }
+.cine .cgift .cgi { width: 22px; height: 14px; border-radius: 3px; background: linear-gradient(135deg, #ffe7a3, #d6a640); box-shadow: inset 0 0 0 1.5px #8a6420; -webkit-mask: radial-gradient(circle at 0 50%, transparent 3px, #000 3.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 3px, #000 3.5px) right / 51% 100% no-repeat; mask: radial-gradient(circle at 0 50%, transparent 3px, #000 3.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 3px, #000 3.5px) right / 51% 100% no-repeat; }
+@keyframes cnGift { 50% { box-shadow: 0 0 14px rgba(255, 200, 90, .45); } }
+html.calm .cine .cgift, .cine.calm .cgift { animation: cnUp .3s ease-out .6s both; }
 .cine.ck-wake { --fc: #9fe8ec; --cr: linear-gradient(180deg, #3f7a8a, #1e3f4a); }
 .cine.ck-wake .cst { min-height: 120px; align-items: flex-end; gap: 14px; }
 .cine .cwk { display: flex; gap: 14px; }

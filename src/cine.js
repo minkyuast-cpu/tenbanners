@@ -26,7 +26,7 @@ function clean(ev, raw) {      // 저장에 남는 꼴 (얼굴은 sprTag 글만)
   if (!ev || !KINDS[ev.k]) return null;
   var sp = raw ? function (x) { return typeof x === 'string' ? x : ''; } : okSpr;
   var col = function (c) { return /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : ''; };
-  return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: col(ev.fc), crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+  return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), gift: str(ev.gift, 40), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: col(ev.fc), crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
     crests: (Array.isArray(ev.crests) ? ev.crests : []).map(okSvg).slice(0, 4), fcs: (Array.isArray(ev.fcs) ? ev.fcs : []).map(col).slice(0, 4), neo: sp(ev.neo), skill: str(ev.skill, 24), names: (Array.isArray(ev.names) ? ev.names : []).map(function (n) { return str(n, 16); }).filter(Boolean).slice(0, 3) };      // 2.2.9: 문장 여럿 · 그 빛깔 · 새 모습 · 새 기술 · 세 이름
 }
 function store() { var s = G.save; if (!s) return; var q = Q.filter(function (e) { return !e.now; }).slice(0, DS.CINE.max).map(function (e) { var c = clean(e); return c; }); if (q.length) s.cineQ = q; else delete s.cineQ; }
@@ -73,7 +73,7 @@ function wakeQ() {      // 2.2.9: 세대가 바뀌어 깨어난 가문 (save.fzW
 setInterval(function () { tick++; if (!cur) wakeQ(); if (!cur && (Q.length || (G.save && G.save.cineQ && G.save !== seenSave))) pump(); }, 700);
 function face(spr, cls) { return '<span class="cfa' + (cls ? ' ' + cls : '') + '">' + spr + '</span>'; }
 function play(ev) {
-  var calm = U.calm && U.calm(), md = mode(), C = DS.CINE, k = ev.k, chars = ((ev.title || '') + (ev.sub || '') + (ev.say || '') + (ev.note || '')).length;
+  var calm = U.calm && U.calm(), md = mode(), C = DS.CINE, k = ev.k, chars = ((ev.title || '') + (ev.sub || '') + (ev.say || '') + (ev.note || '') + (ev.gift || '')).length;
   var hold = md !== 'short' && !!(C.wait[k] || (ev.say && k !== 'boss'));      // 2.2.5: 읽을 것이 있으면 누를 때까지 (2.3.0 강적 등장은 싸움 한가운데라 저절로 닫힌다)
   var dur = md === 'short' ? Math.min(C.shortMax, C.short + chars * C.perCh * 0.4) : Math.min(C.fullMax, C.full + chars * C.perCh);
   if (k === 'boss') dur = md === 'short' || calm ? 2400 : 3800;
@@ -99,7 +99,7 @@ function play(ev) {
   else stage = por.map(function (p, i) { return face(p, 'c' + i); }).join('');
   var el = U.h('<div class="cine ck-' + k + (calm ? ' calm' : '') + (md === 'short' ? ' short' : '') + (hold ? ' hold' : ' auto') + '" role="dialog" aria-live="assertive" aria-label="' + esc(ev.title || KINDS[k]) + '" style="--dur:' + Math.round(dur) + 'ms;--guard:' + C.guard + 'ms' + (ev.fc ? ';--fc:' + ev.fc : '') + '">' +
     '<div class="cbd"></div><div class="cfx" aria-hidden="true">' + fx + '</div><div class="cin"><p class="cey">' + esc(KINDS[k]) + '</p><div class="cst n' + Math.max(1, por.length) + '">' + stage + '</div>' +
-    '<p class="crib"><b>' + esc(ev.title || KINDS[k]) + '</b></p>' + (ev.sub ? '<p class="csub">' + esc(ev.sub) + '</p>' : '') + (ev.say ? '<q class="csay">' + esc(ev.say) + '</q>' : '') + (ev.note ? '<small class="cnote">' + esc(ev.note) + '</small>' : '') +
+    '<p class="crib"><b>' + esc(ev.title || KINDS[k]) + '</b></p>' + (ev.sub ? '<p class="csub">' + esc(ev.sub) + '</p>' : '') + (ev.say ? '<q class="csay">' + esc(ev.say) + '</q>' : '') + (ev.note ? '<small class="cnote">' + esc(ev.note) + '</small>' : '') + (ev.gift ? '<p class="cgift"><span class="cgi" aria-hidden="true"></span>' + esc(ev.gift) + '</p>' : '') +
     '<small class="ctap">누르면 닫힌다</small></div>' + (hold ? '' : '<i class="cbar" aria-hidden="true"></i>') + '</div>');
   var app = document.getElementById('app') || document.body; app.appendChild(el);
   try { U.hydrate(el); } catch (x) {}

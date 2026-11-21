@@ -155,11 +155,14 @@ module.exports = async (page, shot, L) => {
   A(await ev(() => !!document.querySelector('.ov .promo')), 'then the promotion window');
   await L.closeAll(page);
   // 8단 위의 죽음 연출 (셋의 이름) — 대표 가주가 쓰러진다
+  var tk0 = await ev(() => DS.G.save.tickets || 0);
   await ev(() => { var s = DS.G.save, R = s.chars[window.__R], b = DS.bearer(s, R); DS.loseMerc(s, b.id); var evs = DS.linMercDied(s, b, '시험장'); window.__evs = evs; DS.mercTidy(s); DS.pSync(s); DS.openLineageRite(evs, function () { window.__dd = 1; }); });
   await L.sleep(1800);
-  c = await ev(() => { var el = document.querySelector('.cine.ck-fallx'); return el ? { names: el.querySelectorAll('.cx3 i').length, sub: el.querySelector('.csub').textContent } : { none: 1, any: (document.querySelector('.cine') || {}).className || '' }; });
+  c = await ev(() => { var el = document.querySelector('.cine.ck-fallx'); return el ? { names: el.querySelectorAll('.cx3 i').length, sub: el.querySelector('.csub').textContent, gift: (el.querySelector('.cgift') || {}).textContent || '' } : { none: 1, any: (document.querySelector('.cine') || {}).className || '' }; });
   A(c && c.names === 3 && /합일한 넋/.test(c.sub), '8단+ death cinematic: heavier, with the three names (' + JSON.stringify(c) + ')');
-  await vshot('death8_cine');
+  var tk1 = await ev(() => DS.G.save.tickets || 0);
+  A(tk1 - tk0 === 10 && /모집권 10장/.test(c.gift || ''), '8단+ death leaves 10 hero tickets, shown in the cinematic (' + tk0 + ' -> ' + tk1 + ', ' + (c.gift || '-') + ')');
+  await L.sleep(1200); await vshot('death8_cine');
   await page.mouse.click(195, 760); await L.sleep(600); await L.closeAll(page);
   c = await ev(() => { var s = DS.G.save, R = s.chars[window.__R], b = DS.bearer(s, R); DS.sbTick(s); DS.mercTidy(s); DS.pSync(s); b = DS.bearer(s, R); return { L: b ? DS.pL(b) : 0, fz: !!(b && b.fz), x: DS.riseCls(R) }; });
   A(!c.fz && c.L <= 70 && !/^x/.test(c.x), 'the successor does not inherit 8단 (L' + c.L + ', ' + c.x + ')');

@@ -2030,7 +2030,7 @@ function tabHelp() {
       '나머지 두 가주는 대표에게 <b>흡수</b>된다. 가계도에는 합일로 남고, 든 장비는 가방으로 간다. 대표의 수명은 30년에 두 사람의 남은 해를 더한 만큼 늘어난다 (많아야 ' + DS.FUSE_LS_MAX + '년).',
       '흡수된 두 가문은 <b>이번 세대가 끝날 때까지 잠든다</b>. 영웅관에서 그 병과가 나와도 열리지 않고, 막사의 그 병과 사람은 기다린다. 다음 세대의 장을 열면 깨어나 영웅관에서 다시 열 수 있다. 선 가문이 셋 밑으로 줄면(더 합일할 수 없으면) 일찍 깨어난다.',
       '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
-      '8단 위의 가주가 쓰러지면 그대로 떠난다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',
+      '8단 위의 가주가 쓰러지면 그대로 떠난다. 영웅 모집권 10장을 남긴다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
@@ -2807,12 +2807,12 @@ function lgBig(spr) { return String(spr || '').replace(/data-px="[\d.]+"/, 'data
 function lgFallX(d) {
   var r = d && LS() && LS().P[d.id], sn = r && r.snap || {}; if (!r || !(+sn.L > 70 || sn.fz)) return null;
   var nm = (r.fu3 || []).filter(Boolean); if (!nm.length) nm = [d.name];
-  return { sub: '합일한 넋이 졌다. ' + (+sn.L > 70 ? DS.tierOfL(sn.L) + '단' : '8단') + '은 잇지 않는다', names: nm.slice(0, 3), note: nm.length > 1 ? '셋이 하나였던 이' : '' };
+  return { sub: '합일한 넋이 졌다. ' + (+sn.L > 70 ? DS.tierOfL(sn.L) + '단' : '8단') + '은 잇지 않는다', names: nm.slice(0, 3), note: nm.length > 1 ? '셋이 하나였던 이' : '', gift: r.tk10 ? '남긴 뜻, 영웅 모집권 ' + r.tk10 + '장' : '' };      // 2.3.1: 모집권 10장
 }
 function lgRite(ev, cb, griefs, seen) {
   var s = G.save, d = lgP(ev.a), chId = ev.ch;
   if (!d || !chId || !s.chars[chId]) { if (cb) cb(); return; }
-  if (DS.cine && !seen) { var fx0 = lgFallX(d); DS.cine(fx0 ? { k: 'fallx', por: [lgBig(d.spr)], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note } : { k: 'death', por: [d.spr || ''], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', ') }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
+  if (DS.cine && !seen) { var fx0 = lgFallX(d); DS.cine(fx0 ? { k: 'fallx', por: [lgBig(d.spr)], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note, gift: fx0.gift } : { k: 'death', por: [d.spr || ''], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', ') }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
   var step = 'mourn', pick = null, more = false, lock = 0, HO = { k: 'new', t: '' };      // 4.0 ⑬: 가문이 옮겨 갈 때의 호 (확인 걸음)
   var canE = DS.linEntomb && DS.linCanEntomb ? lgTry(function () { return DS.linCanEntomb(s, d.id); }) : null, cf = lgCoffins();
   var body = canE && canE.ok ? 'keep' : 'bury', nat = agNatural(d, ev);      // r6 나이: 천수를 누린 이는 이야기 창부터 조용히
@@ -2979,7 +2979,7 @@ function nfLater(ref, head, n) {
 function lgMournOthers(evs, cb, griefs, seen) {
   var all = lgAll(), ds = evs.map(function (e) { return all[e.a]; }).filter(Boolean); if (!ds.length) { if (cb) cb(); return; }
   var fxs = ds.map(lgFallX), fxi = fxs.findIndex ? fxs.findIndex(Boolean) : -1;
-  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [lgBig(dx.spr)], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
+  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [lgBig(dx.spr)], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note, gift: fq.gift }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
   if (DS.cine && !seen) { DS.cine({ k: 'death', por: ds.slice(0, 3).map(function (d) { return d.spr || ''; }), title: ds.length > 1 ? ds.length + '명이 잠들었다' : ds[0].name, sub: ds.length > 1 ? ds.slice(0, 3).map(function (d) { return d.name; }).join(', ') + (ds.length > 3 ? ' 외' : '') : [ds[0].role, lgDiedTxt(ds[0])].filter(Boolean).join(', ') }, function () { lgMournOthers(evs, cb, griefs, true); }); return; }      // 2.2.4: 먼저 조용한 연출
   var C = LGU().coffin || {}, kept = {};
   A2('mourn', 'lose');
