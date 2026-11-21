@@ -938,6 +938,7 @@ function renderActs() {
       if (into === tray && tray) { G.itemsOpen = null; cancelAim(); if (!DS.ITEMS[key].ctl) { if (SK['i_' + key]) startAim('i_' + key); else if (ITEM_AIM[key]) giveItem(me2, key, me2); else { order(me2, { t: 'item', key: key }); A('ok'); } } else useCtl(key); renderActs(); return; }
       if (DS.ITEMS[key].ctl) { useCtl(key); return; }      // 귀환 두루마리·모닥불 꾸러미: 전투 밖에서 컨트롤러가 처리 (전엔 엔진에 넘어가 개수만 깎였다)
       if (SK['i_' + key]) { startAim('i_' + key); return; }      // 폭탄처럼 기술로 풀리는 소모품 (엔진이 일반 처리)
+      if (key === 'endo' && G.sim.t < (G.sim.endoT || 0)) { deny(b, Math.ceil(G.sim.endoT - G.sim.t) + '초', '기운초는 ' + Math.ceil(G.sim.endoT - G.sim.t) + '초 뒤에 다시 쓴다'); return; }      // 2.3.4: 부대가 함께 쉰다
       if (!ITEM_AIM[key]) { cancelAim(); order(me2, { t: 'item', key: key }); A('ok'); return; }      // 기운초처럼 바로 쓰는 것
       // 2.3.3: 약초·마나초는 겨누지 않는다 — 누르면 조작하는 이가 바로 먹는다
       cancelAim(); giveItem(me2, key, me2);
@@ -1059,6 +1060,7 @@ function updateActs() {
     } else {
       var n = G.save.items[e.key] || 0;
       if (n !== e.cnt) { e.cnt = n; e.n.textContent = n; e.b.classList.toggle('off', n <= 0); e.b.setAttribute('aria-label', DS.ITEMS[e.key].name + ' ' + n + '개'); }
+      if (e.key === 'endo') { var cl = Math.max(0, Math.ceil((G.sim.endoT || 0) - G.sim.t)); if (cl !== e.cl) { e.cl = cl; e.b.classList.toggle('cool', cl > 0); var ce = e.b.querySelector('.cdn'); if (!ce && cl) { ce = document.createElement('i'); ce.className = 'cdn num'; ce.setAttribute('aria-hidden', 'true'); e.b.appendChild(ce); } if (ce) ce.textContent = cl ? cl : ''; e.b.style.setProperty('--cdp', (cl / ((DS.ENDO || {}).cd || 15) * 100) + '%'); } }      // 2.3.4: 기운초 쉬는 시간
       if (e.key === 'herb') e.b.classList.toggle('hint', (G.herbHint || 0) > performance.now());      // r8 hud: 지휘관이 위태로울 때 약초 단추가 깜빡인다
       e.b.classList.toggle('queued', !!(o && (o.t === 'item' ? o.key === e.key : o.t === 'skill' && o.id === 'i_' + e.key)));
     }

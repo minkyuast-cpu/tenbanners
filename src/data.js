@@ -5,6 +5,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 
 DS.LV_PER_TIER = 10;      // 단마다 레벨 1~10
 DS.MAX_TIER = 10;
+DS.ENDO = { gauge: 50, cd: 15 };      // 2.3.4: 기운초 — 게이지 +50 (예전 100으로 채움), 부대가 함께 15초 쉰다 (예전엔 쉼 없이 거듭 먹어 기술을 끝없이 썼다)
 DS.TICK = { regen: 11, attack: 40, item: 25, step: 12, quick: 0.65 };   // 틱(행동) 게이지 규칙
 DS.PARTY_MAX = 3;         // 2.2.8: 출전은 셋 — 맹주 + 고른 가주 둘 (meta.js DS.sortieFix · s.party 는 저절로 맞춘 목록). 맹주 가문의 가문원은 따로 함께 싸운다
 
@@ -720,7 +721,7 @@ DS.TERRAIN = {
 DS.ITEMS = {
   herb:  { name: '약초', price: 30, desc: 'HP +40% (아군 하나, 가문원 포함)' },
   mana:  { name: '마나초', price: 50, desc: '마나 +50% (가주 하나)' },
-  endo:  { name: '기운초', price: 80, desc: '틱 게이지 100%' }
+  endo:  { name: '기운초', price: 80, desc: '틱 게이지 +50%. 쓰고 나면 15초 쉰다 (부대 함께)' }
 };
 DS.gearPrice = function (tier) { return Math.round(10 * Math.pow(tier, 1.9)) * 10; };      // 정가의 바탕 — 2.1.0: 장비에 단이 없어 「단」 자리에 지금 부대 레벨의 눈금(DS.gearTe)을 넣는다. 되팔 값에만 쓴다
 // 장비는 적이 떨어뜨린다(r37: 무기점·방어구점 없음). 가방에 넣고 가문에 입힌다. 2.1.0: 누구나 무엇이든 입는다 — 병과에 맞지 않으면 능력치가 조금 깎인다(DS.GEAR_OFF).

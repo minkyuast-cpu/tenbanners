@@ -920,7 +920,7 @@ var ITEM_FX = { herb: 1, mana: 1, endo: 1 };      // 엔진이 효과를 아는 
 P.useItem = function (u, key, tgt) {
   if (!(this.inv[key] > 0)) return false;
   if (DS.BAL.fix28 && !ITEM_FX[key]) { this.say(u, '여기서는 쓸 수 없다'); return false; }      // 효과 없이 개수만 깎이던 것 (귀환 두루마리·모닥불 꾸러미가 전투 막대로 들어오면)
-  if (key === 'endo') { this.inv.endo--; u.gauge = 100; this.emit({ t: 'item', id: u.id, key: key, tid: u.id }); this.emit({ t: 'inv' }); u.busy = 0.2; return true; }
+  if (key === 'endo') { var EN = DS.ENDO || { gauge: 50, cd: 15 }; if (this.t < (this.endoT || 0)) { this.say(u, '기운초는 ' + Math.ceil(this.endoT - this.t) + '초 뒤'); return false; } this.endoT = this.t + EN.cd; this.inv.endo--; u.gauge = Math.min(100, u.gauge + EN.gauge); this.emit({ t: 'item', id: u.id, key: key, tid: u.id }); this.emit({ t: 'inv' }); u.busy = 0.2; return true; }
   var c = TK.item * this.q(u); if (u.gauge < c) return false;
   tgt = tgt || u; this.inv[key]--; u.gauge -= c;
   this.emit({ t: 'item', id: u.id, key: key, tid: tgt.id }); this.emit({ t: 'inv' });

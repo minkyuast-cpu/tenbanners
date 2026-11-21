@@ -5020,3 +5020,9 @@ html body #app#app #vban.rage b { font-size: 30px; background: linear-gradient(1
 
 .gate-head .bigl { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 0; }
 .gate-head .bigl i { font: 600 11px/1 var(--f-ui); font-style: normal; color: #ffd0d6; background: rgba(160, 30, 50, .35); box-shadow: inset 0 0 0 1px rgba(255, 77, 109, .45); padding: 3px 6px; border-radius: 8px; }
+
+/* 2.3.4: 기운초 쉬는 시간 — 어둡게 덮고 남은 초 (아래에서부터 걷힌다) */
+#acts .act.item { position: relative; }
+#acts .act.item.cool { filter: saturate(.4); }
+#acts .act.item .cdn { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: linear-gradient(to top, rgba(0, 0, 0, .62) var(--cdp, 0%), rgba(0, 0, 0, .25) var(--cdp, 0%)); color: #fff; font: 700 15px/1 var(--f-ui); font-style: normal; text-shadow: 0 1px 2px #000; pointer-events: none; }
+#acts .act.item:not(.cool) .cdn { display: none; }
