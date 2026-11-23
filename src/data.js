@@ -360,75 +360,64 @@ DS.quirkFits = function (type, q) {
 // 공훈: 살아남아 싸울수록 쌓이고, 계급이 오르면 능력이 오른다. 낮은 등급도 오래 살면 귀해진다.
 DS.VET = [{ name: '신참', at: 0, mul: 1 }, { name: '숙련', at: 25, mul: 1.06 }, { name: '고참', at: 70, mul: 1.12 }, { name: '정예', at: 150, mul: 1.18 }, { name: '용사', at: 280, mul: 1.25 }, { name: '불멸', at: 450, mul: 1.33 }];
 DS.vetRank = function (x) { var r = 0; for (var i = 0; i < DS.VET.length; i++) if ((x || 0) >= DS.VET[i].at) r = i; return r; };
-// 성격과 말버릇 (글: 시나리오팀). 성격은 용병 번호에서 정해진다 — 저장 칸 없음. 머리 위에 뜨는 글이라 한 줄 12자 안팎.
-//   상황: start 싸움이 붙을 때 · kill 적을 쓰러뜨렸을 때 · low 크게 다쳤을 때 · mourn 동료 용병이 쓰러졌을 때 · rank 공훈 계급이 올랐을 때
-//         boss 보스를 잡았을 때 · flee 주인이 쓰러져 흩어질 때 · join 모집되어 처음 왔을 때 · heal 치유를 받았을 때
+// 성격과 말버릇 (2.4.1: 2.4 의 말투로 — docs/STORY_BIBLE_2.4.md). 성격은 사람 번호에서 정해진다 — 저장 칸 없음. 머리 위에 뜨는 글이라 한 줄 12자 안팎.
+//   상황: start 싸움이 붙을 때 · kill 적을 쓰러뜨렸을 때 · low 크게 다쳤을 때 · mourn 곁의 사람이 쓰러졌을 때 · rank 공훈 계급이 올랐을 때
+//         boss 보스에게 마지막 일격을 넣었을 때 · join 영웅관에서 처음 왔을 때(알림 글 끝에 붙는다) · last 영영 쓰러지는 순간
+//   웃음은 start · kill · low · rank · boss · join 에. mourn · last 는 담담하게 (떠나는 자리에는 농담을 얹지 않는다).
 DS.PERSONAS = [
-  { key: 'plain', name: '무던함', desc: '보수만큼 일하고, 일한 만큼만 말한다.', say: {
-    start: ['일하러 가자', '밥값은 한다', '늘 하던 대로', '또 시작이군'],
-    kill: ['하나', '다음', '밥값 했다', '끝났다, 다음'],
-    low: ['좀 맞았군', '아직은 선다', '물러날 때다', '보수에 비해 아프다'],
-    mourn: ['…먼저 갔군', '보수는 전해 주마', '빈자리는 내가 선다', '수고했다'],
-    rank: ['오래 버텼군', '보수나 올려 주지', '하던 대로 한 거다', '달라질 건 없다'],
-    boss: ['큰 놈 끝났다', '보수 더 얹어 주나', '이제 쉬자', '일 하나 마쳤다'],
-    flee: ['대장이 쓰러졌다', '일단 흩어진다', '교회에서 보자', '보수는 나중이다'],
-    join: ['보수만 맞으면 된다', '잘 부탁한다', '시키는 대로 하지'],
-    heal: ['고맙다', '다시 선다', '됐다, 충분해'],
-    last: ['…여기까지군', '보수는… 됐다', '할 만큼은… 했다', '…조금 쉬겠다', '나머진… 맡긴다', '하던 대로… 가라', '…생각보다 춥군'] } },
+  { key: 'plain', name: '무던함', desc: '할 일은 한다. 퇴근 시간도 안다.', say: {
+    start: ['출근했습니다', '늘 하던 대로', '또 시작이군', '칼퇴가 목표다'],
+    kill: ['하나 처리', '다음 안건', '밥값 했다', '끝났다, 다음'],
+    low: ['좀 맞았군', '아직은 선다', '이건 산재다', '연차 쓰고 싶다'],
+    mourn: ['…먼저 퇴근했군', '이름은 불러 주마', '빈자리는 내가 선다', '수고했다'],
+    rank: ['오래 버텼군', '하던 대로 한 거다', '직함만 늘었다', '달라질 건 없다'],
+    boss: ['큰 건 하나 끝', '이제 좀 쉬자', '보고는 내일 한다', '일 하나 마쳤다'],
+    join: ['시키는 대로 하지', '잘 부탁한다', '야근은 사양이다'],
+    last: ['…여기까지군', '할 만큼은… 했다', '…먼저 퇴근한다', '나머진… 맡긴다', '하던 대로… 가라', '…생각보다 춥군', '인수인계는… 됐지'] } },
   { key: 'chatty', name: '수다', desc: '입이 쉬지 않는다. 조용해지면 큰일이 난 것이다.', say: {
-    start: ['오늘은 몇이나 될까', '어제 꿈이 말이야', '끝나고 한잔하지', '대장, 내 말 들려?'],
-    kill: ['봤어? 방금 봤어?', '하나 더 얹었다', '이건 꼭 적어 둬', '저놈 꽤 버티던데'],
+    start: ['오늘은 몇이나 될까', '어제 꿈이 말이야', '끝나고 한잔하지', '맹주, 내 말 들려?'],
+    kill: ['봤어? 방금 봤어?', '이건 꼭 적어 둬', '저놈 꽤 버티던데', '단톡방에 올려야지'],
     low: ['아야, 이건 좀', '약초! 누구 약초!', '말할 힘은 있어', '농담이 안 나온다'],
-    mourn: ['…할 말이 없다', '어제도 웃었는데', '이름은 안 잊는다', '오늘은 조용히 하지'],
-    rank: ['들었어? 나 올랐어', '이제 고참 소리 듣나', '한턱은 못 낸다', '신참 때 얘기 해 줄까'],
-    boss: ['평생 얘깃거리다', '마지막은 내 칼이지?', '손주한테 들려준다', '봤지? 다들 봤지?'],
-    flee: ['대장! 대장이!', '이건 얘기가 달라', '흩어져, 나중에 봐', '다시 부르면 온다'],
-    join: ['여기 밥은 어때?', '전 대장은 말이야', '오는 길에 봤는데'],
-    heal: ['살 것 같다! 그래서', '아까 하던 얘긴데', '이 은혜는 말로 갚지'],
+    mourn: ['…할 말이 없다', '어제도 웃었는데', '네 얘기 계속 할게', '오늘은 조용히 하지'],
+    rank: ['들었어? 나 올랐어', '이제 고참 소리 듣나', '한턱은 못 낸다', '나 때는 말이야'],
+    boss: ['평생 얘깃거리다', '막타는 내 거지?', '손주한테 들려준다', '봤지? 다들 봤지?'],
+    join: ['여기 밥은 어때?', '오는 길에 봤는데 말이야', '소문 듣고 왔지'],
     last: ['…할 말이 많았는데', '이번엔… 농담 아냐', '내 얘기… 해 줘', '조용하네… 이상하다', '술은… 네가 사', '…끝까지 못 했네'] } },
   { key: 'timid', name: '겁 많음', desc: '무서워하면서도 끝까지 따라온다.', say: {
-    start: ['많다, 너무 많아', '뒤는 비워 둬', '숨 좀 고르고…', '살아서 받자, 보수'],
+    start: ['많다, 너무 많아', '집에 가고 싶다', '숨 좀 고르고…', '저, 저 뒤에 설게요'],
     kill: ['쓰, 쓰러졌다…', '내가 한 거야?', '일어나지 마라', '휴, 하나 줄었다'],
-    low: ['피, 피가…', '이제 물러날래', '죽기는 싫다', '대장, 나 여기!'],
+    low: ['피, 피가…', '이제 물러날래', '죽기는 싫다', '맹주, 나 여기!'],
     mourn: ['안 돼, 일어나', '거짓말이지…', '눈을 못 떼겠다', '같이 가자 했잖아'],
-    rank: ['사, 살아남았다', '운이 좋았을 뿐', '다음에도 살자', '아직 손이 떨려'],
-    boss: ['끝… 끝난 거지?', '다리가 풀린다', '다신 안 볼 얼굴', '살았다, 정말로'],
-    flee: ['끝났어, 달아나', '대장 없인 못 해', '나, 나 먼저 간다', '돌아올게, 꼭…'],
+    rank: ['사, 살아남았다', '운이 좋았을 뿐', '도망 안 친 상인가', '아직 손이 떨려'],
+    boss: ['끝… 끝난 거지?', '다리가 풀린다', '오늘 꿈에 나오겠다', '살았다, 정말로'],
     join: ['위, 위험한 일은…', '뒷줄이면 좋겠다', '살려서 써 줘'],
-    heal: ['살았다…', '조, 조금만 더', '아직 뒤에 있을래'],
-    last: ['무서워… 대장', '…이제 안 떨려', '도망 안 쳤지…?', '살고… 싶었는데', '…혼자 두지 마', '끝까지… 따라왔어'] } },
+    last: ['무서워…', '…이제 안 떨려', '도망 안 쳤지…?', '살고… 싶었는데', '…혼자 두지 마', '끝까지… 따라왔어'] } },
   { key: 'brag', name: '허세', desc: '큰소리를 친 만큼은 싸운다.', say: {
-    start: ['나 하나면 된다', '눈 감고도 이긴다', '다 내 몫이다', '잘 봐 둬라'],
-    kill: ['시시하군', '다음은 누구냐', '벌써 끝이야?', '이름값은 했나'],
-    low: ['긁힌 거다', '이 정도쯤이야', '…조금만 쉰다', '일부러 맞아 줬다'],
+    start: ['나 하나면 된다', '눈 감고도 이긴다', '주인공은 나다', '잘 봐 둬라'],
+    kill: ['시시하군', '다음은 누구냐', '벌써 끝이야?', '서명은 나중에 해 주지'],
+    low: ['긁힌 거다', '이 정도쯤이야', '일부러 맞아 줬다', '…아프다. 비밀이다'],
     mourn: ['…큰소리가 안 나온다', '네 몫까지 벤다', '웃을 수가 없군', '먼저 가라고는 안 했다'],
-    rank: ['당연한 결과다', '이제야 알아보나', '불멸까지 간다', '이름을 새겨 둬라'],
+    rank: ['당연한 결과다', '이제야 알아보나', '불멸까지 간다', '내 이름 크게 새겨라'],
     boss: ['큰 놈도 별것 없군', '내 이름 기억해라', '다음엔 더 큰 놈', '한 수 가르쳤다'],
-    flee: ['…물러남도 전술이다', '오늘은 봐준다', '대장 몫은 남겨 둔다', '다시 온다, 두고 봐'],
-    join: ['운이 좋군, 대장', '보는 눈이 있군', '보수는 싸게 해 주지'],
-    heal: ['안 고쳐도 됐는데', '…받아는 두지', '이제 두 배로 벤다'],
+    join: ['운이 좋군, 맹주', '보는 눈이 있군', '소문의 그 사람이다. 나다'],
     last: ['…계산에 없던 일이다', '내 이름… 크게 불러', '아직… 안 졌다', '웃지 마… 다 봤다', '…좀 아프군, 이건', '노래로… 남겨 줘'] } },
-  { key: 'quiet', name: '과묵', desc: '말 대신 고개를 끄덕인다.', say: {
-    start: ['간다', '…', '맡겨'],
+  { key: 'quiet', name: '과묵', desc: '말 대신 고개를 끄덕인다. 단톡방에서도 읽기만 한다.', say: {
+    start: ['간다', '…', '맡겨', '(끄덕)'],
     kill: ['하나.', '됐다.', '…다음.'],
     low: ['…깊다.', '아직.', '물러난다.'],
-    mourn: ['…잘 가라.', '기억한다.', '갚아 주마.'],
+    mourn: ['…잘 가라.', '기억한다.', '…이름, 안 잊는다.'],
     rank: ['…그런가.', '고맙다.', '계속한다.'],
     boss: ['끝.', '…해냈다.', '쉰다.'],
-    flee: ['…물러난다.', '대장.', '기다린다.'],
-    join: ['…왔다.', '쓰면 된다.', '칼은 있다.'],
-    heal: ['…고맙다.', '된다.', '간다.'],
+    join: ['…왔다.', '쓰면 된다.', '(끄덕)'],
     last: ['…됐다.', '…간다.', '고마웠다.', '…기억해라.', '뒤는… 부탁한다.', '…조용하군.'] } },
-  { key: 'kind', name: '다정', desc: '제 몸보다 옆 사람을 먼저 본다.', say: {
-    start: ['다치지들 마', '곁에 있을게', '같이 돌아가자', '옆은 내가 본다'],
+  { key: 'kind', name: '다정', desc: '제 몸보다 옆 사람을 먼저 본다. 밥은 먹었는지부터 묻는다.', say: {
+    start: ['다치지들 마', '곁에 있을게', '같이 돌아가자', '밥은 먹고 왔지?'],
     kill: ['미안하게 됐다', '뒤는 괜찮아?', '이쪽은 정리됐어', '고이 가라'],
     low: ['난 됐어, 저쪽 먼저', '걱정 끼쳐 미안', '조금만 쉴게', '아직 지킬 수 있어'],
-    mourn: ['편히 쉬어', '내가 기억할게', '춥지 않게 덮어 줘', '집에는 내가 전할게'],
-    rank: ['다들 덕분이야', '같이 오른 거지', '오래 함께하자', '대장 덕이야'],
+    mourn: ['편히 쉬어', '이름 불러 줄게', '춥지 않게 덮어 줘', '집에는 내가 전할게'],
+    rank: ['다들 덕분이야', '같이 오른 거지', '오래 함께하자', '맹주 덕이야'],
     boss: ['다들 무사해?', '다친 사람부터', '같이 해낸 거야', '잘 버텼어, 모두'],
-    flee: ['대장, 버텨요', '꼭 데리러 올게', '교회에서 기다려', '두고 가서 미안'],
     join: ['잘 지내 봅시다', '다들 반가워요', '짐은 내가 들게'],
-    heal: ['고마워, 살았어', '다음엔 내가 갚을게', '다른 이도 봐 줘'],
     last: ['다들… 무사해?', '울지 마… 괜찮아', '…다친 사람 먼저', '같이 못 가서… 미안', '내 몫까지… 살아', '…따뜻하다'] } }
 ];
 // r30: 싸움터에서 영영 쓰러지는 순간의 마지막 한마디 (아홉 집은 DS.CAST_LAST). 18자 안쪽, 담담하게. {k} 아이 · {sp} 배우자 · {h} 가문명 — 이름이 길면 이름 없는 줄로
@@ -440,22 +429,22 @@ DS.LAST_WORDS = {
   spN: ['…{sp}에게… 미안하다고', '{sp}… 먼저 가서 미안해', '…{sp}{을를} 혼자 두네'],
   sp: ['…집에 가야 하는데', '기다리는 사람이… 있어', '…약속을 못 지키네'],
   house: ['…{h} 가문을… 지켜', '{h}의 이름을… 이어 줘', '…{h} 깃발을 들어'],
-  elder: ['…오래도 살았다', '이만하면… 됐다', '…먼저 간 이들이 부르네'],
+  elder: ['…오래도 살았다', '이만하면… 됐다', '…단톡방이 부르네'],
   young: ['…무서워', '집에… 가고 싶어', '…엄마']
 };
-// 전공 별명 (글: 시나리오팀): 이름 앞에 붙는다. 표시만 — 능력은 그대로. 귀한 것부터 적었고, 가진 것 가운데 가장 앞의 것 하나를 쓴다.
+// 전공 별명 (2.4.1: 둘은 새 말투로 — 일당사백 · 개근상. 추모 기록에는 그때의 별명 글이 그대로 남는다): 이름 앞에 붙는다. 표시만 — 능력은 그대로. 귀한 것부터 적었고, 가진 것 가운데 가장 앞의 것 하나를 쓴다.
 //   need 가 있는 것은 용병의 칸에서 저절로 정해진다 (k 처치 · b 함께한 전투 · bk 보스 마지막 일격 · sv 구사일생 뒤 생환 · weed 일반 등급으로 「용사」 이상).
 //   need 가 없는 것은 전투 화면(game.js)이 그 일이 일어났을 때 DS.mercAward(m, id) 로 준다 (m.nk 에 남는다).
 DS.MERC_TITLES = [
   { id: 'gate', name: '문 닫은', when: '30번 「어스름의 문」을 함께 깸' },
   { id: 'pit10', name: '밑바닥 본', when: '바닥 없는 갱도 10층을 함께 깸' },
-  { id: 'k400', name: '만인적', when: '쓰러뜨린 적 400 (만 사람을 맞설 만한 이)', need: { k: 400 } },
+  { id: 'k400', name: '일당사백', when: '쓰러뜨린 적 400', need: { k: 400 } },
   { id: 'lord', name: '성주잡이', when: '여섯 변경 성주(21~26번 보스) 가운데 하나에게 마지막 일격' },
   { id: 'left', name: '남은 사람', when: '곁에서 동료 다섯이 쓰러지는 것을 보고도 살아 있음' },
   { id: 'alone', name: '끝까지 선', when: '같은 편이 모두 쓰러지거나 물러난 뒤에도 남아 승리' },
   { id: 'weed', name: '잡초', when: '일반 등급으로 공훈 「용사」 이상에 오름', need: { weed: 1 } },
   { id: 'k150', name: '일당백', when: '쓰러뜨린 적 150', need: { k: 150 } },
-  { id: 'b100', name: '백전노장', when: '함께한 전투 100', need: { b: 100 } },
+  { id: 'b100', name: '개근상', when: '함께한 전투 100', need: { b: 100 } },
   { id: 'spree', name: '칼바람', when: '한 전투에서 5명 이상 쓰러뜨림' },
   { id: 'surv', name: '명줄 긴', when: '구사일생이 터진 전투에서 살아 돌아옴', need: { sv: 1 } },
   { id: 'boss1', name: '큰놈잡이', when: '보스에게 마지막 일격', need: { bk: 1 } },
@@ -464,30 +453,30 @@ DS.MERC_TITLES = [
   { id: 'b30', name: '한솥밥', when: '함께한 전투 30', need: { b: 30 } }
 ];
 // 출신 (표시만 — 저장 칸 없음. 종류마다 그럴듯한 고장 몇 곳 가운데 용병 번호로 하나가 정해진다). 키는 지역 키(DS.ZONES)거나 그 밖의 곳.
-//   글: DS.LORE.origin[키] 가 있으면 그것(시나리오팀), 없으면 아래 기본 한 줄.
+//   소개 글은 DS.LORE.origin[키] (lore.js) 에만 둔다. 여기는 이름표뿐이다 (2.4.1: 가려져 쓰이지 않던 옛 기본 글을 걷었다).
 DS.ORIGIN = {
-  haemil: { name: '해밀', desc: '방앗간 마을에서 나고 자랐다. 보수가 밀린 적이 없다는 게 자랑이다.' },
-  dawn:   { name: '새벽 들판', desc: '들판 양치기 집안. 늑대 소리에는 눈을 뜨고 잔다.' },
-  windy:  { name: '바람재 평원', desc: '파발꾼 마을 출신. 바람이 어디서 부는지 먼저 안다.' },
-  stone:  { name: '돌마루 고원', desc: '고원 채석장에서 돌을 깼다. 손바닥이 돌보다 단단하다.' },
-  dodam:  { name: '도담', desc: '짐꾼 거리에서 컸다. 무거운 것을 오래 드는 법을 안다.' },
-  coast:  { name: '물비늘 해안', desc: '어부의 자식. 물때를 읽고 짠물에 눈을 뜬다.' },
-  isle:   { name: '가온 섬', desc: '섬 나루에서 배를 끌었다. 돌지기에게 인사하며 자랐다.' },
-  gaon:   { name: '가온', desc: '무기상 골목에서 컸다. 날의 값을 눈으로 매긴다.' },
-  desert: { name: '붉은 모래 사막', desc: '샘을 지키던 집안. 물 한 모금도 남기지 않는다.' },
-  mire:   { name: '안개 수렁', desc: '가라앉은 마을의 마지막 아이들 가운데 하나. 이름만은 잊지 않았다.' },
-  spire:  { name: '검은 첨탑 기슭', desc: '첨탑 아래 깃대지기 마을에서 왔다. 깃대 다루는 솜씨가 남다르다.' },
-  ash:    { name: '잿빛 변경', desc: '성주를 버리고 나온 변경 사람. 빛깔이 남아 있는 쪽을 골랐다.' },
-  temple: { name: '산마을 사당', desc: '사당의 불을 지키던 손. 꺼진 불을 다시 붙이는 법을 안다.' },
-  tomb:   { name: '왕의 무덤', desc: '무덤에서 깨어난 옛 병사. 자장가를 들으면 걸음을 멈춘다.' },
-  forge:  { name: '끓는 고개', desc: '불목 거인의 고개 아래 대장간 마을. 뜨거운 것을 맨손으로 쥔다.' }
+  haemil: { name: '해밀' },
+  dawn:   { name: '새벽 들판' },
+  windy:  { name: '바람재 평원' },
+  stone:  { name: '돌마루 고원' },
+  dodam:  { name: '도담' },
+  coast:  { name: '물비늘 해안' },
+  isle:   { name: '가온 섬' },
+  gaon:   { name: '가온' },
+  desert: { name: '붉은 모래 사막' },
+  mire:   { name: '안개 수렁' },
+  spire:  { name: '검은 첨탑 기슭' },
+  ash:    { name: '잿빛 변경' },
+  temple: { name: '산마을 사당' },
+  tomb:   { name: '왕의 무덤' },
+  forge:  { name: '끓는 고개' }
 };
 DS.MERC_FROM = {
   m_sword: ['haemil', 'dodam', 'windy'], m_lancer: ['windy', 'dawn', 'dodam'], m_griffin: ['windy', 'stone'], m_merman: ['coast', 'isle'], m_pike: ['dodam', 'stone', 'spire'],
   m_archer: ['dawn', 'windy', 'desert'], m_sister: ['temple', 'haemil', 'gaon'], m_templar: ['temple', 'mire', 'spire'], m_spirit: ['stone', 'forge'], m_skeleton: ['tomb', 'mire'],
   m2_ogre: ['forge', 'stone', 'ash'], m2_wyvern: ['ash', 'spire'], m2_ballista: ['gaon', 'dodam'], m2_abbess: ['temple', 'gaon', 'mire']
 };
-DS.SAY_P = { start: 0.3, kill: 0.22, low: 1, mourn: 0.7, rank: 1, boss: 1, flee: 1, join: 1, heal: 0.25 };      // 상황마다 입을 여는 확률 (화면이 조용하도록)
+DS.SAY_P = { start: 0.3, kill: 0.22, low: 1, mourn: 0.7, rank: 1, boss: 1, join: 1 };      // 상황마다 입을 여는 확률 (화면이 조용하도록)
 // 이름난 용병: 영웅·전설은 종류에 맞는 고유 기술 하나를 타고난다 (마나 없이 재사용 시간으로 쓴다 — 기술 정의는 아래 DS.SKILLS 의 ms_*)
 DS.MERC_SK = {
   m_sword: ['ms_cleave', 'ms_guard', 'ms_cheer'], m_lancer: ['ms_rush', 'ms_cleave', 'ms_cheer'], m_griffin: ['ms_dive', 'ms_cleave'], m_merman: ['ms_tide', 'ms_guard'],
@@ -664,37 +653,37 @@ DS.ENEMIES = {
 
 // ───────── 보스 ─────────
 DS.BOSSES = {
-  grok:     { name: '혹부리 그록', title: '방앗간을 차지한 두목', like: 'orc', sprite: 'b_brute', pal: 'orc', mul: { hp: 2.6, atk: 1.15, def: 1.1, res: 1.5 }, skills: ['e_smash'], guard: 4 },
-  shewolf:  { name: '잿빛 어미늑대', title: '늑대골의 우두머리', like: 'wolf', sprite: 'b_beast', pal: 'wolf', mul: { hp: 3.4, atk: 1.2, def: 1.6, res: 1.6, spd: 0.85 }, skills: ['b_howl', 'b_pounce'], guard: 4 },
-  bargan:   { name: '불목 거인 바르간', title: '끓는 고개의 주인', like: 'salamander', sprite: 'b_brute', pal: 'lava', tags: ['fire'], passive: 'fireborn', mul: { hp: 4.0, atk: 1.2, def: 1.7, res: 1.4, spd: 0.8 }, skills: ['b_erupt', 'e_smash'], guard: 4 },
-  heron:    { name: '말몰이꾼 헤론', title: '통행세 다리의 무법자', like: 'darkKnight', sprite: 'b_beast', pal: 'manti', mul: { hp: 3.0, atk: 1.15, def: 1.2, res: 1.5 }, skills: ['b_charge', 'b_pounce'], guard: 5 },
-  tormak:   { name: '뿔거인 토르막', title: '울림 바위의 괴수', like: 'orc', sprite: 'b_brute', pal: 'mino', mul: { hp: 3.4, atk: 1.25, def: 1.2, res: 1.6, spd: 1.1 }, skills: ['b_quake', 'e_smash'], guard: 4 },
-  pippin:   { name: '요술쟁이 피핀', title: '산마을을 빼앗은 자', like: 'darkMage', sprite: 'b_caster', pal: 'trick', mul: { hp: 4.6, def: 1.9, res: 1.3, mag: 1.15 }, skills: ['b_fire', 'b_blink', 'b_sumGob'], guard: 5 },
-  twinsnake:{ name: '쌍두 구렁이', title: '이끼 낀 사당의 터줏대감', like: 'lizard', sprite: 'b_serpent', pal: 'venom', passive: 'twin', mul: { hp: 4.0, atk: 0.95, def: 1.3, res: 1.4 }, skills: ['b_venom'], guard: 3 },      // 2.8: 호위 5→3 — 2단 끝(L19~20)으로 오는 부대가 벽에 막히지 않게 (L20 승률 30%→60%, L23 은 그대로)
-  volko:    { name: '선장 볼코', title: '해적 부두의 주인', like: 'lizard', sprite: 'b_brute', pal: 'pirate', mt: 'swim', passive: 'marine', mul: { hp: 3.6, atk: 1.2, def: 1.25, res: 1.5 }, skills: ['e_smash', 'b_tide'], guard: 5 },
-  warden:   { name: '돌지기', title: '석상 나루의 파수꾼', like: 'golem', sprite: 'b_brute', pal: 'stone', mul: { hp: 3.0, atk: 1.15, def: 1.15, res: 3.0, spd: 1.2 }, skills: ['b_boulder', 'b_harden', 'e_smash'], guard: 4 },
-  nuri:     { name: '물의 정령 누리', title: '달못에 깃든 정령', like: 'lizard', sprite: 'b_caster', pal: 'aqua', mt: 'swim', passive: 'marine', dtype: 'magic', rng: [1, 3], atk: 'bolt', mul: { hp: 3.6, def: 1.2, res: 1.8, mag: 1.1 }, skills: ['b_tide', 'e_drain'], guard: 5 },
-  shara:    { name: '여왕 전갈 샤라', title: '마른 샘의 여왕', like: 'scorpion', sprite: 'b_beast', pal: 'manti', mul: { hp: 4.2, atk: 1.2, def: 1.5, res: 2.4, spd: 0.9 }, skills: ['b_spikes', 'b_pounce'], guard: 5 },
-  tombbeast:{ name: '무덤지기 석수', title: '왕의 무덤을 지키는 돌짐승', like: 'wolf', sprite: 'b_beast', pal: 'stone', mul: { hp: 4.6, atk: 1.3, def: 2.4, res: 2.2, spd: 0.8 }, skills: ['b_quake', 'b_pounce'], guard: 5 },
-  king:     { name: '잠 못 드는 왕', title: '무덤 속의 옛 왕', like: 'mummy', sprite: 'b_caster', pal: 'pharaoh', tags: ['undead'], mul: { hp: 4.2, atk: 1.2, def: 1.5, res: 2.4 }, dtype: 'magic', rng: [1, 3], atk: 'bolt', skills: ['b_sumSkel', 'b_curse', 'b_dark'], guard: 5 },
-  mire:     { name: '수렁의 그림자', title: '가라앉은 마을의 원혼', like: 'ghost', sprite: 'b_brute', pal: 'specter', tags: ['undead'], mul: { hp: 5.0, def: 3.4, res: 1.3, mag: 1.2 }, skills: ['b_scythe', 'e_drain', 'b_sumGhost'], guard: 5 },
-  orbel:    { name: '점성술사 오르벨', title: '별 보는 탑의 주인', like: 'darkMage', sprite: 'b_caster', pal: 'illusion', mul: { hp: 5.0, def: 2.2, res: 1.4, mag: 1.2 }, skills: ['b_meteor', 'b_fire', 'b_blink'], guard: 5 },
-  hagen:    { name: '사냥꾼 대장 하겐', title: '까마귀 벌판의 군세', like: 'demon', sprite: 'b_demon', pal: 'hunter', tags: ['demon'], rng: [1, 4], atk: 'arrow', mul: { hp: 3.6, atk: 1.05, def: 1.2, res: 1.3 }, skills: ['b_volley', 'e_smash'], guard: 6 },
-  gatekeeper:{ name: '첨탑 문지기', title: '검은 첨탑의 문', like: 'golem', sprite: 'b_brute', pal: 'obsidian', mul: { hp: 3.2, atk: 1.2, def: 1.15, res: 3.0, spd: 1.2 }, skills: ['b_quake', 'b_sumImp', 'e_smash'], guard: 5 },
-  basil:    { name: '독니 바실', title: '첨탑 아래층의 뱀', like: 'lizard', sprite: 'b_serpent', pal: 'cobra', passive: 'twin', mul: { hp: 4.4, atk: 1.0, def: 1.4, res: 1.6 }, skills: ['b_venom', 'b_spikes'], guard: 5 },
-  belmar:   { name: '첨탑의 주인 벨마르', title: '어스름과 계약한 자', like: 'darkMage', sprite: 'b_caster', pal: 'mephisto', tags: ['demon'], mul: { hp: 5.8, def: 2.6, res: 1.4, mag: 1.2, spd: 1.1 }, skills: ['b_cross', 'b_curse', 'b_blink'], guard: 6 },
-  ilva:     { name: '서리 마녀 일바', title: '서리 궁의 주인', like: 'imp', sprite: 'b_witch', pal: 'frost', tags: ['demon', 'fly'], mt: 'fly', dtype: 'magic', rng: [1, 3], atk: 'bolt', mul: { hp: 7.0, def: 3.0, res: 1.5, mag: 1.15 }, skills: ['b_charm', 'b_frost', 'b_sumImp'], guard: 6 },
-  kardan:   { name: '화염 성주 카르단', title: '불가마 성채', like: 'demon', sprite: 'b_lord', pal: 'lava', tags: ['fire', 'demon'], passive: 'fireborn', mul: { hp: 4.2, atk: 1.15, def: 1.3, res: 1.4 }, skills: ['b_erupt', 'b_breath', 'e_smash'], guard: 6 },
-  swarm:    { name: '파리 떼의 왕', title: '썩은 평원', like: 'demon', sprite: 'b_swarm', pal: 'fly', tags: ['demon', 'fly'], mt: 'fly', mul: { hp: 3.8, atk: 1.05, def: 1.2, res: 1.3 }, skills: ['b_sumImp', 'b_cloud', 'e_smash'], guard: 6 },
-  roen:     { name: '협곡 대공 로엔', title: '협곡 성채', like: 'demon', sprite: 'b_lord', pal: 'duke', tags: ['demon'], mul: { hp: 4.2, atk: 1.12, def: 1.3, res: 1.4 }, skills: ['b_cross', 'b_breath', 'e_smash'], guard: 6 },
-  morga:    { name: '역병의 주인 모르가', title: '역병 성', like: 'demon', sprite: 'b_witch', pal: 'plague', tags: ['demon'], mul: { hp: 4.6, atk: 1.15, def: 1.3, res: 1.4 }, skills: ['b_plague', 'b_quake', 'b_sumSkel', 'e_smash'], guard: 6 },
-  bonewyrm: { name: '뼈용', title: '뼈 사막', like: 'demon', sprite: 'b_dragon', pal: 'bone', tags: ['undead'], mul: { hp: 5.0, atk: 1.2, def: 1.4, res: 1.3 }, skills: ['b_breath', 'b_sumSkel', 'b_dark'], guard: 6 },
-  apostle:  { name: '잿불의 사도', title: '불타는 표석', like: 'demon', sprite: 'b_demon', pal: 'avatar', tags: ['demon'], mul: { hp: 4.8, atk: 1.15, def: 1.3, res: 1.4 }, skills: ['b_cross', 'b_erupt', 'e_smash'], guard: 6 },
-  glacia:   { name: '서리용 글라시아', title: '얼어붙은 성', like: 'demon', sprite: 'b_dragon', pal: 'ice', mul: { hp: 5.2, atk: 1.2, def: 1.4, res: 1.5 }, skills: ['b_frost', 'b_breath', 'e_smash'], guard: 6 },
-  ignar:    { name: '용암용 이그나르', title: '성난 화산', like: 'demon', sprite: 'b_dragon', pal: 'lava', tags: ['fire'], passive: 'fireborn', mul: { hp: 5.6, atk: 1.25, def: 1.4, res: 1.5 }, skills: ['b_erupt', 'b_breath', 'b_quake'], guard: 6 },
-  herald:   { name: '어스름에 묶인 먼동', title: '어스름의 문 앞', like: 'darkMage', sprite: 'b_caster', pal: 'jade', mul: { hp: 6.5, def: 3.0, res: 1.5, mag: 1.2, spd: 1.1 }, skills: ['b_cross', 'b_meteor', 'b_blink', 'b_curse'], guard: 0, phase2: 'duskking' },
-  duskking: { name: '어스름의 왕', title: '문 너머에서 온 것', like: 'demon', sprite: 'b_dusk', pal: 'jade2', tags: ['demon'], mul: { hp: 5.6, atk: 1.22, def: 1.35, res: 1.5, spd: 1.1 }, skills: ['b_judge', 'b_cross', 'b_breath', 'b_dark', 'e_smash'], guard: 0 },
-  keeper:   { name: '갱도지기', title: '바닥 없는 갱도', like: 'golem', sprite: 'b_brute', pal: 'obsidian', mul: { hp: 2.8, atk: 1.15, def: 1.15, res: 3.0, spd: 1.2 }, skills: ['b_cavein', 'b_quake', 'e_smash'], guard: 4,
+  grok:     { name: '혹부리 그록', like: 'orc', sprite: 'b_brute', pal: 'orc', mul: { hp: 2.6, atk: 1.15, def: 1.1, res: 1.5 }, skills: ['e_smash'], guard: 4 },
+  shewolf:  { name: '잿빛 어미늑대', like: 'wolf', sprite: 'b_beast', pal: 'wolf', mul: { hp: 3.4, atk: 1.2, def: 1.6, res: 1.6, spd: 0.85 }, skills: ['b_howl', 'b_pounce'], guard: 4 },
+  bargan:   { name: '불목 거인 바르간', like: 'salamander', sprite: 'b_brute', pal: 'lava', tags: ['fire'], passive: 'fireborn', mul: { hp: 4.0, atk: 1.2, def: 1.7, res: 1.4, spd: 0.8 }, skills: ['b_erupt', 'e_smash'], guard: 4 },
+  heron:    { name: '말몰이꾼 헤론', like: 'darkKnight', sprite: 'b_beast', pal: 'manti', mul: { hp: 3.0, atk: 1.15, def: 1.2, res: 1.5 }, skills: ['b_charge', 'b_pounce'], guard: 5 },
+  tormak:   { name: '뿔거인 토르막', like: 'orc', sprite: 'b_brute', pal: 'mino', mul: { hp: 3.4, atk: 1.25, def: 1.2, res: 1.6, spd: 1.1 }, skills: ['b_quake', 'e_smash'], guard: 4 },
+  pippin:   { name: '요술쟁이 피핀', like: 'darkMage', sprite: 'b_caster', pal: 'trick', mul: { hp: 4.6, def: 1.9, res: 1.3, mag: 1.15 }, skills: ['b_fire', 'b_blink', 'b_sumGob'], guard: 5 },
+  twinsnake:{ name: '쌍두 구렁이', like: 'lizard', sprite: 'b_serpent', pal: 'venom', passive: 'twin', mul: { hp: 4.0, atk: 0.95, def: 1.3, res: 1.4 }, skills: ['b_venom'], guard: 3 },      // 2.8: 호위 5→3 — 2단 끝(L19~20)으로 오는 부대가 벽에 막히지 않게 (L20 승률 30%→60%, L23 은 그대로)
+  volko:    { name: '선장 볼코', like: 'lizard', sprite: 'b_brute', pal: 'pirate', mt: 'swim', passive: 'marine', mul: { hp: 3.6, atk: 1.2, def: 1.25, res: 1.5 }, skills: ['e_smash', 'b_tide'], guard: 5 },
+  warden:   { name: '돌지기', like: 'golem', sprite: 'b_brute', pal: 'stone', mul: { hp: 3.0, atk: 1.15, def: 1.15, res: 3.0, spd: 1.2 }, skills: ['b_boulder', 'b_harden', 'e_smash'], guard: 4 },
+  nuri:     { name: '물의 정령 누리', like: 'lizard', sprite: 'b_caster', pal: 'aqua', mt: 'swim', passive: 'marine', dtype: 'magic', rng: [1, 3], atk: 'bolt', mul: { hp: 3.6, def: 1.2, res: 1.8, mag: 1.1 }, skills: ['b_tide', 'e_drain'], guard: 5 },
+  shara:    { name: '여왕 전갈 샤라', like: 'scorpion', sprite: 'b_beast', pal: 'manti', mul: { hp: 4.2, atk: 1.2, def: 1.5, res: 2.4, spd: 0.9 }, skills: ['b_spikes', 'b_pounce'], guard: 5 },
+  tombbeast:{ name: '무덤지기 석수', like: 'wolf', sprite: 'b_beast', pal: 'stone', mul: { hp: 4.6, atk: 1.3, def: 2.4, res: 2.2, spd: 0.8 }, skills: ['b_quake', 'b_pounce'], guard: 5 },
+  king:     { name: '잠 못 드는 왕', like: 'mummy', sprite: 'b_caster', pal: 'pharaoh', tags: ['undead'], mul: { hp: 4.2, atk: 1.2, def: 1.5, res: 2.4 }, dtype: 'magic', rng: [1, 3], atk: 'bolt', skills: ['b_sumSkel', 'b_curse', 'b_dark'], guard: 5 },
+  mire:     { name: '수렁의 그림자', like: 'ghost', sprite: 'b_brute', pal: 'specter', tags: ['undead'], mul: { hp: 5.0, def: 3.4, res: 1.3, mag: 1.2 }, skills: ['b_scythe', 'e_drain', 'b_sumGhost'], guard: 5 },
+  orbel:    { name: '점성술사 오르벨', like: 'darkMage', sprite: 'b_caster', pal: 'illusion', mul: { hp: 5.0, def: 2.2, res: 1.4, mag: 1.2 }, skills: ['b_meteor', 'b_fire', 'b_blink'], guard: 5 },
+  hagen:    { name: '사냥꾼 대장 하겐', like: 'demon', sprite: 'b_demon', pal: 'hunter', tags: ['demon'], rng: [1, 4], atk: 'arrow', mul: { hp: 3.6, atk: 1.05, def: 1.2, res: 1.3 }, skills: ['b_volley', 'e_smash'], guard: 6 },
+  gatekeeper:{ name: '첨탑 문지기', like: 'golem', sprite: 'b_brute', pal: 'obsidian', mul: { hp: 3.2, atk: 1.2, def: 1.15, res: 3.0, spd: 1.2 }, skills: ['b_quake', 'b_sumImp', 'e_smash'], guard: 5 },
+  basil:    { name: '독니 바실', like: 'lizard', sprite: 'b_serpent', pal: 'cobra', passive: 'twin', mul: { hp: 4.4, atk: 1.0, def: 1.4, res: 1.6 }, skills: ['b_venom', 'b_spikes'], guard: 5 },
+  belmar:   { name: '첨탑의 주인 벨마르', like: 'darkMage', sprite: 'b_caster', pal: 'mephisto', tags: ['demon'], mul: { hp: 5.8, def: 2.6, res: 1.4, mag: 1.2, spd: 1.1 }, skills: ['b_cross', 'b_curse', 'b_blink'], guard: 6 },
+  ilva:     { name: '서리 마녀 일바', like: 'imp', sprite: 'b_witch', pal: 'frost', tags: ['demon', 'fly'], mt: 'fly', dtype: 'magic', rng: [1, 3], atk: 'bolt', mul: { hp: 7.0, def: 3.0, res: 1.5, mag: 1.15 }, skills: ['b_charm', 'b_frost', 'b_sumImp'], guard: 6 },
+  kardan:   { name: '화염 성주 카르단', like: 'demon', sprite: 'b_lord', pal: 'lava', tags: ['fire', 'demon'], passive: 'fireborn', mul: { hp: 4.2, atk: 1.15, def: 1.3, res: 1.4 }, skills: ['b_erupt', 'b_breath', 'e_smash'], guard: 6 },
+  swarm:    { name: '파리 떼의 왕', like: 'demon', sprite: 'b_swarm', pal: 'fly', tags: ['demon', 'fly'], mt: 'fly', mul: { hp: 3.8, atk: 1.05, def: 1.2, res: 1.3 }, skills: ['b_sumImp', 'b_cloud', 'e_smash'], guard: 6 },
+  roen:     { name: '협곡 대공 로엔', like: 'demon', sprite: 'b_lord', pal: 'duke', tags: ['demon'], mul: { hp: 4.2, atk: 1.12, def: 1.3, res: 1.4 }, skills: ['b_cross', 'b_breath', 'e_smash'], guard: 6 },
+  morga:    { name: '역병의 주인 모르가', like: 'demon', sprite: 'b_witch', pal: 'plague', tags: ['demon'], mul: { hp: 4.6, atk: 1.15, def: 1.3, res: 1.4 }, skills: ['b_plague', 'b_quake', 'b_sumSkel', 'e_smash'], guard: 6 },
+  bonewyrm: { name: '뼈용', like: 'demon', sprite: 'b_dragon', pal: 'bone', tags: ['undead'], mul: { hp: 5.0, atk: 1.2, def: 1.4, res: 1.3 }, skills: ['b_breath', 'b_sumSkel', 'b_dark'], guard: 6 },
+  apostle:  { name: '잿불의 사도', like: 'demon', sprite: 'b_demon', pal: 'avatar', tags: ['demon'], mul: { hp: 4.8, atk: 1.15, def: 1.3, res: 1.4 }, skills: ['b_cross', 'b_erupt', 'e_smash'], guard: 6 },
+  glacia:   { name: '서리용 글라시아', like: 'demon', sprite: 'b_dragon', pal: 'ice', mul: { hp: 5.2, atk: 1.2, def: 1.4, res: 1.5 }, skills: ['b_frost', 'b_breath', 'e_smash'], guard: 6 },
+  ignar:    { name: '용암용 이그나르', like: 'demon', sprite: 'b_dragon', pal: 'lava', tags: ['fire'], passive: 'fireborn', mul: { hp: 5.6, atk: 1.25, def: 1.4, res: 1.5 }, skills: ['b_erupt', 'b_breath', 'b_quake'], guard: 6 },
+  herald:   { name: '어스름에 묶인 먼동', like: 'darkMage', sprite: 'b_caster', pal: 'jade', mul: { hp: 6.5, def: 3.0, res: 1.5, mag: 1.2, spd: 1.1 }, skills: ['b_cross', 'b_meteor', 'b_blink', 'b_curse'], guard: 0, phase2: 'duskking' },
+  duskking: { name: '어스름의 왕', like: 'demon', sprite: 'b_dusk', pal: 'jade2', tags: ['demon'], mul: { hp: 5.6, atk: 1.22, def: 1.35, res: 1.5, spd: 1.1 }, skills: ['b_judge', 'b_cross', 'b_breath', 'b_dark', 'e_smash'], guard: 0 },
+  keeper:   { name: '갱도지기', like: 'golem', sprite: 'b_brute', pal: 'obsidian', mul: { hp: 2.8, atk: 1.15, def: 1.15, res: 3.0, spd: 1.2 }, skills: ['b_cavein', 'b_quake', 'e_smash'], guard: 4,
               sets: [['b_cavein', 'b_quake', 'e_smash'], ['b_gloom', 'b_cavein', 'b_harden'], ['b_cavein', 'b_gloom', 'b_sumImp', 'e_smash']] }      // 갱도 1~3층 / 4~6층 / 7~10층의 구성 (meta.js enemySpec 이 레벨로 고른다)
 };
 
@@ -821,14 +810,9 @@ DS.BTY = {
     boss: { hp: 2.6, atk: 1.15, def: 1.15, res: 1.15, gold: 4 }, crew: { hp: 1.4, atk: 1.05, gold: 1.5 } },
   shard: { need: 6, elite: 2 }      // 깃술 조각: 현상금마다 1(정예 2), need 개가 모이면 전설 장비 하나(아직 없는 것, 그 지역 것 먼저) + 강화 보호 부적 2 (2.1.0 — 옛 깃술 유물 자리)
 };
-// 정예 우두머리의 칭호 (이름 앞에 붙는다). DS.LORE.bounty.titles 가 있으면 그것
-DS.ELITE_TITLES = ['외눈', '뿔 부러진', '흉터투성이', '세 번 살아난', '쇠사슬 끄는', '잿불 두른', '굶주린', '늙은', '목에 값 걸린', '이름난', '돌 씹는', '가주 노리는'];      // 시나리오팀 감수본과 같게
-DS.BTY_TXT = {      // 기본 글 ({zone} 지역 이름 · {mob} 적 이름 · {n} 수 · {name} 정예 이름). DS.LORE.bounty 가 있으면 그쪽이 먼저
-  hunt:  { title: '{mob} 사냥', line: '「{zone}」의 {mob} {n}마리' },
-  elite: { title: '{name} 토벌', line: '「{zone}」에 정예 무리가 나타났다. 우두머리 {name}' },
-  sweep: { title: '{mob} 떼 출몰', line: '「{zone}」에 {mob} 떼가 들끓는다. 아무 적 {n}마리 (그동안 전리품이 잦다)' },
-  done:  '현상금 「{title}」 달성',
+DS.BTY_TXT = {      // 게시판의 글(사냥 · 정예 · 출몰의 제목과 한 줄, 정예 우두머리의 칭호)은 lore.js 의 DS.LORE.bounty 에 있다. 여기는 달성 · 깃술 조각 알림
+  done:  '「{title}」 해결',
   shard: '깃술 조각 {n}/{need}',
-  flag:  '깃술 조각이 모였다 — 전설 「{name}」'
+  flag:  '깃술 조각이 다 모였다. 전설 「{name}」'
 };
 })();

@@ -90,8 +90,8 @@ DS.NEW_MOBS = Object.keys(NEW_EN);
 // sz: [가로, 세로] 칸 · enr: 격노 (th 체력 비율 아래로 떨어지면 한 번 — 공격 · 빠르기 + , add 비기) · 기술 목록은 옛 것을 바탕으로 큰 몸의 기술을 얹었다
 var ENR = function (add, say, th) { return { th: th || 0.4, atk: 0.12, spd: 0.15, add: add, say: say || '격노' }; };
 var BIG_STORY = {
-  bargan:    { sz: [2, 2], skills: ['b_erupt', 'bb_slam', 'e_smash'], enr: ENR(['bu_inferno'], '목이 끓는다!') },
-  tormak:    { sz: [1, 2], skills: ['bb_rush', 'b_quake', 'e_smash'], enr: ENR(['bu_horn'], '뿔이 달아오른다!') },
+  bargan:    { sz: [2, 2], skills: ['b_erupt', 'bb_slam', 'e_smash'], enr: ENR(['bu_inferno'], '이유는 몰라도 화가 난다') },
+  tormak:    { sz: [1, 2], skills: ['bb_rush', 'b_quake', 'e_smash'], enr: ENR(['bu_horn'], '쿵쿵 소리가 빨라진다') },
   twinsnake: { sz: [2, 1], skills: ['b_venom', 'bb_pool', 'bb_tail'], enr: ENR(['bu_plague'], '두 머리가 처음으로 뜻을 모았다') },
   warden:    { sz: [2, 2], skills: ['b_boulder', 'b_harden', 'bb_slam', 'e_smash'], enr: ENR(['bu_cataclysm'], '돌 눈이 붉게 탄다') },
   shara:     { sz: [2, 2], skills: ['b_spikes', 'bb_burrow', 'bb_tail'], enr: ENR(['bu_plague'], '구독료가 오른다') },

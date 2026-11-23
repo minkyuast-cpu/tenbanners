@@ -1564,7 +1564,7 @@ function onEvents(evs) {
             var kt0 = DS.mercTitle ? DS.mercTitle(km) || '' : '';
             km.k = (km.k || 0) + 1; DS.meritAdd(km, u.role === 'boss' ? 6 : 1);      // ⑭-4: 잠재력만큼 빨리
             if (u.role === 'boss') km.bk = (km.bk || 0) + 1;      // 보스를 잡은 전공
-            if (u.role === 'boss') mercTalk(ku, 'kill', true); else if (Math.random() < 0.3) mercTalk(ku, 'kill');      // 보스를 잡았으면 꼭 한마디
+            if (u.role === 'boss') mercTalk(ku, 'boss', true); else if (Math.random() < 0.3) mercTalk(ku, 'kill');      // 보스를 잡았으면 꼭 한마디
             var kt1 = DS.mercTitle ? DS.mercTitle(km) || '' : '';
             if (kt1 && kt1 !== kt0) { G.view.float(ku.x, ku.y, '「' + kt1 + '」', '#f6cf57', { dy: -24, life: 2.2, delay: 0.4 }); later((km.n || ku.name || '') + '에게 별명이 붙었다. 「' + kt1 + '」', 3600); A('star'); }      // 전공 별명 (QA: 생겨도 알림이 없었다)
           }
@@ -1735,6 +1735,7 @@ function mercTalk(u, when, force, delay) {
   sayT = now; G.view.float(u.x, u.y, String(t), (DS.GRADES[m.g] || {}).col || '#fff3c4', { dy: -16, life: 2.2, delay: delay || 0 });
   return true;
 }
+DS.mercTalk = function (u, when) { return mercTalk(u, when, true); };      // 시험용: 그 사람의 성격 한마디를 지금 띄운다 (tools/t_text.js)
 // 동료가 쓰러지면 곁의 용병이 한마디 (같은 지휘관의 용병 먼저)
 function mournTalk(dead) {
   setTimeout(function () {
@@ -2058,7 +2059,7 @@ function bnNote(list) {
   (list || []).forEach(function (e) {
     if (e && e.text) later(e.text, 4200);      // 기록 · 알림 글은 그대로
     var ch = e && e.t === 'sbSeat' && G.save && G.save.chars[e.ch], m = ch && DS.bearer ? DS.bearer(G.save, ch) : null;
-    if (m && DS.cine) DS.cine({ k: 'succ', por: [charSpr(ch, 4)], fc: DS.FLAG[ch.cls] || '', title: (m.n || '') + ', ' + DS.flagName(ch.cls) + ' 가주', sub: '막사에서 나와 가문을 이었다' });      // 2.2.4: 가주를 잇는 순간 (한가할 때)
+    if (m && DS.cine) DS.cine({ k: 'succ', por: [charSpr(ch, 4)], fc: DS.FLAG[ch.cls] || '', title: (m.n || '') + ', ' + DS.flagName(ch.cls) + ' 가주', sub: '막사에서 나와 가문을 이었다. 인수인계는 단톡방에서 한다' });      // 2.2.4: 가주를 잇는 순간 (한가할 때)
   });
 }
 DS.bnNote = bnNote;

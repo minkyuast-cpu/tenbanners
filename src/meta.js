@@ -1097,7 +1097,7 @@ DS.pitFarm = function (save) { var pl = DS.partyL(save) - DS.REC.farm, nx = DS.p
 // 진행은 처치마다(loot.js 의 DS.rollDrop 이 DS.bountyHit 을 부른다) — 화면·봇이 이미 처치마다 rollDrop 을 부르므로 따로 훅이 필요 없다.
 function hasOwn(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
 function btyOn(save) { return !!(save && DS.BTY.mul > 0 && save.cleared && save.cleared[DS.BTY.from]); }
-function btxt(k, f) { var L = DS.LORE && DS.LORE.bounty && DS.LORE.bounty[k]; return (L && typeof L[f] === 'string' && L[f]) || DS.BTY_TXT[k][f]; }
+function btxt(k, f) { var L = DS.LORE && DS.LORE.bounty && DS.LORE.bounty[k]; return (L && typeof L[f] === 'string' && L[f]) || ''; }      // 2.4.1: 글은 lore.js 한 곳에만 (가려져 쓰이지 않던 data.js 의 옛 기본 글을 걷었다)
 function fill(t, b) { return String(t).replace(/\{zone\}/g, (DS.ZONES && DS.ZONES[b.z] && DS.ZONES[b.z].name) || b.z).replace(/\{mob\}/g, (DS.ENEMIES[b.t] || {}).name || '적').replace(/\{n\}/g, b.n).replace(/\{name\}/g, b.name || ''); }
 // 갈 수 있는 필드(가 본 곳)를 부대 평균 레벨에 가까운 쪽으로 고른다
 function btyZones(save) {
@@ -1131,7 +1131,7 @@ DS.bountyRoll = function (save, kind, rnd) {
   } else {      // 정예: 그 지역 무리 하나(부대 평균에 가까운 레벨)를 골라 우두머리를 세운다
     var zz = zoneOf(pick.id), sp = zz && zz.spawns && zz.spawns.slice().sort(function (a, c) { return Math.abs(a.L - T) - Math.abs(c.L - T); })[Math.floor(rnd() * 3)];
     if (!sp || !sp.list || !sp.list.length) return null;
-    var tl = (DS.LORE && DS.LORE.bounty && DS.LORE.bounty.titles) || DS.ELITE_TITLES;
+    var tl = (DS.LORE && DS.LORE.bounty && DS.LORE.bounty.titles) || ['이름난'];
     b.g = sp.id; b.gn = sp.list.length; b.t = sp.list[0]; b.L = sp.L; b.n = 1; b.x = sp.x; b.y = sp.y;
     b.name = tl[Math.floor(rnd() * tl.length)] + ' ' + DS.ENEMIES[b.t].name;
     b.r = { gold: Math.round(DS.killGoldL(sp.L) * B.elite.gold / 10) * 10, grade: B.elite.grade, ticket: B.elite.ticket, cat: cats ? cats[Math.floor(rnd() * cats.length)] : null, who: who ? who.id : 0 };

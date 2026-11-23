@@ -117,7 +117,7 @@ module.exports = async (page, shot, L) => {
   await vshot('lapse_name');
   await page.click('#lpYes'); await L.sleep(1700);
   const cin = await ev(() => { var el = document.querySelector('.cine.ck-lapse'); return el ? { t: el.innerText, on: el.querySelectorAll('.clp i.on').length, hold: DS.cineInfo() && DS.cineInfo().hold } : null; });
-  A(cin && cin.on === 12 && cin.hold && /이야기는 처음으로/.test(cin.t) && /12개가 잊혔다/.test(cin.t), 'lapse cinematic: 12 cells fade from the end, waits for a tap: ' + (cin ? cin.t.replace(/\s+/g, ' ') : 'none'));
+  A(cin && cin.on === 12 && cin.hold && /이야기는 처음으로/.test(cin.t) && /12개가 잊혔다/.test(cin.t) && /「2회차」/.test(cin.t) && /깃발, 레벨, 장비는 남았다\. 빚도\./.test(cin.t), 'lapse cinematic: 12 cells fade from the end, waits for a tap: ' + (cin ? cin.t.replace(/\s+/g, ' ') : 'none'));
   await vshot('lapse_cine_fading');
   await L.sleep(2600);
   await vshot('lapse_cine_end');

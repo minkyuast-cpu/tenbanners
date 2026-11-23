@@ -313,7 +313,7 @@ DS.pit = function (f) {
   if (f > 18) { var ex = PIT_MOBS[(k + 2) % PIT_MOBS.length].filter(function (m) { return mobs.indexOf(m) < 0; }); if (ex.length) mobs.push(ex[f % ex.length]); }      // 깊을수록 다른 묶음의 하나가 섞인다
   var wall = f <= 10 && DS.LORE && DS.LORE.pit && DS.LORE.pit[f];
   var s = T(100 + f, '바닥 없는 갱도 ' + f + '층', 'stone', 'keeper', DS.pitL(f), PIT_LAY[(f - 1) % PIT_LAY.length], PIT_TH[Math.floor((f - 1) / 3) % PIT_TH.length], mobs, {},
-    wall || null, ['갱도지기가 무너졌다. 아래로 가는 길이 드러났다.']);
+    wall || null, ['갱도지기가 무너졌다. 아래로 가는 길이 드러났다. 바닥은 아직이다.']);
   s.pit = f; s.tier = 5; s.pitKind = kind;
   s.diff = 0.95 * (P.k0 + P.dk * Math.min(f, Math.ceil((P.cap - P.L0) / P.dL))) * DS.pitK(f);
   var B = kind === 10 ? P.boss10 : kind === 5 ? P.boss5 : null;

@@ -334,18 +334,6 @@ DS.storyCastOK = function (lines, sv) {      // 막간: 이 판에 없는 사람
   });
 })();
 
-(function () {      // ㉑ 이 판에 없는 사람을 부르는 보스 한마디 (story_a 의 DS.STORY_BOSSNO)
-  var T = DS.STORY_BOSSNO || {};
-  Object.keys(T).forEach(function (bk) {
-    var b = DS.LORE.boss && DS.LORE.boss[bk]; if (!b) return;
-    Object.keys(T[bk]).forEach(function (k) {
-      var d = Object.getOwnPropertyDescriptor(b, k), alt = T[bk][k]; if (!d || !d.configurable) return;
-      var g0 = 'value' in d ? function () { return d.value; } : d.get;
-      Object.defineProperty(b, k, { enumerable: true, configurable: true, get: function () { var sv = DS.G && DS.G.save; return sv && DS.castAbsent(sv, alt[0]) ? alt[1] : g0.call(b); } });
-    });
-  });
-})();
-
 // 2.4.0: 7단 승급 창의 한마디(cast.t7)는 그 가문 선대의 훈수다 — 그 배역 본인이 살아서 곁에 있는 옛 저장에서는 내주지 않는다(ui.js showPromo 는 빈 글이면 그 줄을 뺀다).
 Object.keys((DS.LORE && DS.LORE.cast) || {}).forEach(function (k) {
   var c = DS.LORE.cast[k], d = c && Object.getOwnPropertyDescriptor(c, 't7'); if (!d || !('value' in d) || !d.configurable) return;

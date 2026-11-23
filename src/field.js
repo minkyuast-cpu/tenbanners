@@ -55,34 +55,34 @@ DS.FIELD = {
 DS.FIELD_BOSS = {
   dawn:   { name: '늑대왕 외눈',     title: '은퇴를 못 한 들판의 우두머리',   like: 'wolf',       k: 0.85, sprite: 'b_beast',   pal: 'stone',    skills: ['b_charge', 'b_pounce', 'b_howl'],
             say: '— 한쪽 눈으로 오래 본다. 후계는 아직 못 정했다.', last: '— 들판 끝을 향해 운다. 어린 늑대가 받아 운다.' },
-  windy:  { name: '바위뿔 쿠르간',   title: '바람재를 떠도는 거인',     like: 'orc',        k: 1.1, sprite: 'b_brute',   pal: 'hunter',   skills: ['b_quake', 'b_boulder', 'e_smash'],
+  windy:  { name: '바위뿔 쿠르간',   title: '바람재의 냄새 감별사',     like: 'orc',        k: 1.1, sprite: 'b_brute',   pal: 'hunter',   skills: ['b_quake', 'b_boulder', 'e_smash'],
             say: '바람이 너희 냄새를 실어 왔다. 좀 씻고 다녀라.', last: '바람이… 멎는군.' },
   stone:  { name: '돌파수 무쇠눈',   title: '돌마루 고원의 만년 파수꾼', like: 'golem',   k: 1.0, mul: { hp: 3.0, atk: 1.3, def: 1.0, res: 1.3 }, sprite: 'b_brute',   pal: 'stone',    skills: ['b_boulder', 'b_quake', 'b_harden'],
             say: '— 이끼 낀 눈이 붉게 켜진다. 교대는 오지 않았다.', last: '— 돌 눈의 불이 천천히 꺼진다. 퇴근이다.' },
-  coast:  { name: '갯구렁 검은비늘', title: '물비늘 해안의 주인',       like: 'lizard',     k: 1.3, sprite: 'b_serpent', pal: 'reaper',   skills: ['b_tide', 'b_venom', 'e_smash'],
+  coast:  { name: '갯구렁 검은비늘', title: '물때만 보고 산 터줏대감',       like: 'lizard',     k: 1.3, sprite: 'b_serpent', pal: 'reaper',   skills: ['b_tide', 'b_venom', 'e_smash'],
             say: '— 썰물 소리에 섞여 비늘이 긁힌다.', last: '— 검은 비늘이 물로 미끄러져 돌아간다.' },
-  isle:   { name: '섬지기 이끼바위', title: '가온 섬을 지키던 돌거인',   like: 'golem',      k: 1.1, mul: { hp: 3.0, atk: 1.3, def: 1.0, res: 1.3 }, sprite: 'b_brute',   pal: 'jade',     skills: ['b_quake', 'b_boulder', 'e_smash'],
+  isle:   { name: '섬지기 이끼바위', title: '예약 손님만 받는 섬지기',   like: 'golem',      k: 1.1, mul: { hp: 3.0, atk: 1.3, def: 1.0, res: 1.3 }, sprite: 'b_brute',   pal: 'jade',     skills: ['b_quake', 'b_boulder', 'e_smash'],
             say: '섬은… 예약 손님만 받는다.', last: '섬을… 부탁한다. 인수인계는… 이게 다다.' },
-  desert: { name: '모래귀 붉은집게', title: '붉은 모래 밑에 사는 것',   like: 'scorpion',   k: 1.25, sprite: 'b_beast',   pal: 'manti',    skills: ['b_spikes', 'b_charge', 'b_pounce'],
+  desert: { name: '모래귀 붉은집게', title: '붉은 모래 밑에 세 든 것',   like: 'scorpion',   k: 1.25, sprite: 'b_beast',   pal: 'manti',    skills: ['b_spikes', 'b_charge', 'b_pounce'],
             say: '— 발밑의 모래가 들썩인다.', last: '— 집게를 모래에 박은 채 굳는다.' },
-  mire:   { name: '검은물',           title: '안개 수렁의 주인',         like: 'ghost',      k: 1.1, mul: { hp: 3.0, atk: 1.3, def: 1.2, res: 1.1 }, sprite: 'b_brute',   pal: 'specter',  skills: ['b_dark', 'b_scythe', 'e_drain'],
+  mire:   { name: '검은물',           title: '수렁 분실물 보관 담당',         like: 'ghost',      k: 1.1, mul: { hp: 3.0, atk: 1.3, def: 1.2, res: 1.1 }, sprite: 'b_brute',   pal: 'specter',  skills: ['b_dark', 'b_scythe', 'e_drain'],
             say: '여기 빠진 것은 다 내 것이다. 분실물은 안 돌려준다.', last: '물이… 맑아지는구나.' },
-  spire:  { name: '잿날개 사냥꾼',   title: '첨탑 기슭의 그림자',       like: 'demon',      k: 1.1, sprite: 'b_demon',   pal: 'mephisto', skills: ['b_cross', 'b_dark', 'e_smash'],
+  spire:  { name: '잿날개 사냥꾼',   title: '첨탑이 뽑은 이달의 사냥꾼',       like: 'demon',      k: 1.1, sprite: 'b_demon',   pal: 'mephisto', skills: ['b_cross', 'b_dark', 'e_smash'],
             say: '첨탑이 오늘의 사냥감을 골랐다. 축하한다.', last: '사냥은… 다음 놈이… 잇는다…' },
-  ash:    { name: '숯불 군주 바하르', title: '잿빛 변경의 화염귀',      like: 'salamander', k: 1.3, sprite: 'b_lord',    pal: 'lava',     skills: ['b_erupt', 'b_quake', 'b_breath'],
+  ash:    { name: '숯불 군주 바하르', title: '잿빛 변경의 마지막 불씨지기',      like: 'salamander', k: 1.3, sprite: 'b_lord',    pal: 'lava',     skills: ['b_erupt', 'b_quake', 'b_breath'],
             say: '재 위에 발자국을 남긴 자, 누구냐.', last: '불씨는… 남는다.' },
-  end:    { name: '재날개',           title: '끝의 땅을 맴도는 늙은 용', like: 'demon',      k: 1.6, sprite: 'b_dragon',  pal: 'plague',   skills: ['b_meteor', 'b_breath', 'b_dark'],
+  end:    { name: '재날개',           title: '정년이 지나도 맴도는 늙은 용', like: 'demon',      k: 1.6, sprite: 'b_dragon',  pal: 'plague',   skills: ['b_meteor', 'b_breath', 'b_dark'],
             say: '— 날갯짓 한 번에 재가 하늘을 덮는다.', last: '— 마지막 숨이 재가 되어 흩어진다.' }
 };
-// 외침 (전투 대사 설정을 따른다). 가볍지만 진지하게 — 가주가 소리친다
+// 외침 (전투 대사 설정을 따른다). 2.4.1: 2.4 의 말투로 — 급한 자리라 짧게, 물러날 때의 말은 진지하게
 DS.FIELD_SAY = {
-  amb:      ['진형을 갖춰라!', '등을 맞대라!', '기습이다, 방패 올려!', '사방에서 온다!', '흩어지지 마라!', '깃발 아래로 모여라!'],
-  ambMerc:  ['어디서 이렇게 나와!', '숨 돌릴 틈도 없군', '오늘 품삯은 두 배요!', '살아서 술 마십시다!', '이건 계약에 없었는데!'],
-  wave:     ['또 온다!', '다음 무리다!', '버텨라, 끝이 보인다', '한 번만 더!'],
-  ambWin:   ['다 물리쳤다', '숨 돌려라', '…다들 살아 있나?', '들판이 조용해졌다'],
-  boss:     ['저건… 급이 다르다', '물러설 줄도 알아야 한다', '가주들, 판단하라'],
-  fight:    ['맞선다! 깃발을 세워라!', '여기서 물러설 수 없다', '열 가문의 이름으로!'],
-  bossWin:  ['쓰러졌다… 정말로?', '이 들판의 주인이 바뀌었다', '오늘 일은 노래가 되겠군'],
+  amb:      ['기습이다, 방패 올려!', '등을 맞대라!', '사방에서 온다!', '예약도 없이 왔다!', '흩어지지 마라!', '깃발 아래로 모여라!'],
+  ambMerc:  ['어디서 이렇게 나와!', '숨 돌릴 틈도 없군', '이건 야근이다!', '살아서 밥 먹자!', '이건 약관에 없었는데!'],
+  wave:     ['또 온다!', '다음 무리다!', '꺾이지 마라, 무릎도!', '한 번만 더!'],
+  ambWin:   ['다 물리쳤다', '숨 돌려라', '…다들 살아 있나?', '출석 부른다, 대답해라'],
+  boss:     ['저건… 급이 다르다', '느낌이 안 좋다', '도망도 전술이다. 책에 나온다'],
+  fight:    ['맞선다! 깃발을 세워라!', '선대가 보고 있다!', '열 가문의 이름으로!'],
+  bossWin:  ['쓰러졌다… 정말로?', '이 들판 주인이 바뀌었다', '단톡방에 자랑해야겠다'],
   flee:     ['물러나라! 뒤를 보지 마라!', '살아야 다음이 있다', '짐은 버려도 된다, 사람은 안 된다!']
 };
 DS.fieldStats = { ft: 0, cmdDie: 0, mercDie: 0, due: 0, amb: 0, ambWin: 0, ambFade: 0, ambMobs: 0, boss: 0, bossWin: 0, bossFlee: 0, bossLeave: 0, bossFight: 0 };

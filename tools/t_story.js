@@ -1,4 +1,4 @@
-// 전민 — 이야기 시험 (2.4.0 「삶은 후계로 계승된다」)
+// 전민 — 이야기 시험 (2.4.0 「삶은 후계로 계승된다」 · 2.4.1 그 밖의 글 표)
 //   H=844 OUT=qa_out/story node tools/shot.js tools/t_story.js
 // ① 이야기 패치가 탈 없이 붙었는가 (DS.STORY_LOG.err 가 비었다)
 // ② 서른 판의 도입 · 맺음을 화면에 뜨는 그대로(DS.storyFit → DS.storyResolve) 훑는다 — 저장 여섯 가지:
@@ -6,6 +6,8 @@
 //    화자 칸이 비지 않는다 · 'undefined' · 'NaN' · 덜 채운 '{…}' 가 없다 · 한 줄 60자 안쪽(44자를 넘으면 알림) · 판마다 도입 3줄 이상
 // ③ 그 밖의 이야기 글(도입 · 엔딩 · 막간 · 합일 · 갱도 · 보스 한마디 · 마을 사람 · 다음 세대의 장)도 같은 잣대로
 // ④ 진짜 화면에서: 도입부 · 1 · 13 · 30번 도입 · 엔딩 · 다음 세대의 장 도입 · 보스 등장 연출 · 마을 사람 — 오류 없이 끝까지 넘어간다
+// ⑤ 2.4.1 그 밖의 글 표(성격 말버릇 · 가문명 버릇 말 · 전투 대사 · 마지막 한마디 · 별명 · 현상 수배 · 연무장 · 뽑기 한마디 · 장비 내력 · 들판 · 가문의 유산 · 필살기 한 줄 · 연대기 · 대 끊김 · 출신)도 같은 잣대로:
+//    빈 글이 없다 · 덜 채운 '{…}' 가 없다 · 한 줄 60자 안쪽(머리 위에 뜨는 글은 더 짧게) · 도움말은 진짜 화면에서 빈 줄 · 덜 채운 글이 없고 「세계」 묶음이 보인다
 'use strict';
 module.exports = async function (page, shot, L) {
   const ev = (fn, arg) => page.evaluate(fn, arg);
@@ -159,6 +161,103 @@ module.exports = async function (page, shot, L) {
   A(/"st":1/.test(res.info.c.heroGen) && !!res.info.c.prev && Object.keys(st('c.모두 대를 이었다').cast).filter(k => st('c.모두 대를 이었다').cast[k] === 'S').length >= 8, 'succession save: the 맹주 is a successor (선대 ' + res.info.c.prev + ' heckles by name) and the houses speak through their heirs: ' + JSON.stringify(res.info.c));
   A(res.info.dVac.length > 0 && /"st":2/.test(res.info.dHero), 'vacant save: houses without a 가주 (' + res.info.dVac + ') and a fallen 맹주 fall back to the 선대 / narration');
   A(res.info.dFuse.shut.split(',').length >= 2 && res.info.dFuse.houses <= 8, 'fused save: asleep houses ' + res.info.dFuse.shut + ' (' + res.info.dFuse.houses + ' houses left) — their lines come from the 선대');
+
+  // ── ⑤ 2.4.1: 그 밖의 글 표 ──
+  const tx = await ev(() => {
+    var bad = [], n = 0, grp = {};
+    function chk(t, at, max) {
+      n++; var g = at.split('.')[0]; grp[g] = (grp[g] || 0) + 1;
+      if (typeof t !== 'string' || !t.trim()) { bad.push('빈 글 ' + at); return; }
+      if (/undefined|NaN|\{[^}]*\}|\[object/.test(t)) bad.push('덜 채운 글 ' + at + ' | ' + t);
+      var L = Array.from(t).length; if (L > (max || 60)) bad.push('긴 줄(' + L + '>' + (max || 60) + ') ' + at + ' | ' + t);
+    }
+    function fill(t, v) { return String(t).replace(/\{(\w+)(?::[^}]*)?\}(\{(이가|은는|을를|과와|으로)\})?/g, function (all, k, j, p) { return v && v[k] != null ? String(v[k]) + (p ? p[0] : '') : all; }); }
+    function each(o, at, max, v) { Object.keys(o || {}).forEach(function (k) { var x = o[k]; if (typeof x === 'string') chk(v ? fill(x, v) : x, at + '.' + k, max); else if (x instanceof Array) x.forEach(function (t, i) { if (typeof t === 'string') chk(v ? fill(t, v) : t, at + '.' + k + i, max); }); }); }
+    // 성격 말버릇: 화면이 부르는 여덟 상황이 성격마다 다 있다 (머리 위 글 16자 · 처음 온 첫마디는 알림 글 끝)
+    var NEED = ['start', 'kill', 'low', 'mourn', 'rank', 'boss', 'join', 'last'];
+    DS.PERSONAS.forEach(function (P) {
+      chk(P.name, 'persona.' + P.key + '.name', 8); chk(P.desc, 'persona.' + P.key + '.desc', 44);
+      NEED.forEach(function (k) { if (!(P.say[k] instanceof Array) || P.say[k].length < 3) bad.push('성격 줄 모자람 ' + P.key + '.' + k); });
+      Object.keys(P.say).forEach(function (k) { if (NEED.indexOf(k) < 0) bad.push('쓰이지 않는 성격 줄 ' + P.key + '.' + k); });
+      each(P.say, 'persona.' + P.key, 16);
+    });
+    Object.keys(DS.SAY_P).forEach(function (k) { if (NEED.indexOf(k) < 0) bad.push('SAY_P 에 쓰이지 않는 상황 ' + k); });
+    Object.keys(DS.SN_SAY).forEach(function (sn) { each(DS.SN_SAY[sn], 'surname.' + sn, 34); Object.keys(DS.SN_SAY[sn]).forEach(function (k) { if (NEED.indexOf(k) < 0) bad.push('쓰이지 않는 버릇 말 ' + sn + '.' + k); }); });
+    Object.keys(DS.BARKS).forEach(function (h) { each(DS.BARKS[h], 'bark.' + h, 16); });
+    each(DS.LAST_WORDS, 'lastWords', 24, { k: '가람', sp: '나래', h: '스카이워커' });
+    DS.MERC_TITLES.forEach(function (T) { chk(T.name, 'title.' + T.id + '.name', 8); chk(T.when, 'title.' + T.id + '.when', 60); });
+    // 현상 수배: 지역마다 그 땅의 적 이름을 다 끼워 본다 (제목은 게시판 한 줄 · 길 안내 줄에 들어간다)
+    var BT = DS.LORE.bounty, zn = 0;
+    ['hunt', 'elite', 'sweep'].forEach(function (k) { if (!BT[k] || !BT[k].title || !BT[k].line) bad.push('현상 수배 글 없음 ' + k); });
+    if (!(BT.titles instanceof Array) || BT.titles.length < 8) bad.push('정예 칭호가 모자란다');
+    Object.keys(DS.ZONES).forEach(function (z) {
+      var Z = DS.ZONES[z]; if (Z.town || !Z.mobs || !Z.L) return; zn++;
+      Z.mobs.forEach(function (m) {
+        var mob = (DS.ENEMIES[m] || {}).name || '';
+        ['hunt', 'sweep'].forEach(function (k) { chk(fill(BT[k].title, { zone: Z.name, mob: mob, n: 40 }), 'bounty.' + k + '.title', 22); chk(fill(BT[k].line, { zone: Z.name, mob: mob, n: 40 }), 'bounty.' + k + '.line', 60); });
+        BT.titles.forEach(function (t) { var nm = t + ' ' + mob; chk(fill(BT.elite.title, { zone: Z.name, name: nm }), 'bounty.elite.title', 24); chk(fill(BT.elite.line, { zone: Z.name, name: nm }), 'bounty.elite.line', 60); });
+      });
+    });
+    BT.titles.forEach(function (t, i) { chk(t, 'bounty.titles.' + i, 9); });
+    each(DS.BTY_TXT, 'bountyTxt', 60, { title: '달빛 대신 벌하는 고블린 주술사 검거', n: 6, need: 6, name: '가주 사냥꾼의 석궁' });
+    // 진짜 게시판: 20번을 깬 저장에서 굴린 방 셋 + 소문꾼의 말
+    (function () {
+      var s = DS.newSave('수배', 'inf'); DS.houseOpenN(s, 9); DS.mercTidy(s); for (var i = 1; i <= 20; i++) s.cleared[i] = 1;
+      Object.keys(DS.ZONES).forEach(function (z) { s.visited[z] = 1; });
+      DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 60; b.exp = 0; } }); DS.mercTidy(s); if (DS.pSync) DS.pSync(s);
+      var l = DS.bountyList(s) || []; if (l.length < 3) bad.push('게시판에 방이 ' + l.length + '개');
+      l.forEach(function (b) { chk(b.title, 'board.title', 24); chk(b.line, 'board.line', 60); });
+      var keep = DS.G.save; DS.G.save = s; try { var t = DS.LORE.bountyTalk(s); chk(t, 'board.talk', 72); } finally { DS.G.save = keep; }
+      grp.kinds = l.map(function (b) { return b.kind; }).join(',');
+    })();
+    // 연무장 · 무술대회 해설 ({w} {f} {u} = 이름 · 별명이 붙으면 열두 자)
+    var AT = DS.ARENA_TXT, who = { w: '일당사백 가나다라', f: '일당사백 가나다라', u: '개근상 마바사아' };
+    ['open', 'low', 'win', 'lose'].forEach(function (k) { if (!(AT[k] instanceof Array) || AT[k].length < 3) bad.push('연무장 줄 모자람 ' + k); (AT[k] || []).forEach(function (t, i) { chk(t, 'arena.' + k + i, 20); }); });
+    ['sub', 'champ', 'noChamp', 'noneChamp', 'busy'].forEach(function (k) { chk(AT[k], 'arena.' + k, 40); });
+    Object.keys(AT.t.cast).forEach(function (k) { AT.t.cast[k].forEach(function (t, i) { chk(fill(t, who), 'arenaCast.' + k + i, 44); }); });
+    ['open', 'even', 'lop', 'fin', 'upset', 'fav', 'champ'].forEach(function (k) { if (!(AT.t.cast[k] instanceof Array) || !AT.t.cast[k].length) bad.push('해설 없음 ' + k); });
+    // 영웅관: 등급마다 한마디
+    [1, 2, 3, 4, 5].forEach(function (g) { if (!(DS.PULL_SAY[g] instanceof Array) || !DS.PULL_SAY[g].length) bad.push('뽑기 한마디 없음 ' + g); (DS.PULL_SAY[g] || []).forEach(function (t, i) { chk(t, 'pull.' + g + '.' + i, 26); }); });
+    // 장비 내력: 전설 예순 점 모두
+    var un = 0; Object.keys(DS.UNIQ).forEach(function (c) { Object.keys(DS.UNIQ[c]).forEach(function (k) { un++; chk(DS.UNIQ[c][k].lore, 'gear.' + c + '.' + k, 60); }); });
+    // 들판: 외침 · 필드 보스
+    each(DS.FIELD_SAY, 'fieldSay', 20);
+    Object.keys(DS.FIELD_BOSS).forEach(function (z) { var D = DS.FIELD_BOSS[z]; chk(D.title, 'fieldBoss.' + z + '.title', 18); chk(D.say, 'fieldBoss.' + z + '.say', 44); chk(D.last, 'fieldBoss.' + z + '.last', 44); });
+    // 가문의 유산: 등급 · 가호의 한 줄 · 돌아온 왕
+    DS.LG.ranks.forEach(function (r, i) { chk(r.line, 'legacy.rank' + i, 44); });
+    Object.keys(DS.LG_BOON).forEach(function (k) { chk(DS.LG_BOON[k].line, 'legacy.boon.' + k, 44); chk(fill(DS.LG_BOON[k].d, { v: 3 }), 'legacy.boonD.' + k, 44); });
+    DS.LG_TWIST.forEach(function (t) { chk(t.say, 'legacy.twist' + t.g + '.say', 44); chk(t.note, 'legacy.twist' + t.g + '.note', 44); });
+    // 필살기의 한 줄 (타고난 것 · 윗길)
+    Object.keys(DS.ULTS).forEach(function (k) { if (DS.ULTS[k].fl != null) chk(DS.ULTS[k].fl, 'ult.' + k, 34); });
+    Object.keys(DS.ULTX || {}).forEach(function (k) { var X = DS.SKILLS[DS.ULTX[k]] || DS.SKILLS[k]; if (X && X.fl != null) chk(X.fl, 'ultx.' + k, 34); });
+    // 연대기 · 대 끊김 · 나이 · 출신
+    var V = { a: '가람 스카이워커', b: '나래 스카이워커', house: '스카이워커 가문', union: '타르가르옌 대가문', kid: '다솜', at: '붉은 모래 사막', y1: 123, 'new': '아트레이데스 가문', t: 3, n: 4, c: 12, g: 2 };
+    each(DS.LIN_TXT, 'chronicle', 90, V); each(DS.AGE_TXT, 'ageTxt', 60, V); each(DS.LAPSE_TXT, 'lapse', 60, V);
+    ['heirSb', 'succ', 'lead', 'fuseH', 'recall', 'bury', 'hand', 'house', 'castHeir', 'lapse'].forEach(function (k) { if (!DS.LIN_TXT[k]) bad.push('연대기 글 없음 ' + k); });
+    ['wed', 'part', 'widow', 'gone', 'birth', 'death', 'heir', 'adopt', 'kin', 'fuse', 'fuseIn', 'fuseU', 'coffin', 'revive', 'deathNat', 'adult', 'elder'].forEach(function (k) {      // lore.js 가 맡은 연대기 줄 (lineage.js · age.js 의 옛 기본 글을 걷은 자리)
+      var e = { t: k, a: 0, b: 0, s: 1, x: {} }, t = ''; try { t = DS.linEvText(DS.G.save, e); } catch (x) { t = ''; }
+      if (!t || /undefined|\{/.test(t)) bad.push('연대기 줄이 비었다 ' + k + ' | ' + t);
+    });
+    Object.keys(DS.ORIGIN).forEach(function (k) { chk(DS.ORIGIN[k].name, 'origin.' + k + '.name', 12); chk(DS.LORE.origin[k], 'origin.' + k + '.desc', 60); });
+    // 보스: 걷어 낸 옛 칭호 자리 — 모든 보스가 lore.js 의 칭호(또는 제 칭호)를 지닌다
+    Object.keys(DS.BOSSES).forEach(function (k) { var b = DS.BOSSES[k], lb = DS.LORE.boss[k]; if (!((lb && lb.title) || b.title)) bad.push('칭호 없는 보스 ' + k); });
+    // 다음 세대의 장: 걷어 낸 기본 글 자리 — lore.js 의 글이 채운다
+    ['intro', 'close.open', 'close.call', 'close.none', 'act', 'fell'].forEach(function (k) { var l = DS.egT(k, { n: 2, a: '가람' }); if (!l || !l.length) bad.push('세대 글 없음 ' + k); });
+    return { bad: bad, n: n, grp: grp, uniq: un, zones: zn };
+  });
+  if (tx.bad.length) console.log(tx.bad.slice(0, 60).join('\n'));
+  console.log('     ' + JSON.stringify(tx.grp));
+  A(tx.bad.length === 0 && tx.uniq === 60 && tx.zones >= 8 && tx.n > 3000, 'other text tables are clean (' + tx.n + ' lines: barks, bounties over ' + tx.zones + ' zones, arena, recruit, ' + tx.uniq + ' gear lore lines, field, legacy, ult lines, chronicle): no empty string, no unfilled token, within length' + (tx.bad.length ? ' — ' + tx.bad.length + ' problems' : ''));
+  // 도움말을 진짜 화면에서: 빈 줄 · 덜 채운 글이 없다, 「세계」 묶음이 보인다
+  const hp = await ev(() => {
+    DS.ui.closeAll(); DS.openMenu('help');
+    var o = document.querySelector('#app .ov'), hs = [].map.call(o.querySelectorAll('h4'), function (h) { return h.textContent; }), li = [].map.call(o.querySelectorAll('ul.help li'), function (l) { return l.textContent; });
+    var bad = li.filter(function (t) { return !t.trim() || /undefined|NaN|\{[^}]*\}|\[object|<b>|<\/b>/.test(t); });
+    return { hs: hs, n: li.length, bad: bad, world: li.filter(function (t) { return /사람은 두 번 죽는다|선대 단톡방은 떠난 옛 가주들의 훈수다|맨 끝 줄은 늘 비어 있다/.test(t); }).length, jump: o.querySelectorAll('.hjump button').length };
+  });
+  await sleep(300); await ev(() => { var h = document.querySelector('#app .ov #hj' + (document.querySelectorAll('#app .ov ul.help').length - 1)); if (h) h.scrollIntoView(); }); await sleep(250); await shot('help_world');
+  A(hp.bad.length === 0 && hp.n >= 70 && hp.hs[hp.hs.length - 1] === '세계' && hp.world === 3 && hp.jump === hp.hs.length, 'help tab renders ' + hp.n + ' items in ' + hp.hs.length + ' sections (' + hp.hs.join(' · ') + '), the 「세계」 section is visible, no empty or unfilled item' + (hp.bad.length ? ' — ' + JSON.stringify(hp.bad.slice(0, 3)) : ''));
+  await ev(() => DS.ui.closeAll());
 
   // ── ④-2 진짜 화면: 1 · 13 · 30번 도입 ──
   for (const id of [1, 13, 30]) {

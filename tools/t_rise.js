@@ -161,7 +161,7 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var el = document.querySelector('.cine.ck-fallx'); return el ? { names: el.querySelectorAll('.cx3 i').length, sub: el.querySelector('.csub').textContent, gift: (el.querySelector('.cgift') || {}).textContent || '' } : { none: 1, any: (document.querySelector('.cine') || {}).className || '' }; });
   A(c && c.names === 3 && /합일한 넋/.test(c.sub), '8단+ death cinematic: heavier, with the three names (' + JSON.stringify(c) + ')');
   var tk1 = await ev(() => DS.G.save.tickets || 0);
-  A(tk1 - tk0 === 10 && /모집권 10장/.test(c.gift || ''), '8단+ death leaves 10 hero tickets, shown in the cinematic (' + tk0 + ' -> ' + tk1 + ', ' + (c.gift || '-') + ')');
+  A(tk1 - tk0 === 10 && /남긴 뜻: 다음 사람을 불러라\. 모집권 10장/.test(c.gift || ''), '8단+ death leaves 10 hero tickets, shown in the cinematic (' + tk0 + ' -> ' + tk1 + ', ' + (c.gift || '-') + ')');
   await L.sleep(1200); await vshot('death8_cine');
   await page.mouse.click(195, 760); await L.sleep(600); await L.closeAll(page);
   c = await ev(() => { var s = DS.G.save, R = s.chars[window.__R], b = DS.bearer(s, R); DS.sbTick(s); DS.mercTidy(s); DS.pSync(s); b = DS.bearer(s, R); return { L: b ? DS.pL(b) : 0, fz: !!(b && b.fz), x: DS.riseCls(R) }; });
@@ -175,7 +175,7 @@ module.exports = async (page, shot, L) => {
   A(c.shut0 === c.woke && c.now === 0 && c.open && c.q === 2, 'next generation: the sleeping houses wake and become normal closed houses (' + c.woke + ')');
   await L.sleep(2200);
   c = await ev(() => { var el = document.querySelector('.cine.ck-wake'); return el ? { t: el.textContent, flags: el.querySelectorAll('.cfzb').length } : null; });
-  A(c && c.flags === 2 && /깨어난다/.test(c.t), 'wake cinematic: 잠든 가문이 깨어난다 (' + (c && c.flags) + ' banners)');
+  A(c && c.flags === 2 && /깨어난다/.test(c.t) && /가문이 기지개를 켠다/.test(c.t) && /영웅관에서 다시 열 수 있다/.test(c.t), 'wake cinematic: 잠든 가문이 깨어난다 · 기지개를 켠다 (' + (c && c.flags) + ' banners)');
   await vshot('wake_cine');
   await page.mouse.click(195, 760); await L.sleep(500); await L.closeAll(page);
   c = await ev(() => { var s = DS.G.save, k = Object.keys(s.fzShut || {})[0]; var r = DS.recruitHero(s, Math.random, { cls: k }); window.__rr = r; return { role: r && r.role, re: !!(r && r.reopen), left: Object.keys(s.fzShut || {}).length, cls: k }; });

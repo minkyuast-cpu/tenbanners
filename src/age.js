@@ -29,11 +29,8 @@ DS.ageLsHuman = function (id, salt) {
   return ls;
 };
 DS.ageLong = function (e, s) { s = s || (DS.G && DS.G.save); var a = e && s ? DS.ageOf(s, e) : null; return a != null && a > DS.AGE_CMD.life[1]; };      // ㉒ 「장수」: 72 를 실제로 넘긴 이 (정해진 수명을 미리 내비치지 않는다)
-DS.AGE_TXT = {
-  deathNat: ['{a}{이가} 천수를 누리고 눈을 감았다.'],
-  adult: ['{a}{이가} 성년이 되어 가문원으로 싸움에 나선다.'],      // {a} = 호 + 성이름 (「민규 2세 불꽃 스타크」)
-  adultSb: ['{a}{이가} 성년이 되어 막사에 들었다.'],      // 2.2.1: 옛 맹주 가문의 아이
-  elder: ['{a}의 머리에 서리가 내렸다. 노년에 들었다.']
+DS.AGE_TXT = {      // 2.4.1: 천수 · 성년 · 노년의 글은 lore.js(DS.LORE.age)에 있다 — 가려져 쓰이지 않던 옛 기본 글은 걷었다
+  adultSb: ['{a}{이가} 성년이 되어 막사에 들었다.']      // 2.2.1: 옛 맹주 가문의 아이 ({a} = 호 + 성이름)
 };
 var NAT = '천수를 누림';
 DS.AGE_NAT = NAT;

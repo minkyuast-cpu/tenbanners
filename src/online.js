@@ -641,10 +641,10 @@ function hornPump() {
 function gearPlain(g) { return String(g.short || g.name || '').replace(' +' + g.enh, ''); }
 function hornHtml(r, band) {
   var who = '「' + esc(r.name) + '」';
-  if (r.k === 'fuse') { var un = (r.lord ? r.name + '의' : (DS.LIN_HOUSE && DS.LIN_HOUSE[r.cls]) || (DS.CLASSES[r.cls] || {}).name || '') + ' 대가문'; return '<b class="hpre">소문, </b> ' + who + '<i class="hj">' + josaOf(r.name, '이가') + '</i> 세 가문을 함께 8단에 올렸다. <span class="hfu">' + esc(un) + '</span>'; }
+  if (r.k === 'fuse') { var un = (r.lord ? r.name + '의' : (DS.LIN_HOUSE && DS.LIN_HOUSE[r.cls]) || (DS.CLASSES[r.cls] || {}).name || '') + ' 대가문'; return '<b class="hpre">소문, </b> ' + who + '<i class="hj">' + josaOf(r.name, '이가') + '</i> 세 가문을 묶어 8단에 올렸다. 합체 성공. <span class="hfu">' + esc(un) + '</span>'; }
   var t = DS.enhTier(r.n), en = DS.enhClass ? DS.enhClass(r.n) : 'en en' + t, nm = gearPlain(r.g);      // r12: 그래픽 2차 강화 색
   if (r.k === 'up') return '<b class="hpre">소문, </b> ' + who + '<i class="hj">' + josaOf(r.name, '이가') + '</i> 〈<span class="' + en + '">' + esc(nm) + '</span>〉' + josaOf(nm, '을를') + ' <b class="' + en + ' hn">+' + r.n + '</b>' + (r.n % 10 === 3 || r.n % 10 === 6 || r.n % 10 === 0 ? '으로' : '로') + ' 벼려 냈다';
-  return '<b class="hpre">소문, </b> ' + who + '의 <span class="' + en + '">+' + (r.n - 1) + ' ' + esc(nm) + '</span>' + josaOf(nm, '이가') + ' 망치 아래 <span class="hbrk">산산조각</span> 났다';
+  return '<b class="hpre">소문, </b> ' + who + '의 <span class="' + en + '">+' + (r.n - 1) + ' ' + esc(nm) + '</span>' + josaOf(nm, '이가') + ' 망치 아래 <span class="hbrk">산산조각</span> 났다. 조의를 표한다';
 }
 function josaOf(w, pair) { var c = String(w).charCodeAt(String(w).length - 1), has = c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 > 0; return has ? pair[0] : pair[1]; }
 function hornBand(r) {
@@ -691,12 +691,12 @@ function hornToday() {
 function hornTab() {
   if (BE.horn !== true) return '';
   var list = hornToday(), on = hornInOn();
-  var html = '<button class="pfold hfold' + (HS.fold ? ' on' : '') + '" data-onl="hornFold" aria-expanded="' + HS.fold + '"><b>오늘의 소문</b><small>' + (!on ? '대장간 소문 듣기가 꺼져 있다' : list.length ? '대장간에서 들려온 ' + list.length + '건' : '아직 들려온 소문이 없다') + '</small><i aria-hidden="true">' + (HS.fold ? '▾' : '▸') + '</i></button>';
+  var html = '<button class="pfold hfold' + (HS.fold ? ' on' : '') + '" data-onl="hornFold" aria-expanded="' + HS.fold + '"><b>오늘의 소문</b><small>' + (!on ? '대장간 소문 듣기가 꺼져 있다' : list.length ? '대장간에서 들려온 ' + list.length + '건' : '아직 들려온 소문이 없다. 대장간이 조용하다') + '</small><i aria-hidden="true">' + (HS.fold ? '▾' : '▸') + '</i></button>';
   if (!HS.fold) return html;
   if (!on) return html + '<p class="hint">설정 「온라인」의 「대장간 소문 듣기」를 켜면 들린다.</p>';
   if (!list.length) return html + '<p class="hint">' + (HS.st === 'err' ? '소문을 불러오지 못했다.' : '지난 6시간 동안 들려온 소문이 없다.') + '</p>';
   html += '<div class="hlist">' + list.map(function (r) { return '<div class="hrow t' + (r.k === 'fuse' ? 'f' : DS.enhTier(r.n)) + (r.k !== 'fuse' && DS.enhStep && DS.enhStep(r.n) ? ' x' + DS.enhStep(r.n) : '') + '" data-hid="' + esc(r.id) + '" data-hat="' + r.at + '"><span>' + hornHtml(r) + (r.me ? ' <i class="own">나</i>' : '') + '</span><small>' + ago(r.at) + '</small></div>'; }).join('') + '</div>';
-  return html + '<p class="hint">소문은 반만 믿어라. 길게 누르면 그 사람 소문을 숨긴다.</p>';
+  return html + '<p class="hint">소문은 반만 믿어라. 선대 단톡방 것은 반의반만. 길게 누르면 그 사람 소문을 숨긴다.</p>';
 }
 function hornOpt() {
   if (BE.horn !== true) return '';

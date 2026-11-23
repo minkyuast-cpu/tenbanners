@@ -121,4 +121,7 @@
 - `src/lore.js` — 도입·엔딩, 배역·보스 한마디, 합일, 막간, 갱도 벽 글, 마을 사람·소문, 출신, 전투 대사, 가문 기록(혼인·출생·죽음·후계), 다음 세대의 장.
 - `src/story.js` — 적용기. 줄의 갈림: `a`(선대일 때) · `heir` · `gone` · `no` · `me` · `er` · `need`, 자리표 `{hero}` `{prev}` `{fallen}` `{erased}`.
 - 그 밖: `src/field.js`(들판 보스), `src/bigmon.js`(큰 보스 격노 한마디·갱도 수문장), `src/lineage.js`(대 끊김), `src/legacy.js`(대마다 달라지는 왕), `src/endgame.js`(장의 첫 줄).
-- 검사: `tools/t_story.js` (열 병과 맹주 · 모두 대를 이은 저장 · 가문이 비거나 잠든 저장에서 서른 판을 훑는다), `python3 tools/fontcheck.py`.
+- 2.4.1 에 같은 말투로 맞춘 곳: `src/data.js`(성격 말버릇 `DS.PERSONAS` · 별명 `DS.MERC_TITLES`), `src/lore.js`(현상 수배 `BOUNTY`), `src/arena.js`(연무장의 한마디 · 무술대회 해설), `src/loot.js`(전설 장비 내력), `src/ui.js`(영웅관의 한마디 `DS.PULL_SAY` · 사건 연출의 한 줄 · 도움말 `tabHelp`), `src/field.js`(외침 · 필드 보스 칭호), `src/legacy.js`(가문 등급 · 가호의 한 줄), `src/rise.js`(윗길 필살기의 한 줄), `src/online.js`(대장간 소문).
+  - 머리 위에 뜨는 글(성격 · 전투 대사)은 16자 안쪽. 떠나는 자리의 줄(mourn · last)과 연대기 줄에는 농담을 얹지 않는다. 도움말은 규칙이 먼저, 묶음마다 가벼운 한마디 하나.
+  - 화면이 읽는 글은 한 곳에만 둔다. `lore.js` 가 늘 덮던 옛 기본 글(보스 옛 칭호 · `LIN_TXT` · `AGE_TXT` · `EG_TXT` 의 intro/close · `BTY_TXT` · 출신 소개 · 옛 도움말 표)은 2.4.1 에 걷었다.
+- 검사: `tools/t_story.js` (열 병과 맹주 · 모두 대를 이은 저장 · 가문이 비거나 잠든 저장에서 서른 판을 훑는다 · ⑤ 그 밖의 글 표), `tools/t_text.js` (고친 글이 진짜 화면에 뜨는가), `python3 tools/fontcheck.py`.

@@ -108,79 +108,79 @@ function axDesc(A, v, aD) {
 var UNIQ = {
   sword: {
     grok:    { n: '그록의 방아공이', pow: 1.25, spd: -0.05, from: 'grok', lore: '보증금을 떼인 혹부리가 휘두르던 공이. 아직 밀가루가 묻어 있다.' },
-    mire:    { n: '가라앉은 종의 추', pow: 1.0, x: { drain: 0.10, hpm: 0.9 }, from: 'mire', lore: '수렁에 잠긴 마을의 종에서 떼어 낸 추. 울릴 때마다 무언가를 가져간다.' },
-    kardan:  { n: '불가마 대검', pow: 1.3, def: -0.4, from: 'kardan', lore: '성채의 가마에서 한 번도 식힌 적이 없는 칼. 쥔 손도 함께 탄다.' },
-    ignar:   { n: '이그나르의 송곳니', pow: 1.2, crit: 0.10, from: 'ignar', lore: '성난 화산이 잠들며 남긴 이빨 하나.' },
+    mire:    { n: '가라앉은 종의 추', pow: 1.0, x: { drain: 0.10, hpm: 0.9 }, from: 'mire', lore: '가라앉은 마을에서 출석 부를 때 치던 종의 추. 칠 때마다 생기를 조금 걷어 온다.' },
+    kardan:  { n: '불가마 대검', pow: 1.3, def: -0.4, from: 'kardan', lore: '불가마 성채에서 한 번도 안 식힌 칼. 쥔 손도 노릇하게 익는다.' },
+    ignar:   { n: '이그나르의 송곳니', pow: 1.2, crit: 0.10, from: 'ignar', lore: '문에 박혔던 불 쐐기의 이빨 하나. 뽑고 나니 문짝이 움직였다.' },
     oath:    { n: '맹세의 검', pow: 1.1, crit: 0.05, x: { nobrk: 1 }, from: 'scn:10', lore: '먼동이 다음 사람에게 주라며 달못에 맡긴 검. 닳지 않는다. 주인은 여럿이었다.' },
-    thirst:  { n: '목마른 칼', pow: 1.0, x: { eng: { killDrain: 0.03 } }, from: 'zone:stone', lore: '피를 마실수록 날이 맑아진다는 칼. 씻어 둘 필요가 없다.' },
-    blood:   { n: '핏빛 대검', pow: 1.55, x: { eng: { curse: 0.006 } }, from: 'zone:spire', lore: '첨탑 기슭에 꽂혀 있던 대검. 뽑은 사람마다 조금씩 말라 갔다.' },
-    first:   { n: '대장장이의 첫 칼', pow: 0.9, x: { enx: 2 }, from: 'zone:dawn', lore: '해밀 대장장이가 처음 두드린 칼. 두드릴수록 제 솜씨를 드러낸다.' },
-    sun:     { n: '해의 칼', pow: 1.05, crit: 0.05, x: { pair: 'sun' }, from: 'zone:coast', lore: '물비늘 해안의 쌍둥이 대장장이 가운데 언니가 벼린 칼. 늘 짝을 찾는다.' }
+    thirst:  { n: '목마른 칼', pow: 1.0, x: { eng: { killDrain: 0.03 } }, from: 'zone:stone', lore: '쓰러뜨릴 때마다 한 모금씩 마시는 칼. 씻을 필요가 없다. 구독료도 없다.' },
+    blood:   { n: '핏빛 대검', pow: 1.55, x: { eng: { curse: 0.006 } }, from: 'zone:spire', lore: '첨탑 기슭에 꽂혀 있던 대검. 약관을 안 읽고 뽑으면 조금씩 말라 간다.' },
+    first:   { n: '대장장이의 첫 칼', pow: 0.9, x: { enx: 2 }, from: 'zone:dawn', lore: '해밀 대장장이가 처음 두드린 칼. 못생겼다. 그래도 두드릴수록 는다.' },
+    sun:     { n: '해의 칼', pow: 1.05, crit: 0.05, x: { pair: 'sun' }, from: 'zone:coast', lore: '쌍둥이 대장장이 가운데 언니가 벼린 칼. 달의 창이 곁에 서면 기가 산다.' }
   },
   lance: {
     heron:   { n: '통행세 걷는 창', pow: 1.0, spd: 0.06, crit: 0.05, from: 'heron', lore: '다리를 막고 세를 걷던 말몰이꾼의 창. 미납 장부는 강물에 떠내려갔다.' },
     twin:    { n: '쌍두 송곳니', pow: 0.95, crit: 0.14, spd: 0.03, from: 'twinsnake', lore: '상속 다툼을 하던 두 머리의 이빨을 한 자루에 묶었다. 이제는 사이가 좋다.' },
-    volko:   { n: '선장의 갈고리 작살', pow: 1.05, x: { skill: 'harpoon' }, from: 'volko', lore: '볼코가 아버지에게 물려받아 배마다 걸어 당기던 작살.' },
-    keeper:  { n: '갱도지기의 곡괭이', pow: 1.35, spd: -0.08, from: 'keeper', lore: '광부들이 돌 파수꾼의 손에 쥐여 준 곡괭이. 내려오는 것은 무엇이든 찍는다.' },
+    volko:   { n: '선장의 갈고리 작살', pow: 1.05, x: { skill: 'harpoon' }, from: 'volko', lore: '볼코가 아버지에게 물려받아 배마다 걸어 당기던 작살. 빚은 안 딸려 왔다.' },
+    keeper:  { n: '갱도지기의 곡괭이', pow: 1.35, spd: -0.08, from: 'keeper', lore: '품삯 못 받은 광부들이 돌 파수꾼에게 쥐여 준 곡괭이. 밀린 품삯만큼 무겁다.' },
     dawn:    { n: '먼동의 깃발', pow: 1.2, x: { lead: { at: 1.10 } }, from: 'duskking', lore: '먼동이 문 안에서 삼백 년을 들고 섰던 깃발. 이제는 다음 사람이 든다.' },
-    moon:    { n: '달의 창', pow: 1.05, spd: 0.04, x: { pair: 'sun' }, from: 'zone:isle', lore: '쌍둥이 대장장이 가운데 아우가 벼린 창. 해의 칼과 같은 쇠를 나눠 썼다.' },
-    finish:  { n: '마무리 창', pow: 1.0, x: { eng: { exec: 0.5 } }, from: 'zone:windy', lore: '쓰러지는 짐승을 한 번에 보내 주던 사냥꾼의 창. 마지막 한 번이 가장 깊다.' },
+    moon:    { n: '달의 창', pow: 1.05, spd: 0.04, x: { pair: 'sun' }, from: 'zone:isle', lore: '쌍둥이 가운데 아우가 벼린 창. 해의 칼과 같은 쇠다. 떨어져 있으면 시무룩하다.' },
+    finish:  { n: '마무리 창', pow: 1.0, x: { eng: { exec: 0.5 } }, from: 'zone:windy', lore: '다 쓰러져 가는 놈만 골라 깊이 찌르는 사냥꾼의 창. 막타 전문이다.' },
     wyrm:    { n: '용뼈 창', pow: 1.25, x: { rng: 1 }, from: 'scn:26', lore: '뼈용이 내준 창. 손잡이에 「다음에 타는 사람에게」라고 적혀 있다. 한 칸 더 닿는다.' }
   },
   bow: {
-    shara:   { n: '샤라의 꼬리침 활', pow: 0.95, crit: 0.16, from: 'shara', lore: '마른 샘의 여왕 전갈이 남긴 꼬리로 시위를 걸었다.' },
+    shara:   { n: '샤라의 꼬리침 활', pow: 0.95, crit: 0.16, from: 'shara', lore: '구독료 받던 전갈 여왕의 꼬리로 시위를 걸었다. 급소만 골라 청구한다.' },
     hagen:   { n: '가주 사냥꾼의 석궁', pow: 1.2, spd: -0.04, x: { rng: 1 }, from: 'hagen', lore: '사람을 번호로 부르던 사냥꾼 대장의 석궁.' },
-    harpy:   { n: '바람재 깃 활', pow: 0.9, spd: 0.10, from: 'zone:windy', lore: '하피의 깃으로 살깃을 단 활. 바람재의 바람을 탄다.' },
-    pierce:  { n: '꿰뚫는 활', pow: 0.95, x: { eng: { pierce: 0.6 } }, from: 'zone:desert', lore: '모래바람을 뚫고 쏘라고 만든 활. 화살이 멈출 줄 모른다.' },
-    gale:    { n: '바람 매 활', pow: 0.85, x: { eng: { atkTick: 0.8 } }, from: 'zone:coast', lore: '매처럼 연달아 내리꽂는다. 시위가 식을 틈이 없다.' },
-    final:   { n: '마지막 한 발', pow: 0.9, crit: 0.08, x: { eng: { critX: 0.5 } }, from: 'zone:mire', lore: '화살이 하나 남았을 때 쓰던 활. 급소를 놓치는 법이 없다.' }
+    harpy:   { n: '바람재 깃 활', pow: 0.9, spd: 0.10, from: 'zone:windy', lore: '하피 깃으로 살깃을 단 활. 바람재 바람을 타서 손이 바빠진다.' },
+    pierce:  { n: '꿰뚫는 활', pow: 0.95, x: { eng: { pierce: 0.6 } }, from: 'zone:desert', lore: '모래바람을 뚫으라고 만든 활. 화살이 앞사람에서 멈출 줄을 모른다.' },
+    gale:    { n: '바람 매 활', pow: 0.85, x: { eng: { atkTick: 0.8 } }, from: 'zone:coast', lore: '매처럼 연달아 내리꽂는다. 시위가 식을 틈이 없다. 팔도 그렇다.' },
+    final:   { n: '마지막 한 발', pow: 0.9, crit: 0.08, x: { eng: { critX: 0.5 } }, from: 'zone:mire', lore: '화살이 하나 남았을 때 쓰던 활. 그 한 발이 유난히 아프다.' }
   },
   wand: {
     tormak:  { n: '울림뿔 메이스', pow: 1.25, mp: -0.10, from: 'tormak', lore: '울림 바위를 찧던 뿔거인의 뿔. 내려치면 땅이 대답한다. 밤에는 삼갈 것.' },
     king:    { n: '잠 못 드는 왕의 홀', pow: 1.05, mp: 0.15, x: { skill: 'curse' }, from: 'king', lore: '왕은 삼백 년 만에 퇴근했지만, 홀은 아직도 다음 안건을 찾는다.' },
     morga:   { n: '역병 성의 향로', pow: 1.05, mp: 0.25, x: { skill: 'deathCloud' }, from: 'morga', lore: '역병을 피우던 향로. 이제는 적진 쪽으로만 연기를 전달한다.' },
-    scale:   { n: '장사꾼의 저울추', pow: 1.0, x: { eng: { goldUp: 0.3 } }, from: 'zone:isle', lore: '가온 시장에서 무게를 속이던 저울추. 이제는 전리품 무게를 늘린다.' },
-    mercy:   { n: '자비의 홀', pow: 0.9, mp: 0.15, x: { eng: { healUp: 0.35 } }, from: 'zone:stone', lore: '순례자들이 돌마루 고원을 넘으며 돌려 쥐던 홀. 상처가 빨리 아문다.' },
-    bell:    { n: '새벽 종 메이스', pow: 1.1, x: { dtype: 'holy', eng: { slay: { undead: 0.25, demon: 0.25 } } }, from: 'zone:end', lore: '어스름이 짙어질 때마다 울리던 종을 녹여 만들었다.' }
+    scale:   { n: '장사꾼의 저울추', pow: 1.0, x: { eng: { goldUp: 0.3 } }, from: 'zone:isle', lore: '가온 시장에서 무게를 속이던 저울추. 이제는 우리 쪽으로만 속인다.' },
+    mercy:   { n: '자비의 홀', pow: 0.9, mp: 0.15, x: { eng: { healUp: 0.35 } }, from: 'zone:stone', lore: '순례자들이 고원을 넘으며 돌려 쥐던 홀. 쥐면 고치는 손이 후해진다.' },
+    bell:    { n: '새벽 종 메이스', pow: 1.1, x: { dtype: 'holy', eng: { slay: { undead: 0.25, demon: 0.25 } } }, from: 'zone:end', lore: '어스름이 짙을 때마다 치던 종을 녹였다. 망자와 악마는 이 소리를 못 견딘다.' }
   },
   staff: {
     pippin:  { n: '피핀의 요술 지팡이', pow: 0.9, mp: 0.4, crit: 0.08, from: 'pippin', lore: '약관 한 장으로 산마을을 가졌던 요술쟁이의 지팡이. 주인도 자주 속인다.' },
     orbel:   { n: '별 보는 탑의 자', pow: 1.0, x: { rng: 1 }, from: 'orbel', lore: '점성술사가 하늘과 땅 사이를 재던 자. 한 칸 더 멀리 닿는다. 운세는 안 맞는다.' },
     apostle: { n: '잿불 지팡이', pow: 1.25, mp: -0.15, from: 'apostle', lore: '먼동이 나올 길을 삼백 년 밝히던 표석 불의 불씨. 마나를 태워 키운다.' },
-    echo:    { n: '메아리 지팡이', pow: 0.95, mp: 0.1, x: { eng: { echo: 0.2 } }, from: 'zone:mire', lore: '별 보는 탑의 견습생이 쓰던 지팡이. 주문을 외우면 늘 한 번 더 들린다.' },
-    lamp:    { n: '마른 샘 등불', pow: 0.95, x: { eng: { killHp: 0.08, mpRegen: 0.004 } }, from: 'zone:desert', lore: '마른 샘을 지키던 등불을 지팡이 끝에 매달았다. 꺼질 듯하다가 다시 붙는다.' },
-    spark:   { n: '불티 지팡이', pow: 1.0, x: { eng: { splash: 0.4 } }, from: 'zone:ash', lore: '잿빛 변경의 불씨를 품은 지팡이. 한 대 맞히면 옆에도 튄다.' }
+    echo:    { n: '메아리 지팡이', pow: 0.95, mp: 0.1, x: { eng: { echo: 0.2 } }, from: 'zone:mire', lore: '별 보는 탑 견습생의 지팡이. 주문이 가끔 한 번 더 나간다. 가끔 한 번 더.' },
+    lamp:    { n: '마른 샘 등불', pow: 0.95, x: { eng: { killHp: 0.08, mpRegen: 0.004 } }, from: 'zone:desert', lore: '마른 샘을 지키던 등불. 꺼질 듯하다가 다시 붙는다. 든 사람도 그렇다.' },
+    spark:   { n: '불티 지팡이', pow: 1.0, x: { eng: { splash: 0.4 } }, from: 'zone:ash', lore: '잿빛 변경의 불씨를 품은 지팡이. 한 놈을 치면 옆 놈도 같이 뜨겁다.' }
   },
   heavy: {
-    bargan:  { n: '불목 흉갑', def: 1.2, res: 0.7, hp: 0.8, from: 'bargan', lore: '끓는 고개의 거인이 두르던 쇠판. 두껍고, 아직 따뜻하다.' },
+    bargan:  { n: '불목 흉갑', def: 1.2, res: 0.7, hp: 0.8, from: 'bargan', lore: '고개지기 바르간이 두르던 쇠판. 아버지 것이라 품이 크다. 아직 따뜻하다.' },
     warden:  { n: '돌지기의 흉갑', def: 1.35, res: 0.3, spd: -0.06, from: 'warden', lore: '제 이름을 되찾은 돌지기가 벗어 준 돌 흉갑. 무겁고, 잘 안 깨진다.' },
     gate:    { n: '첨탑 문의 빗장', def: 1.25, res: 0.9, from: 'gatekeeper', lore: '검은 첨탑의 문을 잠그던 빗장을 펴서 가슴에 댔다. 비밀번호는 필요 없다.' },
     roen:    { n: '대공의 문장 갑옷', def: 1.1, res: 1.0, x: { lead: { def: 1.10 } }, from: 'roen', lore: '제 후계는 저라던 대공의 갑옷. 결국 막내가 물려받았다.' },
-    wyrm:    { n: '뼈용 비늘 갑옷', def: 1.2, res: 1.2, from: 'bonewyrm', lore: '뼈 사막의 용에게 남아 있던 마지막 비늘들.' },
-    mirror:  { n: '되받는 방패갑', def: 1.15, res: 0.6, x: { eng: { reflect: 0.25 } }, from: 'zone:stone', lore: '돌마루 석공들이 바위를 깎아 덧댄 갑옷. 친 만큼 되돌아온다.' },
-    wall:    { n: '마지막 성벽', def: 1.2, res: 0.8, x: { eng: { lone: 0.3 } }, from: 'zone:ash', lore: '무너진 변경 성채에서 끝까지 서 있던 한 사람의 갑옷.' },
-    elder:   { n: '맏이의 갑옷', def: 1.15, res: 0.7, hp: 0.4, x: { pair: 'bro' }, from: 'zone:end', lore: '먼저 떠난 형이 남긴 갑옷. 동생이 곁에 서면 더 단단해진다.' },
-    heal:    { n: '아무는 비늘 갑옷', def: 1.1, res: 0.6, x: { eng: { hpRegen: 0.008 } }, from: 'zone:end', lore: '끝의 땅 용암 도마뱀의 비늘로 엮었다. 긁힌 자리가 금세 아문다.' }
+    wyrm:    { n: '뼈용 비늘 갑옷', def: 1.2, res: 1.2, from: 'bonewyrm', lore: '뼈용에게 남아 있던 마지막 비늘들. 턱 밑의 것은 안 뽑았다.' },
+    mirror:  { n: '되받는 방패갑', def: 1.15, res: 0.6, x: { eng: { reflect: 0.25 } }, from: 'zone:stone', lore: '돌마루 석공들이 바위를 깎아 덧댄 갑옷. 맞은 것의 얼마쯤은 꼭 갚는다.' },
+    wall:    { n: '마지막 성벽', def: 1.2, res: 0.8, x: { eng: { lone: 0.3 } }, from: 'zone:ash', lore: '무너진 변경 성채에서 끝까지 서 있던 사람의 갑옷. 혼자일수록 단단하다.' },
+    elder:   { n: '맏이의 갑옷', def: 1.15, res: 0.7, hp: 0.4, x: { pair: 'bro' }, from: 'zone:end', lore: '먼저 떠난 형이 남긴 갑옷. 막내가 곁에 서면 괜히 더 단단해진다.' },
+    heal:    { n: '아무는 비늘 갑옷', def: 1.1, res: 0.6, x: { eng: { hpRegen: 0.008 } }, from: 'zone:end', lore: '끝의 땅 용암 도마뱀 비늘로 엮었다. 긁혀도 금세 아문다. 좀 가렵긴 하다.' }
   },
   light: {
-    shewolf: { n: '늑대골 털가죽', def: 0.9, res: 0.5, spd: 0.08, from: 'shewolf', lore: '늑대골 초소 바닥에 깔려 있던 잿빛 가죽. 입으면 발이 가벼워진다.' },
+    shewolf: { n: '늑대골 털가죽', def: 0.9, res: 0.5, spd: 0.08, from: 'shewolf', lore: '늑대골 초소에 깔려 있던 잿빛 털가죽. 어미 것은 아니다. 입으면 발이 가볍다.' },
     tomb:    { n: '석수의 갈기', def: 1.25, res: 1.0, spd: -0.03, from: 'tombbeast', lore: '교대 없이 삼백 년을 버틴 돌짐승의 갈기. 가죽옷인데 돌처럼 단단하다.' },
-    basil:   { n: '바실의 비늘옷', def: 0.85, res: 0.8, spd: 0.10, from: 'basil', lore: '독니 바실이 벗어 둔 허물. 독은 빠지고 날램만 남았다.' },
-    swarm:   { n: '파리 떼 왕의 겉날개', def: 0.85, res: 0.7, spd: 0.10, x: { mvm: 0.15 }, from: 'swarm', lore: '썩은 평원의 왕이 남긴 겉날개. 날지는 못해도 걸음이 바람 같다.' },
-    young:   { n: '막내의 가죽옷', def: 0.95, res: 0.6, spd: 0.05, x: { pair: 'bro' }, from: 'zone:ash', lore: '형을 따라나선 막내가 입던 가죽옷. 형의 갑옷과 같은 문장이 찍혀 있다.' },
-    trick:   { n: '요술쟁이 망토', def: 0.85, res: 0.7, x: { eng: { eva: 0.15 } }, from: 'zone:windy', lore: '바람재 장터의 요술쟁이가 두르던 망토. 눈앞에서 사라지는 재주가 남아 있다.' },
-    rage:    { n: '광전사의 가죽', def: 0.9, res: 0.4, x: { eng: { rage: 0.5 } }, from: 'zone:coast', lore: '해적들이 겁을 주려 입던 가죽. 다칠수록 눈빛이 바뀐다.' },
-    post:    { n: '파발꾼 가죽옷', def: 0.85, res: 0.5, spd: 0.04, x: { mvm: 0.25, eng: { killGauge: 20 } }, from: 'zone:dawn', lore: '새벽 들판을 달리던 파발꾼의 옷. 멈춰 서는 법을 잊었다.' }
+    basil:   { n: '바실의 비늘옷', def: 0.85, res: 0.8, spd: 0.10, from: 'basil', lore: '첨탑 일 층 관리자 바실이 벗어 둔 허물. 독은 빠지고 날램만 남았다.' },
+    swarm:   { n: '파리 떼 왕의 겉날개', def: 0.85, res: 0.7, spd: 0.10, x: { mvm: 0.15 }, from: 'swarm', lore: '이름을 새로 얻은 성주가 남긴 겉날개. 날지는 못해도 걸음이 바람 같다.' },
+    young:   { n: '막내의 가죽옷', def: 0.95, res: 0.6, spd: 0.05, x: { pair: 'bro' }, from: 'zone:ash', lore: '형을 따라나선 막내의 가죽옷. 형 갑옷과 같은 문장이다. 물려 입은 건 아니다.' },
+    trick:   { n: '요술쟁이 망토', def: 0.85, res: 0.7, x: { eng: { eva: 0.15 } }, from: 'zone:windy', lore: '바람재 장터 요술쟁이의 망토. 맞을 때가 되면 가끔 자리에 없다.' },
+    rage:    { n: '광전사의 가죽', def: 0.9, res: 0.4, x: { eng: { rage: 0.5 } }, from: 'zone:coast', lore: '해적들이 겁주려고 입던 가죽. 다칠수록 눈빛이 바뀐다. 입은 쪽이.' },
+    post:    { n: '파발꾼 가죽옷', def: 0.85, res: 0.5, spd: 0.04, x: { mvm: 0.25, eng: { killGauge: 20 } }, from: 'zone:dawn', lore: '새벽 들판 파발꾼의 옷. 멈춰 서는 법을 잊었다. 퇴근하는 법도.' }
   },
   robe: {
-    nuri:    { n: '달못 물빛 로브', def: 0.8, res: 1.35, spd: 0.04, from: 'nuri', lore: '달못의 정령이 맑아지며 벗어 둔 물빛. 마법이 수면처럼 흩어진다.' },
+    nuri:    { n: '달못 물빛 로브', def: 0.8, res: 1.35, spd: 0.04, from: 'nuri', lore: '누리가 제 대사를 되찾고 벗어 둔 물빛. 마법이 수면처럼 흩어진다.' },
     belmar:  { n: '깃대지기의 로브', def: 0.7, res: 1.1, mp: 0.45, hp: -1.5, from: 'belmar', lore: '후임을 삼백 년 기다린 깃대지기의 옷. 마나는 넘치고, 목숨은 조금 빌려 간다.' },
     ilva:    { n: '서리 궁의 휘장', def: 0.9, res: 1.3, x: { skill: 'slow' }, from: 'ilva', lore: '아무도 못 떠나게 얼려 두던 궁의 휘장. 스치는 것마다 느려진다.' },
-    glacia:  { n: '글라시아의 서리 비늘', def: 1.0, res: 1.5, from: 'glacia', lore: '얼어붙은 성의 용이 부서지며 남긴 비늘. 마법이 미끄러진다.' },
-    ghost:   { n: '안개 수렁의 수의', def: 0.6, res: 1.3, spd: 0.05, from: 'zone:mire', lore: '망령이 두르고 떠돌던 천. 가볍고, 조금 춥다.' },
-    star:    { n: '별빛 로브', def: 0.75, res: 1.2, x: { eng: { ultUp: 0.5 } }, from: 'zone:spire', lore: '검은 첨탑 꼭대기에서 별을 받아 짠 로브. 입은 이가 부르면 별이 먼저 대답한다.' },
-    clear:   { n: '맑은 샘 로브', def: 0.8, res: 1.25, x: { eng: { immune: { poison: 1, slow: 1 } } }, from: 'zone:desert', lore: '마른 샘이 다시 솟던 날 길어 올린 물로 빨았다. 독도 묶임도 씻겨 나간다.' },
-    well:    { n: '샘솟는 로브', def: 0.75, res: 1.1, mp: 0.3, x: { eng: { mpRegen: 0.008 } }, from: 'zone:isle', lore: '가온 섬 우물지기의 로브. 마를 날이 없다.' }
+    glacia:  { n: '글라시아의 서리 비늘', def: 1.0, res: 1.5, from: 'glacia', lore: '문에 박혔던 서리 쐐기의 비늘. 마법이 미끄러진다. 여름에도 차다.' },
+    ghost:   { n: '안개 수렁의 수의', def: 0.6, res: 1.3, spd: 0.05, from: 'zone:mire', lore: '제 이름을 되찾고 떠난 망령이 두고 간 천. 가볍고, 조금 춥다.' },
+    star:    { n: '별빛 로브', def: 0.75, res: 1.2, x: { eng: { ultUp: 0.5 } }, from: 'zone:spire', lore: '첨탑 꼭대기에서 별빛을 받아 짠 로브. 죽은 별의 빛이라 그런지 빨리 온다.' },
+    clear:   { n: '맑은 샘 로브', def: 0.8, res: 1.25, x: { eng: { immune: { poison: 1, slow: 1 } } }, from: 'zone:desert', lore: '샘이 다시 솟던 날 그 물로 빨았다. 중독도 둔화도 안 묻는다. 물은 셀프.' },
+    well:    { n: '샘솟는 로브', def: 0.75, res: 1.1, mp: 0.3, x: { eng: { mpRegen: 0.008 } }, from: 'zone:isle', lore: '가온 섬 우물지기의 로브. 마를 날이 없다. 판 사람은 못 마신다지만.' }
   }
 };
 DS.UNIQ = UNIQ;
