@@ -18,7 +18,7 @@ var Q = [], cur = null, seenSave = null, tick = 0;
 DS.CINE = { full: 5000, fullMax: 6500, perCh: 28, short: 3500, shortMax: 4200, guard: 700, max: 6, wait: { wed: 1, birth: 1, death: 1, succ: 1, open: 1, fuse: 1, ascend: 1, fallx: 1, wake: 1, reopen: 1, lapse: 1 } };      // 2.2.5: full · short = 저절로 닫히는 것의 시간(ms, 글자마다 perCh 더 · Max 까지) · wait = 누를 때까지 기다리는 종류
 function mode() { var o = G.save && G.save.opt; var m = o && o.cine; return m === 'short' || m === 'off' ? m : 'full'; }
 DS.cineMode = mode;
-var SPR = /^<i class="spr" data-spr="[\w-]+" data-pal="[^"<>&]*" data-px="[\d.]+"( data-flip="1")?><\/i>$/;
+var SPR = /^<i class="spr" data-spr="[\w#=.,-]+" data-pal="[^"<>&]*" data-px="[\d.]+"( data-flip="1")?><\/i>$/;
 function okSpr(x) { return typeof x === 'string' && SPR.test(x) ? x : ''; }
 function okSvg(x) { return typeof x === 'string' && /^<svg[\s>]/.test(x) && !/<script|on\w+=|javascript:/i.test(x) && x.length < 6000 ? x : ''; }
 function str(x, n) { return typeof x === 'string' ? x.slice(0, n || 80) : ''; }
