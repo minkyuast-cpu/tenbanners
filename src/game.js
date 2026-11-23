@@ -226,6 +226,8 @@ function story(lines, cb, who) {
   function castNow(k) { var r = DS.castNow ? DS.castNow(G.save, k) : 0; castNow.r = r || {}; return r ? r.st : 0; }      // 0 본인(또는 아직 합류 전) · 1 후계 · 2 빈자리 (셈은 story.js 의 DS.castNow)
   function castLine(l) {
     if (!l || typeof l !== 'object' || typeof l.t !== 'string') return l;
+    if (l.anc) return l;      // 2.4.0: 선대의 훈수 (story.js storyFit 이 이미 맞췄다)
+    if (l.c && DS.castAnc && DS.CAST_NAME[l.c] && l.gone === undefined && l.no === undefined && DS.castAnc(G.save, l.c)) { if (l.a === '') return null; return { w: DS.ancName(l.c), c: l.c, t: l.a != null ? l.a : l.t, anc: 1 }; }      // 가문이 닫혀 있거나 가주 자리가 비었다 — 그 집 선대가 대신 말한다
     var self = l.c ? castNow(l.c) : 0, r = castNow.r, st = self, t = l.t, w = l.w, c = l.c;
     [].concat(l.of || []).forEach(function (k) { st = Math.max(st, castNow(k)); });
     if (st === 2 && l.gone !== undefined) { if (!l.gone) return null; if (self === 2) return String(l.gone); t = l.gone; }
@@ -250,6 +252,7 @@ function story(lines, cb, who) {
     sp.innerHTML = pic; hydrate(sp);
     box.classList.toggle('talk', obj && !!(l.w || l.c)); box.classList.toggle('pic', !!pic);
     box.classList.toggle('memo', obj && l.w === '전장 메모');      // 이야기 속 목소리가 아니라 조작 안내
+    box.classList.toggle('anc', obj && (!!l.anc || l.w === '선대 단톡방' || /^선대 /.test(l.w || '')));      // 2.4.0: 선대의 훈수 (초상이 바랜다)
     $('.next', o).textContent = (n > 2 ? (i + 1) + ' / ' + n + '  ' : '') + (i >= n - 1 ? '▼ 닫기' : '▼ 눌러서 계속');
   }
   o.addEventListener('click', function (e) {

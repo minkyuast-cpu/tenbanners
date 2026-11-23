@@ -234,8 +234,8 @@ Object.defineProperty(Line.prototype, 'toString', { value: function () {
 } });
 // 열 가문의 가주 열 사람 (이야기 글 안에서만 쓰는 이름 — 화면의 지휘관 이름은 클래스명 그대로다)
 DS.CAST_NAME = { inf: '바우', cav: '우레', fly: '제비', mar: '너울', pike: '서슬', arc: '솔개', cle: '달래', mon: '등불', mag: '슬기', sha: '그믐' };
-var WHO = { memo: ['전장 메모'], hero: ['{hero}', 'hero'], herald: ['어스름에 묶인 먼동', 'herald'], far: ['먼 목소리'], dawn: ['옛 대장 먼동', 'elder_mundong'], flag: ['가문의 목소리'] };
-// say('cle', '…') → 승려 달래, say('belmar', '…') → 보스 이름, say('memo', '…') → 전장 메모
+var WHO = { memo: ['전장 메모'], hero: ['{hero}', 'hero'], herald: ['어스름에 묶인 먼동', 'herald'], far: ['문 안의 목소리'], dawn: ['옛 맹주 먼동', 'elder_mundong'], flag: ['가문의 목소리'], chat: ['선대 단톡방'] };      // chat: 떠난 옛 가주들의 훈수 (2.4.0)
+// say('cle', '…') → 승려 달래, say('belmar', '…') → 보스 이름, say('memo', '…') → 전장 메모, say('chat', '…') → 선대 단톡방
 DS.say = function (who, t) {
   var p = WHO[who];
   if (!p && DS.CAST_NAME[who]) p = [DS.CLASSES[who].name + ' ' + DS.CAST_NAME[who], who];
@@ -246,109 +246,49 @@ DS.say = function (who, t) {
 var say = DS.say;
 
 // ───────── 시나리오 ─────────
-// 1막(1~10) 보수 · 2막(11~20) 열 가문 · 3막(21~30) 맹세
+// 1막(1~10) 물려받은 빚 · 2막(11~20) 지워지는 이름 · 3막(21~30) 넘겨주는 사람들. 도입 · 맺음 글은 story2.js 에 있다 (2.4.0 — 여기에는 판의 틀만)
 function T(id, name, zone, boss, L, layout, theme, mobs, reward, intro, outro) {
   return { id: id, name: name, zone: zone, boss: boss, L: L, layout: layout, theme: theme, mobs: mobs, reward: reward || {}, intro: intro, outro: outro,
            tier: id >= 27 ? 9 : id >= 21 ? 8 : 0, diff: (DS.TUNE && DS.TUNE[id]) || 1 };
 }
 DS.SCENARIOS = [
-  T(1, '무너진 방앗간', 'dawn', 'grok', 2, 'village', 'grass', ['goblin', 'gobArcher'], { items: { herb: 3 } },
-    ['해밀 위쪽 방앗간에 혹부리 그록 패거리가 눌러앉았다.', '마을이 보수를 걸었다. 풋내기 용병대장의 첫 일감이다.'],
-    ['그록이 쓰러지자 패거리는 흩어졌다. 방아가 다시 돈다.', '보수는 적었다. 첫 일감은 원래 그렇다.']),
-  T(2, '늑대골 초소', 'dawn', 'shewolf', 5, 'fort', 'highland', ['wolf', 'goblin', 'gobArcher'], { join: 'cle' },
-    ['북서쪽 늑대골 초소. 잿빛 어미늑대가 무리를 부린다.', '늑대들의 눈빛이 흐리다. 초소 안에 승려 하나가 갇혀 있다고 한다.'],
-    ['창살 안의 승려는 다친 늑대 새끼를 싸매고 있었다.', say('cle', '물린 데부터 봅시다. 늑대는 그다음에요.'), '누렇게 바랜 깃발이 곁에 서자 흰빛이 돌았다. 두 번째 깃발.']),
-  T(3, '끓는 고개', 'windy', 'bargan', 8, 'volcano', 'volcano', ['salamander', 'goblin', 'orc'], { join: 'arc' },
-    ['바람재 남서쪽 끓는 고개. 불목 거인 바르간이 길을 막았다.', '고갯마루 파수막에 사수 하나가 버틴다. 화살이 떨어져 간다.', say('memo', '용암 위에 오래 서 있으면 탄다. 지나가기만 할 것.')],
-    ['파수막의 사수는 화살 세 대를 남기고 있었다.', say('arc', '늦었군. 세 대면 나 혼자서도 됐는데.'), '궁병 솔개. 풀빛이 돌아온 깃발이 세 번째로 섰다.']),
-  T(4, '통행세 다리', 'windy', 'heron', 11, 'shore', 'grass', ['wolf', 'orc', 'harpy'], { join: 'cav' },
-    ['말몰이꾼 헤론이 바람재 다리를 막고 통행세를 걷는다.', '돈이 없어 말을 빼앗긴 기병 하나가 다리목에 앉아 있다.', say('memo', '다리는 좁다. 양옆 여울로 돌아가는 길도 있다.')],
-    ['헤론의 마구간에서 말 한 필이 제 주인을 알아보았다.', say('cav', '빚을 졌군. 갚을 때까지 같이 가지.'), '기병 우레. 금빛 깃발, 네 번째.']),
-  T(5, '울림 바위', 'stone', 'tormak', 15, 'field', 'highland', ['orc', 'harpy', 'gobArcher'], { join: 'mag', alt: 'inf' },
-    ['돌마루 고원 한복판. 뿔거인 토르막이 바위를 쳐 땅을 울린다.', '멀찍이 바위 위에 구경꾼이 하나 앉아 있다. 달아나지도 않는다.', say('memo', '붉게 물든 칸은 곧 내려찍을 자리다. 게이지를 아껴 두었다가 피하라.')],
-    ['토르막이 쓰러지자 바위 위의 구경꾼이 내려왔다.', say('mag', '세 번 내려찍고 한 번 쉬더군요. 다 적어 놨어요.'), '법사 슬기. 보랏빛 깃발이 다섯 번째로 섰다.']),
-  T(6, '빼앗긴 산마을', 'stone', 'pippin', 19, 'village', 'grass', ['goblin', 'gobArcher', 'darkMage'], { join: 'mon' },
-    ['고원 북서쪽 산마을. 요술쟁이 피핀이 사람들을 내쫓고 들어앉았다.', '마을 사당에는 아직 불이 켜져 있다. 누가 지키고 있다.'],
-    ['피핀의 졸개들이 달아났다. 사당의 불은 한 번도 꺼지지 않았다.', say('mon', '불만 지키면 되는 줄 알았습니다. 사람이 먼저더군요.'), '신관 등불. 감빛 깃발, 여섯 번째.']),
-  T(7, '이끼 낀 사당', 'stone', 'twinsnake', 23, 'hall', 'ruins', ['skeleton', 'lizard', 'darkMage'], { join: 'pike' },
-    ['고원 북동쪽 버려진 사당. 머리 둘 달린 구렁이가 똬리를 틀었다.', '문 앞에 창 든 이가 서 있다. 들어가지도 못하고, 떠나지도 않는다.'],
-    ['구렁이가 늘어졌다. 벽화에는 열 깃발과, 깃대를 든 사람이 있다.', say('pike', '지키던 문이 비었군. 다음 문까지 같이 간다.'), '창병 서슬. 옥빛 깃발, 일곱 번째.']),
-  T(8, '해적 부두', 'coast', 'volko', 27, 'shore', 'coast', ['lizard', 'soldier', 'archer'], { items: { endo: 2 } },
-    ['물비늘 해안의 부두를 해적 선장 볼코가 틀어쥐었다.', '가온 섬으로 건너갈 배는 모두 그의 손에 있다.', say('memo', '볼코는 물에 서면 강해진다. 뭍으로 끌어내라.')],
-    ['볼코의 깃발이 내려갔다. 부두의 배들이 닻을 올린다.', '선원들이 수군거렸다. 섬 나루의 돌지기가 요즘 사람을 못 알아본다고.']),
-  T(9, '석상 나루', 'isle', 'warden', 31, 'field', 'coast', ['golem', 'lizard', 'harpy'], { join: 'mar' },
-    ['가온 섬 나루. 길을 지키던 석상 돌지기가 나그네를 치기 시작했다.', '눈에 박힌 푸른 돌이 잿빛으로 바랬다. 뱃사람 하나가 「악!」 소리를 지르며 혼자 맞선다.'],
-    ['돌지기가 주저앉았다. 눈의 돌에 푸른빛이 조금 돌아왔다.', say('mar', '악… 스무 해를 경례했는데. 저 영감, 해병 이름도 잊었다는 것이다.'), '해병 너울. 쪽빛 깃발, 여덟 번째.']),
-  T(10, '달못', 'coast', 'nuri', 35, 'lake', 'lake', ['lizard', 'harpy', 'skelArcher'], { gear: 'sword.oath' },
-    ['해안 북쪽 달못. 못의 정령 누리가 어스름에 빛깔을 잃고 날뛴다.', '이번 일에는 보수를 건 사람이 없다. 그래도 간다.', say('mar', '누리는 길 잃은 배를 뭍까지 밀어 주던 정령이다. 해병은 은인을 패지 않는다. 살살!'), say('memo', '누리도 물에 서면 강해진다. 못 한가운데로 따라 들어가지 말 것.')],
-    ['못이 잔잔해졌다. 누리의 물빛이 돌아왔다.', say('nuri', '빛깔이 빠지니 내 못도 낯설었어요. 북쪽에서 누가 자꾸 불렀고요.'), '물 밑에서 검 한 자루가 떠올랐다. 옛 대장이 돌아오면 찾겠다며 맡긴 검.', '못 건너 어둑한 데서 그림자 하나가 돌아섰다. 빛깔 없는 깃발을 든 채.']),
-  T(11, '마른 샘', 'desert', 'shara', 39, 'oasis', 'desert', ['scorpion', 'mummy', 'skelArcher'], { join: 'fly' },
-    ['붉은 모래 사막의 하나뿐인 샘을 여왕 전갈 샤라가 차지했다.', '샘가 바위에 비병 하나가 내려앉아 있다. 목이 말라 더는 못 난다.'],
-    ['샤라가 모래 속으로 꺼졌다. 샘물이 다시 솟는다.', say('fly', '살았다! 하늘 길은 내가 볼게. 저 활 든 사람만 좀 말려 줘.'), say('arc', '안 쏜다. 아직은.'), '비병 제비. 하늘빛 깃발, 아홉 번째.']),
-  T(12, '왕의 무덤 앞', 'desert', 'tombbeast', 42, 'desert', 'desert', ['scorpion', 'mummy', 'skelArcher'], { items: { herb: 5 } },
-    ['사막 남동쪽, 옛 왕의 무덤. 돌짐승이 문 앞을 지킨다.', '무덤 안에서 밤마다 노랫소리가 샌다. 산 사람의 목소리다.'],
-    ['돌짐승이 부서지고 무덤 문이 열렸다.', '노랫소리는 아래에서 올라온다. 자장가다.']),
-  T(13, '왕의 무덤 속', 'desert', 'king', 45, 'hall', 'tomb', ['mummy', 'skeleton', 'darkMage'], { join: 'sha' },
-    ['무덤 깊은 곳. 잠 못 드는 왕이 관 위에 앉아 있다.', '그 곁에서 사교 하나가 자장가를 부른다. 목이 다 쉬었다.'],
-    ['왕이 누웠다. 사교는 그제야 노래를 그쳤다.', say('sha', '옛 싸움을 본 왕이야. 문 열리는 소리에 깼다더군.'), '사교 그믐. 자줏빛 깃발이 열 번째로 섰다. 열이 모였다.', '모였을 뿐이다. 열을 묶을 깃대는 북쪽 검은 첨탑에 있다.']),
-  T(14, '가라앉은 마을', 'mire', 'mire', 49, 'swamp', 'styx', ['ghost', 'skeleton', 'darkPriest'], { items: { mana: 3 } },
-    ['안개 수렁. 어스름에 맨 먼저 잠긴 마을이다.', '빛깔을 잃은 사람들은 서로를 잊었다. 원혼이 되어서도 못 알아본다.'],
-    ['그림자가 걷혔다. 원혼들이 잠깐 서로를 알아보고 흩어졌다.', say('cle', '못 고치는 것도 있네요. 그래도 알아는 봤으니.')]),
-  T(15, '별 보는 탑', 'mire', 'orbel', 52, 'hall', 'styx', ['darkMage', 'gargoyle', 'darkPriest'], {},
-    ['가라앉은 마을 한복판, 물 위로 탑 하나만 남았다.', '점성술사 오르벨이 별을 읽어 깃발의 자리를 북쪽에 알려 왔다.', say('memo', '하늘에서 돌이 떨어진다. 붉은 칸이 보이면 흩어져라.')],
-    ['탑이 조용해졌다. 별자리 판에 깃발 열 개의 자리가 찍혀 있다.', '북쪽 끝 문 위에도 표시가 하나 있다. 그것만 빛깔이 없다.']),
-  T(16, '까마귀 벌판', 'mire', 'hagen', 55, 'field', 'war', ['darkKnight', 'archer', 'soldier'], {},
-    ['까마귀 벌판. 제국의 사냥꾼 대장 하겐이 군세를 벌여 놓았다.', '오르벨이 짚어 준 깃발을 사냥해 온 자다. 병사들은 제 깃발도 잊었다.'],
-    ['하겐이 쓰러지자 병사들이 멍하니 무기를 내려놓았다.', say('pike', '적이 아니었군. 깃발을 잊은 것뿐이다.'), '벌판에 바람만 남았다. 북쪽으로 망루가 보인다.']),
-  T(17, '구름 위 망루', 'mire', null, 58, 'deck', 'sky', ['harpy', 'gargoyle', 'imp'], { items: { endo: 2, mana: 3 } },
-    ['첨탑으로 가는 길목의 망루. 구름 위로 솟아 있다.', '깃발 열이 한자리에 선 것을 보고 날개 달린 것들이 몰려온다.', say('memo', '보스는 없다. 세 차례 습격을 모두 막아라.')],
-    ['세 번을 막았다. 망루 꼭대기에 열 깃발이 나란히 섰다.', say('fly', '저기 봐. 첨탑 꼭대기에 깃대가 있어. 천이 없는 깃대.')]),
-  T(18, '첨탑 문', 'spire', 'gatekeeper', 61, 'fort', 'nether', ['demon', 'darkMage', 'gargoyle'], {},
-    ['검은 첨탑. 원래 맹세의 깃발을 모시던 깃대탑이다.', '돌 문지기가 문을 막고 섰다. 주인이 바뀐 줄은 모른다.'],
-    ['문지기가 무너지고 문이 열렸다.', say('pike', '누구 문인지도 모르고 지켰군. 문지기가 할 짓이 아니다.')]),
-  T(19, '첨탑 아래층', 'spire', 'basil', 64, 'hall', 'nether', ['demon', 'lizard', 'darkPriest'], {},
-    ['첨탑 아래층. 독니 바실이 계단을 감고 있다.', '벽에 옛 깃발지기들의 이름이 새겨져 있다. 마지막 이름은 벨마르.'],
-    ['독이 걷히고 위층 계단이 드러났다.', say('sha', '깃발지기가 깃대를 팔았다. 탑이 이 꼴인 까닭이지.')]),
-  T(20, '첨탑 꼭대기', 'spire', 'belmar', 68, 'hall', 'palace', ['demon', 'darkKnight', 'imp'], { crest: true },
-    ['첨탑 꼭대기. 깃발지기 벨마르가 천 없는 깃대를 쥐고 있다.', say('belmar', '열 깃발을 묶는 깃대다. 어스름이라고 못 묶겠느냐.'), '그는 깃대를 걸고 어스름과 계약했다. 묶인 쪽은 그였다.'],
-    ['벨마르가 쓰러졌다. 남은 것은 깃대뿐인 깃발, 「맹세의 깃발」.', say('mon', '매듭 자리가 셋입니다. 키가 같은 깃발만 한 매듭에 묶입니다.'), '옛 열 병과는 서둘렀다. 처진 깃발을 둔 채 묶었다.', '모자란 몫은 대장이 문 안에 남아 몸으로 막았다.', say('far', '묶어 오너라. 열을 셋으로. 나도 그렇게 왔다.'), '이번에는 아무도 두고 가지 않는다. 모두가 7단 Lv10에 오를 때까지.', say('memo', '7단 Lv10 가문 셋을 골라 교회에서 합일한다.')]),
-  T(21, '서리 궁', 'ash', 'ilva', 72, 'ice', 'snow', ['iceGolem', 'imp', 'darkPriest'], {},
-    ['잿빛 변경. 문을 지키는 값으로 제국이 여섯 성주에게 내준 땅이다.', '여섯은 영지를 어스름에 넘기고 살아남았다. 첫째, 서리 궁의 일바.', say('memo', '일바의 유혹은 틱 게이지를 비운다. 한꺼번에 다가서지 말 것.')],
-    ['서리 궁이 녹아내린다. 얼음 속에 변경의 깃발이 얼어 있었다.', say('cle', '얼려서라도 붙들고 싶었던 거겠죠. 바래는 것을.')]),
-  T(22, '불가마 성채', 'ash', 'kardan', 74, 'volcano', 'lava', ['salamander', 'demon', 'darkMage'], {},
-    ['둘째 성주, 불가마 성채의 카르단.', '바래는 깃발을 불빛으로 붙들겠다며 영지를 통째로 땠다.', say('memo', '카르단은 용암을 밟아도 타지 않는다. 따라 들어가지 말 것.')],
-    ['불길이 잦아들었다. 탈 것이 더 남지 않았다.', say('cav', '지킬 것을 태워서 지킨다. 셈이 틀렸군.')]),
-  T(23, '썩은 평원', 'ash', 'swarm', 76, 'swamp', 'rot', ['imp', 'demon', 'gargoyle'], {},
-    ['셋째 성주는 이름이 없다. 어스름이 이름부터 지웠다.', '썩은 평원의 것들은 그를 파리 떼의 왕이라 부른다.'],
-    ['파리 떼가 흩어졌다. 왕관 안쪽에 새긴 이름은 닳아서 읽을 수 없다.', say('sha', '이름 없는 망자는 나도 못 부른다. 그게 가장 깊이 죽는 거야.')]),
-  T(24, '협곡 성채', 'ash', 'roen', 77, 'fort', 'canyon', ['darkKnight', 'demon', 'archer'], {},
-    ['넷째 성주, 협곡의 대공 로엔. 여섯 가운데 맨 먼저 깃발을 내렸다.', '싸우지 않고 넘긴 덕에 성도 병사도 멀쩡하다. 빛깔만 없다.'],
-    ['협곡 성채에 깃발이 다시 올랐다. 올린 것은 대공의 병사들이다.', say('arc', '멀쩡한 성이 제일 보기 흉하군.')]),
-  T(25, '역병 성', 'ash', 'morga', 79, 'hall', 'plague', ['skeleton', 'ghost', 'darkPriest', 'demon'], {},
-    ['다섯째 성주, 역병 성의 모르가.', '바래도 서로 알아보게 하겠다며 영지 사람 모두에게 같은 병을 옮겼다.', say('memo', '역병은 부대 전체에 독을 건다. 정화와 치유를 아끼지 말 것.')],
-    ['역병이 물러갔다. 앓던 이들이 서로 얼굴을 살핀다.', say('mon', '같이 앓는 것과 나란히 서는 것은 다릅니다.')]),
-  T(26, '뼈 사막', 'ash', 'bonewyrm', 80, 'desert', 'desert', ['scorpion', 'mummy', 'skelArcher', 'ghost'], { gear: 'lance.wyrm' },
-    ['여섯째 성주는 문에 가장 가까운 땅에서 용을 타고 끝까지 버텼다.', '성주는 간데없다. 용은 뼈만 남아서도 뼈 사막을 지킨다.'],
-    ['뼈용이 주저앉았다. 여섯 성이 모두 비었다.', '용의 갈비 사이에 창 한 자루가 꽂혀 있었다. 여섯째 성주의 창이다.', say('far', '여섯이 다 졌군. 괜찮다. 문은 내가 지킨다. 예전처럼.'), say('mar', '예전처럼? 저 목소리, 문을 지켜 본 적이 있다는 것인가?')]),
-  T(27, '불타는 표석', 'end', 'apostle', 84, 'volcano', 'blood', ['demon', 'salamander', 'darkPriest'], {},
-    ['끝의 땅. 문 앞 표석에 꺼지지 않는 불이 있다.', '옛 대장의 부관이 지킨다. 대장이 돌아올 길을 밝힌다며 켠 불이다.', '기다리다 빛깔을 잃었다. 이제는 아무도 못 지나가게 지킨다.'],
-    ['표석의 불이 꺼졌다. 재 속에 닳은 휘장 하나가 남았다.', say('pike', '기다리는 것과 지키는 것을 헷갈렸군. 남 일 같지 않다.')]),
-  T(28, '얼어붙은 성', 'end', 'glacia', 89, 'ice', 'snow', ['iceGolem', 'ghost', 'darkMage'], {},
-    ['어스름은 옛 용 둘을 깨워 문짝 사이에 쐐기처럼 물려 두었다.', '하나는 서리. 문 오른쪽 얼어붙은 성의 글라시아.', say('memo', '서리 숨결은 넓게 퍼진다. 붉은 칸이 보이면 멀리 흩어져라.')],
-    ['서리용이 부서졌다. 문짝 하나가 삐걱이며 조금 움직였다.', say('fly', '위에서 보니 문짝이 셋이야. 셋을 다 밀어야 닫히겠는데.')]),
-  T(29, '성난 화산', 'end', 'ignar', 94, 'volcano', 'lava', ['salamander', 'demon', 'gargoyle'], {},
-    ['다른 쐐기는 불. 문 왼쪽 화산의 용암용 이그나르.', '이놈만 치우면 문 앞까지 길이 열린다.'],
-    ['화산이 잠들었다. 쐐기 둘이 빠지자 문짝 셋이 모두 풀렸다.', say('sha', '문 안에 한 사람이 서 있다. 죽지 않았어. 살지도 않았고.')]),
-  T(30, '어스름의 문', 'end', 'herald', 99, 'gate', 'nether', ['demon', 'gargoyle', 'ghost', 'darkMage'], {},
-    ['어스름의 문. 세 짝 문 한가운데 사도가 서 있다.', '사당 벽화마다 그려진 얼굴이다. 문을 안에서 닫았던 옛 대장, 먼동.', say('herald', '문은 안에서 닫아야 한다. 이번에는 누가 남겠느냐.'), say('hero', '아무도.'), say('memo', '쓰러뜨려도 끝이 아니다. 문 너머의 것이 따라 나온다.')],
-    ['강철, 바람, 별. 세 깃발이 문짝 하나씩을 맡아 밖에서 밀었다.', '문이 닫혔다. 안에 남은 사람은 없다.', say('dawn', '밖에서도 닫히는 문이었군. 우리는 키를 못 맞췄던 거야.')])
+  T(1, '무너진 방앗간', 'dawn', 'grok', 2, 'village', 'grass', ['goblin', 'gobArcher'], { items: { herb: 3 } }, null, null),
+  T(2, '늑대골 초소', 'dawn', 'shewolf', 5, 'fort', 'highland', ['wolf', 'goblin', 'gobArcher'], { join: 'cle' }, null, null),
+  T(3, '끓는 고개', 'windy', 'bargan', 8, 'volcano', 'volcano', ['salamander', 'goblin', 'orc'], { join: 'arc' }, null, null),
+  T(4, '통행세 다리', 'windy', 'heron', 11, 'shore', 'grass', ['wolf', 'orc', 'harpy'], { join: 'cav' }, null, null),
+  T(5, '울림 바위', 'stone', 'tormak', 15, 'field', 'highland', ['orc', 'harpy', 'gobArcher'], { join: 'mag', alt: 'inf' }, null, null),
+  T(6, '빼앗긴 산마을', 'stone', 'pippin', 19, 'village', 'grass', ['goblin', 'gobArcher', 'darkMage'], { join: 'mon' }, null, null),
+  T(7, '이끼 낀 사당', 'stone', 'twinsnake', 23, 'hall', 'ruins', ['skeleton', 'lizard', 'darkMage'], { join: 'pike' }, null, null),
+  T(8, '해적 부두', 'coast', 'volko', 27, 'shore', 'coast', ['lizard', 'soldier', 'archer'], { items: { endo: 2 } }, null, null),
+  T(9, '석상 나루', 'isle', 'warden', 31, 'field', 'coast', ['golem', 'lizard', 'harpy'], { join: 'mar' }, null, null),
+  T(10, '달못', 'coast', 'nuri', 35, 'lake', 'lake', ['lizard', 'harpy', 'skelArcher'], { gear: 'sword.oath' }, null, null),
+  T(11, '마른 샘', 'desert', 'shara', 39, 'oasis', 'desert', ['scorpion', 'mummy', 'skelArcher'], { join: 'fly' }, null, null),
+  T(12, '왕의 무덤 앞', 'desert', 'tombbeast', 42, 'desert', 'desert', ['scorpion', 'mummy', 'skelArcher'], { items: { herb: 5 } }, null, null),
+  T(13, '왕의 무덤 속', 'desert', 'king', 45, 'hall', 'tomb', ['mummy', 'skeleton', 'darkMage'], { join: 'sha' }, null, null),
+  T(14, '가라앉은 마을', 'mire', 'mire', 49, 'swamp', 'styx', ['ghost', 'skeleton', 'darkPriest'], { items: { mana: 3 } }, null, null),
+  T(15, '별 보는 탑', 'mire', 'orbel', 52, 'hall', 'styx', ['darkMage', 'gargoyle', 'darkPriest'], {}, null, null),
+  T(16, '까마귀 벌판', 'mire', 'hagen', 55, 'field', 'war', ['darkKnight', 'archer', 'soldier'], {}, null, null),
+  T(17, '구름 위 망루', 'mire', null, 58, 'deck', 'sky', ['harpy', 'gargoyle', 'imp'], { items: { endo: 2, mana: 3 } }, null, null),
+  T(18, '첨탑 문', 'spire', 'gatekeeper', 61, 'fort', 'nether', ['demon', 'darkMage', 'gargoyle'], {}, null, null),
+  T(19, '첨탑 아래층', 'spire', 'basil', 64, 'hall', 'nether', ['demon', 'lizard', 'darkPriest'], {}, null, null),
+  T(20, '첨탑 꼭대기', 'spire', 'belmar', 68, 'hall', 'palace', ['demon', 'darkKnight', 'imp'], { crest: true }, null, null),
+  T(21, '서리 궁', 'ash', 'ilva', 72, 'ice', 'snow', ['iceGolem', 'imp', 'darkPriest'], {}, null, null),
+  T(22, '불가마 성채', 'ash', 'kardan', 74, 'volcano', 'lava', ['salamander', 'demon', 'darkMage'], {}, null, null),
+  T(23, '썩은 평원', 'ash', 'swarm', 76, 'swamp', 'rot', ['imp', 'demon', 'gargoyle'], {}, null, null),
+  T(24, '협곡 성채', 'ash', 'roen', 77, 'fort', 'canyon', ['darkKnight', 'demon', 'archer'], {}, null, null),
+  T(25, '역병 성', 'ash', 'morga', 79, 'hall', 'plague', ['skeleton', 'ghost', 'darkPriest', 'demon'], {}, null, null),
+  T(26, '뼈 사막', 'ash', 'bonewyrm', 80, 'desert', 'desert', ['scorpion', 'mummy', 'skelArcher', 'ghost'], { gear: 'lance.wyrm' }, null, null),
+  T(27, '불타는 표석', 'end', 'apostle', 84, 'volcano', 'blood', ['demon', 'salamander', 'darkPriest'], {}, null, null),
+  T(28, '얼어붙은 성', 'end', 'glacia', 89, 'ice', 'snow', ['iceGolem', 'ghost', 'darkMage'], {}, null, null),
+  T(29, '성난 화산', 'end', 'ignar', 94, 'volcano', 'lava', ['salamander', 'demon', 'gargoyle'], {}, null, null),
+  T(30, '어스름의 문', 'end', 'herald', 99, 'gate', 'nether', ['demon', 'gargoyle', 'ghost', 'darkMage'], {}, null, null)
 ];
 DS.scn = function (id) { return DS.SCENARIOS[id - 1]; };
 DS.nextScn = function (save) { for (var i = 0; i < DS.SCENARIOS.length; i++) if (!save.cleared[DS.SCENARIOS[i].id]) return DS.SCENARIOS[i]; return null; };
 // 5번은 주인공의 병과에 따라 합류하는 이가 다르다 (보상의 join / alt). 규칙은 그대로 두고, 맺음 글만 맞는 쪽을 내준다.
 (function (s) {
   var base = s.outro;
-  s.outroAlt = ['토르막이 쓰러지자 바위 위의 구경꾼이 내려왔다.', say('inf', '법사가 맨 앞에 서다니. 보다 못해 내려왔다.'), '보병 바우. 푸른 깃발이 다섯 번째로 섰다.'];
+  s.outroAlt = null;      // 글은 story2.js 가 준다 (story.js setScn 이 같은 셈으로 다시 건다)
   Object.defineProperty(s, 'outro', { enumerable: true, configurable: true, get: function () {
     var sv = DS.G && DS.G.save, h = sv && sv.chars && sv.chars[sv.hero], C = h && DS.CLASSES[h.cls], J = DS.CLASSES[s.reward.join];
     return C && J && s.reward.alt && (h.cls === s.reward.join || (C.master && C.fam === J.fam)) ? s.outroAlt : base;

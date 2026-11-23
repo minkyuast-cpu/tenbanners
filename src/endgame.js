@@ -146,7 +146,7 @@ function memLines(m) {
 DS.egMemText = memLines;
 // ── 4.0 돌아온 어스름의 왕 (30번 맺음의 탈출 뒤) — 대마다 30번 도입 끝에, 이 대에 떠난 우리 사람의 이름을 쥐고 문 앞에 앉아 있다 ──
 // 글은 lore.js gen.king (벌은 대수로 돌아가며). 이름 = 이 장을 연 뒤(스무 해 + 이 장의 싸움) 떠난 이, 장을 닫는 낭독(egCloseLines)과 같은 셈. 먼동의 말은 3대째까지, 그 뒤는 대장이 잇는다.
-var SPK = { '옛 대장 먼동': 'elder_mundong', '어스름의 왕': 'duskking' };
+var SPK = { '옛 맹주 먼동': 'elder_mundong', '옛 대장 먼동': 'elder_mundong', '어스름의 왕': 'duskking' };
 function erNames(s, g) { var r = s && s.erLast; return r && r.g === g - 1 && r.names && r.names.length ? r.names.slice() : []; }      // r24: 지난 대 30번에서 왕이 쥐고 간 이름
 function goneNames(s, g) {
   var e = E(s), P = LP(s), t0 = e.t0 || 0, seen = {}, out = [];

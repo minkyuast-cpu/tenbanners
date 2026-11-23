@@ -1,5 +1,5 @@
-// 전민 戰民, 열 가문의 시대 — 이야기 적용기 (r7 「가문의 부흥」, 경전 개정 6)
-// 세 팀의 글(src/story_a.js · story_b.js · story_c.js)이 쌓은 DS.STORY_PATCH 를 lore 다음에 차례로 덮어쓴다. 규칙은 바꾸지 않는다.
+// 전민 戰民, 열 가문의 시대 — 이야기 적용기 (2.4.0 「삶은 후계로 계승된다」 — docs/STORY_BIBLE_2.4.md)
+// 이야기 글(src/story2.js)이 쌓은 DS.STORY_PATCH 를 lore 다음에 덮어쓴다. 규칙은 바꾸지 않는다.
 //
 // 패치 모양:  DS.STORY_PATCH = (DS.STORY_PATCH || []).concat([{ scn: { 3: { intro: [...], outro: [...] } }, lore: { 'boss.grok.say': '…' } }]);
 //   scn  — 시나리오 번호 → { intro, outro, outroAlt }. 줄은 world.js 와 같다: 문자열(지문) 또는 { w: 화자, t: 글 }.
@@ -13,7 +13,10 @@
 //          w 없이 { t, of, heir, gone } 이면 지문이다. 화자 칸은 후계가 이었을 때 지금 그 사람의 이름으로 바뀐다(game.js story()).
 //   엔딩: 'ending' 배열에 '{fallen}' 한 줄을 넣으면 그 자리에 이번 판에 쓰러진 이의 수를 읽은 줄이 들어간다(글은 'endingFallen' — some(n, 추모 기록)).
 //   4.0: 줄에 { no, ab } — 그 집 사람이 이 판에 없을 때(㉑ 대장이 그 집 병과)의 글과, 지문이 기대는 사람 키. DS.storyFit 이 시나리오·맺음·막간 줄을 화면에 넘기기 전에 맞춘다.
-// 늦게 오는 패치가 앞의 것을 덮는다 (build.js 순서: story_a → story_b → story_c → story).
+//   2.4.0: 가문의 목소리는 물려받는다 — 화자가 열 가문 배역(c)인데 그 가문이 아직 닫혀 있거나, 맹주 자신의 가문이거나, 가주 자리가 비었으면
+//          그 줄은 「선대 ○○」(삼백 년 전 그 집 가주)의 훈수로 뜬다. 글은 줄의 a (없으면 t 그대로, 빈 글이면 뺀다). 가문이 열려 있으면 지금 가주가 t 를 말한다. (DS.castAnc)
+//          글 속의 {prev} 는 바로 앞 맹주의 이름 — 대를 이은 적이 없으면 그 줄은 뺀다.
+// 늦게 오는 패치가 앞의 것을 덮는다 (build.js 순서: story2 → story).
 var DS = globalThis.DS = globalThis.DS || {};
 // r51 (2.1.0) 대체 함수: 연맹의 이름(「펜드래곤 연맹」의 「펜드래곤」). 게임 쪽에 DS.allyName 이 아직 없을 때만 쓴다.
 DS.allyName = DS.allyName || function (s) { return String(DS.houseName ? DS.houseName(s) : '').replace(/ 가문$/, ''); };
@@ -73,15 +76,30 @@ DS.castAbsent = function (s, k) {
   var P = (s.lin && s.lin.P) || {}; for (var id in P) if (P[id] && P[id].cast === k) return false;
   return true;
 };      // 막간의 need 에 쓴다: 본인이 살아 있을 때만 여는 막간
+// 2.4.0 가문의 목소리가 선대에게서 오는가: 그 가문이 아직 닫혀 있다(아무도 없다) · 맹주 자신의 가문이다 · 가주 자리가 비었다(잠든 가문도)
+DS.castAnc = function (s, k) {
+  if (!s || !s.chars || !DS.CAST_NAME || !DS.CAST_NAME[k]) return false;
+  if (DS.castHero(s) === k) return false;      // 그 배역 본인이 맹주가 되었다 (옛 저장) — 맹주의 입으로 (meFit)
+  var r = DS.castNow(s, k);
+  if (!r) return !(s.mercs || []).some(function (m) { return m.cast === k; });
+  return r.st === 2;
+};
+DS.ancName = function (k) { return '선대 ' + ((DS.CAST_NAME && DS.CAST_NAME[k]) || ''); };
+// 바로 앞 맹주의 이름 ('' = 대를 이은 적이 없다). 가문 기록의 마지막 후계 줄에서 읽는다 (저장은 읽기만)
+DS.storyPrev = function (s) {
+  var lg = s && s.lin && s.lin.log, P = s && s.lin && s.lin.P; if (!lg || !P) return '';
+  for (var i = lg.length - 1; i >= 0; i--) { var e = lg[i]; if (e && (e.t === 'heir' || e.t === 'lapse') && e.b && P[e.b]) { var n = ''; try { n = DS.linName(s, e.b); } catch (x) { n = ''; } if (n && n !== '누군가') return n; } }
+  return '';
+};
 if (!DS.LORE) return;
 var own = function (o, k) { return o != null && Object.prototype.hasOwnProperty.call(o, k); };
 
 // ───────── 엔딩의 용병 줄 (lore.js 의 게터와 같은 셈 — 글만 바꿔 끼울 수 있게 칸을 둔다) ─────────
-var FALLEN_TOKEN = '{fallen}', FALLEN_OLD = '쓰러진 용병들의 이름은 깃대에 새겼다. 보수로 왔다가 맹세로 남은 이들이다.';      // lore.js 의 옛 줄(찾는 표식) — 화면에는 아래 base 가 뜬다
+var FALLEN_TOKEN = '{fallen}', FALLEN_OLD = '쓰러진 이들의 이름은 깃대에 새겼다. 한 줄도 건너뛰지 않았다.';      // 글은 story2.js 의 'endingFallen.*' 이 덮는다
 Object.defineProperty(DS.LORE, 'endingFallen', { writable: true, configurable: true, enumerable: false, value: {      // 글 점검(v_text)이 엔딩 줄과 겹친다고 세지 않게 숨긴 칸
-  base: '쓰러진 이들의 이름은 깃대에 새겼다. 한 사람도 빼지 않았다.',
+  base: FALLEN_OLD,
   none: '한 사람도 잃지 않았다. 모두 같이 돌아왔다.',
-  some: function (n) { return '쓰러진 이 ' + n + '명의 이름을 깃대에 새겼다. 한 사람도 빼지 않았다.'; }
+  some: function (n) { return '쓰러진 이 ' + n + '명의 이름을 깃대에 새겼다. 한 줄도 건너뛰지 않았다.'; }
 } });
 
 // ───────── 줄 다듬기 ─────────
@@ -91,7 +109,7 @@ Object.keys(DS.BOSSES || {}).forEach(function (k) { if (DS.BOSSES[k].name) REV[D
 var LINE = Object.getPrototypeOf(DS.say('memo', ''));
 function isKey(k) { if (typeof k !== 'string' || !k) return false; var l = DS.say(k, ''); return l.w !== k || !!l.c; }
 // r8: 화자의 사망·후계에 따라 갈리는 글 — heir(자리를 이은 이가 있을 때) · gone(방금 쓰러져 빈자리일 때) · of(그 줄이 기대는 사람 키). 읽는 쪽은 game.js 의 story()
-function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
+function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er', 'a'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
 function toLine(x) {
   if (x == null || typeof x !== 'object' || typeof x.t !== 'string' || 'lines' in x) return x;
   if (x.s && isKey(x.s)) return keep(DS.say(x.s, x.t), x);
@@ -217,7 +235,7 @@ function subHero(t, hn) { return hn && typeof t === 'string' ? t.replace(/\{hero
 function cpLine(l, hn) {
   if (!l || typeof l !== 'object' || typeof l.t !== 'string' || !hn) return l;
   var o = Object.create(Object.getPrototypeOf(l)); Object.keys(l).forEach(function (k) { o[k] = l[k]; });
-  ['t', 'heir', 'gone'].forEach(function (k) { if (typeof o[k] === 'string') o[k] = subHero(o[k], hn); });
+  ['t', 'heir', 'gone', 'a'].forEach(function (k) { if (typeof o[k] === 'string') o[k] = subHero(o[k], hn); });
   return o;
 }
 function keysOf(l) { var a = []; if (l.c && DS.CAST_NAME[l.c]) a.push(l.c); if (l.ab) a = a.concat(l.ab); if (l.of) a = a.concat(l.of); return a; }
@@ -260,11 +278,25 @@ DS.storyFit = function (lines, sv) {
   if (!Array.isArray(lines) || !sv || !sv.chars) return lines;
   var hn = heroNow(sv), out = [], K = DS.castHero(sv);
   if (K) { HV = ''; try { HV = DS.charName(sv.chars[sv.hero], sv); } catch (x) { HV = ''; } }
+  var pv = null;      // 2.4.0 {prev}: 바로 앞 맹주의 이름 (처음 쓸 때 한 번 읽는다)
+  function prevOf() { if (pv == null) { try { pv = DS.storyPrev(sv) || ''; } catch (x) { pv = ''; } } return pv; }
+  function hasPrev(l) { return typeof l === 'string' ? l.indexOf('{prev}') >= 0 : !!l && typeof l === 'object' && ['w', 't', 'a', 'heir', 'gone'].some(function (k) { return typeof l[k] === 'string' && l[k].indexOf('{prev}') >= 0; }); }
+  function subPrev(l) {
+    var n = prevOf(), f = function (t) { return t.replace(/\{prev\}/g, n); };
+    if (typeof l === 'string') return f(l);
+    var o = Object.create(Object.getPrototypeOf(l)); Object.keys(l).forEach(function (k) { o[k] = typeof l[k] === 'string' && k !== 'c' ? f(l[k]) : l[k]; });
+    return o;
+  }
   lines.forEach(function (l) {
     if (l && typeof l === 'object' && l.er !== undefined && erNow(sv)) { if (!l.er) return; l = toLine(l.er); }
     if (l && typeof l === 'object' && l.need && !DS.castHere(sv, l.need)) return;
+    if (hasPrev(l)) { if (!prevOf()) return; l = subPrev(l); }
     if (typeof l === 'string') { if (!(K && twoOf(l, K))) out.push(subHero(l, hn)); return; }
     if (!l || typeof l !== 'object' || typeof l.t !== 'string') { out.push(l); return; }
+    if (l.c && DS.CAST_NAME[l.c] && l.gone === undefined && l.no === undefined && DS.castAnc(sv, l.c)) {      // 2.4.0: 선대의 훈수로
+      if (l.a === '') return;
+      var an = Object.create(LINE); an.w = DS.ancName(l.c); an.c = l.c; an.t = subHero(l.a != null ? l.a : l.t, hn); an.anc = 1; out.push(an); return;
+    }
     if (K && meFit(l, K, hn, out)) return;
     var gone = keysOf(l).filter(function (k) { return DS.castAbsent(sv, k); });
     if (!gone.length) { out.push(cpLine(l, hn)); return; }
@@ -278,7 +310,7 @@ DS.storyFit = function (lines, sv) {
 };
 DS.storyCastOK = function (lines, sv) {      // 막간: 이 판에 없는 사람이 말하는 막간은 열지 않는다 (주고받는 말이 반쪽이 되지 않게)
   sv = sv || (DS.G && DS.G.save); if (!sv || !Array.isArray(lines)) return true;
-  if (lines.some(function (l) { return l && typeof l === 'object' && l.c && DS.CAST_NAME[l.c] && DS.castAbsent(sv, l.c); })) return false;
+  if (lines.some(function (l) { return l && typeof l === 'object' && l.c && DS.CAST_NAME[l.c] && DS.castAbsent(sv, l.c) && (l.gone !== undefined || l.no !== undefined); })) return false;      // 2.4.0: 그 밖의 줄은 선대가 대신 말한다
   var K = DS.castHero(sv);      // r22: 대장이 된 아홉과 대장이 주고받는 막간은 열지 않는다 (한 사람이 제게 말을 걸지 않게)
   return !(K && lines.some(function (l) { return l && l.c === K && l.me === undefined; }) && lines.some(function (l) { return l && l.c === 'hero'; }));
 };
@@ -289,12 +321,6 @@ DS.storyCastOK = function (lines, sv) {      // 막간: 이 판에 없는 사람
     Object.defineProperty(sc, k, { enumerable: true, configurable: true, get: function () { return DS.storyFit(get.call(sc)); }, set: set || undefined });
   });
 });
-// 보병 바우의 합류 말은 법사 대장을 보고 하는 말이다 — 대장이 법사가 아니면(㉑ 옛 시대에서 온 대장) 다른 말로
-(function () {
-  var c = DS.LORE.cast && DS.LORE.cast.inf, d = c && Object.getOwnPropertyDescriptor(c, 'join'); if (!d || !('value' in d) || !d.configurable) return;
-  var v = d.value, alt = '로저스 가문은 앞에 선다. 앞자리는 내가 맡지.';
-  Object.defineProperty(c, 'join', { enumerable: true, configurable: true, get: function () { var sv = DS.G && DS.G.save, h = sv && sv.chars && sv.chars[sv.hero]; return h && h.cls !== 'mag' ? alt : v; }, set: function (x) { v = x; } });
-})();
 // 다음 세대의 장: 30번의 두 얼굴은 대마다 다르게 말한다 (boss.herald · boss.duskking 의 say/last 에 genSay 배열을 주면 2대째부터 그것을 — 대수에 따라 돌아가며)
 (function () {
   var G2 = DS.STORY_BOSSGEN || {};
@@ -320,10 +346,10 @@ DS.storyCastOK = function (lines, sv) {      // 막간: 이 판에 없는 사람
   });
 })();
 
-// r8: 7단 승급 창의 한마디(cast.t7)는 그 사람 본인의 말이다 — 숨을 거두어 후계가 그 깃발을 들었으면 내주지 않는다(ui.js showPromo 는 빈 글이면 그 줄을 뺀다). 글 자체는 그대로 둔다.
+// 2.4.0: 7단 승급 창의 한마디(cast.t7)는 그 가문 선대의 훈수다 — 그 배역 본인이 살아서 곁에 있는 옛 저장에서는 내주지 않는다(ui.js showPromo 는 빈 글이면 그 줄을 뺀다).
 Object.keys((DS.LORE && DS.LORE.cast) || {}).forEach(function (k) {
   var c = DS.LORE.cast[k], d = c && Object.getOwnPropertyDescriptor(c, 't7'); if (!d || !('value' in d) || !d.configurable) return;
   var v = d.value;
-  Object.defineProperty(c, 't7', { enumerable: true, configurable: true, get: function () { var sv = DS.G && DS.G.save; return sv && !DS.castOrig(sv, k) ? '' : v; }, set: function (x) { v = x; } });
+  Object.defineProperty(c, 't7', { enumerable: true, configurable: true, get: function () { var sv = DS.G && DS.G.save; return sv && DS.castHere && DS.castHere(sv, k) ? '' : v; }, set: function (x) { v = x; } });
 });
 })();
