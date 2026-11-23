@@ -215,8 +215,8 @@ function speakerSpr(c) {
   if (DS.SPR && DS.SPR[c]) return sprTag(c, '', 2);      // 이야기 전용 인물 그림 (예: 옛 대장 먼동 elder_mundong)
   return '';
 }
-function story(lines, cb, who) {
-  if (lines && !(lines instanceof Array)) lines = [lines];
+// 줄을 지금 판에 맞춘다 (화자가 지금도 그 사람인가 · 선대의 훈수). 이야기 창과 시험(tools/t_story.js)이 같은 것을 쓴다.
+function storyLines(lines) {
   // r8 이야기: 화자가 지금도 그 사람인가. 깃발을 든 열 사람과 가주(줄의 c, 그리고 그 줄이 기대는 사람 of)가 숨을 거두었으면 본인 목소리로 띄우지 않는다.
   //   자리를 이은 이가 있다(heir) — 화자 칸은 지금 그 사람의 화면 이름, 글은 줄의 heir 칸(없으면 그대로, 빈 글이면 그 줄을 건너뛴다)
   //   방금 쓰러져 아직 빈자리다(gone) — 줄의 gone 칸을 띄운다(화자 본인이 쓰러졌으면 지문으로). gone 칸이 없고 화자 본인이면 건너뛴다
@@ -238,7 +238,15 @@ function story(lines, cb, who) {
     if (c === 'hero') { var hc = G.save && G.save.chars[G.save.hero]; c = hc ? hc.cls : ''; }
     return w === l.w && c === l.c && t === l.t ? l : { w: w, c: c, t: t };
   }
-  if (lines) { try { lines = lines.map(castLine).filter(function (l) { return l != null; }); } catch (x) {} }
+  return lines.map(castLine).filter(function (l) { return l != null; });
+}
+DS.storyResolve = function (lines) {      // 화면에 뜨는 그대로: [{ w, c, t }] ({hero} 까지 채운 글)
+  if (lines && !(lines instanceof Array)) lines = [lines];
+  return storyLines(lines || []).map(function (l) { var o = !!l && typeof l === 'object'; return { w: o && l.w ? fill(l.w) : '', c: (o && l.c) || '', t: lineText(l), anc: !!(o && l.anc) }; });
+};
+function story(lines, cb, who) {
+  if (lines && !(lines instanceof Array)) lines = [lines];
+  if (lines) { try { lines = storyLines(lines); } catch (x) {} }
   if (!lines || !lines.length) { if (cb) cb(); return; }
   var i = 0, done = false, n = lines.length;
   var o = overlay('<div class="story-box"><span class="sp"></span><p class="who"></p><p class="line"></p>' + (n > 2 ? '<button class="skip">건너뛰기 ▸▸</button>' : '') + '<span class="next"></span></div>', 'story modal');

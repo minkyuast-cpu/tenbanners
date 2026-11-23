@@ -18,19 +18,28 @@ used = set()
 for f in glob.glob(os.path.join(root, 'src', '*.js')) + glob.glob(os.path.join(root, 'src', '*.css')):
     used |= {ord(c) for c in open(f, encoding='utf8').read() if ord(c) > 0x20}
 
+import shutil, filecmp
+twin = filecmp.cmp(os.path.join(root, 'fonts', 'TBBodyB-SemiBold.woff2'), os.path.join(root, 'fonts', 'TBTitleB-SemiBold.woff2'), shallow=False)      # 제목 글꼴이 본문 굵은 글꼴과 같은 파일이었으면 그대로 같게
 for out_name, src_name in JOBS:
     out_path = os.path.join(root, 'fonts', out_name + '.woff2')
+    if twin and out_name == 'TBTitleB-SemiBold':
+        shutil.copyfile(os.path.join(root, 'fonts', 'TBBodyB-SemiBold.woff2'), out_path); print(out_name + ': TBBodyB-SemiBold 와 같은 파일'); continue
     old = TTFont(out_path)
     full_path = os.path.join(src_dir, src_name)
     full = TTFont(full_path)
     fc = full.getBestCmap()
     keep = set(old.getBestCmap().keys()) | {u for u in used if u in fc}
+    feats = set()          # 글꼴 기능은 지금 파일에 있던 것만 (locl · tnum …) — 크기를 그대로
+    for tb in ('GSUB', 'GPOS'):
+        if tb in old and old[tb].table.FeatureList:
+            feats |= {fr.FeatureTag for fr in old[tb].table.FeatureList.FeatureRecord}
     opt = subset.Options()
-    opt.layout_features = ['*']
+    opt.layout_features = sorted(feats) or ['locl']
     opt.name_IDs = ['*']
     opt.name_languages = ['*']
     opt.notdef_outline = True
     opt.glyph_names = False
+    opt.desubroutinize = True          # 지금 파일과 같은 꼴 (크기가 가장 작다)
     opt.flavor = 'woff2'
     f = TTFont(full_path)
     s = subset.Subsetter(opt)

@@ -18,7 +18,7 @@ var BLOCK = { M: 1, w: 1, '#': 1, H: 1, p: 1, F: 1, v: 1, L: 0 };
 // npcs = 마을 사람의 기본 대사. 진행에 따라 바뀌는 대사는 lore.js 의 DS.LORE.npc 가 내준다
 DS.ZONES = {
   haemil: { name: '해밀', town: true, theme: 'grass', gear: [1, 2], exits: [{ side: 'N', to: 'dawn' }],
-    npcs: ['들판 한복판 방앗간에 그록 패거리가 눌러앉았다네. 마을이 보수를 걸었지.', '처음엔 다들 보수로 오지요. 어느 집 가솔이 되고 나면 얼굴이 달라지더군요.', '싸움이 끝나도 상처는 저절로 안 나아요. 약초를 챙기거나 교회에 들르세요.'] },
+    npcs: ['들판 한복판 방앗간에 그록 패거리가 눌러앉았다네. 전세 계약서가 있다나.', '맹주 자리를 물려받으셨다면서요. 빚도 같이 왔다던데… 힘내세요.', '싸움이 끝나도 상처는 저절로 안 나아요. 약초를 챙기거나 교회에 들르세요.'] },
   dawn: { name: '새벽 들판', theme: 'grass', w: 32, h: 34, seed: 11, L: [1, 9], mobs: ['slime', 'goblin', 'gobArcher', 'wolf'],
     exits: [{ side: 'S', at: 0.5, to: 'haemil' }, { side: 'E', at: 0.35, to: 'windy' }],
     gates: [{ ids: [1], fx: 0.5, fy: 0.5, icon: 'village' }, { ids: [2], fx: 0.2, fy: 0.22, icon: 'fort' }],
@@ -32,7 +32,7 @@ DS.ZONES = {
     gates: [{ ids: [5], fx: 0.52, fy: 0.62, icon: 'camp' }, { ids: [6], fx: 0.25, fy: 0.2, icon: 'village' }, { ids: [7], fx: 0.8, fy: 0.2, icon: 'temple' }, { dungeon: true, fx: 0.82, fy: 0.8, icon: 'cave' }],
     terr: { forest: 0.68, hill: 0.6, water: 0.84, mount: 0.76 } },
   dodam: { name: '도담', town: true, theme: 'highland', gear: [3, 5], exits: [{ side: 'E', to: 'stone' }],
-    npcs: ['고원 북서쪽 산마을을 요술쟁이가 차지했다네. 사당 불은 아직 켜져 있다지.', '바닥 없는 갱도는 5단은 돼야 들여보냅죠. 층마다 돌 파수꾼이 섰습니다.', '신관이 4단 세이지가 되면 「신속」을 익혀요. 그때부터 싸움이 달라져요.'] },
+    npcs: ['고원 북서쪽 산마을이 통째로 요술쟁이 것이 됐다네. 다들 약관을 안 읽었다지.', '바닥 없는 갱도는 5단은 돼야 들여보냅죠. 층마다 돌 파수꾼이 섰습니다.', '카마도 가문 사람은 4단에 오르면 「신속」을 익혀요. 그때부터 싸움이 달라져요.'] },
   coast: { name: '물비늘 해안', theme: 'coast', w: 36, h: 34, seed: 53, L: [25, 36], mobs: ['lizard', 'harpy', 'skelArcher', 'soldier', 'archer'],
     exits: [{ side: 'W', at: 0.45, to: 'stone' }, { side: 'S', at: 0.35, to: 'isle' }, { side: 'E', at: 0.5, to: 'desert' }],
     gates: [{ ids: [8], fx: 0.36, fy: 0.72, icon: 'port' }, { ids: [10], fx: 0.6, fy: 0.2, icon: 'lake' }],
@@ -42,7 +42,7 @@ DS.ZONES = {
     gates: [{ ids: [9], fx: 0.42, fy: 0.26, icon: 'statue' }], border: 'w',
     terr: { forest: 0.62, hill: 0.7, water: 0.74, mount: 0.84 } },
   gaon: { name: '가온', town: true, theme: 'coast', gear: [6, 10], special: true, exits: [{ side: 'N', to: 'isle' }],
-    npcs: ['북쪽 하늘을 보게. 저 저녁은 밤이 돼도 안 걷히네. 문이 열려 있다는 뜻일세.', '가온은 6단이 넘은 이만 받습죠. 문 가까이서 싸울 사람만 온다는 뜻입니다.', '7단 Lv10 가주 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 세 집은 서로 달라야 해요.'] },
+    npcs: ['북쪽 하늘을 보게. 저 저녁은 밤이 돼도 안 걷히네. 먼동이 아직 퇴근을 못 했다는 뜻일세.', '가온은 6단은 된 이만 받아요. 문 가까이서 싸울 사람만 온다는 뜻이에요.', '7단 Lv10 가주 셋과 맹세의 깃대가 있으면 교회에서 합일해요. 셋은 서로 다른 가문이어야 해요.'] },
   desert: { name: '붉은 모래 사막', theme: 'desert', base: 'd', w: 36, h: 32, seed: 71, L: [36, 47], mobs: ['scorpion', 'mummy', 'skeleton', 'skelArcher', 'darkMage'],
     exits: [{ side: 'W', at: 0.5, to: 'coast' }, { side: 'E', at: 0.4, to: 'mire' }],
     gates: [{ ids: [11], fx: 0.3, fy: 0.3, icon: 'oasis' }, { ids: [12, 13], fx: 0.62, fy: 0.68, icon: 'pyramid' }],

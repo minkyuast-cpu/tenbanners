@@ -1348,8 +1348,7 @@ DS.showResult = function (s, out, cb) {
     var after = function () { done(); };
     if (s.id === DS.SCENARIOS.length && out.first) {
       DS.Audio.bgm('ending');
-      var end = LORE().ending && LORE().ending.length ? LORE().ending : ['어스름의 문이 닫히자 북쪽 하늘이 처음으로 맑게 개었다.', '열 가문은 세 개의 큰 가문이 되어 한 곳에 섰다. 풋내기 용병대장의 이야기는 여기까지.',
-        '끝까지 함께해 주셔서 고맙습니다. 바닥 없는 갱도와 지난 시나리오는 계속 열려 있습니다.'];
+      var end = LORE().ending && LORE().ending.length ? LORE().ending : ['문이 닫혔다. 북쪽 하늘이 걷혔다.', '여기까지 함께해 주셔서 고맙습니다. 다음 대에서 또 뵙겠습니다.'];      // 글은 story2.js
       story(end, function () { DS.showRecord(after, true); }, '엔딩');
       return;
     }
@@ -3349,7 +3348,7 @@ function renderTitle() {
   var arch = !s && DS.Save.archNote && DS.Save.archNote();      // r42: 처음 한 번 「새 시대가 열렸다」 (옛 저장은 보관만 한다)
   el.innerHTML = '<div class="title-top pad">' +
     '<h1 class="logo" aria-label="전민 ' + (passed ? '傳民' : '戰民') + '"><span class="lg-ko" data-t="전민">전민</span><span class="lg-han' + (passed ? ' passed' : '') + '">' + (passed ? '傳民' : '戰民') + '</span></h1>' +
-    '<p class="logo-sub">열 가문의 시대</p>' + (passed ? '<p class="logo-gloss">싸우던 백성이 이제 전하는 백성이 되었다</p>' : '') + '</div>' +
+    '<p class="logo-sub">열 가문의 시대</p>' + (passed ? '<p class="logo-gloss">싸우던 사람들이 이제 전하는 사람이 되었다</p>' : '<p class="logo-gloss">삶은 후계로 계승된다</p>') + '</div>' +
     '<div class="title-art"><canvas class="px" width="180" height="80"></canvas></div>' +
     '<div class="title-bottom pad">' +
     (nv ? '<p class="welcome warnbox"><b>' + esc(DS.NEWER_MSG) + '.</b> 이 기기의 저장은 더 최신 버전(' + nv + ')이라 읽지 않고 그대로 둡니다.</p><button class="btn gold wide" id="btnReload">새로 고침</button>' : '') +
@@ -3495,9 +3494,7 @@ function newGame(hasSave, r) {
     DS.startGame();
     // 도입: 시나리오팀의 글(LORE.prologue, 회귀자는 prologueR)이 있으면 그것으로 — 마지막 줄이 조작 안내다. 없으면 예전 문장
     var L0 = LORE(), lore = r && L0.prologueR && L0.prologueR.length ? L0.prologueR : L0.prologue;
-    var pro = lore && lore.length ? lore : ['옛날, 열 가문이 세상을 덮치던 「어스름」을 막아 냈다.', '세월이 흘러 가문은 흩어지고, 북쪽 하늘이 다시 어스름하게 물든다.',
-      r ? '그대는 해밀 마을의 용병대장. 어쩐지 이 길이 처음이 아닌 것만 같다.' : '그대는 해밀 마을의 풋내기 용병대장. 이름 하나와 300골드가 전부다.',
-      r ? '마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.' : '마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.'];
+    var pro = lore && lore.length ? lore : ['마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.'];      // 글은 lore.js prologue
     story(pro, perk ? function () { showPerk(perk, null); } : null, '전민 열 가문의 시대');
   });
 }

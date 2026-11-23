@@ -92,11 +92,11 @@ var ENR = function (add, say, th) { return { th: th || 0.4, atk: 0.12, spd: 0.15
 var BIG_STORY = {
   bargan:    { sz: [2, 2], skills: ['b_erupt', 'bb_slam', 'e_smash'], enr: ENR(['bu_inferno'], '목이 끓는다!') },
   tormak:    { sz: [1, 2], skills: ['bb_rush', 'b_quake', 'e_smash'], enr: ENR(['bu_horn'], '뿔이 달아오른다!') },
-  twinsnake: { sz: [2, 1], skills: ['b_venom', 'bb_pool', 'bb_tail'], enr: ENR(['bu_plague'], '두 머리가 한꺼번에 운다') },
+  twinsnake: { sz: [2, 1], skills: ['b_venom', 'bb_pool', 'bb_tail'], enr: ENR(['bu_plague'], '두 머리가 처음으로 뜻을 모았다') },
   warden:    { sz: [2, 2], skills: ['b_boulder', 'b_harden', 'bb_slam', 'e_smash'], enr: ENR(['bu_cataclysm'], '돌 눈이 붉게 탄다') },
-  shara:     { sz: [2, 2], skills: ['b_spikes', 'bb_burrow', 'bb_tail'], enr: ENR(['bu_plague'], '여왕이 집게를 든다') },
-  king:      { sz: [1, 2], skills: ['b_sumSkel', 'b_curse', 'b_dark'], enr: ENR(['bu_tomb'], '무덤이 운다') },
-  gatekeeper:{ sz: [2, 2], skills: ['b_quake', 'b_sumImp', 'bb_rocks', 'e_smash'], enr: ENR(['bu_cataclysm'], '문이 무너진다') },
+  shara:     { sz: [2, 2], skills: ['b_spikes', 'bb_burrow', 'bb_tail'], enr: ENR(['bu_plague'], '구독료가 오른다') },
+  king:      { sz: [1, 2], skills: ['b_sumSkel', 'b_curse', 'b_dark'], enr: ENR(['bu_tomb'], '야근이 시작된다') },
+  gatekeeper:{ sz: [2, 2], skills: ['b_quake', 'b_sumImp', 'bb_rocks', 'e_smash'], enr: ENR(['bu_cataclysm'], '인증에 실패했다') },
   swarm:     { sz: [2, 2], skills: ['b_sumImp', 'b_cloud', 'bb_wing', 'e_smash'], enr: ENR(['bu_plague'], '파리 떼가 하늘을 덮는다', 0.35) },
   bonewyrm:  { sz: [4, 2], skills: ['bb_bonebreath', 'b_sumSkel', 'bb_wing', 'bb_tail'], enr: ENR(['bu_plague'], '뼈가 일어선다', 0.35) },
   glacia:    { sz: [4, 2], skills: ['bb_frostbreath', 'bb_wing', 'bb_tail', 'e_smash'], enr: ENR(['bu_glacier'], '숨이 얼어붙는다', 0.35) },
@@ -130,9 +130,9 @@ DS.BIG_BOSSES = Object.keys(BO).filter(function (k) { return BO[k].sz && (BO[k].
 // 이야기 글 (보스 카드 · 마지막 말)
 if (DS.LORE) {
   DS.LORE.boss = DS.LORE.boss || {};
-  DS.LORE.boss.pitGolem = DS.LORE.boss.pitGolem || { title: '갱도 수문장', say: '— 바위 문이 걸어 나온다.', last: '— 무너진 돌 사이로 아랫길이 보인다.' };
+  DS.LORE.boss.pitGolem = DS.LORE.boss.pitGolem || { title: '갱도 수문장', say: '— 바위 문이 걸어 나온다. 출입증을 본다.', last: '— 무너진 돌 사이로 아랫길이 보인다.' };
   DS.LORE.boss.pitWorm = DS.LORE.boss.pitWorm || { title: '갱도 밑바닥에 사는 것', say: '— 바닥이 울더니 입이 열린다.', last: '— 긴 몸이 땅속으로 다시 가라앉는다.' };
-  DS.LORE.boss.pitTitan = DS.LORE.boss.pitTitan || { title: '바닥 없는 갱도의 주인', say: '더 내려온 자는… 없었다…', last: '그럼… 너희가… 처음이다…' };
+  DS.LORE.boss.pitTitan = DS.LORE.boss.pitTitan || { title: '바닥 없는 갱도의 주인', say: '더 내려온 자는… 없었다…', last: '너희가… 처음이다… 다음 놈에게… 일러 줘라…' };
 }
 
 // ───────── 지역마다 새 몬스터 (목록의 앞쪽이 낮은 레벨 — world.js 의 무리 고르기) ─────────
