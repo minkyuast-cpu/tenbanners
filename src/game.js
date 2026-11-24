@@ -389,7 +389,7 @@ function enterZone(id, from, pos) {
   z.pois.forEach(function (p) { if (p.t === 'npc' || p.t === 'arena') { block[p.y * z.w + p.x] = 1; decor.push({ x: p.x, y: p.y, sprite: p.sprite || 'npc_' + (p.look % 4), flip: p.look % 2 === 1 }); } });      // r39: 연무장 교관(arena.js)도 마을 사람처럼 선다
   var sim = new DS.Sim({ map: z.rows, mode: z.town ? 'town' : 'zone', spawns: spawns, seed: (Date.now() & 0xffff) + 1, inv: s.items, block: block,
     mk: function (type, o) { return DS.fieldSpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, zone: id, save: s }); } });      // 2.2.7: DS.fieldSpec (tune.js — 세기 0.72 · 체력 · 공격 손잡이) · zone: 기획팀 정예 무리가 어느 지역인지 안다
-  G.sim = sim; G.lost = [];
+  G.sim = sim; G.lost = []; if (DS.shadeUI) DS.shadeUI.off();
   var sbS = [];
   if (!(DS.egPassOn && DS.egPassOn(s))) { if (DS.sbTick) sbS = DS.sbTick(s); if (DS.mercTidy) DS.mercTidy(s); }      // 2.2.0: 가주가 떠난 가문은 막사의 같은 병과가 잇는다 · 3.3.0: 스무 해 창 동안은 편성을 건드리지 않는다
   placeParty(sim, start.x, start.y);
@@ -431,6 +431,7 @@ function startScenario(s) {
   if (s.boss === 'herald') { sv.erN = (sv.erN || 0) + 1; sim.erSeed = [sv.hero, sv.name || '', (sv.eg && sv.eg.gen) || 1, sv.erN].join(':'); }      // r17 boss: 이름 지우기 대상은 저장 + 30번 시도 횟수로 정해진다 (같은 시도면 같은 사람, 다시 하면 다른 사람)
   if (DS.linBattleStart) DS.linBattleStart(sv);      // 갓 숨진 이를 관에 모실 때는 다음 싸움 전까지
   placeParty(sim, 6, 17, b.start);
+  if (DS.shadeArm) { if (DS.shadeUI) DS.shadeUI.off(); DS.shadeArm(sim, sv, { scn: s }); }      // 2.5.0 이름 부르기: 출전마다 부를 이름 (shade.js — 갱도 · 다음 세대의 장도)
   sim.hunt = !!sv.opt.hunt;
   G.view.setScene(sim, { rows: b.map, theme: b.theme, seed: s.id });
   select(G.sel); renderChips(); renderActs(); updateQuest(); renderSys();
@@ -875,7 +876,8 @@ function itemKeys() {
 function itemPlan() {
   var inv = G.save.items, fight = !!(G.scn || (G.sim && G.sim.combat));
   var base = ITEM_BASE.filter(function (k) { return DS.ITEMS[k]; });      // r15: 늘 세 칸 (0개여도 남긴다 — 떨어진 줄 알아야 한다). 「더 보기」는 없앴다
-  return { base: base, ext: [], one: false, open: false, aim: null, n: base.length, sig: base.join() + (fight ? '|f' : '') };
+  var sh = !!(DS.shadeOn && DS.shadeOn(G.sim));      // 2.5.0: 출전이면 넷째 칸에 「이름 부르기」 (판이 시작될 때 정해져 싸우는 동안 칸 수가 바뀌지 않는다)
+  return { base: base, ext: [], one: false, open: false, aim: null, n: base.length + (sh ? 1 : 0), sh: sh, sig: base.join() + (fight ? '|f' : '') + (sh ? '|s' : '') };
 }
 // 전투 밖 전용 소모품 (아이템팀 DS.useFieldItem — 쓸 수 없으면 까닭을 돌려준다)
 function useCtl(key) {
@@ -961,6 +963,7 @@ function renderActs() {
     G.actEls.push({ b: b, key: key, n: $('.n', b), cnt: -1 });
   }
   plan.base.forEach(function (key) { itemBtn(key, irow); });
+  if (plan.sh && DS.shadeUI) DS.shadeUI.btn(irow);      // 2.5.0 이름 부르기 (shade.js)
   box.appendChild(irow); if (tray) box.appendChild(tray);
   updateActs(); layoutInsets();
 }
@@ -1058,6 +1061,7 @@ function updateActs() {
   var q = G.sim.q(me), o = me.order;
   for (var i = 0; i < els.length; i++) {
     var e = els[i];
+    if (e.shade) { if (DS.shadeUI) DS.shadeUI.upd(e); continue; }      // 2.5.0 이름 부르기
     if (e.ult || e.lock) { var hu = G.sim.byId[e.hid]; if (hu && !hu.dead && !e.lock) updateUlt(e, hu); continue; }      // 2.1.0: 조작하는 사람의 필살기 칸 (잠긴 칸은 그대로)
     if (e.S) {
       var need = e.S.tick * q, nomp = me.mp < e.S.mp, p = Math.round(Math.min(1, me.gauge / need) * 20) * 5;
@@ -1530,7 +1534,7 @@ function onEvents(evs) {
       case 'hit':      // 누가 얼마나 때렸나 (엔진이 by 를 실어 줄 때만) · 용병이 위태로우면 한마디
         u = sim.byId[e.id]; if (!u) break;
         if (e.by && u.side === 'enemy') { var hb = statId(e.by); G.stats.dmg[hb] = (G.stats.dmg[hb] || 0) + e.v; }
-        else if (u.side === 'ally') hurtBy(e);      // r8 hud: 누구에게 가장 많이 맞았나 (전멸 화면이 읽는다)
+        else if (u.side === 'ally' && u.role !== 'shade') hurtBy(e);      // r8 hud: 누구에게 가장 많이 맞았나 (전멸 화면이 읽는다) · 2.5.0: 그림자가 받은 것은 빼고
         if (u.side === 'ally' && u.role === 'cmd' && G.chipEls[u.id] && !calm()) { var cel = G.chipEls[u.id].el; cel.classList.remove('hit'); void cel.offsetWidth; cel.classList.add('hit'); if (e.crit && u.id === G.sel) haptic(30); }      // r26: 맞은 가문의 칩이 붉게 떨린다
         if (u.side === 'ally' && !u.dead && (u.role === 'cmd' || u.role === 'merc') && u.hp < u.mhp * 0.3 && !u.barkLow) { if (bark(u, 'low')) u.barkLow = true; } else if (u.side === 'ally' && u.hp > u.mhp * 0.6) u.barkLow = false;      // r32 전투 대사
         if (u.side === 'ally' && u.role === 'cmd' && !u.dead) cmdLow(u);
@@ -1607,6 +1611,7 @@ function onEvents(evs) {
       case 'enrage': u = sim.byId[e.id]; if (u) { vban('rage', u.name + ' 격노', (u.enr && u.enr.say) || '', calm() ? 1100 : 1500); A('phase'); if (u.id === G.bossId) { var bel0 = $('#boss'); if (bel0) bel0.classList.add('rage'); } } break;
       case 'wave': vban('wave', e.text || '증원!', '', 1400); A('warn'); break;
       case 'erase': erBegin(e); break;      // r17 boss: 어스름의 왕의 이름 지우기
+      case 'shade': case 'shadeEnd': if (DS.shadeUI) DS.shadeUI.ev(e); break;      // 2.5.0 이름 부르기 (shade.js)
       case 'eraseSave': erSaved(e); break;
       case 'eraseEnd': erEnd(e); break;
       case 'say': if (e.id === G.bossId && !(G.bcast && G.bcast.tid)) G.bcast = { name: e.text, until: performance.now() + 1500 }; break;

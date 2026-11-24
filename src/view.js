@@ -714,7 +714,7 @@ V.handle1 = function (e, sim) {
         break;
       case 'die':
         if (!v) break;
-        if (e.flee) { v.dying = v.dieDur = 0.25; v.flee = true; break; }
+        if (e.flee) { v.dying = v.dieDur = e.fade || 0.25; v.flee = true; break; }      // 2.5.0: 그림자는 천천히 걷힌다 (e.fade)
         var bossDie = u.role === 'boss' && !u.fake, mine = u.side === 'ally';
         v.dying = v.dieDur = bossDie ? 1.1 : mine ? 0.7 : 0.45;
         if (bossDie) { v.boom = 0.01; self.shake = Math.max(self.shake, 0.5); self.flashA = Math.max(self.flashA, 0.1); }
@@ -1396,11 +1396,12 @@ function cerBody(g, cv, x, y, w, cp, spn, pal, flip, step, pose, alpha) {
 V.drawUnit = function (g, v) {
   if (v.ds && this.drawDeath) { this.drawDeath(g, v); return; }      // r16 fx: 죽음 장면
   if (v.gone) return;
+  if (v.u.shade && !v.shdIn) { var a0 = v.alpha, gx = v.x * 16 + 8, gy = v.y * 16 + 5; g.globalAlpha = a0 * (0.32 + 0.1 * Math.sin(this.time * 2.2 + v.bob)); g.drawImage(glowTex('#c9d3ff'), gx - 15, gy - 15, 30, 30); v.shdIn = 1; v.alpha = a0 * (0.72 + 0.08 * Math.sin(this.time * 3 + v.bob)); try { this.drawUnit(g, v); } finally { v.alpha = a0; v.shdIn = 0; g.globalAlpha = 1; } return; }      // 2.5.0 이름 부르기의 그림자: 비쳐 보이고 숨 쉬듯 흔들린다 (아래 blit 이 흰빛을 덧씌운다)
   if (fpBig(v.u) && this.drawBig) { this.drawBig(g, v); return; }      // 2.3.0 큰 몸 (art5 · 아래 V.drawBig)
   var u = v.u, t = this.time, px = v.x * 16, py = v.y * 16;
   if (px - this.cam.x < -40 || py - this.cam.y < -40 || px - this.cam.x > this.W / this.k + 40 || py - this.cam.y > this.H / this.k + 40) return;
   var sp = DS.unitSprite(u), big = !!u.big, fly = u.tags && u.tags.indexOf('fly') >= 0;
-  var cmd = u.side === 'ally' && u.role === 'cmd', merc = u.side === 'ally' && u.role !== 'cmd', boss = u.role === 'boss' && !u.fake;
+  var cmd = u.side === 'ally' && u.role === 'cmd', merc = u.side === 'ally' && u.role !== 'cmd' && u.role !== 'shade', boss = u.role === 'boss' && !u.fake;      // 2.5.0: 그림자는 가주 크기로
   // r11 gfx: 아군은 옷차림(장비·나이)을 입힌 이름 — 1초에 한 번만 다시 읽는다. bearer = 깃발을 든 사람(4.0 u.flag, 없으면 지휘관)
   var spn = sp[0]; if ((u.side === 'ally' || u.arSide) && !sp[1] && DS.unitSpriteName) { if (!v.dn || t - v.dnT > 1) { try { v.dn = DS.unitSpriteName(u.arSide ? Object.assign(Object.create(u), { side: 'ally' }) : u); } catch (e0) { v.dn = sp[0]; } v.dnT = t; } spn = v.dn; }
   var bearer = u.flag != null ? !!u.flag : cmd;
@@ -1507,6 +1508,7 @@ V.drawUnit = function (g, v) {
   else if (cpOn) cerBody(g, cv, sX, sY, lwOf(cv), cp, spn, sp[1], cflip, step, pose, v.alpha);      // r16 fx: 도는 동안은 무기 빛을 쉰다 (자리가 어긋난다)
   else {
     blit(g, cv, sX, sY, lwOf(cv), lwOf(cv), breath, sq, lean);
+    if (u.shade && !white) { var shc = DS.spriteCanvas(spn, sp[1], { flip: cflip, tint: '#c3cdee', hd: 1, step: step, pose: pose }), sha0 = g.globalAlpha; g.globalAlpha = sha0 * 0.38; blit(g, shc, sX, sY, lwOf(shc), lwOf(shc), breath, sq, lean); g.globalAlpha = sha0; }      // 2.5.0: 그림자 — 잿빛 흰 막
     if (cmd && dq < 0 && !white && sq >= 1 && ((!breath && !lean) || pose)) {      // r11: 무기 빛 (몸 위) — 숨·기울기 프레임에는 무기 자리가 어긋나므로 쉰다 (짧다)
       var wm = DS.spriteCanvas(spn, null, { flip: u.face < 0, hd: 1, step: step, mask: 1, pose: pose });
       if (EF) enhFront(g, v, u, EF, Math.min(10, en), sX, sY, wm, u.face < 0, t);
@@ -1890,6 +1892,14 @@ V.drawText = function (g, dt) {
     var es = this.screenOf(evv.x, evv.y);
     if (es.x < -20 || es.y < this.inset.top + 10 || es.x > this.W + 20 || es.y > this.H - this.inset.bottom) continue;
     label(g, eu.name, es.x, es.y - (eu.big ? 30 : 22) * k - 6, '#ffb070', 10);
+  }
+  for (var shid in this.vu) {      // 2.5.0 이름 부르기: 그림자의 이름 (머리 위, 잿빛 흰 글자)
+    var shv = this.vu[shid], shu = shv.u;
+    if (!shu.shade || shu.side !== 'ally' || !shu.name || (shv.dying >= 0 && !shv.flee)) continue;
+    var shs = this.screenOf(shv.x, shv.y);
+    if (shs.x < -20 || shs.y < this.inset.top || shs.x > this.W + 20 || shs.y > this.H - this.inset.bottom + 20) continue;
+    var sha1 = g.globalAlpha; g.globalAlpha = sha1 * Math.max(0, Math.min(1, shv.alpha == null ? 1 : shv.alpha));
+    label(g, shu.name, shs.x, shs.y - 16 * k * 0.5 - 20, '#dfe6ff', 10); g.globalAlpha = sha1;
   }
   // 용병 이름표: 고른 지휘관의 용병에게만(설정 G.view.mtag: 'sel' 기본 · 'all' · 'off'), 작게, 발밑에 등급색으로 — 지휘관 이름표(머리 위)와 자리가 갈린다
   var mt = this.mtag || 'sel';

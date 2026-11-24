@@ -228,6 +228,8 @@ function run(sim, mode, zid, maxT) {
           const g = sim.erGuard(u).filter(c => !c.dead && !(c.order && c.order.t === 'call')).sort((a, b) => (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y)))[0];
           if (g) { sim.setOrder(g.id, { t: 'move', x: u.x, y: u.y }); st.erCover = (st.erCover || 0) + 1; }
         });
+      } else if (e.t === 'shade') { st.shade = (st.shade || 0) + 1; if (e.auto) st.shadeAuto = (st.shadeAuto || 0) + 1; st.shAt = st.shAt || {}; st.shAt[where] = (st.shAt[where] || 0) + 1;
+      } else if (e.t === 'shadeEnd') { st.shadeEnd = st.shadeEnd || {}; st.shadeEnd[e.why] = (st.shadeEnd[e.why] || 0) + 1;
       } else if (e.t === 'win') res = 'win';
       else if (e.t === 'lose') res = 'lose';
     }
@@ -252,6 +254,7 @@ function run(sim, mode, zid, maxT) {
   st.dsk = {};
   D.Sim.prototype.resolve = function (u) { const p = this._bsk; this._bsk = arguments[1]; try { return r0.apply(this, arguments); } finally { this._bsk = p; } };
   D.Sim.prototype.hurt = function (v, dmg, src, o) {
+    if (src && v && !v.dead && v.side === 'enemy' && src.side === 'ally' && src.role === 'shade') st.shadeDmg = (st.shadeDmg || 0) + Math.min(dmg, Math.max(0, v.hp));      // 2.5.0: 그림자가 깎은 체력
     if (src && v && !v.dead && v.side === 'enemy' && src.side === 'ally') {
       const k = hcls(this, src); if (k) { const a = Math.min(dmg, Math.max(0, v.hp)); st.dmg[k] = (st.dmg[k] || 0) + a; const how = src.role === 'summon' ? 'summon' : o && (o.type === 'burn' || o.type === 'poison') ? o.type : o && o.refl ? 'ctr' : this._bsk || 'basic'; const kk = k.replace('+', '') + ':' + how; st.dsk[kk] = (st.dsk[kk] || 0) + a; }
     }
@@ -265,6 +268,10 @@ function hcls(sim, u) {      // 그 유닛이 어느 가문(병과) 몫인가: �
   }
   return null;
 }
+// 2.5.0 이름 부르기: 출전(시나리오 · 갱도)마다 게임처럼 부를 이름을 단다 — 봇의 맹주는 자동이라 엔진(shadeTick)이 위태로울 때 스스로 부른다. BOTSHADE=0 이면 없이
+const SHADE = process.env.BOTSHADE !== '0';
+function arm(sim) { if (SHADE && D.shadeArm) D.shadeArm(sim, s); }
+if (D.SHADE) { if (process.env.SHADEK) D.SHADE.k = +process.env.SHADEK; if (process.env.SHADEHK) D.SHADE.hk = +process.env.SHADEHK; if (process.env.SHADEDUR) D.SHADE.dur = +process.env.SHADEDUR; if (process.env.SHADELOW) D.SHADE.low = +process.env.SHADELOW; if (process.env.SHADESHUN) D.SHADE.shun = +process.env.SHADESHUN; }      // 조율용
 function place(sim, specs, starts, x, y) {
   const pos = starts ? D.formation(specs, starts) : null;
   let first = null;
@@ -311,7 +318,7 @@ function pitFight(f) {
   const sim = new D.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (rnd() * 1e6 | 0) + 100 + f, inv: s.items, mode: 'scn' });
   sim.heroId = 'c' + s.hero;
   if (D.linBattleStart) D.linBattleStart(s);
-  place(sim, D.partySpecs(s), b.start);
+  place(sim, D.partySpecs(s), b.start); arm(sim);
   const r = run(sim, 'scn', null, 900);
   st.pit = (st.pit || 0) + 1; st.over += PIT_OVER; s.time += PIT_OVER; D.ageAdvance(s, PIT_OVER);
   if (r === 'win') { const out = D.applyClear(s, sc); try { D.pitLoot(s, f, rnd); } catch (x) {} st.pitBest = Math.max(st.pitBest || 0, f); if (out.tickets) st.pitTickets = (st.pitTickets || 0) + out.tickets; }
@@ -326,7 +333,7 @@ function scenario(sc) {
   sim.heroId = 'c' + s.hero;
   if (sc.boss === 'herald') sim.erSeed = [s.hero, s.name, 1, (s.erN = (s.erN || 0) + 1)].join(':');
   if (D.linBattleStart) D.linBattleStart(s);
-  place(sim, D.partySpecs(s), b.start);
+  place(sim, D.partySpecs(s), b.start); arm(sim);
   const t0s = st.simT, r = run(sim, 'scn', null, 900);
   if (!st.tAt[sc.id]) st.tAt[sc.id] = Math.round(st.simT - t0s);      // 2.2.7: 처음 싸운 길이 (초)
   st.scn++; st.over += SCN_OVER; s.time += SCN_OVER; D.ageAdvance(s, SCN_OVER);
@@ -398,7 +405,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
   }
 }
 const H = (st.simT + st.over) / 3600;
-const out = { cls, seed, main, g2, hours: +H.toFixed(2), cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
+const out = { cls, seed, main, g2, hours: +H.toFixed(2), shade: st.shade || 0, shadeAuto: st.shadeAuto || 0, shadeDmg: Math.round(st.shadeDmg || 0), shadeEnd: st.shadeEnd || {}, shAt: st.shAt || {}, cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
   births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, lapses: st.lapses || [], g2lapse: st.g2lapse || 0, runs: s.runs || null, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, openGold: st.openGold || 0, xDeaths: st.xDeaths || 0, xNat: st.xNat || 0, erCall: st.erCall || 0, erCover: st.erCover || 0, erased: st.erased || 0, retreats: st.retreats || 0, retX: st.retX || 0, fieldRet: st.fieldRet || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
