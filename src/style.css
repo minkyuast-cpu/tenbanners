@@ -5056,3 +5056,51 @@ html body #app#app #vban.rage b { font-size: 30px; background: linear-gradient(1
 .lhlp { margin: 6px 0; }
 .cine .chl { margin: 8px auto 0; padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(241, 223, 176, .55); font: 700 13px/1.2 var(--f-ui); color: #f1dfb0; background: rgba(40, 30, 18, .55); animation: cnUp .5s ease-out 1.9s both; display: inline-block; }
 html.calm .cine .chl, .cine.calm .chl { animation: cnUp .3s ease-out .7s both; }
+/* 2.5.0 이름 부르기 (shade.js): 아이템 줄 넷째 칸 · 이름 고르기 · 짧은 띠. 그림자는 view.js 가 잿빛 흰 막으로 */
+html body #app#app #s-game #bot.dock .act.item.shade { --ic-a: #cdd6f6; }
+html body #app#app #s-game #bot.dock .act.item.shade.ready::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(223, 230, 255, .55), 0 0 10px rgba(205, 214, 246, .45); animation: shBreath 2.4s ease-in-out infinite; pointer-events: none; }
+html body #app#app #s-game #bot.dock .act.item.shade.cool > .ic { filter: drop-shadow(0 0 6px #dfe6ff); }
+#acts .act.item.shade .cdn { background: linear-gradient(to top, rgba(40, 46, 80, .66) var(--cdp, 0%), rgba(20, 22, 40, .25) var(--cdp, 0%)); color: #eef2ff; }
+@keyframes shBreath { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+#shadepick { position: absolute; left: var(--gut-l, 10px); right: var(--gut-r, 10px); bottom: 150px; z-index: 31; max-width: 340px; margin: 0 auto; padding: 10px 12px 12px; text-align: center;
+  background: rgba(14, 12, 28, .95); border: 1px solid #4f4a78; border-radius: 10px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 8px 24px rgba(0, 0, 0, .55), 0 0 18px rgba(150, 160, 230, .2); animation: erIn .22s ease both; }
+#shadepick .sph { margin: 0 34px 0; font-family: var(--f-11); font-size: var(--fs-m); font-weight: 700; color: #efe6d0; }
+#shadepick .sps { display: block; margin: 2px 0 8px; font-family: var(--f-11); font-size: var(--fs-s); color: #a9a3c4; }
+#shadepick .spl { display: grid; gap: 6px; }
+#shadepick .spn { display: grid; gap: 2px; min-height: 48px; padding: 7px 12px; border-radius: 8px; border: 1px solid #5d5a8c; background: linear-gradient(180deg, #25233c, #1b1a2e); color: #efe6d0; text-align: left; }
+#shadepick .spn:active { background: #2f2c4e; border-color: #cdd6f6; }
+#shadepick .spn b { font-family: var(--f-11); font-size: var(--fs-l, 16px); color: #eef2ff; }
+#shadepick .spn small { font-family: var(--f-11); font-size: var(--fs-s); color: #b4aed2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#shadepick .spx { position: absolute; top: 4px; right: 4px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: transparent; color: #a9a3c4; }
+#shadecut { position: absolute; left: var(--gut-l, 10px); right: var(--gut-r, 10px); top: calc(var(--top-h, 157px) + 52px); z-index: 23; display: grid; justify-items: center; gap: 1px; padding: 6px 10px 7px; pointer-events: none; opacity: 0; visibility: hidden;
+  background: linear-gradient(90deg, transparent, rgba(16, 16, 34, .82) 18%, rgba(16, 16, 34, .82) 82%, transparent); text-align: center; }
+#shadecut.on { visibility: visible; animation: shCut 2.2s ease both; }
+#shadecut small { font-family: var(--f-11); font-size: var(--fs-s); color: #a9b2d8; letter-spacing: .04em; }
+#shadecut b { font-family: var(--f-11); font-size: 20px; font-weight: 700; color: #fff3c4; text-shadow: 0 0 10px rgba(255, 243, 196, .45), 0 1px 0 #000; }
+#shadecut em { font-style: normal; font-family: var(--f-11); font-size: var(--fs-m); color: #dfe6ff; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes shCut { 0% { opacity: 0; transform: translateY(-6px) scale(.98); } 12% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #shadecut.on, #shadepick { animation: none; } #shadecut.on { opacity: 1; } html body #app#app #s-game #bot.dock .act.item.shade.ready::after { animation: none; } }
+html.calm #shadecut.on { animation-duration: 1.6s; }
+/* 2.5.0: 출전의 아래 띠 셋째 줄 = [약초][마나초][기운초][이름 부르기] | [전체 자동][속도][멈춤] — 넷째 칸이 생기면 열을 하나 늘려 부대 단추가 밀려 좁아지지 않게 (판이 시작될 때 정해진다) */
+html body #app#app#app #s-game #bot.dock:has(.act.item.shade) { grid-template-columns: repeat(4, minmax(44px, 48px)) 6px minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); }
+html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #acts .arow.it .act.item.shade { grid-row: 3; grid-column: 4; }
+html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #sys::before { grid-column: 5; }
+html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #bHunt { grid-column: 6; }
+html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #bSpeed { grid-column: 7; }
+html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #bPause { grid-column: 8; }
+html body #app#app#app #s-game #bot.dock:has(.act.item.shade):has(#bHunt[hidden])::after { grid-column: 6; }
+@media (orientation: portrait) and (max-width: 379px) {
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade) { grid-template-columns: repeat(4, 44px) 4px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade) { grid-template-columns: minmax(0, 1fr) repeat(4, 46px) 6px 74px 50px 50px; }
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #acts .arow.it .act.item.shade { grid-row: 1; grid-column: 5; }
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #sys::before { grid-row: 1; grid-column: 6; }
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #bHunt { grid-row: 1; grid-column: 7; }
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #bSpeed { grid-row: 1; grid-column: 8; }
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade) #bPause { grid-row: 1; grid-column: 9; }
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade):has(#bHunt[hidden])::after { grid-row: 1; grid-column: 7; }
+}
+@media (orientation: landscape) and (max-height: 560px) and (max-width: 740px) {
+  html body #app#app#app #s-game #bot.dock:has(.act.item.shade) { grid-template-columns: minmax(0, 1fr) repeat(4, 44px) 4px 66px 46px 46px; }
+}

@@ -447,7 +447,7 @@ P.hurt = function (v, dmg, src, o) {
   }
 };
 P.heal = function (v, amt, quiet) {
-  if (v.dead || amt <= 0) return 0;
+  if (v.dead || amt <= 0 || v.role === 'shade') return 0;      // 2.5.0: 그림자는 고칠 수 없다
   this._hv = (this._hv || 0) + 1;
   var a = Math.min(v.mhp - v.hp, Math.round(amt)); v.hp += a;
   if (a > 0 && !quiet) this.emit({ t: 'heal', id: v.id, v: a });
@@ -455,6 +455,7 @@ P.heal = function (v, amt, quiet) {
 };
 P.kill = function (v, by) {
   if (v.dead) return;
+  if (v.role === 'shade' && this.shadeEnd) { this.shadeEnd(v); return; }      // 2.5.0: 그림자는 쓰러지지 않고 걷힌다 (죽음으로 세지 않는다 — shade.js)
   var self = this;
   v.dead = true; v.deadT = this.t; v.hp = 0; this.unplace(v); this._ver++;
   if (v.rsv || v.rsvU) { v.rsv = null; v.rsvU = false; }      // 2.2.3: 쓰러지면 예약도 거둔다
@@ -979,7 +980,7 @@ P.engage = function (u, v, r0, r1, fire, max) {
 P.foes = function (u) {   // 싸움이 붙은 상대
   return this.units.filter(function (v) { return !v.dead && v.side !== u.side && (u.side === 'enemy' || v.aggro); });
 };
-P.friends = function (u) { return this.units.filter(function (v) { return !v.dead && v.side === u.side; }); };
+P.friends = function (u) { return this.units.filter(function (v) { return !v.dead && v.side === u.side && v.role !== 'shade'; }); };      // 2.5.0: 그림자(이름 부르기)는 고침 · 가호의 대상이 아니다 (shade.js)
 // 살아 있는 아군 목록. 명부가 바뀔 때(등장·쓰러짐·이탈)만 다시 만든다 — 적 하나하나가 생각할 때마다 전체를 거르던 것을 줄인다. 돌려받은 배열은 고치지 않는다.
 P.allies = function () {
   if (this._allyV !== this._ver) { this._ally = this.units.filter(function (v) { return !v.dead && v.side === 'ally'; }); this._allyV = this._ver; }
@@ -990,7 +991,7 @@ P.sweep = function () {
   var us = this.units, t = this.t, n = 0, i, u;
   for (i = 0; i < us.length; i++) {
     u = us[i];
-    if (u.dead && (u.side === 'enemy' || u.role === 'summon') && t - (u.deadT || 0) > 5) { if (this.byId[u.id] === u) delete this.byId[u.id]; u.gone = true; }
+    if (u.dead && (u.side === 'enemy' || u.role === 'summon' || u.role === 'shade') && t - (u.deadT || 0) > 5) { if (this.byId[u.id] === u) delete this.byId[u.id]; u.gone = true; }
     else us[n++] = u;
   }
   us.length = n;
@@ -1003,7 +1004,7 @@ P.pickTarget = function (u, foes, anchor, maxD) {
     var s = d * 10 + (v.hp / v.mhp) * 6 + (d <= r1 ? -25 : 0);
     if (DS.COUNTER[u.kind] === v.kind) s -= 8;
     if (u.atkKind === 'arrow' && has(v, 'fly')) s -= 8;
-    if (u.side === 'enemy') { s += v.def * 0.05; if (v.role !== 'cmd') s += 3; if (u.hate === v.id && !(u.hateT <= this.t)) s -= u.hateP || 12; if (v.back) s += 30; }      // hate: 도발한 용병 (hateT 까지, hateP 만큼 더 노린다)      // 물러나는 용병은 덜 노린다 (아예 안 노리지는 않는다 — 곁에 남은 상대가 없으면 쫓는다)
+    if (u.side === 'enemy') { s += v.def * 0.05; if (v.role !== 'cmd') s += 3; if (u.hate === v.id && !(u.hateT <= this.t)) s -= u.hateP || 12; if (v.back) s += 30; if (v.shun) s += v.shun; }      // 2.5.0 shun: 적은 그림자보다 산 사람을 먼저 노린다 (shade.js)      // hate: 도발한 용병 (hateT 까지, hateP 만큼 더 노린다)      // 물러나는 용병은 덜 노린다 (아예 안 노리지는 않는다 — 곁에 남은 상대가 없으면 쫓는다)
     else { if (v.skills && v.skills.indexOf('e_heal') >= 0) s -= 10; if (u.hate === v.id && !(u.hateT <= this.t)) s -= u.hateP || 12; if (v.pri) s -= v.pri; }      // 2.3.0: 적의 도발(방패병)도 우리 편을 끌어당긴다 · pri = 먼저 쳐야 할 적(주술사 · 터지는 몸)
     if (s < bs) { bs = s; best = v; }
   }
@@ -1880,6 +1881,7 @@ P.think = function (u) {
   u.idle = false;
   if (u.erM) { this.wait(u, 0.2); return; }      // r17: 이름이 바래는 동안은 굳는다
   if (u.side === 'enemy') return this.aiEnemy(u);
+  if (u.role === 'shade' && this.aiShade) return this.aiShade(u);      // 2.5.0 이름 부르기의 그림자 (shade.js)
   if (u.role === 'cmd') {
     if (u.order && DS.BAL.ordSafe && u.order.t !== 'move' && this.ordGuard(u)) { if (u.saving) u.saving = false; return; }      // 명령은 그대로 쥔 채 먼저 몸을 피한다 (이동 명령만 예외)
     if (u.order && this.runOrder(u)) { if (u.saving) u.saving = false; return; }      // 명령을 따르는 동안은 「기술 준비」를 내린다 (화면이 명령보다 이 칸을 먼저 읽는다)
@@ -1919,6 +1921,7 @@ P.tick = function (dt) {
     });
     if (this.waves.length && this.waves[0].t != null && this.t >= this.waves[0].t) this.nextWave();
     if (this.t - this.swp >= 3) { this.swp = this.t; this.sweep(); }
+    if (this.shd && this.shadeTick) this.shadeTick();      // 2.5.0: 이름 부르기 — 자동이면 위태로울 때 스스로 (shade.js)
   }
   var peace = !this.combat;
   for (i = 0; i < us.length; i++) {
