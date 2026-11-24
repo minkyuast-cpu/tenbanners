@@ -91,6 +91,21 @@ DS.storyPrev = function (s) {
   for (var i = lg.length - 1; i >= 0; i--) { var e = lg[i]; if (e && (e.t === 'heir' || e.t === 'lapse') && e.b && P[e.b]) { var n = ''; try { n = DS.linName(s, e.b); } catch (x) { n = ''; } if (n && n !== '누군가') return n; } }
   return '';
 };
+// 2.4.2 이번 대에 먼저 간 사람들 — 가문을 잇다 떠난 이(가문 기록의 후계 줄)가 먼저, 그다음 가주였던 이 · 이름난 이 (저장은 읽기만)
+//   [{ n: 화면 이름, lw: 마지막 한마디('' 가능) }] · 열 가문의 시조 이름과 길에서 이름을 돌려준 이들은 뺀다(30번에서 따로 부른다)
+var DEAD_SKIP = { '나루': 1, '마루': 1, '돌쇠': 1, '평원지기': 1, '벨마르': 1, '먼동': 1, '누군가': 1 };
+DS.storyDead = function (s, max) {
+  var out = [], seen = {}, lwOf = {}, P = s && s.lin && s.lin.P || {}, lg = s && s.lin && s.lin.log || [], fl = (s && s.fallen) || [];
+  Object.keys(DS.CAST_NAME || {}).forEach(function (k) { seen[DS.CAST_NAME[k]] = 1; });
+  fl.forEach(function (f) { if (f && f.n && f.lw) lwOf[f.n] = String(f.lw); });
+  function add(n, w) { n = String(n || '').trim(); if (!n || seen[n] || DEAD_SKIP[n] || n === (s && s.name)) return; seen[n] = 1; out.push({ n: n, lw: lwOf[n] || '', w: w }); }
+  for (var i = lg.length - 1; i >= 0; i--) { var e = lg[i]; if (e && (e.t === 'heir' || e.t === 'lapse') && e.b && P[e.b]) { try { add(DS.linName(s, e.b), 3); } catch (x) {} } }
+  for (var j = fl.length - 1; j >= 0; j--) { var f = fl[j]; if (f && f.n) add(f.n, f.f || f.pid ? 2 : DS.fallenNote && DS.fallenNote(f) ? 1 : 0); }
+  out = out.filter(function (d) { return d.w > 0; });
+  out.sort(function (a, b) { return b.w - a.w; });      // 같은 무게 안에서는 최근에 간 이가 앞 (sort 는 안정)
+  return out.slice(0, max || 8);
+};
+function strHash(t) { var h = 7; t = String(t); for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0; return h; }
 if (!DS.LORE) return;
 var own = function (o, k) { return o != null && Object.prototype.hasOwnProperty.call(o, k); };
 
@@ -109,7 +124,7 @@ Object.keys(DS.BOSSES || {}).forEach(function (k) { if (DS.BOSSES[k].name) REV[D
 var LINE = Object.getPrototypeOf(DS.say('memo', ''));
 function isKey(k) { if (typeof k !== 'string' || !k) return false; var l = DS.say(k, ''); return l.w !== k || !!l.c; }
 // r8: 화자의 사망·후계에 따라 갈리는 글 — heir(자리를 이은 이가 있을 때) · gone(방금 쓰러져 빈자리일 때) · of(그 줄이 기대는 사람 키). 읽는 쪽은 game.js 의 story()
-function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er', 'a'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
+function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er', 'a', 'y', 'dz'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
 function toLine(x) {
   if (x == null || typeof x !== 'object' || typeof x.t !== 'string' || 'lines' in x) return x;
   if (x.s && isKey(x.s)) return keep(DS.say(x.s, x.t), x);
@@ -287,7 +302,25 @@ DS.storyFit = function (lines, sv) {
     var o = Object.create(Object.getPrototypeOf(l)); Object.keys(l).forEach(function (k) { o[k] = typeof l[k] === 'string' && k !== 'c' ? f(l[k]) : l[k]; });
     return o;
   }
+  var dd = null;      // 2.4.2 먼저 간 이들 (처음 쓸 때 한 번 읽는다)
+  function deadOf() { if (dd == null) { try { dd = DS.storyDead(sv) || []; } catch (x) { dd = []; } } return dd; }
+  var DT = /\{dead(w|lw)?\}/;
+  function hasDead(l) { return typeof l === 'string' ? DT.test(l) : !!l && typeof l === 'object' && ['w', 't', 'a', 'heir', 'gone'].some(function (k) { return typeof l[k] === 'string' && DT.test(l[k]); }); }
+  function subDead(l) {
+    var d = deadOf(), lw = d.filter(function (x) { return x.lw; })[0];
+    var f = function (t) { return t.replace(/\{dead\}/g, d.slice(0, 5).map(function (x) { return x.n; }).join('. ')).replace(/\{deadw\}/g, lw ? lw.n : '').replace(/\{deadlw\}/g, lw ? lw.lw : ''); };
+    if (/\{dead(w|lw)\}/.test(JSON.stringify(l)) && !lw) return null;
+    if (typeof l === 'string') return f(l);
+    var o = Object.create(Object.getPrototypeOf(l)); Object.keys(l).forEach(function (k) { o[k] = typeof l[k] === 'string' && k !== 'c' ? f(l[k]) : l[k]; });
+    return o;
+  }
   lines.forEach(function (l) {
+    if (l && typeof l === 'object' && l.dz && deadOf().length) return;
+    if (hasDead(l)) { if (!deadOf().length) return; l = subDead(l); if (l == null) return; }
+    if (l && typeof l === 'object' && l.y && typeof l.t === 'string' && deadOf().length) {      // 단톡방이 이번 대의 사람들로 채워진다
+      var dl = deadOf(), who = dl[strHash(l.t) % dl.length], yo = Object.create(Object.getPrototypeOf(l)); Object.keys(l).forEach(function (k) { if (k !== 'y') yo[k] = l[k]; });
+      yo.w = '단톡방 · ' + who.n; l = yo;
+    }
     if (l && typeof l === 'object' && l.er !== undefined && erNow(sv)) { if (!l.er) return; l = toLine(l.er); }
     if (l && typeof l === 'object' && l.need && !DS.castHere(sv, l.need)) return;
     if (hasPrev(l)) { if (!prevOf()) return; l = subPrev(l); }

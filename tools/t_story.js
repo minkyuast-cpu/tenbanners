@@ -312,5 +312,18 @@ module.exports = async function (page, shot, L) {
   A(/잠 못 드는 왕/.test(c.b) && /퇴근/.test(c.em), 'boss bar: ' + c.b + ' — ' + c.em);
   await shot('boss_bar');
   await ev(() => { DS.G.quiet = true; try { DS.ui.closeAll(); } catch (e) {} });
+
+  // ── ⑥ 2.4.2 먼저 간 사람들(같은 무게면 최근에 간 이가 앞): 30번 이름 부르기 · 엔딩 · 단톡방이 이번 대의 사람으로 채워진다 ──
+  const dd = await ev(() => {
+    var s = DS.G.save, by = {}; DS.SCENARIOS.forEach(function (x) { by[x.id] = x; });
+    var keep = s.fallen; function R(a) { return DS.storyResolve(a).map(function (l) { return (l.w ? l.w + ': ' : '') + l.t; }); }
+    s.fallen = []; var none = { o30: R(by[30].outro), end: R(DS.LORE.ending) };
+    s.fallen = [{ n: '옹달', L: 40, pid: 9001, lw: '앞자리… 비우지 마라', at: '서리 궁' }, { n: '가람', L: 30, pid: 9002 }, { n: '잔챙이', L: 2 }];
+    var got = { o30: R(by[30].outro), end: R(DS.LORE.ending), o5: R(by[5].outro), dead: DS.storyDead(s).map(function (d) { return d.n; }) };
+    s.fallen = keep; return { none: none, got: got };
+  });
+  A(!dd.none.o30.some(t => /그리고/.test(t)) && !dd.none.end.some(t => /마지막 말/.test(t)) && !dd.none.o30.concat(dd.none.end).some(t => /\{dead/.test(t)), 'no fallen: the dead-name lines drop out cleanly');
+  A(dd.got.dead.join(',') === '가람,옹달' && dd.got.o30.some(t => /그리고 가람\. 옹달\./.test(t)) && dd.got.end.some(t => /쓰러진 이 3명\. 가람\. 옹달\./.test(t)) && dd.got.end.some(t => /단톡방 · 옹달: 내 마지막 말 기억하냐\. 「앞자리… 비우지 마라」/.test(t)) && dd.got.o5.some(t => /^단톡방 · (옹달|가람): 내 이름 건너뛰었다/.test(t)),
+    'fallen people are named: 30 roll ' + dd.got.o30.filter(t => /그리고/.test(t)) + ' · ending ' + dd.got.end.filter(t => /쓰러진|마지막 말/.test(t)).join(' / ') + ' · chat ' + dd.got.o5.slice(-1));
   console.log('story done');
 };
