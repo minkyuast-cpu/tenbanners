@@ -87,7 +87,7 @@ DS.msnSee = function (m, sim, e) {
       if (by && by.side === 'ally') m.kills[by.id] = (m.kills[by.id] || 0) + 1;
       if (u.obj && !u.phase2) m.bossBy = e.by || '-';
     }
-  } else if (e.t === 'item' && u && u.side === 'ally') m.items++;
+  } else if (e.t === 'item' && u && u.side === 'ally' && u.order && u.order.t === 'item') m.items++;      // 손으로 시킨 것만 센다 (숨넘어갈 때 저절로 먹는 약초는 봐준다)
   else if (e.t === 'ult' && e.id === m.heroId) m.ult++;
   else if (e.t === 'hit' && e.id === m.heroId && e.v > 0) m.hit++;
 };
