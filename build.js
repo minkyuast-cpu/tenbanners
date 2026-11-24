@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path');
 const WEB = process.env.TARGET === 'web';
 const SRC = path.join(__dirname, 'src');
-const ORDER = ['data', 'rise', 'notes', 'meta', 'loot', 'lineage', 'age', 'banner', 'temper', 'crest', 'icons', 'tune', 'world', 'lore', 'story2', 'story', 'save', 'engine', 'field', 'bigmon', 'sprites', 'sprites2', 'art', 'art2', 'art3', 'rise_art', 'art4', 'art5', 'tiles', 'view', 'death', 'audio', 'game', 'joystick', 'ui', 'cine', 'endgame', 'social', 'legacy', 'arena'];
+const ORDER = ['data', 'rise', 'notes', 'meta', 'loot', 'lineage', 'age', 'banner', 'temper', 'crest', 'icons', 'tune', 'world', 'lore', 'story2', 'story', 'save', 'engine', 'field', 'bigmon', 'sprites', 'sprites2', 'art', 'art2', 'art3', 'rise_art', 'art4', 'art5', 'tiles', 'view', 'death', 'audio', 'game', 'joystick', 'ui', 'cine', 'endgame', 'social', 'legacy', 'arena', 'mission', 'heirloom', 'choice'];
 const list = ORDER.concat(WEB ? ['online_fb', 'online'] : ['online']).concat(['migrate']).filter(f => fs.existsSync(path.join(SRC, f + '.js')));
 const js = '\n' + list.map(f => fs.readFileSync(path.join(SRC, f + '.js'), 'utf8')).join('\n');
 const css = fs.readFileSync(path.join(SRC, 'style.css'), 'utf8');

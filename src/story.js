@@ -124,7 +124,7 @@ Object.keys(DS.BOSSES || {}).forEach(function (k) { if (DS.BOSSES[k].name) REV[D
 var LINE = Object.getPrototypeOf(DS.say('memo', ''));
 function isKey(k) { if (typeof k !== 'string' || !k) return false; var l = DS.say(k, ''); return l.w !== k || !!l.c; }
 // r8: 화자의 사망·후계에 따라 갈리는 글 — heir(자리를 이은 이가 있을 때) · gone(방금 쓰러져 빈자리일 때) · of(그 줄이 기대는 사람 키). 읽는 쪽은 game.js 의 story()
-function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er', 'a', 'y', 'dz'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
+function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er', 'a', 'y', 'dz', 'ch'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
 function toLine(x) {
   if (x == null || typeof x !== 'object' || typeof x.t !== 'string' || 'lines' in x) return x;
   if (x.s && isKey(x.s)) return keep(DS.say(x.s, x.t), x);
@@ -288,6 +288,12 @@ function bare(x, hn) { x = toLine(x); return typeof x === 'string' ? subHero(x, 
 DS.castHere = function (s, k) { return !!(s && DS.CAST_NAME && DS.CAST_NAME[k]) && (s.mercs || []).some(function (m) { return m.cast === k; }) && !DS.castNow(s, k); };
 // r24: 이번 30번 승리에서 지워진 이름이 있었다 — 줄의 er 글(빈 글 = 뺀다)로 바꾼다 (웃음으로 맺지 않게)
 function erNow(sv) { var e = sv && sv.erLast; return !!(e && e.names && e.names.length); }
+// 2.5.0 판의 선택지: 줄의 ch = '3a' · '3b' · '3-'(아직 안 골랐다) · '3a-'(a 이거나 안 골랐다). 이번 대에 고른 것은 choice.js 의 DS.chPick (없으면 '' — 안 골랐다)
+DS.chOk = function (sv, spec) {
+  var m = /^(\d+)([ab-]+)$/.exec(String(spec || '')); if (!m) return true;
+  var p = ''; try { p = DS.chPick ? DS.chPick(sv, +m[1]) || '' : ''; } catch (x) { p = ''; }
+  return m[2].indexOf(p || '-') >= 0;
+};
 DS.storyFit = function (lines, sv) {
   sv = sv || (DS.G && DS.G.save);
   if (!Array.isArray(lines) || !sv || !sv.chars) return lines;
@@ -315,6 +321,7 @@ DS.storyFit = function (lines, sv) {
     return o;
   }
   lines.forEach(function (l) {
+    if (l && typeof l === 'object' && l.ch && !DS.chOk(sv, l.ch)) return;      // 2.5.0 판의 선택지
     if (l && typeof l === 'object' && l.dz && deadOf().length) return;
     if (hasDead(l)) { if (!deadOf().length) return; l = subDead(l); if (l == null) return; }
     if (l && typeof l === 'object' && l.y && typeof l.t === 'string' && deadOf().length) {      // 단톡방이 이번 대의 사람들로 채워진다

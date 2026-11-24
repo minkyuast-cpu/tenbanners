@@ -299,6 +299,9 @@ DS.fixSave = function (s) {
   s.v = Math.max(+s.v || 2, 2);
   if (DS.linFix) DS.linFix(s);
   if (DS.lootFix) DS.lootFix(s);      // 장비 내력(save.gh): 깨진 칸·지니지 않는 기록을 걷는다. 옛 저장은 빈 칸 (SAVE_V 그대로)
+  if (DS.hlFix) DS.hlFix(s);      // 2.5.0 유품(save.gh[식별자].hl): 깨진 칸은 걷는다. 옛 저장은 없음 (heirloom.js)
+  if (DS.msnFix) DS.msnFix(s);      // 2.5.0 선대의 훈수(save.msn): 이번 대의 열쇠 · 보상 받은 판 · 들어간 수 (mission.js)
+  if (DS.chFix) DS.chFix(s);      // 2.5.0 판의 선택지(save.chs): 이번 대에 고른 것 (choice.js)
   if (DS.ageFix) DS.ageFix(s);      // 나이: 세계 달력·나이·수명 (옛 저장은 결정적으로, SAVE_V 그대로)      // 가계도(2.9): 성별·성·사람 명부·관. 옛 저장은 결정적으로 배정 (SAVE_V 를 올리지 않아도 된다)
   if (DS.bnFix) DS.bnFix(s, wasBn);      // 4.0: 부대원 + 깃발 — 불변식 넷을 검사하고 어긴 줄만 변환한다 (두 번 돌려도 같다)
   if (DS.fuseUnions) DS.fuseUnions(s);      // r42: 옛 묶음 기록은 없어졌다 (비운다)

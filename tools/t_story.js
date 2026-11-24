@@ -325,5 +325,34 @@ module.exports = async function (page, shot, L) {
   A(!dd.none.o30.some(t => /그리고/.test(t)) && !dd.none.end.some(t => /마지막 말/.test(t)) && !dd.none.o30.concat(dd.none.end).some(t => /\{dead/.test(t)), 'no fallen: the dead-name lines drop out cleanly');
   A(dd.got.dead.join(',') === '가람,옹달' && dd.got.o30.some(t => /그리고 가람\. 옹달\./.test(t)) && dd.got.end.some(t => /쓰러진 이 3명\. 가람\. 옹달\./.test(t)) && dd.got.end.some(t => /단톡방 · 옹달: 내 마지막 말 기억하냐\. 「앞자리… 비우지 마라」/.test(t)) && dd.got.o5.some(t => /^단톡방 · (옹달|가람): 내 이름 건너뛰었다/.test(t)),
     'fallen people are named: 30 roll ' + dd.got.o30.filter(t => /그리고/.test(t)) + ' · ending ' + dd.got.end.filter(t => /쓰러진|마지막 말/.test(t)).join(' / ') + ' · chat ' + dd.got.o5.slice(-1));
+  // ── ⑦ 2.5.0 판의 선택지: 3 · 13 · 24번을 아직 안 골랐을 때 · 모두 a · 모두 b 에서 뒷글(21 · 29 · 30번, 엔딩, 막간 「문 앞의 불」, 고른 뒤의 줄, 다음 세대의 장 29번 도입)이 깨끗하게 풀린다 ──
+  const ch = await ev(() => {
+    var s = DS.G.save, by = {}, bad = [], out = {}, keep = s.chs; DS.SCENARIOS.forEach(function (x) { by[x.id] = x; });
+    function R(a) { return DS.storyResolve(a).map(function (l) { return (l.w ? l.w + ': ' : '') + l.t; }); }
+    function chk(t, at) { if (!t || /undefined|NaN|\{[^}]*\}|\[object/.test(t)) bad.push(at + ' | ' + t); var n = Array.from(t.replace(/^[^:]{1,16}: /, '')).length; if (n > 60) bad.push('긴 줄(' + n + ') ' + at + ' | ' + t); }
+    var c16 = (DS.LORE.campAll || []).filter(function (c) { return c.id === 'c16'; })[0];
+    [['none', null], ['a', 'a'], ['b', 'b']].forEach(function (st) {
+      if (st[1]) { s.chs = { k: DS.cycKey(s) }; DS.CHOICE_IDS.forEach(function (n) { s.chs[n] = st[1]; }); } else delete s.chs;
+      var o = { i21: R(by[21].intro), o29: R(by[29].outro), o30: R(by[30].outro), end: R(DS.LORE.ending), c16: R(DS.storyFit(c16.lines, s)), eg29: R(DS.egScn(29, 2, s).intro) };
+      if (st[1]) DS.CHOICE_IDS.forEach(function (n) { o['after' + n] = R(DS.storyFit(DS.chAfter(n, st[1], { txt: DS.chRwText(n, st[1]) }), s)); });
+      Object.keys(o).forEach(function (k) { if (!o[k].length && !(k === 'eg29' && !st[1])) bad.push(st[0] + ' ' + k + ' 비었다'); o[k].forEach(function (t) { chk(t, st[0] + ' ' + k); }); });
+      out[st[0]] = o;
+    });
+    DS.CHOICE_IDS.forEach(function (n) { var T = DS.CHOICE_TXT[n]; [T.q, T.qg, T.a.l, T.b.l, T.a.eg, T.b.eg, DS.chRwText(n, 'a'), DS.chRwText(n, 'b')].forEach(function (t, i) { chk(t, 'choice' + n + '.' + i); }); });
+    Object.keys(DS.MSN_TXT.c).forEach(function (k) { ['t', 's', 'ok', 'no'].forEach(function (f) { var t = DS.msnText(k, f, { n: 90, v: 75 }); chk(t, 'msn.' + k + '.' + f); if (f === 's' && Array.from(t).length > 16) bad.push('훈수 이름이 길다 ' + t); }); });
+    if (keep) s.chs = keep; else delete s.chs;
+    return { bad: bad, out: out };
+  });
+  if (ch.bad.length) console.log(ch.bad.slice(0, 30).join('\n'));
+  const has = (arr, re) => arr.some(t => re.test(t));
+  const N = ch.out.none, Ca = ch.out.a, Cb = ch.out.b;
+  A(ch.bad.length === 0, 'choice branches resolve cleanly (none · all a · all b): 21 · 29 · 30 · ending · 「문 앞의 불」 · aftermath · next-gen 29, and the 12 mission lines');
+  A(has(N.o30, /「나루\. 마루\. 돌쇠/) && has(Ca.o30, /「나루\. 마루\. 돌쇠/) && !has(Cb.o30, /마루\. 돌쇠/) && has(Cb.o30, /「나루\. 돌쇠\./) && has(Cb.o30, /흥얼거렸다\. 「마루\. 마루\.」/) && has(Cb.o30, /장부에 없습니다/),
+    '13: the 30 roll reads 마루 when written down (and with no choice yet); left with the king the roll skips it and he hums it from the grave: ' + Cb.o30.filter(t => /마루|장부/.test(t)).join(' / '));
+  A(has(N.c16, /지나가는 사람을 지키랬지/) && has(Ca.c16, /지나가는 사람을 지키랬지/) && has(Cb.c16, /짐은 다 내렸다/) && !has(N.c16, /막내|당번/) && has(Ca.c16, /^막내 대공: /) && has(Cb.c16, /^이번 달 당번 대공: /),
+    '3 · 24: 「문 앞의 불」 — who shows up and what they say changes (a: ' + Ca.c16.filter(t => /바르간|막내/.test(t)).join(' / ') + ' · b: ' + Cb.c16.filter(t => /바르간|당번/.test(t)).join(' / ') + ')');
+  A(has(N.i21, /지도로 찾았다/) && has(Cb.i21, /앞장서 찾았다/) && !has(N.o29, /고갯마루 손님|장작|흥얼/) && has(Ca.o29, /고갯마루 손님/) && has(Cb.o29, /장작도, 솥도/) && has(Cb.o29, /흥얼거림/) && has(Ca.end, /표지판/) && has(Cb.end, /빈손으로/) && has(Ca.end, /막내 올림/) && has(Cb.end, /열두 장/) && !has(N.end, /표지판|빈손|막내 올림|열두 장/),
+    '21 intro · 29 outro · ending follow the choices and stay as written when nothing is chosen yet');
+  A(N.eg29.length + 3 === Ca.eg29.length && has(Cb.eg29, /지게/) && has(Ca.eg29, /덜 삐뚤다/), 'next-generation 29 intro adds the three choice lines of this generation (' + Ca.eg29.slice(-3).join(' / ') + ')');
   console.log('story done');
 };

@@ -870,7 +870,7 @@ DS.lootFix = function (s) {
   for (id in gh) {
     if (!own(gh, id)) continue; r = gh[id];
     var g = DS.gear(id);
-    if (!g || g.grade < 4 || !r || typeof r !== 'object' || Array.isArray(r)) { delete gh[id]; continue; }
+    if (!g || !r || typeof r !== 'object' || Array.isArray(r) || (g.grade < 4 && !r.hl)) { delete gh[id]; continue; }      // 2.5.0: 보통 장비도 유품(hl)이면 남긴다 (heirloom.js DS.hlFix 가 칸을 고친다)
     if (!(r.h instanceof Array)) r.h = [];
     r.h = r.h.filter(function (e) { return e && typeof e === 'object' && typeof e.n === 'string' && typeof e.p === 'string'; }).map(function (e) { var o = { n: e.n.slice(0, 24), p: e.p.slice(0, 12) }; if (isFinite(e.y)) o.y = Math.round(+e.y); return o; });
     while (r.h.length > GH_MAX) { r.h.splice(1, 1); r.x = (r.x || 0) + 1; }
@@ -960,12 +960,13 @@ DS.statChips = function (t, cls, extra) {
 DS.descChips = function (t, cls) { var ps = chipParts(t); return ps.length && ps.every(function (x) { var m = CHIP_RE.exec(x); return m && m[1].length <= 12; }) ? DS.statChips(t, cls) : '<small class="dtx">' + esc(t) + '</small>'; };
 function tagsH(list, cls) { list = list.filter(Boolean); return list.length ? '<span class="tagrow' + (cls ? ' ' + cls : '') + '">' + list.map(function (t) { return '<i>' + t + '</i>'; }).join('') + '</span>' : ''; }      // 이미 HTML 인 조각들
 DS.tagsH = tagsH;
+function hlMark(g) { var s = curSave(); return s && DS.hlOf && DS.hlOf(s, g.id) ? '<i class="lhl">' + esc(DS.HL_TXT.tag) + '</i> ' : ''; }      // 2.5.0 유품 표 (heirloom.js)
 function gname(g) {      // r12: 강화 색은 DS.enhClass(그래픽 2차 표). 2.1.0: 등급은 이름 색(보라·금)과 아이콘 테두리로만 — 앞의 눈금(깃발)은 없앴다
   var nm = esc(g.short || g.name), ec = DS.enhClass ? DS.enhClass(g.enh || 0) : 'en en' + DS.enhTier(g.enh || 0);
-  if (g.grade < 2) return '<span class="lg lg1 ' + ec + '">' + nm + '</span>';
+  if (g.grade < 2) return hlMark(g) + '<span class="lg lg1 ' + ec + '">' + nm + '</span>';
   if (g.enh) nm = nm.replace(' +' + g.enh, ' <span class="' + ec + '">+' + g.enh + '</span>');
   var s = curSave(), w = s ? DS.ghWord(s, g.id) : '';      // 오래 대물림된 물건은 이름 앞에 꾸밈 한 마디
-  return '<span class="lg lg' + (g.grade >= 5 ? 5 : 4) + '">' + (w ? '<i class="lold">' + w + '</i> ' : '') + nm + '</span>';
+  return hlMark(g) + '<span class="lg lg' + (g.grade >= 5 ? 5 : 4) + '">' + (w ? '<i class="lold">' + w + '</i> ' : '') + nm + '</span>';
 }
 function pips(g) {      // 옛 등급 눈금 — 2.1.0 부터 장비 화면에는 그리지 않는다 (다른 파일이 부를 수 있어 남겨 둔다)
   var n = g.grade >= 5 ? 5 : g.grade >= 4 ? 4 : 1, h = '<i class="gp" role="img" aria-label="' + esc(DS.gearTag(g) || '보통') + '">'; for (var i = 0; i < n; i++) h += '<b' + (i === 4 ? ' class="g5"' : '') + '></b>'; return h + '</i>'; }
@@ -983,7 +984,7 @@ DS.gearOffChip = offChip;
 DS.gearHtml = function (g, full, ch) {
   if (!g) return '';
   var st = ch ? DS.gearStatTxt(g, DS.gearAt(g, ch.L, ch.cls, ch.gt)) : g.stat;      // 2.1.0: 그 사람 기준 수치 · r45: 칩 줄로, 맞지 않는 병과는 붉은 칩 하나 더
-  var h = '<b>' + gname(g) + ' <i class="own">' + gtag(g) + g.kind + '</i></b>' + DS.statChips(st, '', ch && !DS.gearFits(ch.cls, g) ? offChip() : '') + (g.grade >= 4 ? ghLine(g.id, full) : '');
+  var h = '<b>' + gname(g) + ' <i class="own">' + gtag(g) + g.kind + '</i></b>' + DS.statChips(st, '', ch && !DS.gearFits(ch.cls, g) ? offChip() : '') + (g.grade >= 4 ? ghLine(g.id, full) : '') + (DS.hlHtml ? DS.hlHtml(curSave(), g.id, ch) : '');
   (g.affix || []).forEach(function (a) { h += '<small class="lax"><i>' + (a.pre ? esc(a.name) : '〈' + esc(a.name) + '〉') + '</i> ' + esc(a.desc) + '</small>'; });
   (g.special || []).forEach(function (t) { h += '<small class="lax"><i>고유</i> ' + esc(t) + '</small>'; });
   if (g.lore) h += '<small class="llore">' + esc(g.lore) + '</small>';
@@ -1028,7 +1029,7 @@ function bagIds(save) {
 function sellList(save, withPlain) {
   var ids = [], gold = 0, n = 0;
   Object.keys(save.gear).forEach(function (id) {
-    var g = DS.gear(id); if (!g || save.lock[id] || g.grade >= 5 || (g.enh || 0) >= 1 || (g.grade === 1 && !withPlain)) return;      // 잠근 것·전설·강화한 것(+1 이상)은 일괄 판매에서 빼 둔다
+    var g = DS.gear(id); if (!g || save.lock[id] || g.grade >= 5 || (g.enh || 0) >= 1 || (g.grade === 1 && !withPlain) || (DS.hlOf && DS.hlOf(save, id))) return;      // 2.5.0: 유품은 「정리할 것」에 들지 않는다      // 잠근 것·전설·강화한 것(+1 이상)은 일괄 판매에서 빼 둔다
     ids.push(id); n += save.gear[id]; gold += g.sell * save.gear[id];
   });
   return { ids: ids, n: n, gold: gold };
@@ -1133,6 +1134,7 @@ function detail(id, redraw) {
       '<p class="lscale">수치는 입은 사람의 레벨을 따른다 (지금 부대 Lv ' + DS.gearRefL() + ' 기준)</p>';
     var gs = DS.ghParts(s, id), gc = DS.ghChain(s, id);
     if (gs.length || gc) h += '<p class="lher">' + tagsH(gs.map(esc), 'gh') + (gs.length && gc ? '<br>' : '') + esc(gc) + '</p>';
+    if (DS.hlHtml && DS.hlOf(s, id)) h += '<p class="lhlp">' + DS.hlHtml(s, id, null) + '</p>';      // 2.5.0 유품: 누구의 것 · 마지막 한마디 · 대를 넘긴 수 · 같은 가문의 덤
     (g.affix || []).forEach(function (a) { h += '<p class="lax"><i>' + (a.pre ? esc(a.name) : '〈' + esc(a.name) + '〉') + '</i> ' + esc(a.desc) + '</p>'; });
     (g.special || []).forEach(function (t) { h += '<p class="lax"><i>고유</i> ' + esc(t) + '</p>'; });
     if (g.lore) h += '<p class="llore">' + esc(g.lore) + '</p>';
@@ -1172,7 +1174,8 @@ function detail(id, redraw) {
     if (e.target.closest('[data-loot-sell]')) {
       if (s.lock[id]) return;
       var doSell = function () { if (!(s.gear[id] > 0)) return; s.gear[id]--; if (!s.gear[id]) delete s.gear[id]; DS.ghTidy(s); s.gold += g.sell; U.A('coin'); U.persist(); again(); };
-      if (g.grade >= 4 || g.enh >= 1) ask('판매할까?', gname(g) + '<br>판매한 물건은 되돌릴 수 없다.', '판매 +' + g.sell + '골드', doSell); else doSell();
+      var hlw = DS.hlOf && DS.hlOf(s, id);      // 2.5.0: 유품은 잠금을 풀었어도 한 번 더 묻는다
+      if (g.grade >= 4 || g.enh >= 1 || hlw) ask('판매할까?', gname(g) + (hlw ? '<br>' + esc(DS.HL_TXT.of.replace('{n}', hlw.n)) + '이다.' : '') + '<br>판매한 물건은 되돌릴 수 없다.', '판매 +' + g.sell + '골드', doSell); else doSell();
     }
   });
   o.onclose = function () { if (redraw) redraw(); };
@@ -1185,9 +1188,9 @@ function ask(title, html, yes, fn) {
 function sellSel(redraw) {      // 고른 것을 판다: 확인 창 하나, 확인 단추만 「판다 +n골드」
   var U = DS.ui, s = DS.G.save, si = bselInfo(s);
   if (!si.n) return;
-  var fancy = si.ids.filter(function (id) { var g = DS.gear(id); return g.grade >= 5 || (g.enh || 0) >= 1; });
+  var fancy = si.ids.filter(function (id) { var g = DS.gear(id); return g.grade >= 5 || (g.enh || 0) >= 1 || (DS.hlOf && DS.hlOf(s, id)); });
   var q = U.overlay('<div class="result ldet"><h2>' + si.n + '점을 팔까?</h2><ul class="mlist">' + si.ids.slice(0, 12).map(function (id) { return '<li>' + DS.gearTitle(DS.gear(id)) + (s.gear[id] > 1 ? ' ×' + s.gear[id] : '') + '</li>'; }).join('') + (si.ids.length > 12 ? '<li>그 외 ' + (si.ids.length - 12) + '종</li>' : '') + '</ul>' +
-    (fancy.length ? '<p class="mwarn">전설이나 강화한 장비 ' + fancy.length + '점이 들어 있다.</p>' : '') + '<p class="dim">판매한 물건은 되돌릴 수 없다.</p>' +
+    (fancy.length ? '<p class="mwarn">전설이나 강화한 장비, 유품 ' + fancy.length + '점이 들어 있다.</p>' : '') + '<p class="dim">판매한 물건은 되돌릴 수 없다.</p>' +
     '<button class="btn red wide" data-loot-yes="1">판매 +' + si.gold + '골드</button><button class="btn wide" data-close>취소</button></div>', 'modal center');
   q.addEventListener('click', function (e) {
     if (!e.target.closest('[data-loot-yes]') || q.dataset.done) return; q.dataset.done = '1';
