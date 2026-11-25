@@ -274,6 +274,7 @@ DS.fixSave = function (s) {
   if (s.sortie != null) {      // 2.2.8 출전 (맹주 밖 가주 둘): [{ h: 가문 번호, m: 가주 번호, n: 이름 }] — 깨진 칸은 걷고, 없으면 DS.sortieFix 가 가장 센 둘로 (옛 저장)
     s.sortie = Array.isArray(s.sortie) ? s.sortie.filter(function (e) { return e && typeof e === 'object' && int(e.h) && own(s.chars, e.h); }).slice(0, 2).map(function (e) { var o = { h: +e.h, m: int(e.m) ? +e.m : 0 }; if (typeof e.n === 'string') o.n = e.n.slice(0, 24); return o; }) : [];
   }
+  if (s.sortieGap != null) { var sg = Math.round(+s.sortieGap); if (sg > 0 && sg <= 2) s.sortieGap = sg; else delete s.sortieGap; }      // 2.6.3: 일부러 비워 둔 출전 자리 수
   if (s.sortieNews != null) { if (!Array.isArray(s.sortieNews)) delete s.sortieNews; else s.sortieNews = s.sortieNews.filter(function (n) { return n && typeof n === 'object' && typeof n.in === 'string'; }).slice(-6).map(function (n) { return { out: typeof n.out === 'string' ? n.out.slice(0, 24) : '', in: n.in.slice(0, 24), why: String(n.why || '').slice(0, 6) }; }); }
   if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 (가주 하나 · 가문원은 맹주 가문 · 그 밖은 막사)
   if (!Array.isArray(s.fallen)) s.fallen = [];

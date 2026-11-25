@@ -23,16 +23,16 @@ function pm(v) { return (Math.round(v * 1000) / 10).toFixed(1).replace(/\.0$/, '
 // 설명 글: {p} 굴림값 % · {n} 지금 부대 레벨 기준 실제 수치 · {g} 굴림값 그대로 · {m} 소수 한 자리 % · {q} (1 − 굴림값) %
 // 2.2.6: 권갑(fist) · 도복(gi)에도 맞는 옵션 — 별 스민 · 바람 탄 · 불꽃 튀는 · 쌍두 · 축성 · 메아리 · 자비 / 아지랑이
 var AFFIX = {
-  keen:   [1, '날 선', 'w', [0.10, 0.30], { powp: 1 }, '위력 +{p}%'],
+  keen:   [1, '날 선', 'w', [0.10, 0.30], { powp: 1 }, '무기 수치 +{p}%'],
   honed:  [1, '벼린', 'w', [0.02, 0.08], { amp: 1 }, '공격, 마공 +{p}%'],
   sharp:  [1, '매서운', 'w', [0.04, 0.16], { crit: 1 }, '치명타 +{p}%'],
-  heavy:  [1, '묵직한', 'w', [0.20, 0.40], { powp: 1, spd: -0.04 }, '위력 +{p}%, 행동 회복 −4%'],
-  fierce: [1, '사나운', 'w', [0.25, 0.45], { powp: 1, defp: -0.4 }, '위력 +{p}%, 방어가 깎인다'],
+  heavy:  [1, '묵직한', 'w', [0.20, 0.40], { powp: 1, spd: -0.04 }, '무기 수치 +{p}%, 행동 회복 −4%'],
+  fierce: [1, '사나운', 'w', [0.25, 0.45], { powp: 1, defp: -0.4 }, '무기 수치 +{p}%, 방어가 깎인다'],
   dusk:   [1, '빛바랜', 'w', [0.06, 0.12], { amp: 1, hpp: -1.5 }, '공격, 마공 +{p}%, 최대 HP가 깎인다'],
-  even:   [1, '고른', 'w', [0.05, 0.15], { powp: 1, crit: 0.4 }, '위력 +{p}%, 치명타 조금'],
+  even:   [1, '고른', 'w', [0.05, 0.15], { powp: 1, crit: 0.4 }, '무기 수치 +{p}%, 치명타 조금'],
   oiled:  [1, '기름 먹인', 'w', [0.02, 0.06], { spd: 1, crit: 1 }, '행동 회복, 치명타 +{p}%'],
   guard:  [1, '막아서는', 'w', [0.15, 0.45], { defp: 1 }, '방어 +{n}'],
-  star:   [1, '별 스민', ['wand', 'staff', 'fist'], [0.06, 0.20], { mp: 1, powp: 0.5 }, '마나 +{p}%, 위력 조금'],
+  star:   [1, '별 스민', ['wand', 'staff', 'fist'], [0.06, 0.20], { mp: 1, powp: 0.5 }, '마나 +{p}%, 무기 수치 조금'],
   wind:   [1, '바람 탄', ['bow', 'lance', 'fist'], [0.02, 0.07], { spd: 1 }, '행동 회복 +{p}%'],
   light:  [1, '가벼운', 'a', [0.02, 0.08], { spd: 1 }, '행동 회복 +{p}%'],
   hard:   [1, '단단한', 'a', [0.12, 0.40], { defp: 1 }, '방어 +{n}'],
@@ -51,7 +51,7 @@ var AFFIX = {
   angry:  [1, '성난', 'w', [0.15, 0.35], { eng: 'rage' }, '잃은 HP만큼 주는 피해가 는다 (빈사일 때 +{p}%)'],
   deadly: [1, '치명적인', 'w', [0.15, 0.40], { eng: 'critX' }, '치명타 피해 +{p}% (기본 150%)'],
   greedy: [1, '탐욕스러운', 'w', [0.10, 0.25], { eng: 'goldUp' }, '쓰러뜨린 적의 골드 +{p}%'],
-  spear:  [1, '꿰뚫는', ['bow', 'lance'], [0.20, 0.45], { eng: 'pierce' }, '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 {p}% 위력으로 꿰뚫는다'],
+  spear:  [1, '꿰뚫는', ['bow', 'lance'], [0.20, 0.45], { eng: 'pierce' }, '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 {p}% 피해로 꿰뚫는다'],
   quick:  [1, '재빠른', 'w', [0.05, 0.15], { eng: 'atkTick' }, '기본 공격에 드는 틱 −{p}%'],
   spark:  [1, '불꽃 튀는', ['staff', 'wand', 'fist'], [0.20, 0.40], { eng: 'splash' }, '기본 공격이 맞힌 적 둘레의 적에게도 {p}% 피해'],
 
@@ -192,7 +192,7 @@ var PAIR_NAME = { sun: ['해의 칼', '달의 창'], bro: ['맏이의 갑옷', '
 // 엔진 fx 칸 → 설명 글 (전설의 대표 효과 줄)
 var ENG_TXT = {
   killDrain: function (v) { return '적을 쓰러뜨릴 때마다 흡혈 +' + pm(v) + '% (그 싸움 동안, 6번까지)'; },
-  pierce: function (v) { return '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 꿰뚫는다 (' + pct(v) + '% 위력)'; },
+  pierce: function (v) { return '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 꿰뚫는다 (' + pct(v) + '% 피해)'; },
   echo: function (v) { return '기술이 ' + pct(v) + '% 확률로 한 번 더 나간다 (필살기 제외)'; },
   lone: function (v) { return '2칸 안에 다른 가주가 없거나 홀로 남으면 받는 피해 −' + pct(v) + '%, 주는 피해 +' + pct(v) + '%'; },
   curse: function (v) { return '저주: 싸우는 동안 초마다 최대 HP의 ' + pm(v) + '%를 잃는다 (30% 아래로는 깎이지 않는다)'; },
@@ -1026,7 +1026,7 @@ DS.gearOffChip = offChip;
 // full: 내력의 거쳐 간 손까지 (지휘관 창의 장비 줄) · ch: 그 사람 기준 수치 (없으면 지금 부대 레벨)
 DS.gearHtml = function (g, full, ch) {
   if (!g) return '';
-  var st = ch ? DS.gearStatTxt(g, DS.gearAt(g, ch.L, ch.cls, ch.gt)) : g.stat;      // 2.1.0: 그 사람 기준 수치 · r45: 칩 줄로, 맞지 않는 병과는 붉은 칩 하나 더
+  var st = ch ? DS.gearStatTxt(g, DS.gearAt(g, ch.L, ch.cls, ch.gt), ch.cls) : g.stat;      // 2.1.0: 그 사람 기준 수치 · r45: 칩 줄로, 맞지 않는 병과는 붉은 칩 하나 더
   var off = !!ch && !DS.gearFits(ch.cls, g);
   var h = '<b>' + gname(g) + ' <i class="own">' + gtag(g) + g.kind + '</i></b>' + DS.statChips(st, '', off ? offChip() : '') + (off ? '<small class="goffn">' + esc(DS.gearOffNote()) + '</small>' : '') + (g.grade >= 4 ? ghLine(g.id, full) : '') + (DS.hlHtml ? DS.hlHtml(curSave(), g.id, ch) : '');      // 2.6.0: 깎인 수치(칩) + 규칙 한 줄
   (g.affix || []).forEach(function (a) { h += '<small class="lax"><i>' + (a.pre ? esc(a.name) : '〈' + esc(a.name) + '〉') + '</i> ' + esc(a.desc) + '</small>'; });
@@ -1045,19 +1045,28 @@ function better(save, g) {
   return best;
 }
 var SHOW = [['hp', 'HP'], ['atk', '공격'], ['mag', '마공'], ['def', '방어'], ['res', '마방'], ['mp', '마나']];
-// 입혔을 때 능력치가 어떻게 바뀌는지 (바뀌는 것만)
+// 입혔을 때 능력치가 어떻게 바뀌는지 (바뀌는 것만). 2.6.3: 맨 앞에 전투력, 수치는 싸움터에 서는 그대로(등급 · 공훈 얹힘까지 — 인물 정보의 수와 같다)
+function wearStats(ch) {
+  var sv = curSave(), st = null;
+  try { if (sv && sv.chars && sv.chars[ch.id] && DS.cmdSpec) { var hero = ch.id === +sv.hero, who = hero ? ch.ps : DS.bearer(sv, ch), u = who || hero ? DS.cmdSpec(ch, hero, who || null) : null;
+    if (u) st = { hp: u.mhp || u.hp, mp: u.mmp != null ? u.mmp : u.mp, atk: u.atk, mag: u.mag, def: u.def, res: u.res, crit: u.crit, spd: u.spd, rng: u.rng, drain: u.drain, pow: DS.power ? DS.power(u) : 0 }; } } catch (e) { st = null; }
+  if (!st) { st = DS.charStats(ch); st.pow = 0; }
+  return st;
+}
 function diffHtml(ch, g) {
-  var a = DS.charStats(ch), c2 = {}, k; for (k in ch) c2[k] = ch[k]; c2[g.slot] = g.id;
-  var b = DS.charStats(c2), out = [];
-  function add(label, x, y, fmt) { if (x === y) return; out.push(DS.chip(label, fmt(x) + '→' + fmt(y), y < x ? -1 : 1)); }
-  var num = function (v) { return String(v); }, pc = function (v) { return pct(v) + '%'; }, one = function (v) { return String(Math.round(v * 10) / 10); };
-  SHOW.forEach(function (s) { add(s[1], a[s[0]], b[s[0]], num); });
+  var a = wearStats(ch), c2 = {}, k; for (k in ch) c2[k] = ch[k]; c2[g.slot] = g.id;
+  var b = wearStats(c2), out = [];
+  function add(label, x, y, fmt, cls) { if (x === y) return; out.push(DS.chip(label, fmt(x) + '→' + fmt(y), y < x ? -1 : 1).replace('class="sch', 'class="sch' + (cls || ''))); }
+  var num = function (v) { return String(v); }, big = function (v) { return Math.round(v).toLocaleString(); };
+  if (a.pow && b.pow) add('전투력', Math.round(a.pow), Math.round(b.pow), big, ' pw');
+  SHOW.forEach(function (s) { add(s[1], Math.round(a[s[0]]), Math.round(b[s[0]]), num); });
   add('치명', pct(a.crit), pct(b.crit), function (v) { return v + '%'; });
   add('행동 회복', Math.round(a.spd * 10), Math.round(b.spd * 10), function (v) { return String(v / 10); });
   add('사거리', a.rng[1], b.rng[1], num);
   add('흡혈', pct(a.drain || 0), pct(b.drain || 0), function (v) { return v + '%'; });
   return out.length ? '<span class="schips">' + out.join('') + '</span>' : '능력치 변화 없음';
 }
+DS.gearDiffHtml = diffHtml;
 var sortBy = 'grade';
 var lowOpen = false, LOW_FOLD = 5, TOP_MAX = 12;      // r8 menus: 가방의 「지금 것보다 좋지 않은」 장비가 이보다 많으면 한 줄로 접는다 (이 판 동안 기억)
 function bagIds(save) {
@@ -1178,7 +1187,7 @@ function detail(id, redraw) {
   function body() {
     var g = DS.gear(id); if (!g || !(s.gear[id] > 0)) return '';
     var lk = !!s.lock[id], h = '<div class="result ldet lr' + g.grade + '"><h2>' + (DS.iconHtml ? DS.iconHtml('gear', id, { cls: 'ldico' }) : '') + gname(g) + '</h2><p class="lsub">' + tagsH([DS.gearTag(g) ? esc(DS.gearTag(g)) : '', esc(g.kind), '×' + s.gear[id], lk ? '잠김' : '']) + '</p><p class="lstat">' + DS.statChips(g.stat) + '</p>' +
-      '<p class="lscale">수치는 입은 사람의 레벨을 따른다 (지금 부대 Lv ' + DS.gearRefL() + ' 기준)</p>';
+      '<p class="lscale">' + (g.slot === 'w' ? '무기의 수치는 입은 사람의 공격(마법 병과는 마공)에 그대로 더해진다. ' : '') + '수치는 입은 사람의 레벨을 따른다 (지금 부대 Lv ' + DS.gearRefL() + ' 기준). 아래는 입었을 때 바뀌는 능력치</p>';
     var gs = DS.ghParts(s, id), gc = DS.ghChain(s, id);
     if (gs.length || gc) h += '<p class="lher">' + tagsH(gs.map(esc), 'gh') + (gs.length && gc ? '<br>' : '') + esc(gc) + '</p>';
     if (DS.hlHtml && DS.hlOf(s, id)) h += '<p class="lhlp">' + DS.hlHtml(s, id, null) + '</p>';      // 2.5.0 유품: 누구의 것 · 마지막 한마디 · 대를 넘긴 수 · 같은 가문의 덤

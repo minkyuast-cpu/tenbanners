@@ -5680,3 +5680,8 @@ html body #app#app .pplv .pph .pph1 button[aria-pressed="true"] { border-color: 
   .pplv .pphd { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; }
   .pplv .pptop { margin: 0; grid-auto-columns: auto; } .pplv .ppa { min-height: 40px; padding: 4px 10px; } .pplv .ppa small { display: none; }
 }
+
+/* 2.6.3: 출전 자리가 비었을 때의 알림 · 장비 고르기 창의 「지금→입은 뒤」 */
+html body #app#app .sobar .soh small .sogap { font-style: normal; font-weight: 700; color: #f0b64a; }
+.gpk-now { display: block; font-size: var(--fs-s); color: var(--mute, #c4b89e); margin-bottom: 2px; }
+.schips .sch.pw { border-color: rgba(210, 176, 114, .6); } .schips .sch.pw i { color: var(--a-gold, #d2b072); }

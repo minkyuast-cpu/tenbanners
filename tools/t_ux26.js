@@ -118,9 +118,12 @@ module.exports = async (page, shot, L, env) => {
   await snap('party_tab');
   const rest1 = await ev(() => +document.querySelector('.ov .hk9 .hkso.rs[data-sotg]').dataset.sotg);
   taps = 0;
+  const out1 = await ev(() => +document.querySelector('.ov .hk9 .hkso:not(.rs)[data-sotg]').dataset.sotg);      // 2.6.3: 먼저 한 사람을 쉬게 한다 (자리는 빈 채로) → 원하는 사람을 내보낸다
+  await tap('.ov .hk9 .hkso[data-sotg="' + out1 + '"]');
+  A(await ev((id) => { var s = DS.G.save; return !DS.sortieOn(s, id) && s.sortie.length === 1 && s.sortieGap === 1 && /출전 2 \/ 3/.test((document.querySelector('.ov .sobar.party') || {}).innerText || ''); }, out1), 'party tab: tapping a card that is out rests it and leaves the seat open (출전 2 / 3, nobody steps in)');
   await tap('.ov .hk9 .hkso.rs[data-sotg="' + rest1 + '"]');
   c = await ev((id) => { var s = DS.G.save; return { on: DS.sortieOn(s, id), party: s.party.indexOf(id) >= 0, ovs: document.querySelectorAll('.ov:not(.ghost)').length, picker: !!document.querySelector('.sopk'), btn: (document.querySelector('.ov .hk9 .hkso[data-sotg="' + id + '"]') || {}).className || '', n: s.sortie.length }; }, rest1);
-  A(c.on && c.party && c.ovs === 1 && !c.picker && !/rs/.test(c.btn) && c.n === 2 && taps === 1, 'party tab: 1 tap on a resting card sends that 가주 out, in place (no picker sheet); was 4 (바꾸기 → 쉴 이 → 나갈 이 → 확인)');
+  A(c.on && c.party && c.ovs === 1 && !c.picker && !/rs/.test(c.btn) && c.n === 2 && taps === 2, 'party tab: 2 taps swap exactly the two you mean (rest one, send one), in place with no picker sheet; was 4 (바꾸기 → 쉴 이 → 나갈 이 → 확인)');
   await L.closeAll(page);
   // 입구 창: 모두가 한 줄에, 누르면 그 자리에서
   await ev(() => DS.openGate(DS.scn(14), null)); await L.sleep(500);
@@ -130,10 +133,11 @@ module.exports = async (page, shot, L, env) => {
   await snap('gate');
   const line0 = c.line, rest2 = await ev(() => +document.querySelector('.ov .gate .sof.rest[data-sotg]').dataset.sotg);
   taps = 0;
+  await tap('.ov .gate .sof.in[data-sotg]');
   await tap('.ov .gate .sof.rest[data-sotg="' + rest2 + '"]');
   c = await ev((id) => { var o = document.querySelector('.ov .gate'), s = DS.G.save; return { gate: !!o, on: DS.sortieOn(s, id), cls: (o.querySelector('.sof[data-sotg="' + id + '"]') || {}).className || '', ovs: document.querySelectorAll('.ov:not(.ghost)').length, go: !!document.querySelector('#goScn'), three: o.querySelectorAll('.sof.in').length, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.role === 'cmd').map(u => u.ch), line: [...o.querySelectorAll('.facts dt')].filter(d => d.textContent === '우리 부대')[0].nextElementSibling.textContent }; }, rest2);
-  A(c.gate && c.on && /\bin\b/.test(c.cls) && c.ovs === 1 && c.three === 3 && c.units.indexOf(rest2) >= 0, 'gate: tapping a resting face swaps it in on the spot — still the gate, still three out, field units follow');
-  A(c.go && taps === 1, 'gate → change one → 입장 = 2 taps (face + 입장); was 5 (바꾸기 → 쉴 이 → 나갈 이 → 확인 → 입장). 우리 부대: 「' + line0.trim() + '」 → 「' + c.line.trim() + '」');
+  A(c.gate && c.on && /\bin\b/.test(c.cls) && c.ovs === 1 && c.three === 3 && c.units.indexOf(rest2) >= 0, 'gate: tapping a face that is out, then a resting face, swaps exactly those two on the spot — still the gate, still three out, field units follow');
+  A(c.go && taps === 2, 'gate → change one → 입장 = 3 taps (쉴 얼굴 + 나갈 얼굴 + 입장); was 5 (바꾸기 → 쉴 이 → 나갈 이 → 확인 → 입장). 우리 부대: 「' + line0.trim() + '」 → 「' + c.line.trim() + '」');
   await snap('gate_after_tap');
   // 맹주는 늘 나간다 (눌러도 그대로)
   await ev(() => document.querySelector('.ov .gate .sof.lord').click()); await L.sleep(200);

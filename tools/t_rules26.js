@@ -186,17 +186,19 @@ module.exports = async (page, shot, L) => {
   A(c === '장비 2점이 가방으로 돌아왔다', 'the 맹주 falls: farewell cinematic says 「' + c + '」');
   await ev(() => DS.cineSkip()); await sleep(700);
   await waitFor(() => !!document.querySelector('.ov .lgrite .gbl'), null, 12000);      // 2.6.0: 추도는 교회에서 치른다 — 창이 뜰 때까지 기다린다
-  c = await ev(() => { var o = document.querySelector('.ov .lgrite'), s = DS.G.save, h = s.chars[s.hero], b = window.__h; return { gb: (o.querySelector('.gbl') || {}).textContent || '', w: h.w, a: h.a, bw: s.gear[b.w] || 0, ba: s.gear[b.a] || 0, hl: Object.keys(s.gh || {}).filter(function (k) { return s.gh[k].hl; }).length - b.hl }; });
-  A(c.gb === '장비 2점이 가방으로 돌아왔다' && c.w == null && c.a == null && c.bw >= 1 && c.ba >= 1 && c.hl === 1, 'succession rite, mourning step: the line is there; the seat is stripped, both pieces are in the bag, one heirloom');
+  c = await ev(() => { var g0 = document.querySelector('.ov .lgrite .gbl'), o = g0 ? g0.closest('.lgrite') : document.querySelector('.ov .lgrite'), s = DS.G.save, h = s.chars[s.hero], b = window.__h; return { gb: (o.querySelector('.gbl') || {}).textContent || '',      // 창이 둘일 수 있다 (추도 · 「장비가 없다」) — 줄이 있는 창을 본다
+    w: h.w, a: h.a, bw: s.gear[b.w] || 0, ba: s.gear[b.a] || 0, hl: Object.keys(s.gh || {}).filter(function (k) { return s.gh[k].hl; }).length - b.hl }; });
+  A(c.gb === '장비 2점이 가방으로 돌아왔다' && c.w == null && c.a == null && c.bw >= 1 && c.ba >= 1 && c.hl === 1, 'succession rite, mourning step: the line is there; the seat is stripped, both pieces are in the bag, one heirloom ' + JSON.stringify(c));
   await shot('r2_rite_mourn');
   await page.click('[data-lgstep="pick"]'); await sleep(400); await page.click('[data-lgheir]'); await sleep(1100);
   c = await top();
   A(/공훈은 가문에 남는다\. 선대의 장비는 가방으로 돌아왔다\. 새 맹주는 장비 없이 시작한다/.test(c) && !/장비와 공훈은 가문에 남는다/.test(c), 'confirm step no longer promises the gear: 「…선대의 장비는 가방으로 돌아왔다. 새 맹주는 장비 없이 시작한다」');
   await shot('r2_rite_confirm');
   await page.click('#yesHeir'); await sleep(600); await L.skipStory(page); await sleep(600);
-  for (let i = 0; i < 30; i++) { const st = await ev(() => ({ cine: DS.cineBusy(), gbd: !!document.querySelector('.ov .gbd'), ov: !!document.querySelector('#app .ov:not(.ghost)') })); if (st.gbd) break; if (st.cine) await ev(() => DS.cineSkip()); else if (st.ov) await ev(() => { var b = document.querySelector('#app .ov:not(.ghost) [data-close]'); if (b) b.click(); else DS.ui.closeAll(); }); await sleep(700); }
-  c = await ev(() => { var o = document.querySelector('.ov .gbd'), s = DS.G.save, h = s.chars[s.hero]; return { t: o ? o.innerText.replace(/\n+/g, ' / ') : '', w: h.w, a: h.a, vac: !!h.vac, name: DS.charName(h) }; });
-  A(!c.vac && c.w == null && c.a == null && /새 맹주/.test(c.t) && /장비가 없다/.test(c.t) && /장비 자동 착용/.test(c.t), 'new 맹주 ' + c.name + ' stands with empty slots and gets the nudge: ' + c.t);
+  for (let i = 0; i < 40; i++) { const st = await ev(() => { var g = document.querySelector('.ov .gbd'), mine = !!g && /새 맹주/.test(g.innerText); return { cine: DS.cineBusy(), gbd: mine, ov: !!document.querySelector('#app .ov:not(.ghost)') }; }); if (st.gbd) break;      // 앞 장에서 선 다른 가주의 「장비가 없다」가 먼저 뜰 수 있다 — 그 창은 닫고 새 맹주의 것을 기다린다
+    if (st.cine) await ev(() => DS.cineSkip()); else if (st.ov) await ev(() => { var b = document.querySelector('#app .ov:not(.ghost) [data-close]'); if (b) b.click(); else DS.ui.closeAll(); }); await sleep(700); }
+  c = await ev(() => { var o = document.querySelector('.ov .gbd'), s = DS.G.save, h = s.chars[s.hero]; return { t: o ? o.innerText.replace(/\n+/g, ' / ') : '', w: h.w, a: h.a, vac: !!h.vac, name: DS.charName(h), dbg: DS.charList(s).map(function (ch) { return ch.id + ch.cls + (ch.id === s.hero ? '*' : '') + ':' + (ch.w || '-') + '/' + (ch.a || '-') + (ch.vac ? ' vac' : ''); }).join(' | ') + ' || bag ' + Object.keys(s.gear).join(',') }; });
+  A(!c.vac && c.w == null && c.a == null && /새 맹주/.test(c.t) && /장비가 없다/.test(c.t) && /장비 자동 착용/.test(c.t), 'new 맹주 ' + c.name + ' stands with empty slots and gets the nudge: ' + c.t + ' ## ' + c.dbg);
   await page.click('.ov .gbd [data-gbd]'); await sleep(600);
   c = await ev(() => { var s = DS.G.save, h = s.chars[s.hero]; return { w: h.w, a: h.a, fits: DS.gearFits(h.cls, DS.gear(h.w)) && DS.gearFits(h.cls, DS.gear(h.a)) }; });
   A(c.w && c.a && c.fits, '「장비 자동 착용」 dresses the new 맹주 in fitting gear (' + c.w + ', ' + c.a + ')');

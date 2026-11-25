@@ -77,10 +77,19 @@ DS.gearAt = function (g, L, cls, te) {
     crit: f(g.crit || 0), spd: f(g.spd || 0), mp: f(g.mp || 0), amp: f(g.amp || 0), ad: f(g.ad || 0), off: off };
 };
 // 능력치 글 (gearAt 의 결과로). 단이 없으니 「위력 +23」 같은 수는 그 레벨의 것이다
-DS.gearStatTxt = function (g, x) {
+// 2.6.3: 「위력」이라는 말을 없앴다 — 무기의 수치는 입은 사람의 주 능력치에 그대로 더해지므로 그 이름으로 적는다: 물리 병과 「공격」 · 마법 병과 「마공」 · 무투가 「공격, 마공」.
+//   입을 사람을 모르면(가방 · 전리품) 그 무기를 쓰는 병과로 정한다 (지팡이 → 마공, 검 → 공격, 권갑 → 공격, 마공). 능력치 셈(DS.charStats)은 그대로다
+function powKindCls(cls) { var c = DS.CLASSES[cls]; return !c ? 'atk' : c.martial ? 'both' : (c.dtype === 'magic' || c.kind === 'holy') ? 'mag' : 'atk'; }
+DS.gearPowKind = function (g, cls) {
+  if (cls && DS.CLASSES[cls]) return powKindCls(cls);
+  var ks = {}; for (var c in DS.CLS_GEAR) { var G0 = DS.CLS_GEAR[c]; if (g && G0 && G0.w && G0.w.indexOf(g.cat) >= 0) ks[powKindCls(c)] = 1; }
+  return ks.both && !ks.atk && !ks.mag ? 'both' : ks.mag && !ks.atk ? 'mag' : 'atk';
+};
+DS.gearPowName = function (g, cls) { return { atk: '공격', mag: '마공', both: '공격, 마공' }[DS.gearPowKind(g, cls)]; };
+DS.gearStatTxt = function (g, x, cls) {
   x = x || DS.gearAt(g, DS.gearRefL());
   var st = [], sg = function (v) { return (v > 0 ? '+' : '−') + Math.abs(v); }, pc = function (v) { return Math.round(v * 100); };
-  if (x.pow) st.push('위력 +' + x.pow);
+  if (x.pow) st.push(DS.gearPowName(g, cls) + ' +' + x.pow);
   if (x.def) st.push('방어 ' + sg(x.def));
   if (x.res) st.push('마방 ' + sg(x.res));
   if (x.hp) st.push('HP ' + sg(x.hp));
@@ -464,7 +473,10 @@ DS.sortieFix = function (save) {
     if (e && save.chars[e.h] && e.h !== +save.hero) gone.push(e);      // 맹주가 된 가문은 소식 없이 빠진다
   });
   var news = heirs.filter(function (n) { return n.out && n.out !== n.in; }), left = DS.sortieRank(save, cands.filter(function (ch) { return keep.every(function (k) { return k.h !== ch.id; }); }));
-  while (keep.length < N && left.length) {
+  // 2.6.3: 일부러 비워 둔 자리(save.sortieGap)는 채우지 않는다 — 「쉼」을 누르면 다른 가주가 저절로 들어와, 원하는 사람을 내보내기 어려웠다. 가주가 쓰러져 빈 자리는 예전처럼 채운다
+  var gap = fresh ? 0 : Math.max(0, Math.min(N - keep.length, Math.round(+save.sortieGap || 0))), want = N - gap;
+  if (gap > 0) save.sortieGap = gap; else delete save.sortieGap;
+  while (keep.length < want && left.length) {
     var ch = left.shift(), b = DS.bearer(save, ch, 1); keep.push({ h: ch.id, m: b.id });
     if (fresh) continue;
     var g = gone.shift(), gch = g && save.chars[g.h], vac = gch && !(DS.bearer && DS.bearer(save, gch, 1));
@@ -492,21 +504,21 @@ DS.sortieSet = function (save, ids) {
   if (DS.partySync) DS.partySync(save);
   return save.sortie.map(function (e) { return e.h; });
 };
-// 가문 창의 출전 · 쉬기: 출전 → 둘 가운데 약한 이와 바꾼다 (자리가 비었으면 그냥) · 쉬기 → 쉬는 가주 가운데 가장 센 이가 대신. 돌려주는 것: { ok, in, out } (이름)
+// 가문 창의 출전 · 쉬기. 2.6.3: 저절로 바꾸지 않는다 — 쉬기 → 그 자리는 빈다 (save.sortieGap +1) · 출전 → 빈 자리가 있을 때만 (없으면 먼저 한 사람을 쉬게 한다). 돌려주는 것: { ok, in, out, n 출전한 가주 수, N 자리 수 } (이름)
+//   예전(2.2.8 ~ 2.6.2): 쉬기 → 쉬는 가주 가운데 가장 센 이가 대신 · 출전 → 둘 가운데 약한 이와 바꾼다. 누른 것과 다른 사람이 함께 움직여 원하는 조합을 만들기 어려웠다
 DS.sortieToggle = function (save, id) {
-  id = +id; var on = DS.sortieOn(save, id), cur = (save.sortie || []).map(function (e) { return e.h; }), ch = save.chars[id];
+  id = +id; var on = DS.sortieOn(save, id), cur = (save.sortie || []).map(function (e) { return e.h; }), ch = save.chars[id], N = DS.SORTIE_N();
   if (!ch || id === +save.hero) return { ok: false, why: '맹주는 늘 출전한다' };
   if (on) {
-    var rest = DS.sortieRank(save, DS.sortieCands(save).filter(function (c) { return cur.indexOf(c.id) < 0; }))[0];
-    if (!rest) return { ok: false, why: '대신 나갈 가주가 없다' };
-    DS.sortieSet(save, cur.filter(function (h) { return h !== id; }).concat([rest.id]));
-    return { ok: true, out: sortieWho(save, ch), in: sortieWho(save, rest) };
+    save.sortieGap = Math.min(N, Math.max(0, Math.round(+save.sortieGap || 0)) + 1);
+    DS.sortieSet(save, cur.filter(function (h) { return h !== id; }));
+    return { ok: true, out: sortieWho(save, ch), in: '', n: save.sortie.length, N: N };
   }
   if (DS.sortieCands(save).indexOf(ch) < 0) return { ok: false, why: '가주가 없는 가문은 나가지 못한다' };
-  var N = DS.SORTIE_N(), drop = null;
-  if (cur.length >= N) { drop = DS.sortieRank(save, cur.map(function (h) { return save.chars[h]; }).filter(Boolean)).pop(); cur = cur.filter(function (h) { return !drop || h !== drop.id; }); }
+  if (cur.length >= N) return { ok: false, why: '출전 자리가 찼다. 나간 가주를 먼저 쉬게 한다' };
+  save.sortieGap = Math.max(0, Math.round(+save.sortieGap || 0) - 1);
   DS.sortieSet(save, cur.concat([id]));
-  return { ok: true, in: sortieWho(save, ch), out: drop ? sortieWho(save, drop) : '' };
+  return { ok: true, in: sortieWho(save, ch), out: '', n: save.sortie.length, N: N };
 };
 // 싸우는 가문: 맹주 가문(맹주가 살아 서 있을 때) + 출전한 가주의 가문. s.party 는 이 목록을 비춘다 (DS.partySync)
 //   2.2.3: 차례 = 맹주 → 다른 가문(부대 탭 격자와 같은 차례 — DS.houseOrd: 공훈 계급 → 합류. 계급이 오를 때만 바뀐다). 가주가 바뀌어도 가문은 제자리, 맹주가 바뀌면 새 맹주가 맨 앞
