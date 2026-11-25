@@ -162,6 +162,19 @@ module.exports = async (page, shot, L, env) => {
   await addQ('입구 창 출전 줄', '.ov .gate .sof .gfr[data-gp="' + gpQ + '"]');
   await L.closeAll(page);
 
+  // ───────── 사람 보기 · 장비 (바뀌지 않은 흐름 — 누름 수만 적어 둔다): 부대 탭 → 가주 카드 → 무기 칸 → 가방 줄 = 3번 (확인 창 없음) ─────────
+  await L.edit(page, function () { s.gear['sword.B'] = (s.gear['sword.B'] || 0) + 1; });
+  await ev(() => DS.openMenu('party')); await L.sleep(500);
+  taps = 0;
+  await tap('.ov .hk9 .hk[data-ch="' + Q.ch + '"]');
+  await tap('.ov .cs2 [data-gslot="w"]');
+  c = await ev(() => { var o = [...document.querySelectorAll('.ov:not(.ghost)')].pop(); return { rows: o.querySelectorAll('.gpk-r[data-on]').length, modal: !!document.querySelector('.ov.modal') }; });
+  A(c.rows >= 1 && !c.modal, 'equip from the house sheet: the gear tile opens the bag list (' + c.rows + ' item(s))');
+  await tap('.ov .gpk-r[data-on="sword.B"]');
+  c = await ev((id) => ({ w: DS.G.save.chars[id].w, ovs: document.querySelectorAll('.ov:not(.ghost)').length, modal: !!document.querySelector('.ov.modal') }), Q.ch);
+  A(c.w === 'sword.B' && !c.modal && taps === 3, 'equipping from a person = 3 taps from the party tab (card → gear tile → item), worn at once with no confirmation (unchanged)');
+  await L.closeAll(page);
+
   // ───────── ③ 막사 → 가주 (한 번에) ─────────
   await ev(() => DS.openMenu('party')); await L.sleep(500);
   const sb = await ev(() => { var s = DS.G.save, b = [...document.querySelectorAll('.ov .bar2 [data-sbset]:not([disabled])')].map(x => x.dataset.sbset.split(':').map(Number)).filter(x => x[1])[0]; if (!b) return null; var ch = s.chars[b[1]], cur = DS.bearer(s, ch); return { m: b[0], ch: b[1], cur: cur ? cur.id : 0, row: document.querySelector('.ov .bar2 .brow[data-info="' + b[0] + '"]').innerText.replace(/\s+/g, ' ') }; });

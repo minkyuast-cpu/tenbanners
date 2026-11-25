@@ -5211,3 +5211,7 @@ html body #app#app .wedq .wedpair { display: flex; align-items: center; justify-
 html body #app#app .wedq .wedk { margin: 2px 0 6px; display: flex; justify-content: center; }
 html body #app#app .wedq .wrule { text-align: left; }
 html body #app#app .pkfr { display: inline-flex; gap: 4px; margin-right: 6px; vertical-align: middle; }
+/* 영웅관 카드 뒷면의 기대 빛도 등급 테와 같은 색 (희귀가 파랑이던 것) */
+html body #app#app .pcard2.back.hint3 { box-shadow: 0 0 0 1px #000, 0 0 14px color-mix(in srgb, var(--g3) 85%, transparent); }
+html body #app#app .pcard2.back.hint4 { box-shadow: 0 0 0 1px #000, 0 0 18px color-mix(in srgb, var(--g4) 95%, transparent); }
+html body #app#app .pcard2.back.hint5 { box-shadow: 0 0 0 1px #000, 0 0 24px var(--g5); }
