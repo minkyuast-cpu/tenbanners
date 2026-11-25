@@ -1754,7 +1754,7 @@ function onEvents(evs) {
             if (up.promo && up.dep && DS.tmRankMsg && (up.pg || []).length) later(DS.tmRankMsg({ who: up.who, name: up.who.ttl || up.who.n || (ch ? DS.charName(ch) : ''), t1: DS.tierOfL(up.to), gains: up.pg, flag: up.bear }), 4200);      // r41 temper → r42: 개인 단이 오를 때 성장
             if (up.hero && up.promo && DS.heroUlt && DS.heroUlt(sv) && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { if (up.to >= q[0] && up.from < q[0]) { later('맹주의 필살기 「' + SK[DS.heroUlt(sv)].name + '」가 세졌다 (+' + Math.round(q[1] * 100) + '%)', 4200); A('star'); } });      // r42: 맹주의 개인 5단 · 8단
             if (up.hero && DS.vetStars(up.to) > DS.vetStars(up.from) && DS.heroUlt && DS.heroUlt(sv)) later('맹주, ' + DS.STAR_NAME[DS.vetStars(up.to)] + '. 필살기 세기 +' + Math.round(DS.ULT.starP * 100) + '%', 3600);
-            if (up.from < DS.FUSE_MIN && up.to >= DS.FUSE_MIN && !up.who.fz) ripe = up;
+            if (up.from < DS.FUSE_MIN && up.to >= DS.FUSE_MIN && !up.who.fz && !up.who.dx) ripe = up;      // 2.6.4: 大 가문의 가주는 합일 없이 넘는다
           });
           A('level');
           if (ripe) fuseNews(ripe);

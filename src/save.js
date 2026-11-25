@@ -309,6 +309,7 @@ DS.fixSave = function (s) {
   if (DS.bnFix) DS.bnFix(s, wasBn);      // 4.0: 부대원 + 깃발 — 불변식 넷을 검사하고 어긴 줄만 변환한다 (두 번 돌려도 같다)
   if (DS.fuseUnions) DS.fuseUnions(s);      // r42: 옛 묶음 기록은 없어졌다 (비운다)
   if (DS.pSync) DS.pSync(s);      // r42: 가문 줄 ← 가주의 개인 레벨
+  if (DS.daeFix) DS.daeFix(s);      // 2.6.4: 大 가문 (fzShutFix 가 선 병과의 기록을 지우기 전에 읽는다)
   if (DS.fzShutFix) { DS.fzShutFix(s); if (DS.fzWakeTick) DS.fzWakeTick(s); }      // 2.2.9: 합일로 잠든 가문 (세대가 이미 바뀌었으면 깨운다)
   if (s.fzWake != null && !(Array.isArray(s.fzWake) && s.fzWake.every(function (k) { return typeof k === 'string' && own(DS.CLASSES, k) && !DS.CLASSES[k].master; }))) delete s.fzWake;
   if (soNew) s._soNew = 1;      // 2.2.8: 읽기(Save.read · peek)가 모든 정리(겉의 fixSave 들까지) 뒤에 출전을 새로 고른다 (soFresh)

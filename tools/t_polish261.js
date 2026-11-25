@@ -81,7 +81,7 @@ module.exports = async (page, shot, L, env) => {
   for (const nm of ['가나다', '로저스왕', '여섯글자이름']) {
     c = await ev((nm) => { var s = DS.G.save; s.chars[s.hero].name = nm + ' 3세'; DS.enterZone('haemil'); return 1; }, nm); await sleep(700); await L.closeAll(page);
     c = await ev(() => { var e = document.querySelector('#chips .chip'), b = e.querySelector('.cn b'), g = e.querySelector('.cgen'); return { n: b.textContent, cut: b.scrollWidth > b.clientWidth + 0.5 || b.scrollHeight > b.clientHeight + 1.5, gen: g ? g.textContent : '', cls: e.querySelector('.cn').className }; });
-    A(c.n === nm && !c.cut && c.gen === '3세', 'chip name 「' + nm + ' 3세」 is fully readable (' + c.cls + ')');
+    A(c.n === nm && !c.cut && c.gen === '3세', 'chip name 「' + nm + ' 3세」 is fully readable (' + c.cls + ') ' + JSON.stringify(c));
   }
   await page.screenshot({ path: path.join(env.OUT, 'chips_long.png'), clip: { x: 0, y: 0, width: 390, height: 120 } });
   await ev(() => { var s = DS.G.save; s.chars[s.hero].name = '봇 2세'; DS.enterZone('haemil'); }); await sleep(700); await L.closeAll(page);

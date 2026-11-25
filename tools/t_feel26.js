@@ -209,7 +209,7 @@ module.exports = async function (page, shot, L, env) {
   c = await ev(() => { var G = DS.G, sim = G.sim, sv = G.save, me = sim.byId[G.sel]; G.quiet = false; G.coachAt = 0; delete sv.seen.cdanger; sv.seen.herb = 1;
     var en = sim.units.filter(function (u) { return u.side === 'enemy' && !u.dead; })[0]; me.lowInfo = false; me.hp = Math.round(me.mhp * 0.6); sim.hurt(me, Math.round(me.mhp * 0.35), en || me, {});
     return { hp: me.hp / me.mhp, hero: me.ch === sv.hero }; });
-  await sleep(500);
+  for (let i = 0; i < 30; i++) { if (await ev(() => { var co = document.querySelector('.coach p'), hb = document.querySelector('#acts [data-it="herb"]'); return !!co && /위험/.test(co.textContent) && !!(hb && hb.classList.contains('hint')); })) break; await sleep(100); }      // 고정 시간 대신 알림이 뜰 때까지 (많아야 3초)
   c = await ev(() => { var co = document.querySelector('.coach p'), hb = document.querySelector('#acts [data-it="herb"]'); return { coach: co ? co.textContent : '', hint: !!(hb && hb.classList.contains('hint')), info: document.querySelector('#info').innerText.replace(/\n/g, ' '), pause: DS.G.pause }; });
   A(/^맹주가 위험하다\. 약초!$/.test(c.coach) && c.hint && !/대장/.test(c.info), 'danger prompt says 맹주: 「' + c.coach + '」 (herb button pulsing: ' + c.hint + ')');
   await shot('danger_prompt');

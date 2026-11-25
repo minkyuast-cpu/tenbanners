@@ -641,19 +641,23 @@ DS.fuseHouse = function (s, key) {
   else u = DS.unionOf(s, key && key.id != null ? key.id : key);
   return u ? DS.unionName(s, u) : '';
 };
-function houseOfCls(s, cls) {      // 2.1.0: 가문 이름은 줄(병과)마다 하나 — 맹주가 선 가문도 같은 규칙 (연맹 이름은 DS.allyName)
+function houseOfCls(s, cls, raw) {      // 2.1.0: 가문 이름은 줄(병과)마다 하나 — 맹주가 선 가문도 같은 규칙 (연맹 이름은 DS.allyName)
   var CC = DS.CLASSES[cls]; if (CC && CC.master && CC.fam && s && s.chars) { var fh = DS.fuseHouse(s, CC.fam); if (fh) return fh; }
   var sn = DS.LIN_HOUSE && DS.LIN_HOUSE[cls];
   if (!sn && CC && CC.master && CC.fam && DS.FAMILY[CC.fam]) sn = DS.LIN_HOUSE[DS.FAMILY[CC.fam].members[0]];
-  return sn && DS.houseOf ? DS.houseOf(sn) : '';
+  var hn = sn && DS.houseOf ? DS.houseOf(sn) : '';
+  if (hn && !raw && s && s.chars && DS.houseDae) { for (var k in s.chars) { var c = s.chars[k]; if (c && c.cls === cls) { if (DS.houseDae(s, c)) hn = DS.DAE + ' ' + hn; break; } } }      // 2.6.4: 합일의 대표 가문 = 「大 ○○ 가문」
+  return hn;
 }
+DS.DAE = '大';
+DS.flagHouseRaw = function (s, cls) { s = s || (DS.G && DS.G.save); return houseOfCls(s, cls, true); };      // 「大」 없이 (이름을 견주는 곳)
 DS.flagHouse = function (s, cls) { s = s || (DS.G && DS.G.save); return houseOfCls(s, cls); };
 DS.houseTitle = function (s, ch) {
   s = s || (DS.G && DS.G.save);
   if (!ch) return { name: '가문', sub: '', cls: '' };
   var C = DS.CLASSES[ch.cls] || {}, hero = !!(s && s.chars && ch.id === hid(s));
   var hn = houseOfCls(s, ch.cls);
-  return { name: hn || (C.name ? C.name + ' 가문' : '가문'), sub: (C.name || '') + (ch.L ? ' ' + DS.tierOfL(ch.L) + '단 Lv' + DS.lvOfL(ch.L) : ''), cls: C.name || '' };
+  return { name: hn || (C.name ? C.name + ' 가문' : '가문'), sub: (C.name || '') + (ch.L ? ' ' + DS.tierOfL(ch.L) + '단 ' + (C.tiers ? DS.tierName(ch.cls, DS.tierOfL(ch.L)) + ' ' : '') + 'Lv' + DS.lvOfL(ch.L) : ''), cls: C.name || '' };
 };
 DS.flagTitle = DS.houseTitle;      // 앞서 쓰던 이름
 DS.flagName = function (cls, s) { s = s || (DS.G && DS.G.save); var hn = houseOfCls(s, cls), C = DS.CLASSES[cls]; return hn || (C && !C.master ? C.name + ' 가문' : C ? fn0(cls) : '가문'); };      // r16 words: 판이 없을 때도 「보병 가문」 꼴 (옛 「보병 깃발」은 flagNameOld)

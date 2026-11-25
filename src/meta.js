@@ -826,7 +826,28 @@ DS.kit = function (save, o) {
 //   바깥(시험 도구·옛 코드)이 가문 줄의 L 을 직접 바꾸면 그 값이 가주에게로 간다 (ch.Ls = 마지막으로 맞춘 값).
 DS.PEXP = { catchCap: 1.5, recruit: { k: 0.9, d: 3 }, kid: 0.8, heir: { kid: 0.5, adopt: 0.25 } };      // 2.2.0: kid 0.5 → 0.8 — 어른이 된 아이는 바로 싸움에 나선다
 DS.pL = function (who) { return who ? Math.max(1, Math.min(100, Math.round(+who.L || 1))) : 1; };
-DS.pCap = function (who) { return who && (who.fz || +who.L > 70) ? 100 : 70; };
+DS.pCap = function (who) { return who && (who.fz || +who.L > 70 || who.dx) ? 100 : 70; };      // 2.6.4: dx = 大 가문의 가주 (합일 없이 70 을 넘는다 — DS.daeSync)
+// ───────── 2.6.4 大 가문 ─────────
+//   합일의 대표 가문은 그 세대 동안 「大 ○○ 가문」이다 (ch.dae = 합일한 세대 · DS.genNow). 8단 위의 가주가 서 있는 가문도 大 로 부른다.
+//   大 가문의 가주는 합일하지 않아도 7단 Lv10 뒤에 8단으로 자란다 (who.dx → DS.pCap 100). 합일한 가주가 쓰러져도 그 가문은 이번 세대에 다시 8단에 닿을 수 있다 —
+//   예전에는 다시 합일해야 했는데, 흡수된 두 가문이 잠들어 있어 셋을 모으지 못하면 길이 막혔다. 뒤를 잇는 사람은 여전히 제 레벨로 선다 (8단을 물려받지는 않는다).
+DS.houseHead = function (s, ch) { if (!s || !ch) return null; return ch.id === +s.hero ? (ch.vac ? null : ch.ps || null) : (DS.bearer ? DS.bearer(s, ch, 1) : null); };
+DS.houseDaeGen = function (s, ch) { return !!(s && ch && (+ch.dae || 0) >= DS.genNow(s)); };      // 이번 세대에 합일한 대표 가문인가 (가주가 70 을 넘을 수 있다)
+DS.houseDae = function (s, ch) { if (!s || !ch) return false; var b = DS.houseHead(s, ch); return DS.houseDaeGen(s, ch) || !!(b && (b.fz || +b.L > 70)); };      // 화면 이름에 「大」가 붙는가
+DS.daeSync = function (s) {
+  if (!s || !s.chars) return;
+  var heads = [];
+  for (var k in s.chars) { var ch = s.chars[k]; if (!ch) continue; var b = DS.houseHead(s, ch); if (!b) continue; heads.push(b); if (DS.houseDaeGen(s, ch)) b.dx = 1; else delete b.dx; }
+  (s.mercs || []).forEach(function (m) { if (m.dx && heads.indexOf(m) < 0) delete m.dx; });
+};
+DS.daeFix = function (s) {      // 저장 다듬기 + 옛 저장: 잠든 가문 기록(fzShut[].by = 대표 가문의 병과) · 살아 있는 합일 가주(fuG)에서 大 를 되살린다
+  if (!s || !s.chars) return;
+  var k, list = DS.charList(s);
+  list.forEach(function (c) { if (c.dae != null) { var d = Math.round(+c.dae); if (d >= 1) c.dae = d; else delete c.dae; } });
+  var z = s.fzShut; if (z && typeof z === 'object' && !Array.isArray(z)) for (k in z) { var e = z[k]; if (!e || !e.by || !(+e.g >= 1)) continue; list.forEach(function (c) { if (c.cls === e.by && !((+c.dae || 0) >= +e.g)) c.dae = Math.round(+e.g); }); }
+  list.forEach(function (c) { var b = DS.houseHead(s, c); if (b && b.fz && +b.fuG >= 1 && !((+c.dae || 0) >= +b.fuG)) c.dae = Math.round(+b.fuG); });
+  DS.daeSync(s);
+};
 DS.heroPs = function (s) { var h = s && s.chars && s.chars[s.hero]; return h && !h.vac && h.ps ? h.ps : null; };
 DS.whoHouse = function (s, who) {      // 그 사람이 선 가문 (맹주 = 대장 가문, 가주·가솔 = m.o). 막사는 null
   if (!s || !s.chars || !who) return null;
@@ -844,6 +865,7 @@ DS.pSync = function (s) {
   if (!s || !s.chars) return s;
   for (var k in s.chars) { var ch = s.chars[k]; if (!ch) continue; var b = DS.bearer ? DS.bearer(s, ch, 1) : null; DS.pSyncRow(ch, b, !b && ch.id !== +s.hero); }
   (s.mercs || []).forEach(function (m) { if (m.L == null || !(+m.L >= 1)) m.L = 1; m.L = DS.pL(m); if (!(+m.exp >= 0)) m.exp = 0; if (m.L > 70) m.fz = 1; });
+  if (DS.daeSync) DS.daeSync(s);
   return s;
 };
 // 모든 사람 [{ who, ch: 선 가문(없으면 null), role: 'hero'|'bear'|'kin'|'sb'|'bench', dep: 싸우러 나갔는가 }]
@@ -870,6 +892,7 @@ DS.kidL = function (s) { return Math.max(1, Math.min(70, Math.round(DS.pAvgL(s) 
 //   막사의 사람은 같은 병과(DS.sbFits) 가문의 가주가 이번에 얻은 경험치 × BAL.sbShare 를 그대로 얻는다 (보정 없음 · 막사의 같은 병과가 여럿이어도 저마다 온전히). 그 병과의 가주가 없으면 얻지 못한다.
 //   돌려주는 것: 레벨이 오른 사람 [{ id: 선 가문 번호(막사 0), mid: 부대원 번호(맹주 0), hero, bear(깃발 유닛인가), from, to, promo, who, pg: 새 성장 }]
 DS.gainExp = function (save, amount, eL) {
+  if (DS.daeSync) DS.daeSync(save);
   var ups = [], list = DS.persons(save), top = 1, perk = (save.perk && save.perk.exp) || 0;
   list.forEach(function (p) { if (p.dep) top = Math.max(top, DS.pL(p.who)); });
   var got = {};      // 가문 번호 → 그 가문 가주가 이번에 얻은 경험치 (막사의 몫을 잰다)
@@ -932,7 +955,7 @@ function fuEnt(s, p) { return { id: DS.pKey(s, p.who), key: DS.pKey(s, p.who), w
 //   나머지 두 가주는 대표에게 흡수된다: 명부에서 사라지고(가계도에는 「합일」로 남는다 — 죽음으로 세지 않는다), 든 장비는 가방으로, 든 물건은 소지품으로.
 //   그 두 가문은 이번 세대가 끝날 때까지 닫힌다 (save.fzShut[병과] = { g: 닫힌 세대, …}). 세대 = DS.egGen (1 = 첫 대 · 「다음 세대의 장」을 열 때마다 하나씩 — endgame.js DS.egStart).
 //   닫힌 동안은 영웅관이 그 병과로 가문을 열지 않고(DS.closedCls 에서 빠진다 · 천장 셈에도 들지 않는다), 다음 세대가 오면 보통의 닫힌 가문이 되어 다시 열 수 있다 (열 때 연출 'reopen').
-DS.fuseCan = function (p) { return !!p && (p.role === 'hero' || p.role === 'bear') && !!p.ch && !p.ch.vac && !p.ch.down && !p.who.fz && DS.pL(p.who) <= 70; };
+DS.fuseCan = function (p) { return !!p && (p.role === 'hero' || p.role === 'bear') && !!p.ch && !p.ch.vac && !p.ch.down && !p.who.fz && !p.who.dx && DS.pL(p.who) <= 70; };      // 2.6.4: 大 가문의 가주는 합일하지 않는다 (제 힘으로 8단에 오른다)
 DS.fusePool = function (save) { return DS.persons(save).filter(DS.fuseCan).map(function (p) { return fuEnt(save, p); }); };
 DS.fuseCands = function (save) { return DS.fusePool(save).filter(function (c) { return c.L >= DS.FUSE_MIN; }); };
 DS.fuseRepLock = function (save, who) { var hp = DS.heroPs(save); return hp && (who || []).indexOf(hp) >= 0 ? save.chars[save.hero] : null; };      // 맹주가 셋에 들면 대표는 맹주 가문 (바꿀 수 없다)
@@ -1007,6 +1030,7 @@ DS.fuse = function (save, ids, opt) {
   var names = who.map(nameOf), houses = who.map(function (w) { return DS.whoHouse(save, w); }), ri = houses.indexOf(H), rw = who[ri], gen = DS.genNow(save);
   var trio = [names[ri]].concat(names.filter(function (n, i) { return i !== ri; }));
   rw.L = Math.max(DS.pL(rw), 71); rw.exp = 0; rw.fz = 1; rw.fu3 = trio.slice(); rw.fuG = gen;
+  if (H) H.dae = gen;      // 2.6.4: 대표 가문은 이번 세대 동안 「大 ○○ 가문」
   // 두 넋의 남은 해: 대표의 수명이 FUSE_LS(30)년에 흡수된 두 가주가 살 해를 더한 만큼 는다 (수명 +N년 — 나이는 그대로). 맹주는 대장 줄(ch.ls)에, 가주는 그 사람(m.ls)에
   var lsAdd = 0; who.forEach(function (w, i) { if (i === ri || !DS.ageLife) return; var e = w === hp ? save.chars[save.hero] : w, L0 = DS.ageLife(save, e); if (L0 && L0.left != null) lsAdd += Math.max(0, Math.round(L0.left)); });
   lsAdd = Math.min(DS.FUSE_LS_MAX, DS.FUSE_LS + lsAdd);

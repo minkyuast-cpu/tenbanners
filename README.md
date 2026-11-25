@@ -10,3 +10,4 @@
 - 이야기 시험: `H=844 OUT=qa_out/story node tools/shot.js tools/t_story.js` (서른 판과 그 밖의 글 표) · 글 화면 시험: `H=844 OUT=qa_out/text node tools/shot.js tools/t_text.js` (현상 수배 · 영웅관 · 장비 내력 · 연무장 · 연출 · 도움말 · 성격 한마디가 진짜 화면에 뜨는가) · 싸움 도중의 한마디 시험: `H=844 OUT=qa_out/banter node tools/shot.js tools/t_banter.js` (글은 `src/story2.js` 의 `DS.BANTER_TXT`, 띄우는 것은 `src/banter.js`)
 
 2.1.2 배포본에서 되살린 소스다. 같은 소스로 빌드하면 2.1.2 배포본과 바이트까지 같다.
+- 한자 「大」(합일한 가문 이름 앞) 한 글자는 `fonts/TBHan-Medium.woff2` 에 있다 (Noto Sans KR 500 의 부분 집합, SIL OFL 1.1). 글꼴 묶음마다 원래 굵기와 똑같은 굵기로 `unicode-range: U+5927` 얼굴을 하나씩 얹는다 (tmpl/*.html). 굵기를 범위(100 900)로 적으면 굵은 글씨의 글꼴 고르기가 바뀌어 한글 너비가 달라진다.

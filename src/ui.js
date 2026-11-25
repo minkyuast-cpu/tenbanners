@@ -1579,7 +1579,7 @@ function rankBlock(who, merc, follow) {
   var h = '<div class="rkbox">';
   h += '<div class="rkhd"><span class="rkk">등급</span><b style="color:' + (G0.col || '#efe6d0') + '">' + esc(G0.name || '') + '</b><small class="schips">' + gEff + '</small></div>';
   h += '<ol class="rkl">' + DS.GRADES.slice(1).map(function (q, i) { var k = i + 1; return '<li class="' + (k === g ? 'on' : k < g ? 'past' : '') + '" style="--rc:' + q.col + '">' + esc(q.name) + '</li>'; }).join('') + '</ol>';
-  h += '<div class="rkhd"><span class="rkk">단</span><b>' + t + '단 Lv' + DS.lvOfL(L) + '</b><small>' + esc((who.fz ? '합일함. 레벨 100까지' : L >= 70 ? '7단 Lv10. 가주면 교회에서 합일해 70을 넘는다' : '단이 오를 때마다 기질에 맞는 능력치가 오른다')) + '</small></div>';
+  h += '<div class="rkhd"><span class="rkk">단</span><b>' + t + '단 Lv' + DS.lvOfL(L) + '</b><small>' + esc((who.fz ? (who.fu3 ? '합일함. 레벨 100까지' : '8단 위. 레벨 100까지') : who.dx ? '大 가문의 가주. 합일 없이 7단 Lv10을 넘어 자란다' : L >= 70 ? '7단 Lv10. 가주면 교회에서 합일해 70을 넘는다' : '단이 오를 때마다 기질에 맞는 능력치가 오른다')) + '</small></div>';
   var lord = !!(DS.ultFor && DS.ultFor(G.save, who)), uv = {}; if (lord && DS.ULT && DS.ULT.vetP) DS.ULT.vetP.forEach(function (q) { uv[DS.tierOfL(q[0])] = q[1]; });      // 맹주: 5단 · 8단 = 필살기 +15%
   var pgl = DS.pgList ? DS.pgList(who) : [], st = DS.vetStars(L);
   h += '<ol class="rkl v t10">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (k) { var uu = uv[k], gg = k > 1 ? pgl[k - 2] : null, sk = lord && DS.ULT && DS.ULT.stars.indexOf((k - 1) * 10 + 1) >= 0; return '<li class="' + (k === t ? 'on' : k < t ? 'past' : '') + (uu || sk ? ' ult' : '') + '">' + k + '단' + (uu ? '<i class="rku">필살 +' + Math.round(uu * 100) + '%</i>' : '') + (sk ? '<i class="rku ust">✦</i>' : '') + (gg ? '<i class="rkg">' + esc(DS.pgText(gg)) + '</i>' : '') + '</li>'; }).join('') + '</ol>';
@@ -1720,7 +1720,8 @@ function flagPast(ch) {
 // 합일 조건 진행: ■■□ (7단 Lv10 가문 수 / 셋). 묶음에 들었으면 그 이름
 function fuseLine(s, ch) {      // r42: 그 가문 가주의 합일 (사람 셋)
   var C = DS.CLASSES[ch.cls], b = ch.id === s.hero ? DS.heroPs(s) : DS.bearer(s, ch); if (C.master || !DS.fuseProg || !b) return '';
-  if (b.fz) return '<p class="fzl"><i>합일</i><small>가주가 합일했다. 레벨 100까지</small></p>';
+  if (b.fz) return b.fu3 ? '<p class="fzl"><i>합일</i><small>가주가 합일했다. 레벨 100까지</small></p>' : '<p class="fzl"><i>大 가문</i><small>합일 없이 8단에 올랐다. 레벨 100까지</small></p>';
+  if (b.dx) return '<p class="fzl"><i>大 가문</i><small>이번 세대에 합일한 가문. 가주는 합일 없이 7단 Lv10을 넘어 8단으로 자란다</small></p>';      // 2.6.4
   var L = DS.pL(b), P = DS.fuseProg(s), ok = P.n, n = P.of, near = L >= DS.FUSE_MIN || DS.FUSE_MIN - L <= FUSE_NEAR; if (!P.can || (!near && !ok)) return '';
   var box = ''; for (var i = 0; i < n; i++) box += i < ok ? '■' : '□';
   return '<p class="fzl"><i>합일 조건</i><b class="fzb" aria-label="' + ok + ' / ' + n + '">' + box + '</b><small>7단 Lv10 가주 ' + ok + '/' + n + '</small></p>';
@@ -1739,7 +1740,7 @@ function charSheet(id, parent) {
     var c = DS.CLASSES[ch.cls], hero = id === s.hero, bw = hero ? (ch.vac ? null : ch.ps) : DS.bearer(s, ch), inP = s.party.indexOf(ch.id) >= 0, vacH = !hero && !bw, w = bnWhere();
     var seat = hero ? { k: 'hero', ch: ch } : { k: 'bear', ch: ch }, u = null; if (bw) { try { u = seatSpec(seat, bw); } catch (x) { u = null; } }
     var r = DS.hRank(ch), st = ch.down ? ['dn', '쓰러짐'] : vacH ? ['dn', '빈 가문'] : inP ? ['ok', '싸운다'] : ['', '쉰다'];
-    var tags = '<i class="rtag s-' + st[0] + '">' + st[1] + '</i><i class="ctag">' + esc(c.name) + '</i><i class="ctag mr">' + (DS.vetBadge ? DS.vetBadge(r) : '') + esc(DS.hName(r)) + '</i>' + (hero ? '<i class="tg">맹주</i>' : '') + fuTag(s, ch);
+    var tags = '<i class="rtag s-' + st[0] + '">' + st[1] + '</i><i class="ctag">' + esc(c.name) + '</i>' + (bw && c.tiers ? '<i class="ctag tn">' + esc(DS.tierName(ch.cls, DS.tierOfL(DS.pL(bw)))) + '</i>' : '') + '<i class="ctag mr">' + (DS.vetBadge ? DS.vetBadge(r) : '') + esc(DS.hName(r)) + '</i>' + (hero ? '<i class="tg">맹주</i>' : '') + fuTag(s, ch);
     var html = sheetHead({ spr: bw && !hero ? mercSpr(bw, 4) : charSpr(ch, 4), g: DS.gradeOfCh(s, ch), lord: hero, who: hero ? 'c' + ch.id : bw ? 'm' + bw.id : '', fc: DS.FLAG[ch.cls] || '#f6cf57', name: crestH(ch, 22) + esc(DS.flagName(ch.cls)), tags: tags, lv: bw, pow: bw ? DS.cardPower(s, ch) : null, powLab: '가문 전투력', cls: 'hs2' + (vacH ? ' vac' : '') });
     html += gearSlots(ch, hero ? null : bw);      // 2.2.0: 장비는 머리에 (누르면 고르기)
     if (bw) html += hero ? '<div class="duty in so"><span><b>출전</b><small>맹주는 늘 나간다</small></span></div>' : inP ? '<div class="duty in so"><span><b>출전</b><small>맹주와 함께 싸운다</small></span><button class="btn small" data-sotg="1"' + (w === 'battle' ? ' disabled' : '') + '>쉬기</button></div>' :
@@ -1873,7 +1874,7 @@ function hgCell(s, ch, cls) {
   return '<button class="hk hgh' + st + '" data-ch="' + ch.id + '" style="--fc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '" aria-label="' + esc(hgShort(ch) + ' 가문, ' + (b ? m.bn + ' ' + lv(L) : '빈 가문') + (m.pi >= 0 ? ', 출전' : b ? ', 쉼' : '') + (dn ? ', 쓰러짐' : '') + (gq.names.length ? ', ' + gq.names.join(', ') : '')) + '">' + gq.html +
     '<span class="hkh">' + DS.houseCrestOf(s, ch, m.hero ? 16 : 14) + '<small>' + esc(hgShort(ch)) + '</small>' + (m.hero ? '<i class="hkt">맹주</i>' : '') + '</span>' +
     (rk >= 1 ? '<span class="hkr" title="' + esc(DS.hName(rk)) + '">' + DS.vetBadge(rk) + '</span>' : '') + por + (b ? lvPill(L) : '') +
-    '<b class="hkn' + (b ? '' : ' dim') + '">' + esc(b ? m.bn : '빈 가문') + '</b>' + foot + sot + '</button>';
+    '<b class="hkn' + (b ? '' : ' dim') + '">' + esc(b ? m.bn : '빈 가문') + '</b>' + (b && DS.CLASSES[ch.cls] ? '<small class="hkc">' + esc(DS.tierName(ch.cls, DS.tierOfL(L))) + '</small>' : '') + foot + sot + '</button>';
 }
 // 2.2.4: 칸 안의 장비 — 초상 오른쪽에 무기 · 방어구(그리고 가주가 든 물건) 작은 그림 (가문 창의 장비 칸과 같은 그림 · 등급 테). 빈 칸은 흐리게
 function hgGear(s, ch, b, big) {
@@ -2166,7 +2167,8 @@ function tabHelp() {
       '나머지 두 가주는 대표에게 <b>흡수</b>된다. 가계도에는 합일로 남고, 든 장비는 가방으로 간다. 대표의 수명은 30년에 두 사람의 남은 해를 더한 만큼 늘어난다 (많아야 ' + DS.FUSE_LS_MAX + '년).',
       '흡수된 두 가문은 <b>이번 세대가 끝날 때까지 잠든다</b>. 영웅관에서 그 병과가 나와도 열리지 않고, 막사의 그 병과 사람은 기다린다. 다음 세대의 장을 열면 깨어나 영웅관에서 다시 열 수 있다. 선 가문이 셋 밑으로 줄면(더 합일할 수 없으면) 일찍 깨어난다.',
       '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
-      '8단 위의 가주가 쓰러지면 그대로 떠난다. 영웅 모집권 10장을 남긴다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다. 다시 합일해야 한다.',
+      '8단 위의 가주가 쓰러지면 그대로 떠난다. 영웅 모집권 10장을 남긴다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다.',
+      '합일의 대표 가문은 그 세대 동안 이름 앞에 <b>大</b>가 붙는다. 大 가문의 가주는 합일하지 않아도 7단 Lv10 뒤에 8단으로 자란다. 8단 가주를 잃어도 다음 가주가 다시 8단에 오를 수 있다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
@@ -2285,12 +2287,18 @@ function tabPeople() {
 function pplPass(e, f) { return !f || (f === 'out' ? e.out : f === 'sb' ? e.sb : f === 'fam' ? e.fam : f === 'wed' ? e.wed : true); }
 // r45 ui: 한눈에 견줄 수 있게 고정 칸 — [등급 테 초상] [이름·등급 / 자리·가문] [단·Lv] [나이] [전투력 + 막대(목록의 가장 센 사람 기준)]
 function pplRole(e) { var k = e.key === 'h' ? 'hero' : e.seat ? (e.seat.sb ? 'sb' : e.seat.k) : 'bar'; return '<i class="prole r-' + k + '">' + (k === 'hero' ? '맹주' : k === 'bear' ? '가주' : k === 'sb' ? '막사' : k === 'fol' ? '가문원' : '자리 없음') + '</i>'; }
+// 2.6.4: 단 이름 (맹주 · 가주 = 병과의 그 단 이름 「그레이트 엠퍼러」 · 그 밖 = 그 사람의 병종) — 예전에는 맹주 인물 정보 한 곳에만 보였다
+function pplKind(e) {
+  var t = '', k = e.key === 'h' ? 'hero' : e.seat ? e.seat.k : '';
+  try { if ((k === 'hero' || k === 'bear') && e.seat && e.seat.ch && DS.CLASSES[e.seat.ch.cls]) t = DS.tierName(e.seat.ch.cls, DS.tierOfL(e.xp || 1)); else if (e.kind === 'merc' && DS.mercKind) t = DS.mercKind(e.ent) || ''; } catch (x) { t = ''; }
+  return t ? '<i class="ptn">' + esc(t) + '</i>' : '';
+}
 function pplRow(e, wedMode, top) {
   var G0 = DS.GRADES[e.g] || {}, L = e.xp || 1, a = e.ag, sel = PV.cmp && PV.sel.indexOf(e.key) >= 0, hs = e.seat && e.seat.k !== 'bar' && e.seat.ch ? e.seat.ch : null;
   return '<button class="row ppl pgrid' + (e.key === 'h' ? ' hero' : '') + (sel ? ' psel' : '') + '" data-pp="' + e.key + '"' + (PV.cmp ? ' aria-pressed="' + sel + '"' : '') + '>' +
     '<span class="pfr ' + DS.gfrCls(e.g, { lord: e.key === 'h' }) + '" data-gp="' + (e.key === 'h' ? 'c' + e.ref : e.key) + '">' + e.spr + (sel ? '<i class="pck">' + (PV.sel.indexOf(e.key) + 1) + '</i>' : '') + '</span>' +
     '<span class="pn"><span class="p1"><b>' + esc(e.name) + '</b>' + gbadge(e.g) + (e.sx ? '<i class="psx sx-' + esc(e.sx) + '">' + esc(lgSexTxt(e.sx)) + '</i>' : '') + '</span>' +
-    '<small class="pl">' + pplRole(e) + (hs ? crestH(hs, 14) + '<span>' + esc(hgShort(hs)) + '</span>' : '') + '</small>' + (wedMode || (e.wed && PV.f === 'fam') ? kidPot(e.g) : '') + '</span>' +
+    '<small class="pl">' + pplRole(e) + pplKind(e) + (hs ? crestH(hs, 14) + '<span class="phn">' + esc(hgShort(hs)) + '</span>' : '') + '</small>' + (wedMode || (e.wed && PV.f === 'fam') ? kidPot(e.g) : '') + '</span>' +
     '<span class="pc plv"><b class="num">' + DS.tierOfL(L) + '단</b><small class="num">Lv' + DS.lvOfL(L) + '</small></span>' +
     '<span class="pc pag' + (a && a.old ? ' old' : a && a.young ? ' yg' : '') + '">' + (a ? '<b class="num">' + a.y + '</b><small>' + (a.old ? esc(AGL().elderWord || '노년') : '살') + '</small>' : '<b>—</b>') + '</span>' +
     '<span class="pc ppw' + (e.bar || e.sb ? ' dim' : '') + '"><b class="num">' + (e.pow > 0 ? fmtN(e.pow) : '—') + '</b><i class="pbar"><u style="width:' + Math.max(2, Math.min(100, (e.pow || 0) / (top || 1) * 100)).toFixed(1) + '%"></u></i></span></button>';
@@ -3070,7 +3078,7 @@ function lgBig(spr) { return String(spr || '').replace(/data-px="[\d.]+"/, 'data
 function lgFallX(d) {
   var r = d && LS() && LS().P[d.id], sn = r && r.snap || {}; if (!r || !(+sn.L > 70 || sn.fz)) return null;
   var nm = (r.fu3 || []).filter(Boolean); if (!nm.length) nm = [d.name];
-  return { sub: '합일한 넋이 졌다. ' + (+sn.L > 70 ? DS.tierOfL(sn.L) + '단' : '8단') + '은 잇지 않는다', names: nm.slice(0, 3), note: nm.length > 1 ? '세 이름을 한 몸에 묶었던 이' : '', gift: r.tk10 ? '남긴 뜻: 다음 사람을 불러라. 모집권 ' + r.tk10 + '장' : '' };      // 2.3.1: 모집권 10장
+  return { sub: ((r.fu3 || []).filter(Boolean).length ? '합일한 넋이 졌다. ' : '8단 위의 가주가 졌다. ') + (+sn.L > 70 ? DS.tierOfL(sn.L) + '단' : '8단') + '은 잇지 않는다', names: nm.slice(0, 3), note: nm.length > 1 ? '세 이름을 한 몸에 묶었던 이' : '', gift: r.tk10 ? '남긴 뜻: 다음 사람을 불러라. 모집권 ' + r.tk10 + '장' : '' };      // 2.3.1: 모집권 10장
 }
 function lgRite(ev, cb, griefs, seen) {
   var s = G.save, d = lgP(ev.a), chId = ev.ch;

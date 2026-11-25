@@ -5685,3 +5685,12 @@ html body #app#app .pplv .pph .pph1 button[aria-pressed="true"] { border-color: 
 html body #app#app .sobar .soh small .sogap { font-style: normal; font-weight: 700; color: #f0b64a; }
 .gpk-now { display: block; font-size: var(--fs-s); color: var(--mute, #c4b89e); margin-bottom: 2px; }
 .schips .sch.pw { border-color: rgba(210, 176, 114, .6); } .schips .sch.pw i { color: var(--a-gold, #d2b072); }
+
+/* 2.6.4: 단 이름 (인물 줄 · 부대 카드) */
+.row.ppl .pl .ptn { font-style: normal; color: var(--bone, #ece2cc); margin: 0 5px 0 4px; }
+.hk .hkc { display: block; font-size: 10px; line-height: 13px; color: var(--mute, #c4b89e); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center; }
+html body #app#app .row.ppl.pgrid .pl { display: flex; align-items: center; gap: 0; min-width: 0; overflow: hidden; }
+html body #app#app .row.ppl.pgrid .pl > * { flex: 0 0 auto; }
+html body #app#app .row.ppl.pgrid .pl > span.phn { flex: 0 1000 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }      /* 가문 이름이 먼저 줄어든다 — 단 이름은 끝까지 */
+html body #app#app .row.ppl.pgrid .pl .ptn { flex: 0 0 auto; white-space: nowrap; font-size: 11px; margin: 0 4px 0 3px; }      /* 단 이름은 줄이지 않는다 — 넘치면 뒤의 문장 · 가문 이름이 잘린다 */
+html body #app#app .pplv .pph, html body #app#app .row.ppl.pgrid { grid-template-columns: 44px minmax(0, 1fr) 42px 30px 66px; column-gap: 7px; }      /* 2.6.4: 단 이름 자리 (이름 칸 +15px) */

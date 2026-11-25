@@ -542,7 +542,7 @@ function hornEnh(res) {
 }
 function hornFuse(s) {
   var LF = DS.lastFuse, ids = LF && LF.ids; if (!ids || !hornOutOn()) return;
-  var top = null; ids.forEach(function (id) { var c = s.chars[id]; if (c && LF.name && String(DS.flagHouse ? DS.flagHouse(s, c.cls) : '').replace(/ 가문$/, '') === LF.name && !top) top = c; });
+  var top = null; ids.forEach(function (id) { var c = s.chars[id]; if (c && LF.name && String(DS.flagHouseRaw ? DS.flagHouseRaw(s, c.cls) : DS.flagHouse ? DS.flagHouse(s, c.cls) : '').replace(/ 가문$/, '') === String(LF.name || '').replace(/^大 /, '') && !top) top = c; });
   top = top || s.chars[ids[0]]; var i = top ? hornCls().indexOf(top.cls) : -1; if (i < 0) return;
   hornSend({ k: 'fuse', n: i + 1 + (top.id === s.hero ? 10 : 0), gid: '' });
 }

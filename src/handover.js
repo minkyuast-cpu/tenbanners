@@ -157,7 +157,7 @@ DS.NK_TXT = {
     h2: '{b}{이가} 막사에서 나와 새 맹주가 된다. 제 레벨 {l1} 그대로',
     h3: '맹주 자리가 {house}{으로} 간다. {b}{은는} 제 장비와 공훈 그대로 맹주가 된다', h3o: '{old}{은는} 보통 가문이 된다. 어른 자식이나 막사의 같은 병과가 잇고, 없으면 빈 가문이 된다',
     bare: '새 맹주는 장비 없이 시작한다. 가방에서 다시 입힌다',
-    x8: '합일한 {t}단은 잇지 않는다', tk: '남긴 뜻으로 영웅 모집권 {n}장을 받는다',
+    x8: '합일한 {t}단은 잇지 않는다', x8d: '합일한 {t}단은 잇지 않는다. 大 가문이라 새 가주는 합일 없이 다시 8단에 오를 수 있다', tk: '남긴 뜻으로 영웅 모집권 {n}장을 받는다',
     sp: '배우자 {sp}{과와} 사별한다', mood: '가족은 비탄에 잠긴다 (공격, 마공 −10%, 두 판). 새 맹주는 유지를 잇는다 (공격, 마공 +10%, 두 판)',
     keep: '스무 해는 흐르지 않는다. 깬 시나리오와 금고는 그대로다', name: '이름은 깃대에 남는다. {a}{은는} 선대 단톡방에 들어간다'
   },
@@ -239,7 +239,7 @@ DS.nkPreview = function (s, row) {
   var hl = hlWould(s, ch, dp ? dp.id : 0), x8 = L > 70 || !!ps.fz, m = mercOf(s, row.mid);
   var sp = dp && dp.sp && P[dp.sp] ? DS.linName(s, dp.sp) : '', hf = row.move && (row.hf || row.h) ? s.chars[row.hf || row.h] : null;
   var cof = s.coffins ? Math.max(0, (s.coffins.have || 0) - ((s.coffins.list || []).length)) : 0;
-  return { old: DS.charName(ch, s), oldL: L, gear: gear, hl: hl.made, step: hl.step, x8: x8, tk: x8 && !(dp && dp.tk10) ? (DS.FALLX_TK || DS.NK.tk) : 0,
+  return { old: DS.charName(ch, s), oldL: L, gear: gear, hl: hl.made, step: hl.step, x8: x8, dae: !!(DS.houseDaeGen && DS.houseDaeGen(s, ch)), tk: x8 && !(dp && dp.tk10) ? (DS.FALLX_TK || DS.NK.tk) : 0,
     heir: row.name || '', l0: m ? DS.pL(m) : row.pL || 1, l1: row.opt === 1 ? row.nL || row.pL || 1 : m ? DS.pL(m) : row.pL || 1, opt: row.opt, move: !!hf, house: hf ? DS.flagName(hf.cls, s) : '', oldHouse: DS.flagName(ch.cls, s),
     spouse: sp, coffin: cof, canKeep: cof > 0 && !!DS.linEntomb && !(dp && dp.rv) };
 };
@@ -414,7 +414,7 @@ function consq(s, row) {
   else if (v.opt === 2) add(T.h2, { b: b, l1: lvT(v.l1) });
   else add(v.l1 > v.l0 ? T.h1 : T.h1s, { b: b, l0: lvT(v.l0), l1: lvT(v.l1) });
   if (v.opt !== 3) add(T.bare, {});
-  if (v.x8) add(T.x8, { t: DS.tierOfL(Math.max(71, v.oldL)) }, 'lploss');
+  if (v.x8) add(v.dae ? T.x8d : T.x8, { t: DS.tierOfL(Math.max(71, v.oldL)) }, 'lploss');
   if (v.tk) add(T.tk, { n: v.tk });
   if (v.spouse) add(T.sp, { sp: v.spouse });
   add(T.mood, {});
