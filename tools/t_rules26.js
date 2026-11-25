@@ -140,6 +140,8 @@ module.exports = async (page, shot, L) => {
   c = await waitFor(() => { var el = document.querySelector('.cine.ck-succ'); return el ? el.querySelector('.crib').textContent : ''; });
   A(/이음/.test(c), 'the 막사 person takes the seat (' + c + ')');
   await ev(() => DS.cineSkip());
+  // 2.6.0: 쓰러짐 안내가 죽음 장면 뒤로 늦게 뜬다 — 다른 창이 떠 있으면 닫아 가며 기다린다 (묻는 창은 화면이 빌 때 뜬다)
+  for (let i = 0; i < 30; i++) { const st = await ev(() => ({ cine: DS.cineBusy(), gbd: !!document.querySelector('.ov .gbd'), ov: !!document.querySelector('#app .ov:not(.ghost)') })); if (st.gbd) break; if (st.cine) await ev(() => DS.cineSkip()); else if (st.ov) await ev(() => { var b = document.querySelector('#app .ov:not(.ghost) [data-close]'); if (b) b.click(); else DS.ui.closeAll(); }); await sleep(500); }
   c = await waitFor(() => { var o = document.querySelector('.ov .gbd'); return o ? { t: o.innerText.replace(/\n+/g, ' / '), btn: !!o.querySelector('[data-gbd]') } : null; }, null, 6000);
   A(c && /새 가주/.test(c.t) && /장비가 없다/.test(c.t) && /이음/.test(c.t) && /무기 .+, 방어구 /.test(c.t) && c.btn, 'then the nudge: ' + (c && c.t));
   await shot('r2_nudge');
@@ -183,6 +185,7 @@ module.exports = async (page, shot, L) => {
   c = await waitFor(() => { var el = document.querySelector('.cine.ck-death'); return el ? (el.querySelector('.cgb') || {}).textContent || '-' : ''; });
   A(c === '장비 2점이 가방으로 돌아왔다', 'the 맹주 falls: farewell cinematic says 「' + c + '」');
   await ev(() => DS.cineSkip()); await sleep(700);
+  await waitFor(() => !!document.querySelector('.ov .lgrite .gbl'), null, 12000);      // 2.6.0: 추도는 교회에서 치른다 — 창이 뜰 때까지 기다린다
   c = await ev(() => { var o = document.querySelector('.ov .lgrite'), s = DS.G.save, h = s.chars[s.hero], b = window.__h; return { gb: (o.querySelector('.gbl') || {}).textContent || '', w: h.w, a: h.a, bw: s.gear[b.w] || 0, ba: s.gear[b.a] || 0, hl: Object.keys(s.gh || {}).filter(function (k) { return s.gh[k].hl; }).length - b.hl }; });
   A(c.gb === '장비 2점이 가방으로 돌아왔다' && c.w == null && c.a == null && c.bw >= 1 && c.ba >= 1 && c.hl === 1, 'succession rite, mourning step: the line is there; the seat is stripped, both pieces are in the bag, one heirloom');
   await shot('r2_rite_mourn');

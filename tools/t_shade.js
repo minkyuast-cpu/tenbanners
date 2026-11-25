@@ -41,7 +41,7 @@ module.exports = async (page, shot, L) => {
   // ② 수동(맹주 「수동」) — 단추 → 고르기 → 그림자
   await ev(() => { var s = DS.G.save; s.chars[s.hero].manual = true; DS.ui.closeAll(); DS.G.quiet = true; DS.startScenario(DS.scn(13)); DS.G.pause = true; });
   await sleep(700); await L.skipStory(page, 5);
-  const before = await ev(() => { var s = DS.G.save; DS.G.pause = true; return { fallen: JSON.stringify(s.fallen), lin: JSON.stringify(s.lin), mercs: s.mercs.length, chars: JSON.stringify(Object.keys(s.chars).map(function (k) { return [k, s.chars[k].L, !!s.chars[k].vac]; })), items: JSON.stringify(s.items), gold: s.gold }; });
+  const before = await ev(() => { var s = DS.G.save; DS.G.pause = true; return { fallen: JSON.stringify(s.fallen), lin: JSON.stringify(s.lin), mercs: s.mercs.length, chars: JSON.stringify(Object.keys(s.chars).map(function (k) { return [k, s.chars[k].L, !!s.chars[k].vac]; })), items: JSON.stringify(s.gear || {}), gold: s.gold }; });
   c = await ev(() => { var b = document.querySelector('#acts .act.item.shade'); return { ready: !!(b && b.classList.contains('ready')), off: !!(b && b.classList.contains('off')), why: DS.shadeUI.why(), auto: DS.G.sim.byId['c' + DS.G.save.hero].auto }; });
   A(c.ready && !c.off && c.why === '' && c.auto === false, 'with the fallen: button ready (맹주 manual) ' + JSON.stringify(c));
   await snap('button_ready');
@@ -81,7 +81,7 @@ module.exports = async (page, shot, L) => {
   A(c.why2 === '그림자가 다녀갔다' && c.btnOff, 'after it fades: button off 「' + c.why2 + '」');
   await snap('fade_line');
   await ev(() => { DS.G.pause = true; });
-  const after = await ev(() => { var s = DS.G.save; return { fallen: JSON.stringify(s.fallen), lin: JSON.stringify(s.lin), mercs: s.mercs.length, chars: JSON.stringify(Object.keys(s.chars).map(function (k) { return [k, s.chars[k].L, !!s.chars[k].vac]; })), items: JSON.stringify(s.items) }; });
+  const after = await ev(() => { var s = DS.G.save; return { fallen: JSON.stringify(s.fallen), lin: JSON.stringify(s.lin), mercs: s.mercs.length, chars: JSON.stringify(Object.keys(s.chars).map(function (k) { return [k, s.chars[k].L, !!s.chars[k].vac]; })), items: JSON.stringify(s.gear || {}) }; });
   A(after.fallen === before.fallen && after.lin === before.lin && after.mercs === before.mercs && after.chars === before.chars && after.items === before.items, 'save.fallen · lineage · houses · roster · bag untouched by the shade');
   // 쓰러뜨려도 죽음이 아니다 (엔진 kill → 걷힘) · 이름 지우기 후보가 아니다
   c = await ev(() => {
@@ -101,7 +101,7 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var sim = DS.G.sim; sim.units.forEach(function (e) { if (e.side === 'enemy' && !e.dead) e.aggro = true; }); sim.combat = true; for (var i = 0; i < 20; i++) { sim.cmds().forEach(function (u) { u.hp = u.mhp; }); sim.update(0.25); } sim.drain(); return { used: sim.shd.used, auto: sim.byId['c' + DS.G.save.hero].auto, t: sim.t - sim.shd.t0 }; });
   A(!c.used && c.auto, 'auto: healthy party does not call (' + JSON.stringify(c) + ')');
   c = await ev(() => { var sim = DS.G.sim, v = sim.cmds().filter(function (u) { return !u.hero; })[0] || sim.cmds()[0]; v.hp = Math.round(v.mhp * 0.2); DS.G.pause = false; return v.name; });
-  for (let i = 0; i < 20; i++) { const u = await ev(() => DS.G.sim.shd.used); if (u) break; await sleep(150); }
+  for (let i = 0; i < 60; i++) { const u = await ev((nm) => { var sim = DS.G.sim, v = sim.cmds().filter(function (u) { return u.name === nm; })[0]; if (v && !sim.shd.used) v.hp = Math.min(v.hp, Math.round(v.mhp * 0.2)); return sim.shd.used; }, c); if (u) break; await sleep(150); }      // 2.6.0: 싸움이 한 박자 쉬고 움직인다 — 부를 때까지 기다린다 (그사이 고쳐지면 다시 낮춘다)
   await sleep(250);
   c = await ev(() => { var sim = DS.G.sim, S = sim.shd; return { used: S.used, auto: S.auto, cut: (document.querySelector('#shadecut.on small') || {}).textContent || '' }; });
   A(c.used && c.auto && /자동/.test(c.cut), 'auto: a house head below 35% → the 맹주 calls by itself (' + JSON.stringify(c) + ')');
