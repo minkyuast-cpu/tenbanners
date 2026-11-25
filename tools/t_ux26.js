@@ -241,6 +241,8 @@ module.exports = async (page, shot, L, env) => {
   await ev(() => { DS.ui.closeAll(); DS.G.quiet = true; DS.G.pause = true; DS.startScenario(DS.scn(3)); }); await L.sleep(900); await L.skipStory(page, 5);
   c = await ev(() => { var s = DS.G.save, sim = DS.G.sim, out = []; sim.units.forEach(function (u) { if (u.side !== 'ally' || u.role !== 'cmd') return; var ch = s.chars[u.ch], want = ch.id === s.hero ? DS.charSprite(ch, s) : DS.charLook(ch, s)[0]; out.push({ ch: u.ch, got: DS.unitSpriteName(u), want: want }); }); return out; });
   A(c.length === 3 && c.every(u => u.got === u.want), 'battle sprites of the three commanders are the same look as their portraits (' + c.map(u => u.got.split('#')[0]).join(', ') + ')');
+  c = await ev(() => { var s = DS.G.save, sim = DS.G.sim, out = []; sim.units.forEach(function (u) { if (u.side !== 'ally' || u.mid == null) return; var m = s.mercs.filter(function (x) { return x.id === u.mid; })[0]; if (m) out.push({ got: DS.unitSpriteName(u), want: DS.personLook(m, s)[0], t: DS.tierOfL(DS.pL(m)) }); }); return out; });
+  A(c.length >= 1 && c.every(u => u.got === u.want) && c.every(u => (u.t >= 4) === /r=[sg]/.test(u.got)), '가문원 in battle = their portrait, with the 단 rim from 4단 like everyone else (' + c.map(u => u.got).join(', ') + ')');
   await snap('battle');
   await ev(() => { DS.G.pause = false; DS.G.sim.win(); });
   for (let i = 0; i < 50 && !(await ev(() => !!document.querySelector('.ov.res26'))); i++) { await L.sleep(200); await L.skipStory(page, 1); }

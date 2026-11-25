@@ -1191,7 +1191,7 @@ function xpBoard(sv, sn, out, deadCh) {
     var hero = id === sv.hero, w = hero ? (ch.vac ? null : ch.ps) : DS.bearer(sv, ch), cls = hero ? ' lord' : '', crest = DS.houseCrestOf ? DS.houseCrestOf(sv, ch, hero ? 16 : 14) : '', fc = DS.FLAG[ch.cls] || '#c9a96a';
     var c;
     var fr = !hero && (deadCh[id] || !w) ? (sv.fallen || []).filter(function (f) { return f && +f.f === id; }).pop() : null;      // 2.6.0: 쓰러진 가주의 칸도 그 사람의 등급 테 그대로 (초상만 잿빛)
-    if (deadCh[id] || !w) c = '<div class="hk xc down' + cls + '" style="--fc:' + fc + '"><span class="hkh">' + crest + '<small>' + esc(hgShort(ch)) + '</small></span><span class="hkf ' + DS.gfrCls(fr ? fr.g : hero && w ? w.g || 3 : 0, { lord: hero, dead: 1 }) + '"' + (fr && fr.id ? ' data-gp="m' + fr.id + '"' : '') + '>' + (fr ? goneSpr({ type: fr.type, g: fr.g, L: fr.L, cls: ch.cls }, 3) : hero && w ? charSpr(ch, 4) : '') + '<i class="hkx">' + (deadCh[id] === 2 ? '천수' : '쓰러짐') + '</i></span><b class="hkn">' + esc(w ? DS.charName(ch) : '빈 가문') + '</b></div>';
+    if (deadCh[id] || !w) c = '<div class="hk xc down' + cls + '" style="--fc:' + fc + '"><span class="hkh">' + crest + '<small>' + esc(hgShort(ch)) + '</small></span><span class="hkf ' + DS.gfrCls(fr ? fr.g : hero ? DS.gradeNum((ch.ps && ch.ps.g) || DS.CAST_G || 3) : 0, { lord: hero, dead: 1 }) + '"' + (fr && fr.id ? ' data-gp="m' + fr.id + '"' : hero ? ' data-gp="c' + ch.id + '"' : '') + '>' + (fr ? goneSpr({ type: fr.type, g: fr.g, L: fr.L, cls: ch.cls }, 3) : hero ? charSpr(ch, 4) : '') + '<i class="hkx">' + (deadCh[id] === 2 ? '천수' : '쓰러짐') + '</i></span><b class="hkn">' + esc(w ? DS.charName(ch) : '빈 가문') + '</b></div>';
     else { var r = xpCell(sv, sn, w, { spr: charSpr(ch, hero ? 4 : 3), who: hero ? 'c' + ch.id : 'm' + w.id, name: hero ? DS.charName(ch) : (w.ttl || w.n || ''), house: hgShort(ch), crest: crest, cls: cls, fc: fc }); up = up || r.up; c = r.html; }
     if (hero) lord = c; else cells.push(c);
     DS.mercsOf(sv, id).forEach(function (m) { if (m === w) return; var r = xpCell(sv, sn, m, { spr: mercSpr(m, 1.5), name: m.ttl || m.n || '', small: 1 }); up = up || r.up; kin.push(r.html); });
@@ -2000,7 +2000,7 @@ function tabHelp() {
     ['사람과 가문', '가문', [
       '연맹에는 <b>맹주</b> 한 명과 가문들이 있다. 가문들이 모여 <b>' + esc(DS.allyFull ? DS.allyFull(G.save) : '연맹') + '</b>을 이룬다. 맹주는 자기가 선 가문의 가주다. 연맹의 이름은 대가 바뀌어도 그대로다.',
       '<b>싸움에는 셋이 나간다.</b> 맹주와 고른 가주 둘이다. 맹주의 어른 가문원은 늘 함께 싸운다. 나머지 가주는 쉰다. 쉬는 가주는 싸우지 않아 쓰러지지 않고, 나이는 그대로 먹는다.',
-      '출전은 부대 탭의 <b>바꾸기</b>나 가문 창의 <b>출전, 쉬기</b>로 바꾼다. 시나리오와 갱도 입구에서도 바꾼다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러지거나 가문이 비면 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
+      '출전은 부대 탭 가주 카드의 <b>출전, 쉼</b> 단추를 눌러 그 자리에서 바꾼다. 시나리오와 갱도 입구에서는 얼굴을 눌러 바꾼다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러지거나 가문이 비면 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
       '가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
       '사람의 자리는 셋이다. <b>가주</b>는 가문을 이끌고 싸운다. <b>막사</b>는 모집한 영웅이 기다리는 곳 하나로, 가문에 매이지 않고 싸우지 않는다. <b>가문원</b>은 맹주 집 사람(아이, 배우자)으로, 어른이면 모두 맹주를 따라 싸운다.',
       '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 장비와 공훈은 가문에 남는다.',
@@ -2068,7 +2068,7 @@ function tabHelp() {
       '맹주가 쓰러지면 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 뒤를 고른다. 막사에서 이은 이는 제 레벨 그대로다. 다른 가문의 가주를 고르면 맹주 자리가 그 가문으로 간다. 그 가문의 장비와 공훈은 그대로다.', '옛 맹주 가문은 보통 가문이 된다. 어른 자식 가운데 레벨이 가장 높은 이가 가주가 되고, 없으면 막사의 같은 병과가, 그도 없으면 빈 가문이 된다. 남은 가족은 그 가문의 병과로 막사에 가고, 아이는 자라면 막사로 간다. 새 맹주를 따르지 않는다. 고를 이가 아무도 없으면 대가 끊기고 스무 해가 흐른다. 깬 시나리오는 모두 사라지고 1번부터 다시다. 가문과 사람, 레벨, 장비는 남고, 다시 깨면 처음 깬 보상을 또 받는다.']],
     ['혼인과 아이', '혼인', [
       '혼인은 <b>맹주만</b> 할 수 있다. 성별이 다른 가주나 막사의 사람을 배우자로 맞는다. 막사에 있던 배우자는 맹주 가문의 가문원이 되어 함께 싸운다. 시나리오와 전투 밖이면 어디서나 「마을 일」에서 한다.',
-      '<b>인물 탭</b>의 「배우자 후보」 필터에서 혼인할 수 있는 사람과 아이의 예상 등급을 볼 수 있다.',
+      '<b>인물 탭</b>의 「배우자 고르기」에서 혼인할 수 있는 사람과 아이의 예상 등급을 보고, 줄의 「혼인」으로 바로 맺는다.',
       '혼인하면 <b>해마다 확률로</b> 아이가 태어난다. 첫해가 가장 높고, 해가 갈수록, 아이가 늘수록 드물어진다.',
       '아이의 등급은 <b>배우자의 등급</b>을 닮는다. 운에 따라 한 단계 오르거나 내린다.',
       '대장 인물 정보의 <b>혼인 칸</b>에서 함께한 햇수, 아이 수, 다음 해 출산 확률을 볼 수 있다.',
@@ -2219,7 +2219,8 @@ function pplCmpBar(all) {
 }
 // 표시 안내: 등급 이름표 · 가문 공훈 별 · 필살기 ✦ · 단·Lv
 function pplKey() {
-  return '<div class="pkeyb"><dl class="kvr"><dt>등급</dt><dd>' + [1, 2, 3, 4, 5].map(function (g) { return gbadge(g); }).join('') + '<small>색 이름표 하나로만 보인다. 초상 테두리도 같은 색. 가문에서 태어난 아이도 같은 다섯 등급이다</small></dd>' +
+  return '<div class="pkeyb"><dl class="kvr"><dt>등급</dt><dd>' + [1, 2, 3, 4, 5].map(function (g) { return gbadge(g); }).join('') + '<small>색 이름표와 초상의 테 색이 곧 등급이다. 가문에서 태어난 아이도 같은 다섯 등급이다</small></dd>' +
+    '<dt>테</dt><dd><span class="pkfr">' + [1, 2, 3, 4, 5].map(function (g) { return DS.gfr(g, '', { cls: 's' }); }).join('') + DS.gfr(3, '', { cls: 's', lord: 1 }) + '</span><small>어느 화면에서나 같은 색. 테 안의 눈금 수도 등급이다. 왕관 표는 맹주. 떠난 이는 테 색은 그대로, 초상만 잿빛</small></dd>' +
     '<dt>단·Lv</dt><dd><b class="num">5단 Lv7</b><small>사람마다 따로. 10레벨마다 단이 오른다</small></dd>' +
     '<dt>자리</dt><dd>' + ['hero', 'bear', 'sb', 'fol'].map(function (k) { return '<i class="prole r-' + k + '">' + { hero: '맹주', bear: '가주', sb: '막사', fol: '가문원' }[k] + '</i>'; }).join('') + '<small>막사는 싸우지 않는다. 전투력은 같은 병과 가주가 되었을 때</small></dd>' +
     '<dt>별</dt><dd>' + (DS.vetBadge ? DS.vetBadge(4) : '★') + '<small>가문 공훈 계급에만 쓴다</small></dd>' +
@@ -2523,7 +2524,7 @@ function lgSpr(r, ch, m, cls, type, g, L) {
   if (ch) return charSpr(ch, 2);
   if (m) return mercSpr(m, 2);
   var v = (r.snap && r.snap.v) || (r.ya && r.ya.v) || r.v || 0;
-  if (cls && DS.lookName) return lgTry(function () { return sprTag(DS.dressName(DS.lookName(cls, DS.tierOfL(L || 1)), { v: v }), '', 2); }) || '';
+  if (cls && DS.lookName) return lgTry(function () { return sprTag(DS.dressName(DS.lookName(cls, DS.tierOfL(L || 1)), { x: r.sx || '', v: v }), '', 2); }) || '';
   var fb = r.d && r.d.fb && G.save.chars[r.d.fb] ? G.save.chars[r.d.fb].cls : '';      // 2.6.0: 깃발을 든 채 잠든 가주는 그 가문 병과의 옷 그대로 (살아서의 모습과 같게)
   return goneSpr({ type: type, g: g, v: v, L: (r.snap && r.snap.L) || r.L || 1, cls: fb }, 2);
 }
@@ -2719,7 +2720,7 @@ function lgSpouseRow(kind, ref) {
     : kids.length ? '자식 ' + kids.length + '명: ' + kids.map(function (k) { return (k.full || k.name) + (k.alive ? (k.young && k.ag ? '(' + k.ag.y + '살)' : '') : '(잠듦)'); }).join(', ')
     : (kind === 'merc' ? '맹주와 혼인할 수 있다. ' : '가주나 막사의 사람과 혼인할 수 있다. ') + '성별이 달라야 한다.';
   var html = '<h4>집안 <i class="own">' + esc(p && p.sur ? p.sur + ' 가문' : '') + (p && p.gen ? ' ' + p.gen + '세' : '') + '</i></h4><div class="row lgrow"><div class="tx"><b>' + (sp ? '배우자 ' + esc(sp.name) : '배우자 없음') + ' <i class="own">' + esc(lgSexTxt(sp ? sp.sx : sx)) + '</i>' + mood + '</b>' +
-    '<small>' + esc(sub) + '</small></div><div class="btns">' + (sp ? '<button class="btn small" data-lgpart="' + kind + ':' + ref + '">이별</button>' : kind === 'ch' ? (ref === G.save.hero && heroCanWed() ? '<button class="btn small gold" data-lgwed="' + kind + ':' + ref + '">배우자 고르기 <b class="num">' + wedCands().length + '</b></button>' : '') : (wedWhy(mercById(ref) || {}) ? '' : '<button class="btn small gold" data-lgwed="' + kind + ':' + ref + '">맹주와 혼인</button>')) +
+    '<small>' + esc(sub) + '</small></div><div class="btns">' + (sp ? '<button class="btn small" data-lgpart="' + kind + ':' + ref + '">이별</button>' : kind === 'ch' ? (ref === G.save.hero && heroCanWed() ? '<button class="btn small' + (wedCands().length ? ' gold' : '') + '" data-lgwed="' + kind + ':' + ref + '">배우자 고르기 <b class="num">' + wedCands().length + '</b></button>' : '') : (wedWhy(mercById(ref) || {}) ? '' : '<button class="btn small gold" data-lgwed="' + kind + ':' + ref + '">맹주와 혼인</button>')) +
     (p ? '<button class="btn small" data-lgtree="' + esc(p.id) + '">가계도</button>' : '') + '</div></div>';
   return html;
 }
@@ -2996,7 +2997,7 @@ function lgRite(ev, cb, griefs, seen) {
   function heirRow(c) {
     var m = c.mid ? mercById(c.mid) : null, ch = s.chars[chId], hf = c.opt === 3 && (c.hf || c.h) ? s.chars[c.hf || c.h] : null;
     if (!m || !ch) return '';
-    c._spr = mercSpr(m, 2);
+    c._spr = gfM(m, 2);
     var cls = hf ? hf.cls : ch.cls, pw = lgTry(function () { return hf ? flagPow(hf, m) : flagPow(ch, m); }) || 0;
     var say = c.opt === 1 ? '맹주가 된다. 선대와의 레벨 차이 일부를 받는다' : c.opt === 2 ? '막사에서 나와 맹주가 된다. 제 레벨 그대로' : '맹주 자리가 이 가문으로 간다. 옛 맹주 가문의 가족은 막사로 간다';      // 2.2.1
     var sub = [c.opt === 1 ? (c.sx === 'f' ? '딸' : '아들') : '', DS.CLASSES[cls] ? (hf ? DS.flagName(hf.cls) + ' 가주' : DS.CLASSES[cls].name) : '', lv(DS.pL(m))].filter(Boolean);

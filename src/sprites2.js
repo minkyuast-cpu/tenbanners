@@ -632,6 +632,7 @@ DS.unitDress = function (u) {
   o.x = u.sx || (p && p.sx) || (e && e.sx) || '';
   o.f = u.faded !== undefined ? !!u.faded : !!(p && (p.rv || p.ret));
   if (u.role === 'cmd' && !u.plook && pv && pv.v) o.v = pv.v;      // 2.6.0: 병과 옷을 입은 가주 · 맹주의 제 살빛
+  if (m && !ch && u.role !== 'cmd' && DS.rimOf && DS.tierOfL && DS.pL) o.r = DS.rimOf(DS.tierOfL(DS.pL(m)));      // 2.6.0: 가문원도 제 단의 테두리 빛 (4단 은 · 8단 금 — 가주 · 맹주와 같은 말)
   return o;
 };
 DS.unitSpriteName = function (u) {
@@ -670,6 +671,7 @@ DS.personLook = function (m, save) {
   if (M.big) return [M.sprite, M.pal, 0.75];
   var own = [m.type + '_' + (m.g || 1) + '_' + (m.v || 0), '', 1];
   if (!S || !S.chars || m.id == null) return own;
+  var p0 = linP(S, m); own[0] = DS.dressName(own[0], { g: ageWord(S, m), x: (p0 && p0.sx) || m.sx || '', f: !!(p0 && (p0.rv || p0.ret)), r: DS.rimOf && DS.pL ? DS.rimOf(DS.tierOfL(DS.pL(m))) : '' });      // 싸움터의 그림과 같게: 나이 · 성별 + 제 단의 테두리 빛
   if (m.h && m.o && S.chars[m.o] && m.o !== +S.hero) { var cl = null; try { cl = DS.charLook(S.chars[m.o], S, 0, m); } catch (x) { cl = null; } return cl || own; }
   var c = m.cast || m.nc;
   if (!m.o && c && DS.CLASSES[c] && !DS.keepsBody(m)) { var p = linP(S, m); return [DS.dressName(DS.lookName(c, DS.tierOfL(DS.pL ? DS.pL(m) : m.L || 1)), { g: ageWord(S, m), x: (p && p.sx) || m.sx || '', f: !!(p && (p.rv || p.ret)), v: m.v }), '', 1]; }

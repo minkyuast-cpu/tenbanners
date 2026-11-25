@@ -564,9 +564,9 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var s = DS.G.save, top = DS.sortieRank(s).slice(0, 2).map(ch => ch.id).sort(); return { so: s.sortie.map(e => e.h).sort(), top: top, n: DS.charList(s).length }; });
   A(c.n === 10 && JSON.stringify(c.so) === JSON.stringify(c.top), 'no sortie yet → the two strongest go out (' + c.so.join(',') + ')');
   await ev(() => DS.openMenu('party')); await L.sleep(600);
-  c = await ev(() => { var o = document.querySelector('.ov'), s = DS.G.save; return { on: o.querySelectorAll('.hk .hkso:not(.rs)').length, rs: o.querySelectorAll('.hk .hkso.rs').length, bar: o.querySelectorAll('.sobar .sof:not(.none)').length, pick: !!o.querySelector('.sobar [data-sopick]'), lordOn: !!o.querySelector('.hk.lord .hkso:not(.rs)'), sw: document.documentElement.scrollWidth, ids: [...o.querySelectorAll('.hk9 .hk.in')].map(e => +e.dataset.ch).sort(), so: s.sortie.map(e => e.h).sort() }; });
+  c = await ev(() => { var o = document.querySelector('.ov'), s = DS.G.save; return { on: o.querySelectorAll('.hk .hkso:not(.rs)').length, rs: o.querySelectorAll('.hk .hkso.rs').length, bar: o.querySelectorAll('.sobar .sof').length, line: (o.querySelector('.sobar.party') || {}).innerText || '', tg: o.querySelectorAll('.hk9 .hkso[data-sotg]').length, pick: !!o.querySelector('[data-sopick]'), lordOn: !!o.querySelector('.hk.lord .hkso:not(.rs)'), sw: document.documentElement.scrollWidth, ids: [...o.querySelectorAll('.hk9 .hk.in')].map(e => +e.dataset.ch).sort(), so: s.sortie.map(e => e.h).sort() }; });
   A(c.on === 3 && c.rs === 7 && c.lordOn && JSON.stringify(c.ids) === JSON.stringify(c.so), '부대 grid: 「출전」 band on the three (맹주 + ' + c.ids.join(',') + '), 「쉼」 on the 7 others');
-  A(c.bar === 3 && c.pick && c.sw <= 390, 'sortie bar with three faces and 바꾸기 fits 390px (' + c.sw + ')');
+  A(c.bar === 0 && !c.pick && /출전 3 \/ 3/.test(c.line) && c.tg === 9 && c.sw <= 390, '2.6.0: one summary line (' + c.line.replace(/\s+/g, ' ') + '), no 바꾸기 and no second row of faces — every 가주 card has its own 출전/쉼 button (' + c.tg + '), fits 390px (' + c.sw + ')');
   A((await L.badText(page, '.ov')).length === 0, '부대 tab with sortie has no NaN/undefined');
   await vshot('grid_badges');
   // 가문 창: 쉬는 가주 → 출전 (둘 가운데 약한 이와 바꾼다) · 출전한 가주 → 쉬기 (쉬는 이 가운데 가장 센 이가 대신)
@@ -583,35 +583,31 @@ module.exports = async (page, shot, L) => {
   await vshot('sheet_out');
   c = await ev((id) => { var s = DS.G.save, best = DS.sortieRank(s, DS.benched(s))[0].id; document.querySelector('.ov .duty.so [data-sotg]').click(); return { best: best, so: s.sortie.map(e => e.h) }; }, rest0);
   A(c.so.indexOf(rest0) < 0 && c.so.indexOf(c.best) >= 0 && c.so.length === 2, 'toggle 쉬기: the strongest resting 가주 steps in (' + c.best + ')');
-  // 바꾸기 창: 둘을 골라 확인 · 셋째를 고르면 막힌다
+  // 2.6.0 고르기 창 없이: 가주 카드의 「쉼」을 누르면 그 자리에서 나간다 (둘 가운데 약한 이가 쉰다) · 「출전」을 누르면 쉰다 (쉬던 이 가운데 가장 센 이가 대신)
   await ev(() => { DS.ui.closeAll(); DS.openMenu('party'); }); await L.sleep(400);
-  await page.click('.ov .sobar [data-sopick]'); await L.sleep(400);
-  c = await ev(() => { var s = DS.G.save, rows = [...document.querySelectorAll('.ov .sopk [data-sop]')], want = DS.benched(s).slice(-2).map(ch => ch.id);
-    [...document.querySelectorAll('.ov .sopk .sopr.on[data-sop]')].map(r => r.dataset.sop).forEach(id => document.querySelector('.ov .sopk [data-sop="' + id + '"]').click());      // 누를 때마다 다시 그린다
-    want.forEach(id => document.querySelector('.ov .sopk [data-sop="' + id + '"]').click());
-    var third = rows.map(r => +r.dataset.sop).filter(id => want.indexOf(id) < 0)[0]; document.querySelector('.ov .sopk [data-sop="' + third + '"]').click();
-    var on = [...document.querySelectorAll('.ov .sopk .sopr.on[data-sop]')].map(r => +r.dataset.sop).sort();
-    return { rows: rows.length, want: want.sort(), on: on, sw: document.documentElement.scrollWidth }; });
-  A(c.rows === 9 && JSON.stringify(c.on) === JSON.stringify(c.want) && c.sw <= 390, 'picker lists 9 가주, a third pick is refused (on ' + c.on.join(',') + ')');
-  const want2 = c.want;
+  c = await ev(() => { var s = DS.G.save, id = DS.benched(s).slice(-1)[0].id, weak = DS.sortieRank(s, s.sortie.map(e => s.chars[e.h])).pop().id; document.querySelector('.ov .hk9 .hkso.rs[data-sotg="' + id + '"]').click();
+    return { id: id, weak: weak, so: s.sortie.map(e => e.h), ovs: document.querySelectorAll('.ov:not(.ghost)').length, picker: !!document.querySelector('.ov .sopk'), on: document.querySelectorAll('.ov .hk .hkso:not(.rs)').length, btn: document.querySelector('.ov .hk9 .hkso[data-sotg="' + id + '"]').className, sw: document.documentElement.scrollWidth }; });
+  A(c.so.indexOf(c.id) >= 0 && c.so.indexOf(c.weak) < 0 && c.so.length === 2 && c.ovs === 1 && !c.picker && c.on === 3 && !/rs/.test(c.btn) && c.sw <= 390, 'card button 쉼 → 출전 in place: that 가주 goes out, the weaker of the two rests, no picker sheet (out ' + c.so.join(',') + ')');
+  const want2 = c.so.slice().sort();
   await vshot('picker');
-  await page.click('.ov [data-sook]'); await L.sleep(400);
-  c = await ev(() => DS.G.save.sortie.map(e => e.h).sort());
-  A(JSON.stringify(c) === JSON.stringify(want2), 'picker 확인 applies the pick (' + c.join(',') + ')');
-  // 입구 창: 셋 · 바꾸기 · 우리 부대 평균 = 셋의 평균
+  c = await ev(() => { var s = DS.G.save, id = s.sortie[0].h, best = DS.sortieRank(s, DS.benched(s))[0].id; document.querySelector('.ov .hk9 .hkso[data-sotg="' + id + '"]').click(); var so = s.sortie.map(e => e.h); document.querySelector('.ov .hk9 .hkso.rs[data-sotg="' + id + '"]').click(); document.querySelector('.ov .hk.lord .hkso').click();
+    return { id: id, best: best, so: so, back: s.sortie.map(e => e.h).sort(), lord: !!document.querySelector('.ov .hk.lord .hkso:not(.rs)') }; });
+  A(c.so.indexOf(c.id) < 0 && c.so.indexOf(c.best) >= 0 && c.so.length === 2 && c.lord, 'card button 출전 → 쉼: the strongest resting 가주 steps in; the 맹주 button does nothing (' + c.so.join(',') + ')');
+  c = c.back;
+  A(c.length === 2 && c.indexOf(want2[0]) + c.indexOf(want2[1]) > -2, 'tapping back restores a pick of two (' + c.join(',') + ')');
+  // 입구 창 (2.6.0): 맹주 + 모든 가주가 한 줄에 · 셋이 출전 · 얼굴을 누르면 그 자리에서 바뀐다 · 우리 부대 평균 = 셋의 평균
   await ev(() => { DS.ui.closeAll(); DS.openGate(DS.scn(14), null); }); await L.sleep(500);
   c = await ev(() => { var s = DS.G.save, o = document.querySelector('.ov .gate'), dd = [...o.querySelectorAll('.facts dt')].filter(d => d.textContent === '우리 부대')[0]; var avg = Math.round(s.party.reduce((a, id) => a + s.chars[id].L, 0) / s.party.length);
-    return { faces: o.querySelectorAll('.sobar .sof:not(.none)').length, pick: !!o.querySelector('.sobar [data-sopick]'), line: dd ? dd.nextElementSibling.textContent : '', avg: DS.lvText(avg), sw: document.documentElement.scrollWidth }; });
-  A(c.faces === 3 && c.pick && c.line.indexOf(c.avg) >= 0 && c.sw <= 390, 'scenario gate shows the three and 바꾸기; 우리 부대 is the sortie average (' + c.line + ')');
+    return { faces: o.querySelectorAll('.sobar .sof:not(.none)').length, on: o.querySelectorAll('.sobar .sof.in').length, pick: !!o.querySelector('.sobar [data-sopick]'), line: dd ? dd.nextElementSibling.textContent : '', avg: DS.lvText(avg), sw: document.documentElement.scrollWidth }; });
+  A(c.faces === 10 && c.on === 3 && !c.pick && c.line.indexOf(c.avg) >= 0 && c.sw <= 390, 'scenario gate shows everyone (10) with the three marked 출전, no 바꾸기; 우리 부대 is the sortie average (' + c.line + ')');
   A((await L.badText(page, '.ov')).length === 0, 'gate has no NaN/undefined');
   await vshot('gate');
-  await page.click('.ov .gate [data-sopick]'); await L.sleep(400);
-  c = await ev(() => !!document.querySelector('.ov .sopk'));
-  A(c, 'gate 바꾸기 opens the picker');
-  await page.click('.ov [data-sook]'); await L.sleep(500);
-  A(await ev(() => !!document.querySelector('.ov .gate .sobar')), 'gate comes back after the picker');
+  c = await ev(() => { var s = DS.G.save, r = document.querySelector('.ov .gate .sof.rest[data-sotg]'), id = +r.dataset.sotg; r.click(); var o = document.querySelector('.ov .gate'), dd = [...o.querySelectorAll('.facts dt')].filter(d => d.textContent === '우리 부대')[0], avg = Math.round(s.party.reduce((a, i) => a + s.chars[i].L, 0) / s.party.length);
+    return { on: DS.sortieOn(s, id), in3: o.querySelectorAll('.sobar .sof.in').length, cls: o.querySelector('.sof[data-sotg="' + id + '"]').className, picker: !!document.querySelector('.ov .sopk'), ovs: document.querySelectorAll('.ov:not(.ghost)').length, line: dd.nextElementSibling.textContent, avg: DS.lvText(avg) }; });
+  A(c.on && c.in3 === 3 && /\bin\b/.test(c.cls) && !c.picker && c.ovs === 1, 'gate: tapping a resting face swaps it in on the spot (no picker)');
+  A(await ev(() => !!document.querySelector('.ov .gate .sobar')) && c.line.indexOf(c.avg) >= 0, 'the gate stays and 우리 부대 follows the new three (' + c.line + ')');
   await ev(() => { DS.ui.closeAll(); DS.openPit(null); }); await L.sleep(400);
-  A(await ev(() => document.querySelectorAll('.ov .pitw .sobar .sof:not(.none)').length === 3 && !!document.querySelector('.ov .pitw [data-sopick]')), 'pit entry shows the three and 바꾸기');
+  A(await ev(() => document.querySelectorAll('.ov .pitw .sobar .sof.in').length === 3 && !document.querySelector('.ov .pitw [data-sopick]') && document.querySelectorAll('.ov .pitw .sobar .sof canvas').length >= 3), 'pit entry shows the same strip with the three out');
   await ev(() => DS.ui.closeAll());
   // 쉬는 가주의 경험치: 같은 레벨 · 같은 성장이면 나간 이가 얻은 몫의 30% · 막사는 같은 병과 가주가 얻은 몫의 10% (그 가주가 쉬면 쉬는 몫의)
   c = await ev(() => { var s = DS.G.save, out = DS.G.save.sortie[0], rest = DS.benched(s)[0], a = DS.bearer(s, s.chars[out.h]), b = DS.bearer(s, rest); a.L = b.L = 40; a.exp = b.exp = 0; var ga = a.g, pa = a.pot; a.g = b.g; a.pot = b.pot; s.chars[s.hero].ps.L = 40;

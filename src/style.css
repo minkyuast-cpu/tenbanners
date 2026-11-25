@@ -5210,3 +5210,4 @@ html body #app#app .wedempty { display: grid; gap: 6px; justify-items: start; pa
 html body #app#app .wedq .wedpair { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0 4px; }
 html body #app#app .wedq .wedk { margin: 2px 0 6px; display: flex; justify-content: center; }
 html body #app#app .wedq .wrule { text-align: left; }
+html body #app#app .pkfr { display: inline-flex; gap: 4px; margin-right: 6px; vertical-align: middle; }
