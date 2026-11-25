@@ -113,7 +113,7 @@ function diffHtml(list, max) {
 // ───────── 장비 줄 (r37: 무기점·방어구점은 없어졌다 — 장비는 드랍으로 얻고, 마을 대장간에서는 강화만) ─────────
 function gearRowName(g) { return DS.gearTitle ? DS.gearTitle(g) : '<b><span class="' + enhCls(g.enh) + '">' + esc(g.name) + '</span> <i class="own">' + g.kind + '</i></b>'; }      // r12: 가방·가게·대장간이 같은 줄 머리
 function gearLine(g, ch) { if (DS.gearHtml) return DS.gearHtml(g, false, ch); return '<b><span class="' + enhCls(g.enh) + '">' + esc(g.name) + '</span> <i class="own">' + g.kind + '</i></b><small>' + g.stat + '</small>'; }      // 2.1.0: ch 를 주면 그 사람 기준 수치
-function offTag(ch, g) { return DS.gearFits && !DS.gearFits(ch.cls, g) ? ' <i class="goff" title="맞지 않는 병과: 능력치 −' + Math.round((1 - DS.GEAR_OFF) * 100) + '%">−' + Math.round((1 - DS.GEAR_OFF) * 100) + '%</i>' : ''; }      // 2.1.0: 병과에 맞지 않는 장비 표시
+function offTag(ch, g) { return DS.gearOffTag ? DS.gearOffTag(ch, g) : ''; }      // 2.1.0: 병과에 맞지 않는 장비 표시 · 2.6.0: 붉은 「병과 안 맞음 −50%」 (loot.js)
 function wearers(sl, cat) { return partyFirst(); }      // 2.1.0: 누구나 입는다
 function gearDiff(ch, id) { var g = DS.gear(id), o = {}; o[g.slot] = id; return statDiff(DS.charStats(ch), withChange(ch, o)); }
 // 한 숫자로: 무기는 주 공격 능력, 방어구는 방어
@@ -391,24 +391,25 @@ function cmdGearClick(e, chId, o) {
 // 2.2.0 머리의 장비 칸 (가문 창 · 가주와 맹주의 사람 창): 무기 · 방어구 타일 (그림 · 등급 테 · +강화). 사람이 든 물건(가주 · 가문원 · 막사)은 셋째 타일 — 있을 때만
 //   누르면 고르기 창(pickGear · 물건은 loot.js 의 mercItem). ch = 가문(장비의 주인) 또는 null, who = 물건을 드는 사람 또는 null
 function hasMItems(s) { return !!(DS.lootUI && DS.lootUI.mercItem && Object.keys(DS.MGEAR || {}).some(function (k) { return (s.items[k] || 0) > 0; })); }
-function gTile(sl, lab, g, bb) {
+function gTile(sl, lab, g, bb, off) {
   if (!g) return '<button class="gt2 empty sl-' + sl + '" data-gslot="' + sl + '" aria-label="' + lab + ' 비어 있음"><span class="gph" aria-hidden="true">' + lab + '</span><span class="gtx"><b>' + lab + '</b><small>비어 있다</small></span>' + (bb ? '<i class="gup" title="가방에 맞는 것이 있다">▲</i>' : '') + '</button>';
   var gr = Math.max(1, Math.min(5, +g.grade || 1));
   return '<button class="gt2 sl-' + sl + ' lr' + gr + '" data-gslot="' + sl + '" aria-label="' + lab + ': ' + esc(g.name) + (g.enh ? ' +' + g.enh : '') + '" style="--gc:' + gcolOf(gr) + '">' + (DS.iconHtml ? DS.iconHtml('gear', g.id, { size: 36 }) : '') + (g.enh ? '<i class="gen ' + enhCls(g.enh) + '">+' + g.enh + '</i>' : '') +
-    '<span class="gtx"><b>' + esc(g.name) + '</b><small>' + lab + '</small></span>' + (bb ? '<i class="gup" title="가방에 더 좋은 것이 있다">▲</i>' : '') + '</button>';
+    '<span class="gtx"><b>' + esc(g.name) + '</b><small>' + lab + (off ? ' <i class="goff g50">' + esc(DS.gearOffTxt()) + '</i>' : '') + '</small></span>' + (bb ? '<i class="gup" title="가방에 더 좋은 것이 있다">▲</i>' : '') + '</button>';      // 2.6.0 off: 병과에 맞지 않는 장비
 }
 function gearSlots(ch, who) {
   var s = G.save, h = '';
-  if (ch) [['w', '무기'], ['a', '방어구']].forEach(function (sl) { h += gTile(sl[0], sl[1], DS.gear(ch[sl[0]]), bestInBag(ch, sl[0])); });
+  if (ch) [['w', '무기'], ['a', '방어구']].forEach(function (sl) { var g0 = DS.gear(ch[sl[0]]); h += gTile(sl[0], sl[1], g0, bestInBag(ch, sl[0]), !!g0 && !DS.gearFits(ch.cls, g0)); });
   if (who && (who.it || hasMItems(s))) {
     var I = who.it && DS.ITEMS[who.it];
     h += I ? '<button class="gt2 sl-it lr2" data-gslot="it" aria-label="든 물건: ' + esc(I.name) + '">' + (DS.iconHtml ? DS.iconHtml('item', who.it, { size: 36 }) : '') + '<span class="gtx"><b>' + esc(I.name) + '</b><small>물건</small></span></button>'
       : '<button class="gt2 empty sl-it" data-gslot="it" aria-label="물건 비어 있음"><span class="gph" aria-hidden="true">물건</span><span class="gtx"><b>물건</b><small>비어 있다</small></span></button>';
   }
-  return h ? '<div class="gsl2 n' + ((ch ? 2 : 0) + (h.indexOf('data-gslot="it"') >= 0 ? 1 : 0)) + '">' + h + '</div>' : '';
+  return h ? '<div class="gsl2 n' + ((ch ? 2 : 0) + (h.indexOf('data-gslot="it"') >= 0 ? 1 : 0)) + '">' + h + '</div>' + (ch && DS.autoEqBtn ? DS.autoEqBtn(ch) : '') : '';      // 2.6.0: 빈 칸이 있고 가방에 입힐 것이 있으면 「장비 자동 착용」 (handover.js)
 }
 // 장비 칸을 눌렀다: 처리했으면 true. chId = 장비의 주인 가문, mid = 물건을 드는 사람
 function gearSlotClick(e, chId, mid, o) {
+  if (DS.autoEqClick && DS.autoEqClick(e, chId, o)) return true;      // 2.6.0 「장비 자동 착용」
   var b = e.target.closest('[data-gslot]'); if (!b) return false;
   var sl = b.dataset.gslot; A('tap');
   if (sl === 'it') { if (mid && DS.lootUI && DS.lootUI.mercItem) DS.lootUI.mercItem(G.save, mid, function () { if (o.isConnected) o.draw(); }); return true; }
@@ -420,10 +421,10 @@ function pickGear(chId, slot, parent) {
   var W = slot === 'w' ? '무기' : '방어구';
   var o = sheet(W, function () {
     var s = G.save, ch = s.chars[chId], cur = DS.gear(ch[slot]), html = '', bb = bestInBag(ch, slot);
-    html += '<div class="gpk-cur">' + (cur ? (DS.iconHtml ? DS.iconHtml('gear', cur.id, { size: 40 }) : '') + '<div class="tx">' + gearLine(cur, ch) + offTag(ch, cur) + '</div><div class="gpk-b">' + (DS.enhRate(cur) ? enhBtn(cur, 'data-enh-' + slot + '="' + ch.id + '"') : '<span class="why">최고 단계</span>') + '<button class="btn small" data-off="1">해제</button></div>'
+    html += '<div class="gpk-cur">' + (cur ? (DS.iconHtml ? DS.iconHtml('gear', cur.id, { size: 40 }) : '') + '<div class="tx">' + gearLine(cur, ch) + '</div><div class="gpk-b">' + (DS.enhRate(cur) ? enhBtn(cur, 'data-enh-' + slot + '="' + ch.id + '"') : '<span class="why">최고 단계</span>') + '<button class="btn small" data-off="1">해제</button></div>'
       : '<span class="gph" aria-hidden="true">' + W + '</span><div class="tx"><b>' + (slot === 'a' ? '맨몸' : '맨손') + '</b><small>' + esc(DS.flagName(ch.cls)) + '</small></div>') + '</div>';
     html += '<button class="btn wide' + (bb ? ' gold' : '') + '" data-gbest="1"' + (bb ? '' : ' disabled') + '>' + (bb ? '가장 좋은 것 <small>' + esc(DS.gear(bb).name) + '</small>' : '지금 것이 가장 좋다') + '</button>';
-    var list = Object.keys(s.gear).filter(function (id) { var g = DS.gear(id); return g && g.slot === slot && s.gear[id] > 0; }).sort(function (a, b) { return DS.gearScore(DS.gear(b), ch) - DS.gearScore(DS.gear(a), ch); });      // 2.1.0: 누구나 입는다 (맞지 않는 병과는 −10%)
+    var list = Object.keys(s.gear).filter(function (id) { var g = DS.gear(id); return g && g.slot === slot && s.gear[id] > 0; }).sort(function (a, b) { return DS.gearScore(DS.gear(b), ch) - DS.gearScore(DS.gear(a), ch); });      // 2.1.0: 누구나 입는다 (맞지 않는 병과는 수치가 깎인다 — 2.6.0 −50%, 점수에 들어 있다)
     html += '<h4>가방 <i class="own">' + list.length + '종</i></h4>';
     if (!list.length) html += '<p class="hint">가방에 ' + W + '가 없다. 적에게서 얻는다</p>';
     list.forEach(function (id) {
@@ -664,9 +665,11 @@ function heroInfo(parent) {
     html += (heroSpouse() ? wedBox() : '') + lgSpouseRow('ch', ch.id);      // r16 person: 혼인 칸 · 2.6.0: 혼인 전에는 집안 줄 하나만 (「배우자 고르기」 단추가 둘이던 것)
     html += personMore('h', seat, p, DS.powerParts(s, ch, p), '<dl class="kv tr2">' + natureRow(p) + '</dl>' + agRow(ch));
     if (DS.rnBtn) html += DS.rnBtn('c', ch.id);
+    if (DS.nkBtn) html += DS.nkBtn(s);      // 2.6.0 「맹주 넘기기」 (handover.js)
     return '<div class="cs2">' + html + '</div>';
   }, 'sub');
   o.addEventListener('click', function (e) {
+    if (DS.nkClick && DS.nkClick(e, o)) return;      // 2.6.0
     if (lgRowClick(e, o)) return;
     var hc = G.save.chars[G.save.hero]; if (hc && cmpClick(e, o, 'h', { k: 'hero', ch: hc })) return;      // r16 person: 비교
     if (hc && gearSlotClick(e, hc.id, 0, o)) return;      // 2.2.0: 머리의 장비 칸
@@ -1167,7 +1170,7 @@ function upgradable() {
   var s = G.save, n = 0;
   s.party.forEach(function (id) {
     var ch = s.chars[id]; if (!ch) return;
-    var up = ['w', 'a'].some(function (sl) { var cur = DS.gearScore(DS.gear(ch[sl])); for (var gid in s.gear) { var g = DS.gear(gid); if (g && g.slot === sl && s.gear[gid] > 0 && DS.canEquip(ch, gid) && DS.gearScore(g) > cur) return true; } return false; });
+    var up = ['w', 'a'].some(function (sl) { var cur = DS.gearScore(DS.gear(ch[sl]), ch); for (var gid in s.gear) { var g = DS.gear(gid); if (g && g.slot === sl && s.gear[gid] > 0 && DS.canEquip(ch, gid) && DS.gearScore(g, ch) > cur) return true; } return false; });      // 2.6.0: 그 사람의 병과로 잰다 (맞지 않는 장비의 −50% 가 든다 — 자동 장착과 같은 셈)
     if (up) n++;
   });
   return n;
@@ -2020,7 +2023,7 @@ function tabHelp() {
       '출전은 부대 탭 가주 카드의 <b>출전, 쉼</b> 단추를 눌러 그 자리에서 바꾼다. 시나리오와 갱도 입구에서는 얼굴을 눌러 바꾼다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러지거나 가문이 비면 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
       '가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
       '사람의 자리는 셋이다. <b>가주</b>는 가문을 이끌고 싸운다. <b>막사</b>는 모집한 영웅이 기다리는 곳 하나로, 가문에 매이지 않고 싸우지 않는다. <b>가문원</b>은 맹주 집 사람(아이, 배우자)으로, 어른이면 모두 맹주를 따라 싸운다.',
-      '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 장비와 공훈은 가문에 남는다.',
+      '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 공훈은 가문에 남는다. <b>떠난 가주나 맹주가 입던 장비는 모두 가방으로 돌아온다.</b> 뒤를 이은 사람은 장비 없이 시작하니 가문 창에서 다시 입힌다.',
       '빈 가문을 채우는 길은 둘이다. <b>영웅관</b>에서 모집하거나, 맹주의 <b>어른 아이</b>를 그 가문의 가주로 보낸다. 보낸 아이는 그 가문의 병과를 받는다. 맹주의 자리는 늘 이어지니 싸울 이가 아무도 없어지는 일은 없다.',
       '<b>가문은 영웅관에서 열린다.</b> 처음에는 맹주의 가문 하나뿐이다. 닫힌 가문의 병과가 나오면 그 영웅이 가주가 되어 가문이 열린다. 시나리오를 깨도 가문은 오지 않는다.',
       '<b>영웅 모집</b>은 비싸다. 한 번에 한 사람이다. 빈 가문(영웅관이 열 수 있는 닫힌 가문과 가주가 없는 가문)이 많을수록 싸고, 하나뿐이거나 없으면 넷일 때의 네 배다. 부를 때마다 값이 오르고 계절이 지나면 조금씩 내려간다. 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다 한 장, 예전에 가문이 합류하던 시나리오(2, 3, 4, 5, 6, 7, 9, 11, 13번)는 처음 깨면 한 장 더 준다.',
@@ -2062,7 +2065,7 @@ function tabHelp() {
       '들판에서는 가끔 <b>기습</b>이 온다. 무리가 사방에서 한꺼번에 몰려온다. 모두 물리치면 골드와 경험치를 더 준다.',
       '<b>맹주가 쓰러지면</b> 전투가 끝난 뒤에 누가 이을지 고른다. 시나리오 중이면 시나리오가 끝난 뒤에. 고르기 전에 게임을 꺼도 다시 켜면 그 창이 돌아온다.']],
     ['장비', 0, [
-      '장비는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 누구나 어떤 장비든 장착한다. 병과에 맞지 않는 계열은 능력치가 ' + Math.round((1 - DS.GEAR_OFF) * 100) + '% 깎인다.',
+      '장비는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 누구나 어떤 장비든 장착한다. <b>병과에 맞지 않는 장비는 그 장비의 수치와 옵션 수치가 ' + Math.round((1 - DS.GEAR_OFF) * 100) + '% 깎인다.</b> 붉은 「' + esc(DS.gearOffTxt ? DS.gearOffTxt() : '병과 안 맞음') + '」 표시가 붙고, 비교 화살표와 자동 장착은 깎인 값으로 잰다. 기술, 특성, 사거리 같은 효과와 깎는 값은 그대로다.',
       '가문 창과 인물 창 맨 위의 <b>장비 칸</b>을 누르면 가방의 장비가 뜬다. 줄을 한 번 누르면 입고, 「가장 좋은 것」은 가장 나은 것을 입힌다. 강화도 거기서 한다. 위쪽 초상을 한 번 더 누르면 가문 창이 열린다.',
       '장비에는 단이 없다. 위력, 방어 같은 수치는 <b>입은 사람의 레벨</b>을 따라 오르니, 마음에 드는 장비는 끝까지 쓸 수 있다.',
       '등급은 셋이다. <b class="lg lg1">보통</b>, <b class="lg lg4">유니크</b>(옵션 하나나 둘), <b class="lg lg5">전설</b>(이름과 대표 효과가 정해진 물건). 이름과 그림 테두리의 색으로 등급을 표시한다. 사람의 등급도 색 이름표로 보인다. 전설은 지역마다 다르니 여러 곳을 사냥해 본다.',
@@ -2095,7 +2098,8 @@ function tabHelp() {
       '모두 함께 나이를 먹는다. 1배속으로 10분이 한 해다.',
       '나이는 인물 정보 위쪽에 크게, 목록과 가문 카드에 작게 표시된다.',
       '늙으면 <b>노년</b> 표시가 붙고 공격과 마공이 조금 줄어든다. 15살이 안 된 아이는 <b>어린</b>, 72살을 넘기면 <b>장수</b> 표시가 붙는다.',
-      '수명은 아무도 모른다. 노년이 다가오면 후계자를 미리 정해 두는 것이 좋다. 인수인계는 살아 있을 때 한다.']],
+      '수명은 아무도 모른다. 노년이 다가오면 후계자를 미리 정해 두는 것이 좋다. 인수인계는 살아 있을 때 한다.',
+      '<b>맹주 넘기기</b>: 대장 인물 정보 맨 아래에서, 살아 있는 맹주가 자리를 넘길 수 있다. 받을 수 있는 사람은 맹주가 쓰러졌을 때와 같다(어른 자식, 막사의 같은 병과, 다른 가문의 가주). <b>넘긴 맹주는 기운을 모두 쏟고 눈을 감는다. 되돌릴 수 없다.</b> 입던 장비는 가방으로 돌아오고 무기는 유품이 된다. 스무 해는 흐르지 않는다. 싸우는 동안에는 넘길 수 없다.']],
     ['세계', 0, [
       '<b>사람은 두 번 죽는다.</b> 숨이 멎을 때 한 번, 아무도 그 이름을 부르지 않을 때 또 한 번.',
       '<b>어스름의 왕</b>은 죽이지 않고 이름을 지운다. 부를 사람이 없는 이름부터 가져간다.',
@@ -2920,7 +2924,7 @@ function lgFallX(d) {
 function lgRite(ev, cb, griefs, seen) {
   var s = G.save, d = lgP(ev.a), chId = ev.ch;
   if (!d || !chId || !s.chars[chId]) { if (cb) cb(); return; }
-  if (DS.cine && !seen) { var fx0 = lgFallX(d), hl0 = DS.hlCineTxt ? DS.hlCineTxt(s, d.id) : ''; DS.cine(fx0 ? { k: 'fallx', por: [lgBig(d.spr)], pg: [d.gf], pl: d.lord ? 0 : -1, pw: [d.gp], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note, gift: fx0.gift, hl: hl0 } : { k: 'death', por: [d.spr || ''], pg: [d.gf], pl: d.lord ? 0 : -1, pw: [d.gp], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', '), hl: hl0 }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.5.0 hl: 「유품: ○○의 검」      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
+  if (DS.cine && !seen) { var fx0 = lgFallX(d), hl0 = DS.hlCineTxt ? DS.hlCineTxt(s, d.id) : '', gb0 = DS.gbCineTxt ? DS.gbCineTxt(s, [d.id]) : ''; DS.cine(fx0 ? { k: 'fallx', por: [lgBig(d.spr)], pg: [d.gf], pl: d.lord ? 0 : -1, pw: [d.gp], title: d.name, sub: fx0.sub, names: fx0.names, note: fx0.note, gift: fx0.gift, hl: hl0, gb: gb0 } : { k: 'death', por: [d.spr || ''], pg: [d.gf], pl: d.lord ? 0 : -1, pw: [d.gp], title: d.name, sub: [chId === s.hero ? '맹주' : d.role, lgDiedTxt(d)].filter(Boolean).join(', '), hl: hl0, gb: gb0 }, function () { lgRite(ev, cb, griefs, true); }); return; }      // 2.5.0 hl: 「유품: ○○의 검」      // 2.2.4: 의식 앞에 조용한 연출 · 2.2.9: 합일한 넋(8단 위)은 무거운 연출
   var step = 'mourn', pick = null, more = false, lock = 0, HO = { k: 'new', t: '' };      // 4.0 ⑬: 가문이 옮겨 갈 때의 호 (확인 걸음)
   var canE = DS.linEntomb && DS.linCanEntomb ? lgTry(function () { return DS.linCanEntomb(s, d.id); }) : null, cf = lgCoffins();
   var body = canE && canE.ok ? 'keep' : 'bury', nat = agNatural(d, ev);      // r6 나이: 천수를 누린 이는 이야기 창부터 조용히
@@ -2967,7 +2971,7 @@ function lgRite(ev, cb, griefs, seen) {
     if (step === 'mourn') {
       html = '<p class="eyebrow">' + (nat ? esc(AGL().natTitle || '천수') : '추도') + '</p>' + (d.spr ? '<div class="lgdead gk">' + lgFr(d, 'l', true) + '</div>' : '') + '<h2>' + esc(d.name) + '</h2><p class="rn">' + esc([d.full && d.full.indexOf(d.name) < 0 ? d.full : '', d.role, d.gen ? d.gen + '대' : '', d.ag ? agWord(d.ag) : ''].filter(Boolean).join(', ')) + '</p>' +
         '<p class="ep">' + esc(lgFill(nat ? (LGL().deathNat && LGL().deathNat[0]) || '{a}{이가} 천수를 누리고 잠들었다.' : lgPick(LGL().death) || '{a}, {at}에서 잠들다.', { a: d.name, at: at || '싸움터', house: d.sur })) + '</p>' +
-        (d.died && (d.died.why || at) ? '<p class="dim">' + esc([lgWhen(d.died), at, d.died.why].filter(Boolean).join(', ')) + '</p>' : '') + lgMournHtml(d, griefs);
+        (d.died && (d.died.why || at) ? '<p class="dim">' + esc([lgWhen(d.died), at, d.died.why].filter(Boolean).join(', ')) + '</p>' : '') + (DS.gbHtml ? DS.gbHtml(s, d.id) : '') + lgMournHtml(d, griefs);      // 2.6.0: 「장비 N점이 가방으로 돌아왔다」
       var twice = (LS().P[d.id] || {}).rv, TW = (GN().rite && GN().rite.twice) || [];
       if (DS.linEntomb && twice) html += '<p class="dim lgtwice">' + TW.map(function (l) { return esc(lgFill(l, { a: d.name })); }).join('<br>') + '</p>';      // 3.3.0: 한 번 돌아온 이는 다시 관에 들지 않는다
       else if (DS.linEntomb) html += '<h5>' + esc(lgFill(C.ask || '{a:을를} 어떻게 보냅니까?', { a: d.name })) + '</h5><div class="seg2" role="group">' +
@@ -2999,7 +3003,7 @@ function lgRite(ev, cb, griefs, seen) {
       var c = pick, kk = lgHeirKind(c), adopt = kk === 'merc', kin = kk === 'kin', ch = s.chars[chId], mvf = c.move && (c.h || c.hf) ? s.chars[c.h || c.hf] : null, own0 = c.cast && DS.CAST_NAME[c.cast] ? DS.CAST_NAME[c.cast] : c.name || '', cst = !!c.cast;
       html = '<p class="eyebrow">' + (c.opt === 3 ? '다른 가문' : c.opt === 2 ? '막사' : adopt ? '입양' : kin ? '먼 친척' : '계승') + '</p>' + (c._spr ? '<div class="lgdead heir">' + c._spr + '</div>' : '') + '<h2>' + esc(c.name || (kin ? '먼 친척' : '')) + '</h2>' +
         '<p class="ep">' + esc(adopt ? (H.adoptAsk || '이 이름을 잇겠는가.') : lgFill(kin ? (H.kinAsk || '{house}의 먼 친척이 {a}의 자리를 잇는다.') : (H.childAsk || '{b:이가} {a}의 자리를 잇는다.'), { a: d.name, b: c.name, house: d.sur ? d.sur + ' 가문' : '가문' })) + '</p>' +
-        '<ul class="lgafter"><li>' + esc(mvf ? '맹주 자리가 ' + DS.flagName(mvf.cls) + '으로 간다. 그 가문의 장비와 공훈은 그대로다' : (ch ? DS.flagName(ch.cls) : '맹주의 가문') + '을 그대로 잇는다. 장비와 공훈은 가문에 남는다') + '</li>' + (mvf ? '<li>' + esc((ch ? DS.flagName(ch.cls) : '옛 맹주의 가문') + '은 보통 가문이 된다. ' + oldFate()) + '</li>' + (oldFam() ? '<li>' + esc(oldFam()) + '</li>' : '') : '') +      // 2.1.0: 문패는 옮겨 가지 않는다
+        '<ul class="lgafter"><li>' + esc(mvf ? '맹주 자리가 ' + DS.flagName(mvf.cls) + '으로 간다. 그 가문의 장비와 공훈은 그대로다' : (ch ? DS.flagName(ch.cls) : '맹주의 가문') + '을 그대로 잇는다. 공훈은 가문에 남는다. 선대의 장비는 가방으로 돌아왔다. 새 맹주는 장비 없이 시작한다') + '</li>' + (mvf ? '<li>' + esc((ch ? DS.flagName(ch.cls) : '옛 맹주의 가문') + '은 보통 가문이 된다. ' + oldFate()) + '</li>' + (oldFam() ? '<li>' + esc(oldFam()) + '</li>' : '') : '') +      // 2.1.0: 문패는 옮겨 가지 않는다
           (c.why && !cst ? '<li>' + esc(c.why) + '</li>' : '') +
           (adopt && !mvf ? '<li>' + esc((d.sur ? d.sur + ' ' : '') + '가문의 성을 받는다') + '</li>' : '') + '</ul>' +
           (mvf ? '<h5>호를 고릅니다</h5><div class="seg2 lgho" role="group">' + [['new', own0 + ' 1세'], ['cont', own0 + ' ' + ((d.gen || 1) + 1) + '세']].map(function (x) { return '<button data-lgho="' + x[0] + '"' + (HO.k === x[0] ? ' aria-pressed="true"' : '') + '><b>' + esc(x[1]) + '</b></button>'; }).join('') +
@@ -3093,8 +3097,8 @@ function nfLater(ref, head, n) {
 function lgMournOthers(evs, cb, griefs, seen) {
   var all = lgAll(), ds = evs.map(function (e) { return all[e.a]; }).filter(Boolean); if (!ds.length) { if (cb) cb(); return; }
   var fxs = ds.map(lgFallX), fxi = fxs.findIndex ? fxs.findIndex(Boolean) : -1;
-  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [lgBig(dx.spr)], pg: [dx.gf], pl: dx.lord ? 0 : -1, pw: [dx.gp], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note, gift: fq.gift, hl: DS.hlCineTxt ? DS.hlCineTxt(G.save, dx.id) : '' }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
-  if (DS.cine && !seen) { DS.cine({ k: 'death', por: ds.slice(0, 3).map(function (d) { return d.spr || ''; }), pg: ds.slice(0, 3).map(function (d) { return d.gf; }), pl: ds.slice(0, 3).map(function (d) { return !!d.lord; }).indexOf(true), pw: ds.slice(0, 3).map(function (d) { return d.gp; }), title: ds.length > 1 ? ds.length + '명이 잠들었다' : ds[0].name, sub: ds.length > 1 ? ds.slice(0, 3).map(function (d) { return d.name; }).join(', ') + (ds.length > 3 ? ' 외' : '') : [ds[0].role, lgDiedTxt(ds[0])].filter(Boolean).join(', '), hl: DS.hlCineTxt ? ds.map(function (d) { return DS.hlCineTxt(G.save, d.id); }).filter(Boolean)[0] || '' : '' }, function () { lgMournOthers(evs, cb, griefs, true); }); return; }      // 2.2.4: 먼저 조용한 연출
+  if (DS.cine && !seen && fxi >= 0 && !lgMournOthers.fx) { var dx = ds[fxi], fq = fxs[fxi]; lgMournOthers.fx = 1; DS.cine({ k: 'fallx', por: [lgBig(dx.spr)], pg: [dx.gf], pl: dx.lord ? 0 : -1, pw: [dx.gp], title: dx.name, sub: fq.sub, names: fq.names, note: fq.note, gift: fq.gift, hl: DS.hlCineTxt ? DS.hlCineTxt(G.save, dx.id) : '', gb: DS.gbCineTxt ? DS.gbCineTxt(G.save, [dx.id]) : '' }, function () { try { lgMournOthers(evs, cb, griefs, ds.length === 1); } finally { lgMournOthers.fx = 0; } }); return; }      // 2.2.9: 합일한 넋이 졌다 (먼저 무거운 연출)
+  if (DS.cine && !seen) { DS.cine({ k: 'death', por: ds.slice(0, 3).map(function (d) { return d.spr || ''; }), pg: ds.slice(0, 3).map(function (d) { return d.gf; }), pl: ds.slice(0, 3).map(function (d) { return !!d.lord; }).indexOf(true), pw: ds.slice(0, 3).map(function (d) { return d.gp; }), title: ds.length > 1 ? ds.length + '명이 잠들었다' : ds[0].name, sub: ds.length > 1 ? ds.slice(0, 3).map(function (d) { return d.name; }).join(', ') + (ds.length > 3 ? ' 외' : '') : [ds[0].role, lgDiedTxt(ds[0])].filter(Boolean).join(', '), hl: DS.hlCineTxt ? ds.map(function (d) { return DS.hlCineTxt(G.save, d.id); }).filter(Boolean)[0] || '' : '', gb: DS.gbCineTxt ? DS.gbCineTxt(G.save, ds.map(function (d) { return d.id; })) : '' }, function () { lgMournOthers(evs, cb, griefs, true); }); return; }      // 2.2.4: 먼저 조용한 연출
   var C = LGU().coffin || {}, kept = {};
   A2('mourn', 'lose');
   var o = overlay('<div class="result lgrite lgothers"></div>', 'modal center rite');
@@ -3105,7 +3109,7 @@ function lgMournOthers(evs, cb, griefs, seen) {
       var can = DS.linEntomb && DS.linCanEntomb ? lgTry(function () { return DS.linCanEntomb(G.save, d.id); }) : null;
       html += '<div class="lgod">' + (d.spr ? '<div class="lgdead gk">' + lgFr(d) + '</div>' : '') + '<span><b>' + esc(d.name) + '</b><small>' + esc([d.full, d.role, d.ag ? agWord(d.ag) : '', lgDiedTxt(d)].filter(Boolean).join(', ')) + '</small></span>' +
         (kept[d.id] ? '<em class="why">관에 모심</em>' : can && can.ok ? '<button class="btn small" data-lgkeep="' + esc(d.id) + '">' + esc(C.keep || '관에 모신다') + '</button>' : '') + '</div>' +
-        ((LS().P[d.id] || {}).rv ? '<p class="dim lgtwice">' + ((GN().rite && GN().rite.twice) || []).map(function (l) { return esc(lgFill(l, { a: d.name })); }).join('<br>') + '</p>' : '') + lgMournHtml(d, griefs);
+        ((LS().P[d.id] || {}).rv ? '<p class="dim lgtwice">' + ((GN().rite && GN().rite.twice) || []).map(function (l) { return esc(lgFill(l, { a: d.name })); }).join('<br>') + '</p>' : '') + (DS.gbHtml ? DS.gbHtml(G.save, d.id) : '') + lgMournHtml(d, griefs);      // 2.6.0: 가주의 장비가 가방으로
     });
     html += '<button class="btn gold wide" data-close>' + esc(LGU().farewell || '보낸다') + '</button>';
     var box = $('.lgrite', o); box.innerHTML = html; U.hydrate(box);

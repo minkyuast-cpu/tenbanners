@@ -116,9 +116,11 @@ module.exports = async (page, shot, L) => {
     DS.sortieSet(s, [H.id]); var m = DS.addMerc(s, DS.heroType(H.cls), 3, 0); m.sb = 1; m.nc = DS.houseCls(H); m.L = 33; DS.mercTidy(s);      // 2.2.8: 나가 있는 가주 (새 가주가 더 세니 그 가문이 다시 나간다)
     var b0 = DS.bearer(s, H, 1); DS.loseMerc(s, b0.id); DS.linMercDied(s, b0, '시험', '천수를 누림');
     DS.rebuildParty();
-    return { seat: DS.bearer(s, H, 1) === m, L: H.L, chip: !!DS.G.chipEls['c' + H.id] };
+    var seat = DS.bearer(s, H, 1) === m, bare = !H.w && !H.a;      // 2.6.0: 떠난 가주의 장비는 가방으로 — 새 가주는 빈손으로 선다 (빈손이라 저절로 출전에 들지는 않는다)
+    DS.gearPlanDo(s, DS.gearPlan(s, [H])); DS.sortieSet(s, [H.id]); DS.rebuildParty();      // 가방에서 다시 입히고 내보낸다
+    return { seat: seat, bare: bare, L: H.L, w: H.w, chip: !!DS.G.chipEls['c' + H.id] };
   });
-  A(c.seat && c.L === 33 && c.chip, 'out-of-combat 가주 death in town → same-class 막사 person seated at once (L ' + c.L + ')');
+  A(c.seat && c.bare && c.L === 33 && c.w && c.chip, 'out-of-combat 가주 death in town → same-class 막사 person seated at once (L ' + c.L + '), bare until re-equipped from the bag (' + c.w + ')');
   // ④ 영웅관 창 (한 번 모집) · NaN 없음
   await ev(() => { DS.ui.closeAll(); DS.rebuildParty(); DS.openShop('merc'); }); await L.sleep(500);
   await shot('hall');

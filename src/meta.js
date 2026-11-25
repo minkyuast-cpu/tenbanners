@@ -59,7 +59,7 @@ DS.aDef = function (t) { return t ? 1 + 2.5 * t : 0; };
 // 2.1.0: 장비에 단이 없다. 아이디 = '계열.형[+강화]' (예: 'sword.A' · 'robe.B+3') — 옵션·고유 장비는 loot.js 가 감싼다.
 //   수치의 크기는 입은 사람의 레벨이 정한다: 레벨 L 의 눈금 te = GEAR_TE0 + (L − 1) / 10 (2.7 이면 L1 → 2.7, L100 → 12.6 — 옛 단 눈금이 레벨마다 조금씩 오른다).
 //   위력 = wAtk(te) × 위력 계수, 방어·마방·HP = aDef(te) × 계수. 장비는 계수(g.k)만 지니고, 실제 수치는 DS.gearAt(g, L, 병과)가 낸다.
-//   병과에 맞지 않는 계열(DS.CLS_GEAR 밖)은 그 수치가 DS.GEAR_OFF(×0.9)로 깎인다 — 입는 제한은 없다.
+//   병과에 맞지 않는 계열(DS.CLS_GEAR 밖)은 그 장비의 수치가 DS.GEAR_OFF(2.6.0: ×0.5)로 깎인다 — 입는 제한은 없다.
 //   g.pow·g.def·g.res·g.hp·g.stat 은 「지금 부대 레벨」(DS.gearRefL) 기준으로 읽히는 값이다 (가방·대장간 줄의 글). 능력치 셈은 늘 gearAt 을 쓴다.
 DS.enhAdTxt = function (ad) { var p = Math.round(ad * 100); return '방어, 마방 +' + p + '%, 방어구 HP +' + p + '%'; };      // 강화한 방어구의 능력치 글
 DS.GEAR_TE0 = 2.7;      // 눈금의 바닥: 옛 판에서 드랍이 적의 단보다 한 단쯤 앞서 나오던 것을 그대로 (봇으로 맞춘 값)
@@ -72,8 +72,9 @@ DS.gearFits = function (cls, g) { var G = DS.CLS_GEAR[cls], X = DS.GEAR_ALSO && 
 DS.gearAt = function (g, L, cls, te) {
   if (!g) return null;
   var t = te || DS.gearTe(L), w = DS.wAtk(t), a = DS.aDef(t), K = g.k || {}, off = !!cls && !DS.gearFits(cls, g), m = off ? DS.GEAR_OFF : 1;
-  return { pow: Math.round(w * (K.pow || 0) * m), def: Math.round(a * (K.def || 0) * m), res: Math.round(a * (K.res || 0) * m), hp: Math.round(a * (K.hp || 0) * m),
-    crit: g.crit || 0, spd: g.spd || 0, mp: g.mp || 0, amp: g.amp || 0, ad: g.ad || 0, off: off };
+  var f = function (v) { return v > 0 ? v * m : v; };      // 2.6.0: 맞지 않는 병과 — 그 장비가 주는 덤은 모두 m 배(절반), 깎는 값(묵직한의 행동 회복 −4% 같은 대가)은 그대로
+  return { pow: Math.round(f(w * (K.pow || 0))), def: Math.round(f(a * (K.def || 0))), res: Math.round(f(a * (K.res || 0))), hp: Math.round(f(a * (K.hp || 0))),
+    crit: f(g.crit || 0), spd: f(g.spd || 0), mp: f(g.mp || 0), amp: f(g.amp || 0), ad: f(g.ad || 0), off: off };
 };
 // 능력치 글 (gearAt 의 결과로). 단이 없으니 「위력 +23」 같은 수는 그 레벨의 것이다
 DS.gearStatTxt = function (g, x) {
@@ -115,7 +116,7 @@ DS.gear = function (id) {
   gcache[id] = g;
   return g;
 };
-// 2.1.0: 누구나 무엇이든 입는다 (병과에 맞지 않으면 능력치 −10% — DS.gearAt). 무기·방어구 칸에 들어가는 장비면 된다
+// 2.1.0: 누구나 무엇이든 입는다 (병과에 맞지 않으면 그 장비의 수치가 깎인다 — DS.gearAt · DS.GEAR_OFF). 무기·방어구 칸에 들어가는 장비면 된다
 DS.canEquip = function (ch, id) {
   var g = DS.gear(id);
   return !!(g && ch && DS.CLASSES[ch.cls] && (g.slot === 'w' || g.slot === 'a'));
@@ -140,7 +141,7 @@ DS.gearScore = function (g, ch) { if (!g) return -1; var x = DS.gearAt(g, ch ? c
 DS.autoEquip = function (save, ch) {
   var changed = false; DS.gearRefSave(save);
   ['w', 'a'].forEach(function (slot) {
-    var best = null, bs = DS.gearScore(DS.gear(ch[slot]), ch);      // 2.1.0: 그 사람의 레벨·병과로 잰다 (맞지 않는 계열의 −10% 가 점수에 든다)
+    var best = null, bs = DS.gearScore(DS.gear(ch[slot]), ch);      // 2.1.0: 그 사람의 레벨·병과로 잰다 (맞지 않는 계열의 깎임 — 2.6.0 −50% — 이 점수에 든다)
     for (var id in save.gear) { var g = DS.gear(id); if (g && g.slot === slot && save.gear[id] > 0 && DS.canEquip(ch, id)) { var sc = DS.gearScore(g, ch); if (sc > bs) { bs = sc; best = id; } } }
     if (best && DS.equip(save, ch, best)) changed = true;
   });

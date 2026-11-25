@@ -207,6 +207,7 @@ DS.curse = function (s, top) {
 // 빠진 칸을 채우고 어긋난 값을 바로잡는다. 살릴 수 없으면 null.
 DS.fixSave = function (s) {
   if (!s || typeof s !== 'object' || !s.chars || typeof s.chars !== 'object') return null;
+  var was26 = s.r26 === 1;      // 2.6.0: 「병과에 맞지 않는 장비 −50%」를 이미 아는 저장인가 (채움보다 먼저 — handover.js DS.r26Fix)
   var wasBn = s.bn === 1;      // 4.0: 「표시가 있었나」는 채움보다 먼저 (bn 은 기본값 채움에 걸리지 않는다 — 표시가 틀려도 DS.bnFix 의 불변식이 바로잡는다)
   var def = DS.newSave('대장', 'inf'), k, id, hid0 = own(s.chars, s.hero) ? +s.hero : 0;
   for (k in def) if (s[k] === undefined && k !== 'chars' && k !== 'party' && k !== 'hero' && k !== 'nid' && k !== 'lin' && k !== 'coffins' && k !== 'cal' && k !== 'bn' && k !== 'us' && k !== 'sortie') s[k] = def[k];      // r42: us(필살기 씨앗)는 새 판에서만 — 없는 저장은 eg.seed 로 (결정적)      // 가계도·관은 DS.linFix 가 채운다 (새 판의 사람 명부를 옮겨 오지 않게)
@@ -300,6 +301,7 @@ DS.fixSave = function (s) {
   if (DS.linFix) DS.linFix(s);
   if (DS.lootFix) DS.lootFix(s);      // 장비 내력(save.gh): 깨진 칸·지니지 않는 기록을 걷는다. 옛 저장은 빈 칸 (SAVE_V 그대로)
   if (DS.hlFix) DS.hlFix(s);      // 2.5.0 유품(save.gh[식별자].hl): 깨진 칸은 걷는다. 옛 저장은 없음 (heirloom.js)
+  if (DS.r26Fix) DS.r26Fix(s, was26);      // 2.6.0: 떠난 이의 장비 수(P.d.gb) · 넘기고 떠난 표시(P.d.nk) · 맹주 자리에 앉은 때(P.sat). 옛 저장은 없음 — 소급하지 않는다 (handover.js)
   if (DS.msnFix) DS.msnFix(s);      // 2.5.0 선대의 훈수(save.msn): 이번 대의 열쇠 · 보상 받은 판 · 들어간 수 (mission.js)
   if (DS.chFix) DS.chFix(s);      // 2.5.0 판의 선택지(save.chs): 이번 대에 고른 것 (choice.js)
   if (DS.ageFix) DS.ageFix(s);      // 나이: 세계 달력·나이·수명 (옛 저장은 결정적으로, SAVE_V 그대로)      // 가계도(2.9): 성별·성·사람 명부·관. 옛 저장은 결정적으로 배정 (SAVE_V 를 올리지 않아도 된다)

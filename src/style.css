@@ -5251,3 +5251,93 @@ html.calm body #app#app #s-game #bot .act.newp { animation: none; box-shadow: 0 
 .row.f26lock { opacity: .8; } .row.f26lock .lk { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(0, 0, 0, .3); color: var(--dim, #ab9f86); }
 .row.f26lock .tx small { color: var(--dim, #ab9f86); }
 .pity.f26why b { color: var(--bone, #ece2cc); font-weight: inherit; }
+/* ───────── 2.6.0 규칙 (handover.js · loot.js): 병과 안 맞음 −50% · 떠난 이의 장비는 가방으로 · 맹주 넘기기 ───────── */
+/* 붉은 꼬리표 「병과 안 맞음 −50%」 (옛 −10% 의 주황보다 세게) · 규칙 한 줄 */
+html body #app#app i.goff.g50 { display: inline-block; margin-left: 4px; padding: 0 5px; font-style: normal; font-weight: 700; font-size: var(--fs-s); line-height: 1.5; white-space: nowrap; color: #ffb0b0; border: 1px solid #b3404c; border-radius: 3px; background: rgba(179, 64, 76, .26); box-shadow: none; vertical-align: 1px; }
+html body #app#app .sch.tag.goff.g50 { color: #ffb0b0; font-weight: 700; background: rgba(179, 64, 76, .26); box-shadow: inset 0 0 0 1px #b3404c; }
+html body #app#app .goffn { display: block; margin: 3px 0 0; font-size: var(--fs-s); line-height: 1.4; color: #e8a4a4; text-align: left; white-space: normal; }
+html body #app#app p.goffn { width: 100%; padding: 6px 8px; border: 1px solid rgba(179, 64, 76, .5); border-radius: 6px; background: rgba(179, 64, 76, .12); }
+html body #app#app .gt2 .gtx small i.goff.g50 { margin: 2px 0 0; }
+/* 「장비 N점이 가방으로 돌아왔다」 */
+html body #app#app .gbl { display: inline-flex; align-items: center; gap: 7px; justify-self: center; margin: 2px auto; padding: 5px 12px; border: 1px solid rgba(201, 169, 106, .5); border-radius: 999px; background: rgba(40, 30, 18, .5); font-size: var(--fs-m); color: #ead9ae; }
+html body #app#app .gbl > i { width: 11px; height: 10px; border: 1.5px solid #d9bd7a; border-radius: 2px 2px 4px 4px; box-shadow: 0 -4px 0 -2px #d9bd7a; }
+.cine .cgb { display: inline-block; margin: 6px auto 0; padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(201, 169, 106, .45); font: 600 12px/1.2 var(--f-ui); color: #ead9ae; background: rgba(30, 24, 16, .55); animation: cnUp .5s ease-out 2.2s both; }
+html.calm .cine .cgb, .cine.calm .cgb { animation: cnUp .3s ease-out .8s both; }
+/* 장비 칸 밑의 「장비 자동 착용」 · 「장비가 없다」 창 */
+html body #app#app .geq { display: grid; gap: 1px; justify-items: center; width: 100%; min-height: 44px; margin: -2px 0 10px; padding: 6px 10px; }
+html body #app#app .geq small { font-weight: 400; font-size: var(--fs-s); opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+html body #app#app .gbd .gbr { width: 100%; text-align: left; }
+html body #app#app .gbd .gbp { color: var(--leaf); }
+html body #app#app .gbd p.gbn { margin: 0; font-size: var(--fs-m); color: #ead9ae; }
+/* 부대 탭의 가문 칸: 가주가 서 있는데 장비 칸이 비었다 (장비 없음) */
+html body #app#app .hk.hgh:not(.vac) .hgs.e { opacity: 1; background: rgba(120, 40, 36, .35); box-shadow: inset 0 0 0 1px rgba(232, 128, 106, .85); }
+html body #app#app .hk.hgh:not(.vac) .hgs.e::after { content: "!"; font: 700 12px/1 var(--f-num, inherit); color: #f0a08c; }
+/* 맹주 넘기기: 인물 창의 단추 · 확인 창 */
+html body #app#app .nkrow { display: grid; gap: 5px; margin: 16px 0 6px; padding-top: 12px; border-top: 1px dashed rgba(192, 96, 90, .4); }
+html body #app#app .nkrow .nkb { min-height: 44px; color: #ffc4c4; border-color: #8f2738; background: rgba(143, 39, 56, .22); }
+html body #app#app .nkrow .nkb:disabled { opacity: .5; }
+html body #app#app .nkrow .nkwhy { font-size: var(--fs-s); line-height: 1.4; color: var(--mute); text-align: center; }
+html body #app#app .nkrow .nkwhy.no { color: #eaa392; }
+html body #app#app .nkd .nkw { font-weight: 700; line-height: 1.5; }
+html body #app#app .nkd .nkl { display: grid; gap: 6px; width: 100%; }
+html body #app#app .nkd .nkl h5.nkg { margin: 4px 0 0; color: var(--mute); }
+html body #app#app .nkd .lgcb.nkh { margin: 0; }
+html body #app#app .nkd .lgcb.nkh[aria-checked="true"] { border-color: var(--ember); background: linear-gradient(90deg, rgba(201, 169, 106, .2), rgba(201, 169, 106, .04)), var(--ink2); box-shadow: inset 4px 0 0 var(--ember); }
+html body #app#app .nkd .nkf { margin: 2px 0 0; }
+html body #app#app .nkd .nkno { list-style: none; width: 100%; margin: 0; padding: 0; display: grid; gap: 5px; text-align: left; }
+html body #app#app .nkd .nkno li { display: grid; gap: 1px; padding: 5px 9px; border-left: 2px solid var(--line); font-size: var(--fs-m); }
+html body #app#app .nkd .nkno li b { color: var(--bone); font-weight: 600; } html body #app#app .nkd .nkno li small { color: var(--mute); font-size: var(--fs-s); }
+html body #app#app .nkd .nkc li { line-height: 1.45; padding: 2px 0 2px 10px; }
+html body #app#app .nkd .nko canvas, html body #app#app .nkd .nko img { filter: none; }
+html body #app#app .nkd .nkpair { display: flex; align-items: center; justify-content: center; gap: 12px; }
+html body #app#app .nkd .nkpair .nko { filter: grayscale(.7) brightness(.8); opacity: .85; }
+html body #app#app .nkd .nkar { position: relative; width: 40px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, rgba(201, 169, 106, 0), var(--ember)); }
+html body #app#app .nkd .nkar::after { content: ""; position: absolute; right: -2px; top: -5px; border: 6.5px solid transparent; border-left-color: var(--ember); border-right-width: 0; }
+html body #app#app .nkd .nkh2 { color: #ff9c9c; }
+html body #app#app .nkd .nkhold { position: relative; overflow: hidden; min-height: 60px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+html body #app#app .nkd .nkhold .nkfill { position: absolute; inset: 0; background: rgba(255, 255, 255, .34); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); pointer-events: none; }
+html body #app#app .nkd .nkhold b { position: relative; pointer-events: none; font-size: var(--fs-l); }
+html body #app#app .nkd .nkhold:disabled { opacity: .5; }
+html body #app#app .nkd .nkhn { font-size: var(--fs-s); color: var(--mute); }
+html body #app#app .nkd .nkhn.on { color: #ffb3bd; font-weight: 700; }
+/* 맹주 넘기기 연출 (cine 'handover'): 기본 모습 = 끝 모습 (움직임 줄이기면 끝 모습 그대로). 옛 맹주는 왼쪽, 후계는 오른쪽 (칸 너비 312 — 두 얼굴 가운데 사이 200) */
+.cine.ck-handover { --cr: linear-gradient(180deg, #8a6a24, #46320e); }
+.cine.ck-handover .cbd { background: radial-gradient(ellipse at 50% 36%, color-mix(in srgb, var(--fc) 22%, transparent), transparent 62%), rgba(4, 3, 8, .97); animation-duration: .6s; }
+.cine.ck-handover .cfx { display: none; }
+.cine.ck-handover .cst { position: relative; display: block; width: 312px; max-width: 100%; height: 170px; min-height: 0; margin: 4px 0 0; }
+.cine.ck-handover .cfa { position: absolute; top: 30px; }
+.cine.ck-handover .cfa.chvo { left: 8px; border-color: #5a554c; box-shadow: none; filter: grayscale(1) brightness(.55); opacity: .6; transform: translate(-4px, 24px) rotate(-22deg) scale(.82); animation: hvOld 4.5s ease-in both; }
+.cine.ck-handover .cfa.chvn { right: 8px; border-color: var(--fc); box-shadow: 0 0 0 2px #1a1206, 0 0 0 4px var(--fc), 0 0 30px color-mix(in srgb, var(--fc) 70%, transparent); transform: scale(1.06); animation: hvNew 5.2s ease-out both; }
+.cine .chvp { grid-area: 1 / 1; display: grid; place-items: center; }
+.cine .chvp.was { opacity: 0; animation: hvWas 4.7s linear both; } .cine .chvp.now { animation: hvNow 4.7s linear both; }
+.cine .chv { position: absolute; inset: 0; pointer-events: none; }
+.cine .chva, .cine .chvg { position: absolute; top: 78px; width: 176px; height: 176px; margin: -88px 0 0 -88px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--fc) 70%, #fff) 0, color-mix(in srgb, var(--fc) 62%, transparent) 26%, color-mix(in srgb, var(--fc) 20%, transparent) 52%, transparent 70%); }
+.cine .chva { left: 56px; opacity: 0; animation: hvAura 4.3s ease-in both; }
+.cine .chvg { left: calc(100% - 56px); opacity: .8; animation: hvGlow 5.4s ease-out both; }
+.cine .chvs { position: absolute; left: 70px; top: 78px; width: 172px; height: 40px; margin-top: -20px; border-radius: 20px; background: linear-gradient(90deg, color-mix(in srgb, var(--fc) 55%, transparent), color-mix(in srgb, var(--fc) 30%, transparent) 60%, transparent); filter: blur(7px); opacity: 0; transform-origin: 0 50%; animation: hvStream 4.5s ease-in-out both; }
+.cine .chvm { position: absolute; left: 56px; top: 78px; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: color-mix(in srgb, var(--fc) 60%, #fff); box-shadow: 0 0 12px 2px var(--fc), 0 0 3px #fff; opacity: 0; animation: hvMote 1.05s cubic-bezier(.45, .05, .55, .95) calc(.7s + var(--i) * .115s) both; }
+.cine .chvm:nth-child(3n) { width: 6px; height: 6px; margin: -3px 0 0 -3px; } .cine .chvm:nth-child(4n) { width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; }
+.cine .chvk { position: absolute; left: calc(100% - 56px + (var(--i) - 4.5) * 11px); top: 60px; width: 5px; height: 5px; border-radius: 50%; background: color-mix(in srgb, var(--fc) 55%, #fff); box-shadow: 0 0 8px var(--fc); opacity: 0; animation: hvSpark 1.3s ease-out calc(4.45s + var(--i) * .045s) both; }
+.cine .chvt { position: absolute; left: calc(100% - 56px); top: 2px; padding: 3px 9px; border-radius: 9px; font: 700 11px/1 var(--f-ui); font-style: normal; color: #1a1206; background: var(--fc); box-shadow: 0 0 10px color-mix(in srgb, var(--fc) 60%, transparent); transform: translateX(-50%); animation: hvTag 4.9s cubic-bezier(.5, 0, .3, 1) both; }
+.cine .chvl { position: absolute; top: 134px; width: 128px; font: 600 12px/1.2 var(--f-ui); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: cnUp .4s ease-out .5s both; }
+.cine .chvl.o { left: -8px; color: #8f897c; } .cine .chvl.n { right: -8px; color: #fbe7d0; }
+.cine.ck-handover .crib { animation-delay: 4.7s; } .cine.ck-handover .csub { animation-delay: 4.95s; } .cine.ck-handover .csay { animation-delay: 5.4s; }
+.cine.ck-handover .chl { animation-delay: 6.9s; } .cine.ck-handover .cgb { animation-delay: 7.1s; } .cine.ck-handover .cgift { animation-delay: 7.3s, 7.8s; }
+.cine.ck-handover.hold .ctap, .cine.ck-handover .ctap { animation: cnUp .3s ease-out 7.5s both, cnTap 1.6s ease-in-out 7.8s infinite; }
+.cine .cchat { display: grid; justify-items: start; gap: 3px; max-width: 300px; margin: 6px auto 0; padding: 7px 12px 8px; border-radius: 4px 14px 14px 14px; background: rgba(255, 236, 190, .09); box-shadow: inset 0 0 0 1px rgba(220, 190, 130, .3); text-align: left; animation: cnUp .4s ease-out .9s both; }
+.cine .cchat b { font: 700 11px/1 var(--f-ui); color: var(--a-gold, #dcb46a); letter-spacing: .02em; }
+.cine .cchat span { font: 400 14px/1.4 var(--f-14, inherit); color: #f4ead2; }
+.cine.ck-handover .cchat { animation-delay: 6.2s; }
+html.calm .cine .cchat, .cine.calm .cchat { animation: none; }
+.cine.calm.ck-handover .ctap { animation: none !important; }
+@keyframes hvOld { 0% { opacity: 0; filter: none; transform: scale(.7); border-color: var(--fc); } 9% { opacity: 1; filter: none; transform: none; border-color: var(--fc); } 22% { opacity: 1; filter: none; transform: none; border-color: var(--fc); } 74% { opacity: 1; filter: grayscale(.75) brightness(.78); transform: translateY(7px) rotate(-4deg) scale(.9); border-color: #6a6458; } 84% { opacity: 1; transform: translateY(8px) rotate(3deg) scale(.89); } }
+@keyframes hvNew { 0% { opacity: 0; transform: scale(.7); filter: brightness(.55) saturate(.5); border-color: #5a554c; box-shadow: 0 0 0 0 transparent; } 9% { opacity: 1; transform: none; } 16% { filter: brightness(.55) saturate(.5); border-color: #5a554c; box-shadow: 0 0 0 0 transparent; } 80% { transform: none; filter: brightness(.92) saturate(.9); border-color: #8a7a55; box-shadow: 0 0 0 0 transparent; } 87% { filter: none; transform: scale(1.17); border-color: var(--fc); } }
+@keyframes hvWas { 0%, 86% { opacity: 1; } 94%, 100% { opacity: 0; } }
+@keyframes hvNow { 0%, 86% { opacity: 0; } 94%, 100% { opacity: 1; } }
+@keyframes hvAura { 0% { opacity: 0; transform: scale(.4); } 14% { opacity: 1; transform: scale(1); } 30% { opacity: .95; transform: scale(1.08); } 86% { opacity: .22; transform: scale(.5); } 100% { opacity: 0; transform: scale(.3); } }
+@keyframes hvGlow { 0%, 16% { opacity: 0; transform: scale(.4); } 72% { opacity: .5; transform: scale(.8); } 84% { opacity: 1; transform: scale(1.55); } }
+@keyframes hvStream { 0%, 14% { opacity: 0; transform: scaleX(.1); } 30% { opacity: .75; transform: scaleX(1); } 55% { opacity: .5; } 70% { opacity: .8; } 84% { opacity: .5; transform: scaleX(1); } 100% { opacity: 0; transform: scaleX(1); } }
+@keyframes hvMote { 0% { opacity: 0; transform: translate(14px, 0) scale(.3); } 14% { opacity: 1; } 50% { transform: translate(100px, var(--dy, 0)) scale(1.15); } 86% { opacity: 1; } 100% { opacity: 0; transform: translate(196px, 0) scale(.4); } }
+@keyframes hvSpark { 0% { opacity: 0; transform: translateY(30px) scale(.4); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-70px) scale(1.1); } }
+@keyframes hvTag { 0% { opacity: 0; transform: translate(calc(-50% - 200px), 6px); } 8% { opacity: 1; transform: translate(calc(-50% - 200px), 0); } 78% { opacity: 1; transform: translate(calc(-50% - 200px), 0); } 93% { transform: translate(-50%, -7px) scale(1.2); } }
+@media (max-height: 640px) { .cine.ck-handover .cst { height: 150px; } .cine .chva, .cine .chvg, .cine .chvm, .cine .chvs { top: 70px; } .cine .chvk { top: 52px; } .cine .chvl { top: 116px; } }

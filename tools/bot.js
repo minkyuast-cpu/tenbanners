@@ -6,13 +6,14 @@
 //   BOTLAPSE=n (2.3.2): n번을 깬 뒤 한 번 대를 일부러 끊는다 — 대가 끊기면 깬 시나리오가 모두 사라지니(DS.lapseRestart) 봇은 1번부터 다시 걷는다.
 //     요약의 lapses: [{ lost 잃은 시나리오 수, top, h 끊긴 때(시간), back 그 번호까지 되찾는 데 든 시간, forced }] · 저절로 끊긴 대도 같은 칸에 (forced 0)
 //   BOTSAVE=파일 BOTSAVEAT=15: 그 시나리오를 깬 판을 저장 글(JSON)로 쓰고 끝낸다 (화면 시험용 중반 저장)
+//   BOTNOKEEP=1 (2.6.0): 뒤를 이은 이에게 선대가 입던 것을 먼저 입히지 않는다 — 출전 셋이 가방에서 먼저 고르던 첫 판 (비교용: 대를 이은 가문이 남은 것만 입어 다시 합일하는 긴 판이 잦았다)
 //   끝에 한 줄 요약과 「BOT {json}」 (hours · cleared · wipes · deaths · vacancies · recruits …).
 //
 // 정책 (사람이 하듯이, 단순하게):
 //   · 다음 시나리오의 권장 레벨(DS.recL)에 부대 평균(DS.partyL)이 닿을 때까지 들판에서 싸운다. 들판 = 부대 평균에 맞는 지역의 무리 하나
 //     (그 무리 레벨이 평균 + 1 이하), 그 지역 지도 위에서 진짜 엔진으로. 걸어 다니는 시간은 싸움마다 FIELD_OVER 초를 더해 셈한다.
 //   · 합일: 맹세의 깃대를 얻은 뒤 7단 Lv10 셋이 모일 때마다 교회에서 합일(DS.fuseAuto). 단 문턱(8단 · 9단) 앞에서는 가장 앞선 사람의 레벨 쪽 무리를 잡는다.
-//   · 싸움 앞: 교회 치료(골드), 약초 다섯까지 사기, 가방의 더 좋은 장비 입히기(DS.lootAutoEquip), 맹주가 홀몸이면 혼인(DS.linAutoWed — 막사의 같은 병과가 하나뿐이면 그이는 빼고).
+//   · 싸움 앞: 교회 치료(골드), 약초 다섯까지 사기, 가방의 더 좋은 장비 입히기(DS.lootAutoEquip · 2.6.0: 뒤를 이은 이의 빈 칸도 — equipAll), 맹주가 홀몸이면 혼인(DS.linAutoWed — 막사의 같은 병과가 하나뿐이면 그이는 빼고).
 //   · 영웅 모집: 모집권은 바로 쓴다. 빈 가문(막사도 비었음)이 있으면 골드로도 부른다 (예비 골드 200 × 단은 남긴다).
 //     빈 가문이 없어도 골드가 값의 세 배를 넘고 막사가 싸우는 가문 수의 절반보다 적으면 부른다. 병과는 무작위다 (게임 규칙 그대로).
 //   · 맹주의 어른 아이(가문원)는 빈 가문이 생기면 레벨이 가장 높은 이를 그 가문의 가주로 보낸다 (DS.hand).
@@ -160,8 +161,20 @@ function fuseMaybe(gate) {
   if (k) { const LF = D.lastFuse || {}, g = D.genNow ? D.genNow(s) : 1; st.fuse += k; st.fuseG = st.fuseG || {}; st.fuseG[g] = (st.fuseG[g] || 0) + k; st.fuseAt = (st.fuseAt || []).concat([Object.keys(s.cleared).length]); st.shut = (st.shut || []).concat((LF.gone || []).map(g => g.cls + '@' + Object.keys(s.cleared).length)); st.log.push('fuse @' + Object.keys(s.cleared).length + ' h' + ((st.simT + st.over) / 3600).toFixed(1) + ' left ' + (D.ageLife(s, LF.repWho === D.heroPs(s) ? s.chars[s.hero] : LF.repWho).left) + ' (+' + LF.ls + ') rep ' + LF.repCls + ' absorbs ' + (LF.gone || []).map(g => g.cls).join(',') + ' houses ' + n0 + '→' + D.charList(s).length); }
   return k;
 }
+// 2.6.0 떠난 이의 장비는 가방으로: 뒤를 이은 가주 · 맹주는 빈 칸으로 선다 — 사람이 「장비 자동 착용」을 누르듯 다시 입힌다.
+//   ① 뒤를 이은 이(빈 칸이 있는 가문)는 먼저 선대가 입던 것을 가방에서 찾아 입는다 (사람이 「아버지 것을 아들에게」 하듯 — 출전 셋이 그 가문의 장비를 먼저 집어 가 후계가 남은 것만 입지 않게)
+//   ② 출전 셋이 가방에서 가장 좋은 것을 고르고(DS.lootAutoEquip) ③ 쉬는 가문은 그래도 빈 칸이 있을 때만 남은 것으로 채운다 (쉬는 가문의 멀쩡한 장비는 예전처럼 건드리지 않는다)
+const worn = {};      // 가문 번호 → { w, a } 그 가문이 마지막으로 입고 있던 것
+function seatedCh(ch) { return !ch.vac && !ch.down && (ch.id === s.hero || !!D.bearer(s, ch, 1)); }
+function equipAll() {
+  if (!process.env.BOTNOKEEP) D.charList(s).forEach(ch => { const o = worn[ch.id]; if (!o || !seatedCh(ch)) return; ['w', 'a'].forEach(sl => { if (!ch[sl] && o[sl] && s.gear[o[sl]] > 0 && D.equip(s, ch, o[sl])) st.reKeep = (st.reKeep || 0) + 1; }); });
+  D.lootAutoEquip(s);
+  D.charList(s).forEach(ch => { if (s.party.indexOf(ch.id) >= 0 || !seatedCh(ch) || (ch.w && ch.a)) return; if (D.autoEquip(s, ch)) st.reEquip = (st.reEquip || 0) + 1; });
+  D.charList(s).forEach(ch => { const o = worn[ch.id] = worn[ch.id] || {}; ['w', 'a'].forEach(sl => { if (ch[sl]) o[sl] = ch[sl]; }); });
+}
 function prep() {
   tidy();
+  if (!OLD) equipAll();      // 2.6.0: 출전을 고르기 전에 — 빈손인 새 가주가 전투력 차례에서 밀리지 않게
   if (D.linAutoWed) {      // 혼인: 막사에 맹주와 같은 병과가 한 사람뿐이면 그이는 짝으로 고르지 않는다 (맹주의 뒤를 받칠 사람 — 사람이 하듯)
     const hc = s.chars[s.hero], bk = hc && !OLD ? D.barracks(s).filter(m => D.sbFits(hc, m)) : [], keep = bk.length === 1 ? bk[0] : null, sx0 = keep && keep.sx;
     if (keep && hc.sx) keep.sx = hc.sx;
@@ -179,7 +192,7 @@ function prep() {
     r = r.map(ch => ch.id); const cur = (s.sortie || []).map(e => e.h);
     if (r.slice().sort().join() !== cur.slice().sort().join()) { D.sortieSet(s, r); st.sortieSw = (st.sortieSw || 0) + 1; }
   }
-  D.lootAutoEquip(s); heal(false); shop();      // 2.2.8: 봇은 싸움 사이 체력을 잇지 않는다 (늘 가득) — 교회 값은 시나리오에 들어갈 때만 낸다 (들판 싸움마다 내던 것은 작은 무리의 벌이를 모두 먹었다)
+  if (OLD) D.lootAutoEquip(s); else equipAll(); heal(false); shop();      // 2.2.8: 봇은 싸움 사이 체력을 잇지 않는다 (늘 가득) — 교회 값은 시나리오에 들어갈 때만 낸다 (들판 싸움마다 내던 것은 작은 무리의 벌이를 모두 먹었다)
   check('prep');
 }
 // 한 싸움: specs 를 starts(또는 x,y 근처)에 세우고 끝날 때까지. 돌려주는 것: 'win' | 'lose' | 'end'
@@ -406,7 +419,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
   }
 }
 const H = (st.simT + st.over) / 3600;
-const out = { cls, seed, main, g2, hours: +H.toFixed(2), choices: st.choices || 0, heirlooms: Object.keys(s.gh || {}).filter(k => s.gh[k] && s.gh[k].hl).length, shade: st.shade || 0, shadeAuto: st.shadeAuto || 0, shadeDmg: Math.round(st.shadeDmg || 0), shadeEnd: st.shadeEnd || {}, shAt: st.shAt || {}, cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
+const out = { cls, seed, main, g2, hours: +H.toFixed(2), choices: st.choices || 0, heirlooms: Object.keys(s.gh || {}).filter(k => s.gh[k] && s.gh[k].hl).length, reEquip: st.reEquip || 0, reKeep: st.reKeep || 0, bare: D.gearBare ? D.gearBare(s).length : 0, bag: Object.keys(s.gear || {}).reduce((n, k) => n + s.gear[k], 0), shade: st.shade || 0, shadeAuto: st.shadeAuto || 0, shadeDmg: Math.round(st.shadeDmg || 0), shadeEnd: st.shadeEnd || {}, shAt: st.shAt || {}, cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
   births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, lapses: st.lapses || [], g2lapse: st.g2lapse || 0, runs: s.runs || null, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, openGold: st.openGold || 0, xDeaths: st.xDeaths || 0, xNat: st.xNat || 0, erCall: st.erCall || 0, erCover: st.erCover || 0, erased: st.erased || 0, retreats: st.retreats || 0, retX: st.retX || 0, fieldRet: st.fieldRet || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };

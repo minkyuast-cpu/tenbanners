@@ -153,11 +153,11 @@ module.exports = async function (page, shot, L) {
   await ev(() => DS.cineSkip()); await sleep(500);
   await ev(() => { DS.ui.closeAll(); var s = DS.G.save; DS.linAutoAll(s); try { DS.rebuildParty(); } catch (x) {} DS.ui.persist(); });
   await L.closeAll(page);
-  c = await ev((W) => {
-    var s = DS.G.save, h = s.chars[s.hero], o = {}; for (var k in h) o[k] = h[k]; o.id = 9999;
-    return { heir: DS.charName(h), w: h.w, same: DS.cmdSpec(h, true).atk, other: DS.cmdSpec(o, true).atk, bt: DS.hlBonusTxt(s, W, h) };
+  c = await ev((W) => {      // 2.6.0: 떠난 이의 장비는 가방으로 — 후계는 빈손으로 서고, 유품은 가방에 있다. 다시 입히면 같은 가문의 덤이 붙는다
+    var s = DS.G.save, h = s.chars[s.hero], w0 = h.w, a0 = h.a, bag = s.gear[W] || 0, eq = DS.equip(s, h, W), o = {}; for (var k in h) o[k] = h[k]; o.id = 9999;
+    return { heir: DS.charName(h), w0: w0, a0: a0, bag: bag, eq: eq, w: h.w, same: DS.cmdSpec(h, true).atk, other: DS.cmdSpec(o, true).atk, bt: DS.hlBonusTxt(s, W, h) };
   }, W);
-  A(c.w === W && c.same > c.other && Math.abs(c.same / c.other - 1.03) < 0.02 && /로저스 가문이 들면 공격 \+3%/.test(c.bt), 'heir ' + c.heir + ' keeps the heirloom: same house atk ' + c.same + ' vs another house ' + c.other + ' (+3%) — ' + c.bt);
+  A(c.w0 == null && c.a0 == null && c.bag === 1 && c.eq && c.w === W && c.same > c.other && Math.abs(c.same / c.other - 1.03) < 0.02 && /로저스 가문이 들면 공격 \+3%/.test(c.bt), 'heir ' + c.heir + ' starts bare, the heirloom waits in the bag; re-equipped: same house atk ' + c.same + ' vs another house ' + c.other + ' (+3%) — ' + c.bt);
   // 장비 고르기 창(지금 것 줄): 유품 표와 내력
   await ev(() => { var s = DS.G.save; DS.ui.closeAll(); DS.openMenu('party'); DS.gearPickOpen(s.hero, 'w'); }); await sleep(600);
   c = await ev(() => { var o = [].slice.call(document.querySelectorAll('#app .ov')).pop(), b = o && o.querySelector('.lhlb'); return { mark: !!(o && o.querySelector('.lhl')), t: b ? b.innerText.replace(/\n/g, ' / ') : '' }; });
@@ -176,7 +176,7 @@ module.exports = async function (page, shot, L) {
   // 대를 넘긴다: 다음 맹주도 들고 떠나면 +6% · 저장을 다시 읽어도 남는다
   c = await ev((W) => {
     var s = DS.G.save, h = s.chars[s.hero]; h.down = true; DS.linSettle(s, '바람재'); DS.linAutoAll(s); try { DS.rebuildParty(); } catch (x) {}
-    var h2 = s.chars[s.hero], o = {}; for (var k in h2) o[k] = h2[k]; o.id = 9999;
+    var h2 = s.chars[s.hero]; DS.equip(s, h2, W); var o = {}; for (var k in h2) o[k] = h2[k]; o.id = 9999;      // 2.6.0: 유품은 가방으로 돌아왔다 — 다음 맹주가 다시 든다
     var raw = JSON.parse(JSON.stringify(s)), fx = DS.fixSave(raw);
     return { N: DS.hlOf(s, W).N, bt: DS.hlBonusTxt(s, W, h2), r: DS.cmdSpec(h2, true).atk / DS.cmdSpec(o, true).atk, kept: !!(fx.gh[W] && fx.gh[W].hl && fx.gh[W].hl.N === 2 && fx.lock[W]) };
   }, W);
@@ -187,7 +187,7 @@ module.exports = async function (page, shot, L) {
     var s = DS.G.save, f = DS.charList(s).filter(function (x) { return x.id !== s.hero && DS.bearer(s, x); })[0], b = DS.bearer(s, f), w = f.w, n0 = (s.gear[w] || 0);
     var U2 = 'lance.A~keen7'; s.gear[U2] = 1; if (DS.CLS_GEAR[f.cls].w[0] !== 'lance') U2 = DS.CLS_GEAR[f.cls].w[0] + '.A~keen7', s.gear[U2] = 1; delete s.gear['lance.A~keen7']; DS.equip(s, f, U2);
     b.lw = '교대… 부탁한다'; var lost = DS.loseMerc(s, b.id); DS.linMercDied(s, lost, '늑대골');
-    return { id: U2, hl: DS.hlOf(s, U2), plainDup: (function () { var t = DS.newSave('복', 'cav'); DS.houseOpenN(t, 6); DS.mercTidy(t); var g = DS.charList(t).filter(function (x) { return x.id !== t.hero && x.w === t.chars[t.hero].w; })[0]; if (!g) return 'n/a'; var hh = t.chars[t.hero]; hh.down = true; DS.linSettle(t, '시험'); return DS.hlOf(t, hh.w) ? 'made' : 'none'; })() };
+    return { id: U2, hl: DS.hlOf(s, U2), plainDup: (function () { var t = DS.newSave('복', 'cav'); DS.houseOpenN(t, 6); DS.mercTidy(t); var g = DS.charList(t).filter(function (x) { return x.id !== t.hero && x.w === t.chars[t.hero].w; })[0]; if (!g) return 'n/a'; var hh = t.chars[t.hero], w0 = hh.w; hh.down = true; DS.linSettle(t, '시험'); return DS.hlOf(t, w0) ? 'made' : 'none'; })() };
   });
   A(c.hl && c.hl.k === 'c' && c.hl.lw === '교대… 부탁한다' && c.hl.N === 1 && (c.plainDup === 'none' || c.plainDup === 'n/a'), 'a 가주 death makes an heirloom too (' + c.hl.n + ', ' + c.id + '); a plain piece shared by two houses does not (' + c.plainDup + ')');
   await sleep(2000); await shot('hl_toast');
