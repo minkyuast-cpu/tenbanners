@@ -2172,7 +2172,7 @@ function tabHelp() {
       '맹주가 쓰러지면 어른 자식, 막사의 같은 병과, 다른 가문의 가주 가운데 뒤를 고른다. 막사에서 이은 이는 제 레벨 그대로다. 다른 가문의 가주를 고르면 맹주 자리가 그 가문으로 간다. 그 가문의 장비와 공훈은 그대로다.', '옛 맹주 가문은 보통 가문이 된다. 어른 자식 가운데 레벨이 가장 높은 이가 가주가 되고, 없으면 막사의 같은 병과가, 그도 없으면 빈 가문이 된다. 남은 가족은 그 가문의 병과로 막사에 가고, 아이는 자라면 막사로 간다. 새 맹주를 따르지 않는다. 고를 이가 아무도 없으면 대가 끊기고 스무 해가 흐른다. 깬 시나리오는 모두 사라지고 1번부터 다시다. 가문과 사람, 레벨, 장비는 남고, 다시 깨면 처음 깬 보상을 또 받는다.']],
     ['혼인과 아이', '혼인', [
       '혼인은 <b>맹주만</b> 할 수 있다. 성별이 다른 가주나 막사의 사람을 배우자로 맞는다. 막사에 있던 배우자는 맹주 가문의 가문원이 되어 함께 싸운다. 시나리오와 전투 밖이면 어디서나 「마을 일」에서 한다.',
-      '<b>인물 탭</b>의 「배우자 고르기」에서 혼인할 수 있는 사람과 아이의 예상 등급을 보고, 줄의 「혼인」으로 바로 맺는다.',
+      '<b>인물 탭</b> 맨 위의 「혼인」에서 혼인할 수 있는 사람과 아이의 예상 등급을 보고, 줄의 「혼인」으로 바로 맺는다.',
       '혼인하면 <b>해마다 확률로</b> 아이가 태어난다. 첫해가 가장 높고, 해가 갈수록, 아이가 늘수록 드물어진다.',
       '아이의 등급은 <b>배우자의 등급</b>을 닮는다. 운에 따라 한 단계 오르거나 내린다.',
       '맹주 인물 정보의 <b>혼인 칸</b>에서 함께한 햇수, 아이 수, 다음 해 출산 확률을 볼 수 있다.',
@@ -2269,15 +2269,15 @@ function tabPeople() {
   var hkey = function (e) { return e.seat && e.seat.k !== 'bar' && e.seat.ch ? (e.key === 'h' ? 0 : 1 + s.party.concat(Object.keys(s.chars).map(Number)).indexOf(e.seat.ch.id)) * 4 + (e.seat.sb ? 3 : e.seat.k === 'fol' ? 2 : 1) : 999; };
   var by = { h: function (a, b) { return hkey(a) - hkey(b) || b.pow - a.pow; }, p: function (a, b) { return b.pow - a.pow; }, a: function (a, b) { return ((b.ag && b.ag.y) || 0) - ((a.ag && a.ag.y) || 0) || b.pow - a.pow; }, g: function (a, b) { return b.g - a.g || b.pow - a.pow; }, x: function (a, b) { return b.xp - a.xp || b.pow - a.pow; } }[PV.sort] || null;
   if (by) list.sort(function (a, b) { return (a.key === 'h' ? -1 : 0) - (b.key === 'h' ? -1 : 0) || by(a, b); });      // 대장은 늘 맨 위
-  var html = '<p class="hint sm pplh">' + esc(pst('tabHint', '맹주와 가주, 막사, 가문원 모두. 누르면 인물 정보.')) + '</p>';
-  html += wedNote(canWed);
-  html += listTools(PSORT.map(function (k) { return '<button data-psort="' + k[0] + '"' + (PV.sort === k[0] ? ' aria-pressed="true"' : '') + '>' + k[1] + '</button>'; }).join(''),
-    PFILT.map(function (f) { return '<button data-pf="' + f[0] + '"' + (PV.f === f[0] ? ' aria-current="true"' : '') + '>' + f[1] + ' <b class="num">' + n[f[0]] + '</b></button>'; }).join(''),
-    '<span>' + list.length + '명</span>' + pplCmpBtns());
+  // 2.6.2: 맨 위를 줄였다 — 혼인 · 가계도 · 비교는 한 줄 단추, 거르기 한 줄, 정렬은 목록 머리줄에 (예전: 안내 글 + 혼인 카드 + 정렬 줄 + 거르기 줄 + 인원 줄 + 가문 띠 → 목록이 화면 아래 절반에서 시작했다)
+  var html = '<div class="pphd">' + pplTop(canWed);
+  html += '<div class="ppfr"><nav class="chips2 ppf" aria-label="필터">' + PFILT.map(function (f) { return '<button data-pf="' + f[0] + '"' + (PV.f === f[0] ? ' aria-current="true"' : '') + '>' + f[1] + ' <b class="num">' + n[f[0]] + '</b></button>'; }).join('') + '</nav>' +
+    '<button class="ppq" data-pkey="1" aria-expanded="' + !!FOLD.pkey + '" aria-label="표시 안내" title="표시 안내">?</button></div></div>';
   html += pplHouses(s) + pplCmpBar(all);
   if (!list.length) html += '<p class="hint empty">' + (PV.f === 'fam' ? '아직 가족이 없다. 맹주가 혼인하면 여기에 모인다' : PV.f === 'sb' ? '막사가 비었다. 영웅관에서 모집한다' : '없음') + '</p>';
   var top = 1; list.forEach(function (e) { top = Math.max(top, e.pow || 0); });
-  if (list.length) html += '<div class="pph" aria-hidden="true"><span>인물</span>' + [['x', '단·Lv'], ['a', '나이'], ['p', '전투력']].map(function (k) { return '<span data-psort="' + k[0] + '"' + (PV.sort === k[0] ? ' class="on"' : '') + '>' + k[1] + (PV.sort === k[0] ? ' ▾' : '') + '</span>'; }).join('') + '</div>';
+  if (list.length) html += '<div class="pph" role="group" aria-label="정렬"><span class="pph1"><em><b class="num">' + list.length + '</b>명</em>' + [['g', '등급'], ['h', '가문']].map(function (k) { return '<button data-psort="' + k[0] + '" aria-pressed="' + (PV.sort === k[0]) + '">' + k[1] + '순</button>'; }).join('') + '</span>' +
+    [['x', '단·Lv'], ['a', '나이'], ['p', '전투력']].map(function (k) { return '<button data-psort="' + k[0] + '" aria-pressed="' + (PV.sort === k[0]) + '"' + (PV.sort === k[0] ? ' class="on"' : '') + '>' + k[1] + (PV.sort === k[0] ? ' ▾' : '') + '</button>'; }).join('') + '</div>';
   list.forEach(function (e) { html += pplRow(e, false, top); });
   return '<div class="pplv' + (PV.cmp ? ' cmpon' : '') + '">' + html + '</div>';
 }
@@ -2302,7 +2302,6 @@ function pplHouses(s) {
 }
 // 비교 모드: 두 사람을 골라 나란히 (같은 자리 기준 육각형 겹침 + 지금 자리의 실제 능력치)
 var PCMP_ROWS = [['mhp', 'HP'], ['atk', '공격'], ['mag', '마공'], ['def', '방어'], ['res', '마방'], ['crit', '치명타', 100, '%'], ['spd', '행동 회복', 1]];
-function pplCmpBtns() { return '<span class="pcmpb"><button class="btn small' + (PV.cmp ? ' gold' : '') + '" data-pcmp="1" aria-pressed="' + PV.cmp + '">' + (PV.cmp ? '비교 끝내기' : '비교') + '</button><button class="btn small pkey" data-pkey="1" aria-expanded="' + !!FOLD.pkey + '">표시 안내</button></span>'; }
 function pplCmpBar(all) {
   var bar = PV.cmp ? '<p class="pcmph0">' + (PV.sel.length < 2 ? '비교할 두 사람을 누른다 <b class="num">' + PV.sel.length + '/2</b>' : '다른 사람을 누르면 바뀐다') + '</p>' : '';
   if (FOLD.pkey) bar += pplKey();
@@ -2332,16 +2331,26 @@ function pplKey() {
     '<dt>✦</dt><dd><small>필살기 강화 (9단 · 10단 · 레벨 100)</small></dd>' +
     '<dt>전투력</dt><dd><i class="pbar demo"><u style="width:60%"></u></i><small>막대는 지금 목록에서 가장 센 사람 기준</small></dd></dl></div>';
 }
-// 인물 탭 위 안내: 대장이 혼인할 수 있으면 배우자감 수, 혼인했으면 한 줄
-function wedNote(canWed) {
-  var sp = heroSpouse(), all = lgAll();
-  if (sp) { var q = all[sp.sp.id]; return '<div class="wednote on"><i class="lgring" aria-hidden="true"></i><span><b>' + esc(pst('marriedNote', '맹주는 혼인했다')) + '</b><small>' + esc((q ? q.name : '') + ', ' + birthWord().t) + '</small></span><button class="btn small" data-wedopen="1">혼인</button></div>'; }
-  if (!canWed) return '';
-  var c = wedCands().length;      // 2.6.0: 단추 하나 — 혼인 창(후보 목록)이 바로 열린다
-  return '<div class="wednote"><i class="lgring" aria-hidden="true"></i><span><b>' + esc(pst('canWed', '맹주가 혼인할 수 있다')) + '</b><small>' + esc(pst('candN', '배우자 후보')) + ' ' + c + '명, ' + esc(pst('wedRule', '아이는 해마다 확률로 태어난다')) + '</small></span><button class="btn small' + (c ? ' gold' : '') + '" data-wedopen="1">배우자 고르기</button></div>';
+// 2.6.2: 인물 탭 맨 위의 단추 줄 — 혼인(후보 수 · 배우자 이름 · 못 하는 까닭) · 가계도(한 번에 연다) · 비교
+var PPI = { tree: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 7v4M6 15v-2h12v2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="9" y="2.5" width="6" height="5" rx="1.2" fill="currentColor"/><rect x="3" y="15" width="6" height="5" rx="1.2" fill="currentColor"/><rect x="15" y="15" width="6" height="5" rx="1.2" fill="currentColor"/></svg>',
+  cmp: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3" y="5" width="7" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="5" width="7" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 15h2M16.5 11h2M16.5 15h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' };
+function pplTop(canWed) {
+  var h = '', hero = heroCh();
+  if (lgOn() && DS.linWed && hero) {
+    var sp = heroSpouse(), all = lgAll(), ag = agInfo(hero), sub, gold = false;
+    if (sp) { var q = all[sp.sp.id]; sub = (q && q.name) || '배우자'; }
+    else if (canWed) { var c = wedCands().length; sub = '후보 ' + c + '명'; gold = c > 0; }
+    else sub = hero.vac || hero.down ? '자리가 비었다' : ag && ag.young ? '아직 어리다' : '지금은 못 한다';
+    h += '<button class="ppa' + (sp ? ' on' : '') + (gold ? ' gold' : '') + '" data-wedopen="1"><i class="lgring" aria-hidden="true"></i><span><b>혼인</b><small>' + esc(sub) + '</small></span></button>';
+    var en = lgTry(function () { return lgEvents().length; }) || 0;
+    h += '<button class="ppa" data-pplin="1">' + PPI.tree + '<span><b>가계도</b><small>' + (en ? '연대기 ' + en : '가문의 기록') + '</small></span></button>';
+  }
+  h += '<button class="ppa' + (PV.cmp ? ' gold' : '') + '" data-pcmp="1" aria-pressed="' + PV.cmp + '">' + PPI.cmp + '<span><b>' + (PV.cmp ? '비교 끝' : '비교') + '</b><small>둘을 나란히</small></span></button>';
+  return '<div class="pptop">' + h + '</div>';
 }
 function peopleClick(e, o) {
   var b;
+  if (e.target.closest('[data-pplin]')) { A('tap'); DS.openLineage('tree', null, o); return true; }      // 2.6.2: 가계도를 한 번에
   var popt = function () { var so = G.save.opt || (G.save.opt = {}); so.pplSort = PV.sort; so.pplF = PV.f === 'wed' ? '' : PV.f; so.pplH = PV.h || 0; U.persist(); };      // r45 ui: 고른 것을 기억
   if (e.target.closest('[data-wedopen]')) { A('tap'); wedSheet(o); return true; }      // 2.6.0
   if ((b = e.target.closest('[data-psort]'))) { PV.sort = b.dataset.psort; popt(); A('tap'); o.draw(); return true; }
@@ -2349,7 +2358,7 @@ function peopleClick(e, o) {
   if ((b = e.target.closest('[data-pcmp]'))) { PV.cmp = !PV.cmp; PV.sel = []; A('tap'); o.draw(); return true; }
   if ((b = e.target.closest('[data-pkey]'))) { FOLD.pkey = !FOLD.pkey; A('tap'); o.draw(); return true; }
   if ((b = e.target.closest('[data-pf]'))) { PV.f = b.dataset.pf; popt(); A('tap'); o.draw(); return true; }
-  if (PV.cmp && (b = e.target.closest('[data-pp]')) && !b.closest('.wednote')) { var pk = b.dataset.pp, pi = PV.sel.indexOf(pk); if (pi >= 0) PV.sel.splice(pi, 1); else { PV.sel.push(pk); if (PV.sel.length > 2) PV.sel.shift(); } A('tap'); o.draw(); var sb2 = $('.sb', o); if (PV.sel.length === 2 && sb2) { var pc = $('.pcmp', o); if (pc) sb2.scrollTop += pc.getBoundingClientRect().top - sb2.getBoundingClientRect().top - 70; } return true; }
+  if (PV.cmp && (b = e.target.closest('[data-pp]')) && !b.closest('.pptop')) { var pk = b.dataset.pp, pi = PV.sel.indexOf(pk); if (pi >= 0) PV.sel.splice(pi, 1); else { PV.sel.push(pk); if (PV.sel.length > 2) PV.sel.shift(); } A('tap'); o.draw(); var sb2 = $('.sb', o); if (PV.sel.length === 2 && sb2) { var pc = $('.pcmp', o); if (pc) sb2.scrollTop += pc.getBoundingClientRect().top - sb2.getBoundingClientRect().top - 70; } return true; }
   if ((b = e.target.closest('[data-pp]'))) { A('tap'); var k = b.dataset.pp; if (k === 'h') heroInfo(o); else mercInfo(+k.slice(1), o); return true; }
   return false;
 }
@@ -2812,7 +2821,7 @@ DS.openLineage = function (tab, focus, parent) {
     var ev = lgEvents(), cf = lgCoffins();
     var html = '<nav class="lgtab">' + [['tree', '가계도'], ['log', '연대기 ' + ev.length], ['coffin', '관' + (cf ? ' ' + cf.used + '/' + cf.have : '')]].filter(function (t) { return t[0] !== 'coffin' || cf; })
       .map(function (t) { return '<button data-lgtab="' + t[0] + '"' + (t[0] === cur ? ' aria-current="true"' : '') + '>' + t[1] + '</button>'; }).join('') + '</nav>';
-    if (cur === 'tree') html += agCalRow() + lgHouseBar() + (DS.lgPartyRow ? DS.lgPartyRow(G.save) : '') + lgTree(focus);      // r33 legacy: 가문의 유산 줄      // r6 나이: 달력
+    if (cur === 'tree') html += lgHead() + (DS.lgPartyRow ? DS.lgPartyRow(G.save) : '') + lgTree(focus);      // r33 legacy: 가문의 유산 줄      // r6 나이: 달력
     else if (cur === 'log') html += ev.length ? lgChronHtml(ev) : '<p class="hint">아직 적힌 일이 없다.</p>';
     else html += lgCoffinHtml();
     return html;
@@ -2833,6 +2842,18 @@ DS.openLineage = function (tab, focus, parent) {
   o.onclose = function () { if (parent && parent.isConnected && parent.draw) parent.draw(); };
   return o;
 };
+// 2.6.2: 가계도 맨 위를 한 줄로 — 달력(가문력 · 계절) + 연맹 이름 + 「연맹 이름」 단추 + 맹주 성별(혼인 전에만 바꾼다). 예전에는 달력 카드와 연맹 카드 두 장이 가계도를 화면 아래로 밀었다
+function lgHead() {
+  var s = G.save, hero = s.chars[s.hero], L = LS(), c = agCal(); if (!hero || !L) return agCalRow();
+  var canSur = !!(DS.linSetSurname && DS.SURNAMES), canSex = !!DS.linSetSex && !heroSpouse(), sx = lgSexOf('ch', hero.id);
+  var old = DS.charList(s).filter(function (ch) { var a = agInfo(ch); return a && a.old; });
+  var hn = DS.allyFull ? DS.allyFull(s) : '연맹';
+  return '<div class="lghead' + (c ? ' agcal s' + (c.season | 0) : '') + '">' + (c ? '<i class="sea" aria-hidden="true"></i>' : '') +
+    '<span class="tx"><b>' + esc(c ? agCalText(c) : hn) + '</b><small>' + esc(c ? hn : DS.houseName(s)) + '</small></span><span class="btns">' +
+    (canSur ? '<button class="btn small" data-lgsur="1">연맹 이름</button>' : '') +
+    (canSex ? '<span class="seg" role="group" aria-label="맹주 성별"><button data-lgsex="m"' + (sx === 'm' ? ' aria-pressed="true"' : '') + '>남</button><button data-lgsex="f"' + (sx === 'f' ? ' aria-pressed="true"' : '') + '>여</button></span>' : '') + '</span></div>' +
+    (old.length ? '<p class="hint sm lgold">' + esc((AGL().elderCount || '노년에 든 이') + ' ' + old.map(function (ch) { return DS.charName(ch); }).join(', ')) + '</p>' : '');
+}
 // 가계도 맨 위: 주인공 가문의 성과 주인공의 성별 (설계서 linSetSurname·linSetSex)
 function lgHouseBar() {
   var s = G.save, hero = s.chars[s.hero], L = LS(); if (!hero || !L) return '';

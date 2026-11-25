@@ -96,7 +96,7 @@ module.exports = async (page, shot, L, env) => {
   else A(c && noDj(c.why), 'hand-over button (disabled: ' + (c && c.why) + '): no 「대장」');
   await L.closeAll(page);
   await ev(() => DS.openMenu('people')); await sleep(600);
-  c = await topText(); A(noDj(c) && /맹주(가 혼인할 수 있다|는 혼인했다)/.test(c), 'people tab: 「' + (/(맹주가 혼인할 수 있다|맹주는 혼인했다)/.exec(c) || [''])[0] + '」, no 「대장」');
+  c = await topText(); A(noDj(c) && /맹주/.test(c) && /혼인/.test(c) && /가계도/.test(c), 'people tab: 「맹주」 tag with the 혼인 and 가계도 buttons (2.6.2), no 「대장」');
   A(await docW() <= 390, 'people tab does not scroll sideways');
   await ev(() => DS.openMenu('help')); await sleep(600);
   c = await topText(); A(noDj(c) && /맹주 인물 정보/.test(c) && c.length > 2000, 'help tab (' + c.length + ' chars): 「맹주 인물 정보」, no 「대장」 (대장간 · 대장장이 are other words)');

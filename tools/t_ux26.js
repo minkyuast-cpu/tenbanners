@@ -54,11 +54,13 @@ module.exports = async (page, shot, L, env) => {
   await tap('#bMenu');
   await addP('부대 탭 막사 줄', '.ov .bar2 .brow[data-info="' + P + '"] .gfr');
   await tap('.ov [data-tab="people"]');
-  c = await ev(() => { var o = document.querySelector('.ov'); return { wedFilter: !!o.querySelector('[data-pf="wed"]'), note: !!o.querySelector('.wednote [data-wedopen]'), txt: (o.querySelector('.wednote') || {}).innerText || '' }; });
-  A(!c.wedFilter && c.note, '인물 tab: no 「배우자 후보」 filter chip any more, one 「배우자 고르기」 button on the banner (' + c.txt.replace(/\s+/g, ' ') + ')');
+  c = await ev(() => { var o = document.querySelector('.ov'); return { wedFilter: !!o.querySelector('[data-pf="wed"]'), note: o.querySelectorAll('.pptop [data-wedopen]').length === 1, txt: (o.querySelector('.pptop [data-wedopen]') || {}).innerText || '', lin: !!o.querySelector('.pptop [data-pplin]'), cmp: !!o.querySelector('.pptop [data-pcmp]'), sorts: o.querySelectorAll('.pph [data-psort]').length, oldRow: !!o.querySelector('.ltools'),
+    top: (function () { var r = o.querySelector('.row.ppl'), b = o.querySelector('.sb') || o; return r ? Math.round(r.getBoundingClientRect().top - b.getBoundingClientRect().top) : -1; })() }; });
+  A(!c.wedFilter && c.note, '인물 tab: no 「배우자 후보」 filter chip any more, one 「혼인」 button on the top row (' + c.txt.replace(/\s+/g, ' ') + ')');
+  A(c.lin && c.cmp && c.sorts === 5 && !c.oldRow && c.top > 0 && c.top <= 280, '인물 tab (2.6.2): 가계도 and 비교 sit beside 혼인, the five sorts live in the list header, and the first person starts ' + c.top + ' px below the top of the sheet body (was about 450)');
   await addP('인물 탭 줄', '.ov [data-pp="' + gpP + '"] .pfr');
   await snap('people_tab');
-  await tap('.ov .wednote [data-wedopen]');
+  await tap('.ov .pptop [data-wedopen]');
   c = await ev((P) => { var o = [...document.querySelectorAll('.ov:not(.ghost)')].pop(), rows = [...o.querySelectorAll('.wedr:not(.dim)')], r0 = rows[0];
     return { title: o.querySelector('.sh h3').textContent, rows: rows.length, first: r0 ? +r0.dataset.info : 0, btn: r0 ? !!r0.querySelector('[data-wedto]') : false, kid: rows.every(r => !!r.querySelector('.kpot .gbdg')), badge: rows.every(r => !!r.querySelector('.p1 .gbdg')), frame: rows.every(r => !!r.querySelector('.gfr')), role: rows.every(r => !!r.querySelector('.prole')), age: rows.every(r => /\d+살/.test(r.querySelector('.pl').textContent)),
       odds: /첫해 아이 가망 약 \d+%/.test(o.querySelector('.wedhd').textContent), sort: [...o.querySelectorAll('[data-wsort]')].map(b => b.dataset.wsort + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(','), sw: document.documentElement.scrollWidth, more: !!o.querySelector('[data-lgno]') }; }, P);

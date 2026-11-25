@@ -5645,3 +5645,38 @@ html.calm .ar-std { animation: none; } @media (prefers-reduced-motion: reduce) {
 .ar-fight .ar-cast span { min-width: 0; word-break: keep-all; } .ar-fight .ar-cast.pop span { animation: arCast .28s ease-out; }
 @keyframes arCast { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 html.calm .ar-fight .ar-cast.pop span { animation: none; }
+
+/* 2.6.2: 인물 탭 맨 위 — 단추 한 줄(혼인 · 가계도 · 비교) + 거르기 한 줄 + 머리줄 정렬 */
+.pplv .pptop { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin: 2px 0 8px; }
+.pplv .ppa { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 7px; align-items: center; min-height: 48px; padding: 5px 9px; text-align: left; color: var(--bone, #ece2cc); font: inherit; border: 1px solid rgba(210, 176, 114, .38); border-radius: 6px; background: rgba(210, 176, 114, .06); }
+.pplv .ppa > svg, .pplv .ppa > .lgring { justify-self: center; color: var(--a-gold, #d2b072); }
+.pplv .ppa span { display: grid; min-width: 0; }
+.pplv .ppa b { font-family: var(--f-title); font-weight: 400; font-size: var(--fs-m); line-height: 1.2; white-space: nowrap; }
+.pplv .ppa small { font-size: var(--fs-s); color: var(--mute, #c4b89e); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pplv .ppa.gold { border-color: var(--ember2, #d2b072); background: linear-gradient(180deg, rgba(232, 196, 120, .26), rgba(210, 176, 114, .1)); box-shadow: var(--hi-gold, none); }
+.pplv .ppa.gold small { color: var(--bone, #ece2cc); }
+.pplv .ppa.on small { color: var(--a-gold, #d2b072); }
+.pplv .ppa:active { transform: translateY(1px); }
+.pplv .ppfr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: start; }
+.pplv .ppfr .chips2 { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; } .pplv .ppfr .chips2::-webkit-scrollbar { display: none; }
+.pplv .ppfr .chips2 button { flex: 0 0 auto; padding: 0 11px; white-space: nowrap; }
+.pplv .ppq { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line, #3d3324); background: var(--ink2, #241d14); color: var(--mute, #c4b89e); font-weight: 700; font-size: var(--fs-m); }
+.pplv .ppq[aria-expanded="true"] { color: #2a1c05; background: var(--ember, #d2b072); border-color: var(--ember2, #d2b072); }
+html body #app#app .pplv .pph { min-height: 38px; padding: 2px 0; margin-top: 2px; }
+html body #app#app .pplv .pph > button, html body #app#app .pplv .pph .pph1 button { min-height: 34px; padding: 0 2px; border: 0; background: none; color: var(--mute, #c4b89e); font: inherit; font-size: var(--fs-s); white-space: nowrap; text-align: center; }
+html body #app#app .pplv .pph > button:last-child { text-align: right; }
+html body #app#app .pplv .pph > button.on, html body #app#app .pplv .pph .pph1 button[aria-pressed="true"] { color: var(--a-gold, #d2b072); }
+html body #app#app .pplv .pph .pph1 { grid-column: 1 / 3; display: flex; align-items: center; gap: 4px; text-align: left; padding-left: 2px; }
+html body #app#app .pplv .pph .pph1 em { font-style: normal; margin-right: 4px; color: var(--bone, #ece2cc); }
+html body #app#app .pplv .pph .pph1 button { padding: 0 9px; min-height: 30px; border: 1px solid var(--line, #3d3324); border-radius: 99px; }
+html body #app#app .pplv .pph .pph1 button[aria-pressed="true"] { border-color: var(--a-gold, #d2b072); }
+/* 2.6.2: 가계도 맨 위 한 줄 */
+.lghead { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 10px; margin: 2px 0 6px; background: var(--ink2); border: 1px solid var(--line); border-radius: 6px; }
+.lghead.agcal { grid-template-columns: 26px minmax(0, 1fr) auto; }
+.lghead .tx { display: grid; min-width: 0; } .lghead .tx b, .lghead .tx small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lghead .btns { display: flex; gap: 6px; align-items: center; } .lghead .btns .btn { min-height: 40px; white-space: nowrap; } .lghead .seg { display: inline-flex; } .lghead .seg button { min-width: 36px; min-height: 40px; }
+.lgold { margin: 0 0 6px; }
+@media (orientation: landscape) and (max-height: 560px) {      /* 가로: 단추 줄과 거르기 줄을 한 줄로 */
+  .pplv .pphd { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; }
+  .pplv .pptop { margin: 0; grid-auto-columns: auto; } .pplv .ppa { min-height: 40px; padding: 4px 10px; } .pplv .ppa small { display: none; }
+}
