@@ -22,12 +22,14 @@ var SPR = /^<i class="spr" data-spr="[\w#=.,-]+" data-pal="[^"<>&]*" data-px="[\
 function okSpr(x) { return typeof x === 'string' && SPR.test(x) ? x : ''; }
 function okSvg(x) { return typeof x === 'string' && /^<svg[\s>]/.test(x) && !/<script|on\w+=|javascript:/i.test(x) && x.length < 6000 ? x : ''; }
 function str(x, n) { return typeof x === 'string' ? x.slice(0, n || 80) : ''; }
+function gnum(g) { g = Math.round(+g); return g >= 0 && g <= 5 ? g : -1; }      // 2.6.0: 등급 테의 등급 (숫자만 받는다)
 function clean(ev, raw) {      // 저장에 남는 꼴 (얼굴은 sprTag 글만). raw: 흐름 안의 것(저장하지 않는다) — 얼굴 HTML 을 그대로 (가계도 얼굴 등)
   if (!ev || !KINDS[ev.k]) return null;
   var sp = raw ? function (x) { return typeof x === 'string' ? x : ''; } : okSpr;
   var col = function (c) { return /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : ''; };
   return { k: ev.k, title: str(ev.title, 40), sub: str(ev.sub, 80), say: str(ev.say, 90), note: str(ev.note, 60), gift: str(ev.gift, 40), hl: str(ev.hl, 40), por: (Array.isArray(ev.por) ? ev.por : []).map(sp).filter(Boolean).slice(0, 3), old: sp(ev.old), fc: col(ev.fc), crest: okSvg(ev.crest), id: ev.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
-    crests: (Array.isArray(ev.crests) ? ev.crests : []).map(okSvg).slice(0, 4), fcs: (Array.isArray(ev.fcs) ? ev.fcs : []).map(col).slice(0, 4), neo: sp(ev.neo), skill: str(ev.skill, 24), names: (Array.isArray(ev.names) ? ev.names : []).map(function (n) { return str(n, 16); }).filter(Boolean).slice(0, 3), n: Math.max(0, Math.min(99, Math.round(+ev.n || 0))) };      // 2.3.2 n: 깬 시나리오 가운데 가장 뒤 번호 (lapse)      // 2.2.9: 문장 여럿 · 그 빛깔 · 새 모습 · 새 기술 · 세 이름
+    crests: (Array.isArray(ev.crests) ? ev.crests : []).map(okSvg).slice(0, 4), fcs: (Array.isArray(ev.fcs) ? ev.fcs : []).map(col).slice(0, 4), neo: sp(ev.neo), skill: str(ev.skill, 24), names: (Array.isArray(ev.names) ? ev.names : []).map(function (n) { return str(n, 16); }).filter(Boolean).slice(0, 3), n: Math.max(0, Math.min(99, Math.round(+ev.n || 0))),
+    pg: (Array.isArray(ev.pg) ? ev.pg : []).map(gnum).slice(0, 3), og: gnum(ev.og), pl: ev.pl === 0 || ev.pl === 1 || ev.pl === 2 ? ev.pl : -1, ol: ev.ol ? 1 : 0, pw: (Array.isArray(ev.pw) ? ev.pw : []).map(function (w) { return typeof w === 'string' && /^[cmp]\d{1,9}$/.test(w) ? w : ''; }).slice(0, 3) };      // 2.6.0 등급 테: pg = 얼굴(por)마다의 등급 (0~5 · −1 = 모름 → 예전 테) · og = 떠난 이(old) · pl = 얼굴 가운데 맹주의 자리 · ol = 떠난 이가 맹주 · pw = 얼굴마다의 사람 열쇠 ('m12' · 'c1' · 'p3' — 같은 사람의 테를 화면마다 견주는 시험용)      // 2.3.2 n: 깬 시나리오 가운데 가장 뒤 번호 (lapse)      // 2.2.9: 문장 여럿 · 그 빛깔 · 새 모습 · 새 기술 · 세 이름
 }
 function store() { var s = G.save; if (!s) return; var q = Q.filter(function (e) { return !e.now; }).slice(0, DS.CINE.max).map(function (e) { var c = clean(e); return c; }); if (q.length) s.cineQ = q; else delete s.cineQ; }
 function restore() {      // 저장을 불러온 뒤: 남아 있던 연출을 줄에 (같은 것은 한 번)
@@ -71,33 +73,33 @@ function wakeQ() {      // 2.2.9: 세대가 바뀌어 깨어난 가문 (save.fzW
   if (U.persist) try { U.persist(); } catch (x) {}
 }
 setInterval(function () { tick++; if (!cur) wakeQ(); if (!cur && (Q.length || (G.save && G.save.cineQ && G.save !== seenSave))) pump(); }, 700);
-function face(spr, cls) { return '<span class="cfa' + (cls ? ' ' + cls : '') + '">' + spr + '</span>'; }
+function face(spr, cls, g, lord, dead, who) { return '<span class="cfa' + (cls ? ' ' + cls : '') + (g >= 0 && DS.gfrCls ? ' ' + DS.gfrCls(g, { lord: lord, dead: dead }) : '') + '"' + (who ? ' data-gp="' + who + '"' : '') + '>' + spr + '</span>'; }      // 2.6.0: g 가 있으면 등급 테 (떠난 이는 테 색 그대로, 초상만 잿빛)
 function play(ev) {
   var calm = U.calm && U.calm(), md = mode(), C = DS.CINE, k = ev.k, chars = ((ev.title || '') + (ev.sub || '') + (ev.say || '') + (ev.note || '') + (ev.gift || '') + (ev.hl || '')).length;
   var hold = md !== 'short' && !!(C.wait[k] || (ev.say && k !== 'boss'));      // 2.2.5: 읽을 것이 있으면 누를 때까지 (2.3.0 강적 등장은 싸움 한가운데라 저절로 닫힌다)
   var dur = md === 'short' ? Math.min(C.shortMax, C.short + chars * C.perCh * 0.4) : Math.min(C.fullMax, C.full + chars * C.perCh);
   if (k === 'boss') dur = md === 'short' || calm ? 2400 : 3800;
-  var por = ev.por || [], fx = '';
+  var por = ev.por || [], fx = '', pg = ev.pg || [], PG = function (i) { return pg[i] == null ? -1 : pg[i]; }, PL = function (i) { return ev.pl === i; }, PW = function (i) { return (ev.pw || [])[i] || ''; }, gone = k === 'death' || k === 'fallx';
   for (var n = 0; n < (k === 'death' || k === 'fallx' || k === 'lapse' ? 7 : k === 'fuse' || k === 'ascend' ? 12 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
   var stage = '';
-  if (k === 'wed') stage = face(por[0] || '', 'cl') + '<span class="cring" aria-hidden="true"><i></i><i></i></span>' + face(por[1] || '', 'cr');
-  else if (k === 'birth') stage = (por[1] ? face(por[1], 'cp cl') : '') + face(por[0] || '<i class="cbaby"></i>', 'cb') + (por[2] ? face(por[2], 'cp cr') : '');
-  else if (k === 'succ') stage = face(ev.old || '<i class="cghost"></i>', 'cold') + face(por[0] || '', 'cnew');
-  else if (k === 'open') stage = '<span class="cflag" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew');
+  if (k === 'wed') stage = face(por[0] || '', 'cl', PG(0), PL(0), false, PW(0)) + '<span class="cring" aria-hidden="true"><i></i><i></i></span>' + face(por[1] || '', 'cr', PG(1), PL(1), false, PW(1));
+  else if (k === 'birth') stage = (por[1] ? face(por[1], 'cp cl', PG(1), PL(1)) : '') + face(por[0] || '<i class="cbaby"></i>', 'cb', por[0] ? PG(0) : -1) + (por[2] ? face(por[2], 'cp cr', PG(2), PL(2)) : '');
+  else if (k === 'succ') stage = face(ev.old || '<i class="cghost"></i>', 'cold', ev.old ? ev.og : -1, !!ev.ol, true) + face(por[0] || '', 'cnew', PG(0), PL(0), false, PW(0));
+  else if (k === 'open') stage = '<span class="cflag" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew', PG(0), PL(0));
   else if (k === 'ticket') stage = '<span class="ctk" aria-hidden="true">' + (U.svg ? U.svg('ticket', 46) : '') + '</span>';
-  else if (k === 'rank' || k === 'pit') stage = (por[0] ? face(por[0]) : '') + '<span class="cbadge" aria-hidden="true">' + (ev.crest || (U.svg ? U.svg('star', 34) : '')) + '</span>';
+  else if (k === 'rank' || k === 'pit') stage = (por[0] ? face(por[0], '', PG(0), PL(0)) : '') + '<span class="cbadge" aria-hidden="true">' + (ev.crest || (U.svg ? U.svg('star', 34) : '')) + '</span>';
   else if (k === 'fuse') {      // 2.2.9 합일: 세 얼굴이 가운데 빛으로 모인다 → 두 깃발은 내려가 흐려지고 대표 깃발이 오른다 → 8단 모습
     var cr = ev.crests || [], fcs = ev.fcs || [];
     stage = '<span class="cfz" aria-hidden="true"><i class="cfzl"></i>' + [0, 1, 2].map(function (i) { return '<span class="cfzb b' + i + '" style="--bc:' + (fcs[i] || ev.fc || '#f6cf57') + '"><i class="cfl">' + (cr[i] || '') + '</i></span>'; }).join('') + '</span>' +
-      [0, 1, 2].map(function (i) { return face(por[i] || '', 'cfzf f' + i); }).join('') + face(ev.neo || por[0] || '', 'cneo');
+      [0, 1, 2].map(function (i) { return face(por[i] || '', 'cfzf f' + i, PG(i), PL(i)); }).join('') + face(ev.neo || por[0] || '', 'cneo');
   }
-  else if (k === 'ascend') stage = face(ev.old || '', 'cold') + face(por[0] || '', 'cneo') + (ev.skill ? '<span class="cskl" aria-hidden="true"><i>새 기술</i><b>' + esc(ev.skill) + '</b></span>' : '');      // 9 · 10단: 새 모습과 새 고유 기술
-  else if (k === 'fallx') stage = '<span class="cxr" aria-hidden="true"><i></i><i></i><i></i></span>' + face(por[0] || '', 'cxf') + (ev.names && ev.names.length ? '<span class="cx3">' + ev.names.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</span>' : '');      // 8단 위의 죽음: 금 테가 갈라지고 세 이름이 흩어진다
+  else if (k === 'ascend') stage = face(ev.old || '', 'cold', ev.og, !!ev.ol) + face(por[0] || '', 'cneo') + (ev.skill ? '<span class="cskl" aria-hidden="true"><i>새 기술</i><b>' + esc(ev.skill) + '</b></span>' : '');      // 9 · 10단: 새 모습과 새 고유 기술
+  else if (k === 'fallx') stage = '<span class="cxr" aria-hidden="true"><i></i><i></i><i></i></span>' + face(por[0] || '', 'cxf', PG(0), PL(0), true, PW(0)) + (ev.names && ev.names.length ? '<span class="cx3">' + ev.names.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</span>' : '');      // 8단 위의 죽음: 금 테가 갈라지고 세 이름이 흩어진다
   else if (k === 'wake') stage = '<span class="cwk" aria-hidden="true">' + (ev.crests || []).map(function (c, i) { return '<span class="cfzb w' + i + '" style="--bc:' + ((ev.fcs || [])[i] || '#f6cf57') + '"><i class="cfl">' + c + '</i></span>'; }).join('') + '</span>';      // 세대가 바뀌어 잠든 가문이 깨어난다
   else if (k === 'boss') stage = '<span class="cbsr" aria-hidden="true"><i></i><i></i><i></i></span>' + face(por[0] || '', 'cbsf');      // 2.3.0 강적: 붉은 땅울림 고리 위로 큰 몸이 솟는다
   else if (k === 'lapse') stage = U.lpStrip ? U.lpStrip(ev.n || 0, true) : '';      // 2.3.2: 깬 시나리오가 끝에서부터 하나씩 꺼지고, 1번 칸만 다시 빛난다
-  else if (k === 'reopen') stage = '<span class="cflag rx" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew');
-  else stage = por.map(function (p, i) { return face(p, 'c' + i); }).join('');
+  else if (k === 'reopen') stage = '<span class="cflag rx" aria-hidden="true"><i class="cfl">' + (ev.crest || '') + '</i></span>' + face(por[0] || '', 'cnew', PG(0), PL(0));
+  else stage = por.map(function (p, i) { return face(p, 'c' + i, PG(i), PL(i), gone, PW(i)); }).join('');
   var el = U.h('<div class="cine ck-' + k + (calm ? ' calm' : '') + (md === 'short' ? ' short' : '') + (hold ? ' hold' : ' auto') + '" role="dialog" aria-live="assertive" aria-label="' + esc(ev.title || KINDS[k]) + '" style="--dur:' + Math.round(dur) + 'ms;--guard:' + C.guard + 'ms' + (ev.fc ? ';--fc:' + ev.fc : '') + '">' +
     '<div class="cbd"></div><div class="cfx" aria-hidden="true">' + fx + '</div><div class="cin"><p class="cey">' + esc(KINDS[k]) + '</p><div class="cst n' + Math.max(1, por.length) + '">' + stage + '</div>' +
     '<p class="crib"><b>' + esc(ev.title || KINDS[k]) + '</b></p>' + (ev.sub ? '<p class="csub">' + esc(ev.sub) + '</p>' : '') + (ev.say ? '<q class="csay">' + esc(ev.say) + '</q>' : '') + (ev.note ? '<small class="cnote">' + esc(ev.note) + '</small>' : '') + (ev.gift ? '<p class="cgift"><span class="cgi" aria-hidden="true"></span>' + esc(ev.gift) + '</p>' : '') + (ev.hl ? '<p class="chl">' + esc(ev.hl) + '</p>' : '') +

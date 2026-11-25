@@ -766,7 +766,7 @@ function renderChips() {
     var uid = 'c' + id, u = sim && sim.byId[uid];
     var nm = DS.charName(ch);      // 클래스명은 길다 — 이름은 한 줄을 통째로 쓰고, 단·레벨은 얼굴 아래에 둔다
     // r26 art: 둥근 초상 테(--hc 가문 색) · 문장은 테 왼쪽 위 · 레벨은 초상 밑 알약 · 이름 옆 작은 「n단」 · 체력 막대 뒤에 흰 잔상(lag)
-    var el = h('<button class="chip' + (u ? '' : ' down') + '" data-u="' + uid + '" style="--hc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '"><span class="por">' + charSpr(ch, 1.5) + '</span>' + (DS.houseCrestOf ? '<i class="ccr">' + DS.houseCrestOf(sv, ch, 16) + '</i>' : '') + (id === sv.hero && DS.lgBadge ? DS.lgBadge(sv).replace('lgxgen', 'lgxgen chipg') : '') + '<em class="lv num">' + DS.tierOfL(ch.L) + '단 <i>Lv' + DS.lvOfL(ch.L) + '</i></em>' +
+    var el = h('<button class="chip' + (u ? '' : ' down') + '" data-u="' + uid + '" style="--hc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '"><span class="por ' + DS.gfrCls(DS.gradeOfCh(sv, ch), { lord: id === sv.hero }) + '" data-gp="' + (id === sv.hero ? 'c' + id : (DS.bearer && DS.bearer(sv, ch) ? 'm' + DS.bearer(sv, ch).id : '')) + '">' + charSpr(ch, 1.5) + '</span>' + (DS.houseCrestOf ? '<i class="ccr">' + DS.houseCrestOf(sv, ch, 16) + '</i>' : '') + (id === sv.hero && DS.lgBadge ? DS.lgBadge(sv).replace('lgxgen', 'lgxgen chipg') : '') + '<em class="lv num">' + DS.tierOfL(ch.L) + '단 <i>Lv' + DS.lvOfL(ch.L) + '</i></em>' +
       vetBadge(vetOfCh(sv, ch)) + '<span class="cn' + (nm.length >= 7 ? ' long' : '') + '"><b>' + esc(nm) + '</b></span><small class="tr clv num">Lv' + DS.lvOfL(ch.L) + '</small>' +
       '<span class="bars"><i class="hp"><u class="lag"></u><u class="v"></u></i><i class="mp"><u></u></i><i class="tk"><u></u></i></span><span class="md"></span><i class="urd" aria-hidden="true">필</i><i class="crs" aria-hidden="true">예</i><span class="ghost">' + icon('skull', 16) + '<b>쓰러짐</b><small>' + esc(nm) + '</small></span></button>');
     el.addEventListener('click', function () {
@@ -1315,11 +1315,12 @@ function questGo(e) {
 }
 // r8 hud: 퇴각 창. fell = 방금 쓰러진 지휘관(그 판의 첫 사람)일 때는 그 소식을 먼저 말한다.
 function downNames() { var sv = G.save; return sv.party.filter(function (id) { return sv.chars[id] && sv.chars[id].down && !sv.chars[id].vac; }).map(function (id) { return DS.charName(sv.chars[id]); }); }
+function fellFr(ch, gone) { var sv = G.save, hero = ch.id === sv.hero; return DS.gfr(gone ? gone.g : DS.gradeOfCh(sv, ch), charSpr(ch, 3, 0, gone), { dead: 1, lord: hero, who: gone && gone.id != null ? 'm' + gone.id : hero ? 'c' + ch.id : '', cls: 'l' }); }      // 2.6.0: 쓰러진 이의 초상 — 등급 테는 그대로, 초상만 잿빛
 function retreatAsk(fell, goneNm, goneM) {
   var sv = G.save, dn = downNames(), live = G.sim ? G.sim.cmds().length : 0, html;
   if (fell) {
     var nm = goneNm || DS.charName(fell);
-    html = '<div class="result fell"><span class="fellpic">' + charSpr(fell, 3, 0, goneM) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
+    html = '<div class="result fell"><span class="fellpic">' + fellFr(fell, goneM) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
       '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + (goneNm ? '돌아오지 못한다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
       '<p class="dim">물러나면 남은 사람을 지킨다. 남은 가문 ' + live + '개와 가문원은 살아 돌아가고 얻은 경험치와 골드도 남는다. ' + esc(goneNm ? DS.flagName(fell.cls) + '은 막사에 같은 병과가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : nm + '의 자리는 후계가 잇는다.') + '</p>' +
       '<button class="btn red wide" id="yesRet">퇴각</button><button class="btn wide" data-close>계속 싸우기</button></div>';
@@ -1356,7 +1357,7 @@ function cmdFell(u, gone) {
   var hunt = !!sim.hunt;
   if (hunt) { sim.hunt = false; sv.opt.hunt = false; renderSys(); }
   toastOff();
-  overlay('<div class="result fell"><span class="fellpic">' + charSpr(ch, 3, 0, gone || null) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
+  overlay('<div class="result fell"><span class="fellpic">' + fellFr(ch, gone || null) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
     '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + esc(gone ? '돌아오지 못한다. ' + DS.flagName(ch.cls) + '은 막사에 같은 병과가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
     '<p class="dim">' + (hunt ? '자동 사냥을 멈췄다. ' : '') + '쓰러진 이는 돌아오지 않는다. 남은 이들은 적에게서 멀어지면 싸움에서 벗어난다.</p>' +
     '<button class="btn wide" data-close>확인</button></div>', 'modal center');
@@ -2064,7 +2065,7 @@ function bnNote(list) {
   (list || []).forEach(function (e) {
     if (e && e.text) later(e.text, 4200);      // 기록 · 알림 글은 그대로
     var ch = e && e.t === 'sbSeat' && G.save && G.save.chars[e.ch], m = ch && DS.bearer ? DS.bearer(G.save, ch) : null;
-    if (m && DS.cine) DS.cine({ k: 'succ', por: [charSpr(ch, 4)], fc: DS.FLAG[ch.cls] || '', title: (m.n || '') + ', ' + DS.flagName(ch.cls) + ' 가주', sub: '막사에서 나와 가문을 이었다. 인수인계는 단톡방에서 한다' });      // 2.2.4: 가주를 잇는 순간 (한가할 때)
+    if (m && DS.cine) DS.cine({ k: 'succ', por: [charSpr(ch, 4)], pg: [m.g], fc: DS.FLAG[ch.cls] || '', title: (m.n || '') + ', ' + DS.flagName(ch.cls) + ' 가주', sub: '막사에서 나와 가문을 이었다. 인수인계는 단톡방에서 한다' });      // 2.2.4: 가주를 잇는 순간 (한가할 때)
   });
 }
 DS.bnNote = bnNote;
