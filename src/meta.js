@@ -1083,7 +1083,12 @@ DS.recTag = function (save, s) {
   var pl = DS.partyL(save), r = DS.recL(s), h = DS.recHalf(s), ov = recPair(s)[2];
   if (pl < h || (ov && pl >= 100 && DS.pitK(s.pit) > 1.2)) return { k: 'risk', tag: '위험', cls: 'warn', tc: '' };
   if (pl < r) return { k: 'low', tag: '권장 미달', cls: 'warn', tc: 'soft' };
-  if (!ov && pl >= (s && !s.pit && !s.gen && DS.REC.scn[s.id] ? Math.max(r + 1, DS.recSafe(s)) : r + DS.REC.easy)) return { k: 'easy', tag: '여유', cls: '', tc: 'ok' };
+  if (!ov && pl >= (s && !s.pit && !s.gen && DS.REC.scn[s.id] ? Math.max(r + 1, DS.recSafe(s)) : r + DS.REC.easy)) {
+    // 2.6 (표시만): 「여유」는 가주 셋이 나갈 때 잰 값이다 — 나가는 가주가 셋보다 적으면 붙이지 않는다 (맹주 혼자면 「여유」 레벨에서도 1 · 2번은 체력이 35% 아래로 내려가고 3~6번은 열에 다섯도 못 이긴다)
+    var nc = 3; try { nc = DS.partySpecs ? DS.partySpecs(save).filter(function (u) { return u.role === 'cmd'; }).length : 3; } catch (e) { nc = 3; }
+    if (nc < 3) return { k: 'ok', tag: '', cls: '', tc: '' };
+    return { k: 'easy', tag: '여유', cls: '', tc: 'ok' };
+  }
   return { k: 'ok', tag: '', cls: '', tc: '' };
 };
 // 입구 창의 「권장보다 낮습니다」 경고 줄 (자동 전투 · 퇴각 안내): 반반 아래일 때
@@ -1160,7 +1165,7 @@ DS.bountyList = function (save) {
   var st = DS.bountyState(save); if (!st || !btyOn(save)) return [];
   return st.list.map(function (b) {
     var r = [], who = b.r.who && save.chars[b.r.who];
-    if (b.r.gold) r.push(b.r.gold.toLocaleString() + ' 골드');
+    if (b.r.gold) r.push(b.r.gold.toLocaleString() + '골드');
     if (b.r.grade) r.push((b.r.grade >= 5 ? '전설' : '유니크') + ' ' + (b.r.cat && DS.GEAR_CAT[b.r.cat] ? DS.GEAR_CAT[b.r.cat].name : '장비') + (who ? ' (' + DS.charName(who) + ')' : ''));
     if (b.r.ticket) r.push('모집권 ' + b.r.ticket);
     if (b.r.item) r.push('소모품');

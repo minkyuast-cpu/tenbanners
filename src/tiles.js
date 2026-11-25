@@ -66,6 +66,26 @@ THEMES.isle = th({ b: '#e3d6a4', d: '#cfc08a', l: '#f0e6bc', hill: '#8ccf8a', hi
 var DECO = { grass: 1, meadow: 1, highland: 1, lake: 1, jungle: 1, ruins: 1, isle: 2, coast: 2, desert: 2, tomb: 2, canyon: 2, sky: 2, moon: 2, war: 3, swamp: 3, styx: 3, nether: 3, lava: 3, rot: 3, plague: 3, blood: 3, volcano: 3, palace: 3, snow: 4 };
 for (var tk in THEMES) { THEMES[tk].name = tk; THEMES[tk].deco = DECO[tk] || 0; }
 DS.THEMES = THEMES;
+// ── 2.6 계절: 달력(age.js DS.calNow)의 계절이 온화한 땅(풀밭 · 평원 · 호숫가 · 고원 · 옛터)의 빛깔을 바꾼다 ──
+//   봄 = 그대로 · 여름 = 조금 짙은 풀 · 가을 = 누런 풀과 단풍 든 나무 · 겨울 = 서리 앉은 풀과 눈 얹힌 나무. 바닷가 · 섬은 땅은 그대로 두고 지붕의 눈 · 공기만 (view.js).
+//   m.season (0 봄 ~ 3 겨울) 이 없으면 예전 그대로. DS.seasonNow() = 지금 계절 (저장이 없으면 null)
+var SEASON_OK = { grass: 1, meadow: 1, lake: 1, highland: 1, ruins: 1 }, SEASON_SOFT = { coast: 1, isle: 1 }, seasonC = {};
+function mix(a, b, f) { var x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16), r = Math.round((x >> 16) + ((y >> 16) - (x >> 16)) * f), g = Math.round(((x >> 8) & 255) + (((y >> 8) & 255) - ((x >> 8) & 255)) * f), bl = Math.round((x & 255) + ((y & 255) - (x & 255)) * f); return '#' + ((1 << 24) | (r << 16) | (g << 8) | bl).toString(16).slice(1); }
+function palOf(m) {
+  var th = THEMES[m.theme] ? m.theme : 'grass', T = THEMES[th], se = m.season;
+  if (!(se >= 1 && se <= 3) || !SEASON_OK[th]) return T;
+  var key = th + ':' + se; if (seasonC[key]) return seasonC[key];
+  var o = {}, k; for (k in T) o[k] = T[k];
+  if (se === 1) { o.b = mix(T.b, '#3f8f3a', 0.22); o.d = mix(T.d, '#357a33', 0.22); o.l = mix(T.l, '#58a84a', 0.22); o.tree = mix(T.tree, '#1f5a2a', 0.25); o.treeL = mix(T.treeL, '#3f9040', 0.25); }
+  else if (se === 2) { o.b = mix(T.b, '#c2a04a', 0.42); o.d = mix(T.d, '#a8843a', 0.42); o.l = mix(T.l, '#dcbc62', 0.42); o.hill = mix(T.hill, '#d8b866', 0.4); o.hillD = mix(T.hillD, '#8a6a34', 0.35);
+    o.tree = mix(T.tree, '#c2622a', 0.72); o.treeL = mix(T.treeL, '#eaa23c', 0.78); o.treeD = mix(T.treeD, '#7a3418', 0.6); }
+  else { o.b = mix(T.b, '#dfe8f0', 0.4); o.d = mix(T.d, '#c5d2df', 0.4); o.l = mix(T.l, '#f4f8fb', 0.5); o.hill = mix(T.hill, '#f4f8fb', 0.6); o.hillD = mix(T.hillD, '#a9bccd', 0.4);
+    o.tree = mix(T.tree, '#4a7a6a', 0.6); o.treeL = mix(T.treeL, '#eef5f8', 0.85); o.treeD = mix(T.treeD, '#2c5246', 0.5); o.road = mix(T.road, '#d6d2cc', 0.3); o.roadD = mix(T.roadD, '#b8b2aa', 0.3);
+    o.water = mix(T.water, '#8fc3dc', 0.3); o.waterL = mix(T.waterL, '#e9f7fd', 0.35); o.deco = 0; }
+  return (seasonC[key] = o);
+}
+DS.seasonNow = function () { try { var s = DS.G && DS.G.save; return s && DS.calNow ? DS.calNow(s).season : null; } catch (e) { return null; } };
+DS.seasonLand = function (theme) { return SEASON_OK[theme] ? 2 : SEASON_SOFT[theme] ? 1 : 0; };      // 2 = 땅 빛깔까지 · 1 = 지붕 · 공기만 · 0 = 계절이 없는 땅
 
 function hash(x, y, s) {
   var h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
@@ -368,12 +388,14 @@ function landmark(g, icon, ox, oy) {
 var ROOF = { forge: ['#5a5466', '#3a3446'], weapon: ['#c0525e', '#8a3040'], armor: ['#4f7fd0', '#2f559c'], item: ['#4c9a52', '#2f6b3a'], merc: ['#e08a3c', '#a8602a'], church: ['#e9e2d0', '#b9ae96'], house: ['#a8754a', '#6f4a2c'] };
 // 마을마다 벽과 지붕의 맛이 다르다: 풀밭 마을은 회벽과 꽃 상자, 고원 마을은 돌벽과 슬레이트 지붕, 바닷가 마을은 흰 벽과 줄무늬 차양·나무통
 var WALLS = { grass: ['#eadcbc', '#c4b48e', '#8a7a58'], highland: ['#d2cdc0', '#a9a394', '#6f6a5c'], coast: ['#f6f1e4', '#d3ccb8', '#9a8f78'] };
-function building(g, kind, ox, oy, theme, frame) {
-  var K = '#1b1626', c = ROOF[kind] || ROOF.house, W = WALLS[theme] || WALLS.grass, st = theme === 'highland' ? 1 : theme === 'coast' ? 2 : 0, x, y;
+// 2.6: 민가 넷이 서로 다르다 (hv = 몇째 민가: 지붕 빛 · 간판 그림 · 굴뚝 연기는 첫 집만) · 겨울(se 3)에는 지붕과 굴뚝에 눈이 얹힌다
+var HROOF = [['#a8754a', '#6f4a2c'], ['#c0525e', '#8a3040'], ['#6a7f9a', '#465a74'], ['#d0b060', '#a08038']];
+function building(g, kind, ox, oy, theme, frame, hv, se) {
+  var K = '#1b1626', c = (kind === 'house' && hv >= 0 ? HROOF[hv % 4] : ROOF[kind]) || ROOF.house, W = WALLS[theme] || WALLS.grass, st = theme === 'highland' ? 1 : theme === 'coast' ? 2 : 0, x, y;
   function R(x, y, w, h, col) { g.fillStyle = col; g.fillRect(ox + x, oy + y, w, h); }
   R(2, 30, 44, 2, 'rgba(0,0,0,.3)');
   // 굴뚝과 연기 (교회는 종탑이 따로 있다)
-  if (kind !== 'church') { R(35, 0, 6, 6, K); R(36, 1, 4, 5, st === 1 ? '#8d8a9a' : '#b06a4a'); R(36, 1, 4, 1, st === 1 ? '#b3b0c0' : '#d08a66'); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(ox + 37 + frame, oy - 3 - frame, 2, 2); g.fillRect(ox + 39 - frame, oy - 6 - frame, 2, 1); }
+  if (kind !== 'church') { R(35, 0, 6, 6, K); R(36, 1, 4, 5, st === 1 ? '#8d8a9a' : '#b06a4a'); R(36, 1, 4, 1, st === 1 ? '#b3b0c0' : '#d08a66'); if (!(kind === 'house' && hv > 0)) { g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(ox + 37 + frame, oy - 3 - frame, 2, 2); g.fillRect(ox + 39 - frame, oy - 6 - frame, 2, 1); if (kind === 'house') { g.fillRect(ox + 38 + frame, oy - 9 - frame, 3, 2); g.fillRect(ox + 41 - frame, oy - 12, 2, 1); } } }
   // 벽
   R(2, 14, 44, 17, K); R(3, 14, 42, 16, W[0]); R(39, 14, 6, 16, W[1]); R(3, 14, 42, 1, W[2]);
   if (st === 1) { for (y = 18; y < 30; y += 4) R(3, y, 42, 1, W[1]); for (y = 0; y < 3; y++) for (x = 6 + (y & 1) * 5; x < 44; x += 10) R(x, 15 + y * 4, 1, 3, W[1]); }      // 돌벽 줄눈
@@ -385,6 +407,7 @@ function building(g, kind, ox, oy, theme, frame) {
   if (st === 1) { for (y = 7; y < 12; y += 2) R(1, y, 46, 1, c[1]); for (x = 3; x < 46; x += 4) R(x, 5, 1, 2, c[1]); }      // 슬레이트 결
   else for (x = 4; x < 46; x += 6) R(x, 6, 1, 6, c[1]);
   if (st === 2) for (x = 1; x < 47; x += 4) R(x, 12, 2, 3, '#f6f1e4');      // 줄무늬 차양
+  if (se === 3) { R(3, 3, 42, 2, '#ffffff'); R(1, 5, 46, 2, '#f4f8fb'); for (x = 2; x < 46; x += 5) R(x + ((x * 7) % 3), 7, 2, 1, '#f4f8fb'); R(1, 5, 46, 1, '#ffffff'); if (kind !== 'church') R(36, 0, 4, 1, '#ffffff'); }      // 2.6 겨울: 지붕에 눈
   // 문과 창
   R(19, 18, 10, 13, K); R(20, 19, 8, 12, '#6f4a2c'); R(21, 20, 6, 11, '#8a5a36'); R(26, 25, 1, 2, '#f6cf57'); R(18, 30, 12, 1, shade(W[1], -0.15));
   R(6, 18, 9, 8, K); R(7, 19, 7, 6, '#62b0ee'); R(7, 19, 3, 2, '#a9dcff'); R(10, 19, 1, 6, W[0]); R(7, 22, 7, 1, W[0]);
@@ -400,7 +423,11 @@ function building(g, kind, ox, oy, theme, frame) {
   else if (kind === 'item') { R(23, 9, 2, 2, '#8f9ab3'); R(22, 11, 4, 4, '#e0525e'); R(22, 11, 4, 1, '#f7b0b8'); }
   else if (kind === 'merc') { R(20, 9, 1, 6, K); R(21, 9, 6, 4, '#e0525e'); R(22, 10, 2, 2, '#f6cf57'); }
   else if (kind === 'church') { R(23, 9, 2, 6, '#c08f2c'); R(21, 11, 6, 2, '#c08f2c'); R(21, -7, 6, 11, K); R(22, -6, 4, 10, W[0]); R(19, -9, 10, 4, K); R(20, -8, 8, 3, c[1]); R(23, -3, 2, 3, '#62b0ee'); R(23, -14, 2, 6, '#f6cf57'); R(21, -12, 6, 2, '#f6cf57'); }
+  else if (hv === 1) { R(23, 9, 2, 2, '#ff9db5'); R(22, 10, 4, 1, '#ff9db5'); R(24, 11, 1, 3, '#4c9a52'); R(22, 12, 2, 1, '#4c9a52'); R(22, 14, 5, 1, '#b06a4a'); }      // 꽃집 같은 집: 화분
+  else if (hv === 2) { R(21, 11, 5, 3, '#62b0ee'); R(22, 10, 3, 1, '#62b0ee'); R(26, 10, 1, 5, '#3572b8'); R(27, 11, 1, 3, '#3572b8'); R(22, 11, 1, 1, K); }      // 물고기 잡는 집
+  else if (hv === 3) { R(21, 12, 6, 3, '#c9a56a'); R(22, 10, 4, 2, '#e0c080'); R(23, 9, 2, 1, '#e0c080'); R(21, 14, 6, 1, '#8a6a3a'); }      // 빵 굽는 집: 빵 한 덩이
   else { R(21, 10, 6, 1, '#8a7a58'); R(21, 12, 6, 1, '#8a7a58'); R(21, 14, 4, 1, '#8a7a58'); }
+  if (se === 3 && kind === 'church') { R(20, -8, 8, 1, '#ffffff'); }
 }
 // 시나리오 지도의 민가(2×2칸): 박공지붕·굴뚝·창·문. 지붕색은 집마다 다르다.
 var COT = [['#a8754a', '#6f4a2c'], ['#c0525e', '#8a3040'], ['#6a7f9a', '#465a74'], ['#7a8a4a', '#566434']];
@@ -421,7 +448,7 @@ function cottage(g, ox, oy, n) {
 function paintMap1(m, frame) {
   var h = m.rows.length, w = m.rows[0].length;
   var cv = document.createElement('canvas'); cv.width = w * 16; cv.height = h * 16;
-  var g = cv.getContext('2d'), T = THEMES[m.theme] || THEMES.grass, x, y;
+  var g = cv.getContext('2d'), T = palOf(m), x, y, hn = 0;
   function k(x, y) { return (x < 0 || y < 0 || x >= w || y >= h) ? null : DS.TILE_CH[m.rows[y][x]]; }
   function wet(t) { return t === 'water' || t === 'ford' || t === 'lava' || t === 'bridge' || t === null; }
   function land(a, b) { return a === 'sand' || b === 'sand' ? T.sand : a === 'floor' || b === 'floor' ? T.floor : a === 'road' || b === 'road' ? T.road : T.b; }
@@ -448,7 +475,7 @@ function paintMap1(m, frame) {
   }
   (m.pois || []).forEach(function (p) {
     if (p.t === 'gate' || p.t === 'dungeon') landmark(g, p.icon, (p.x - 1) * 16, (p.y - 2) * 16);
-    if (p.t === 'shop') building(g, p.kind, p.bx * 16, p.by * 16, m.theme, frame);
+    if (p.t === 'shop') building(g, p.kind, p.bx * 16, p.by * 16, m.theme, frame, p.kind === 'house' ? hn++ : -1, m.season);
   });
   if (m.pois && m.pois.some(function (p) { return p.t === 'shop'; })) try { townProps(g, m, T); } catch (e) {}      // r11: 세대마다 늘어나는 마을 소품
   // 시나리오 지도의 민가
@@ -660,7 +687,7 @@ DS.paintMap = function (m, frame, base) {
     }
   });
   // 결: 칸마다 몇 자리를 골라, 그 자리 원래 색이 지형의 바탕색이면 반 픽셀 밝은 점/짙은 점을 찍는다
-  var T = THEMES[m.theme] || THEMES.grass, W2 = w * 2, tw = w / 16, th2 = h / 16, seed = (m.seed || 1) * 13 + 5;
+  var T = palOf(m), W2 = w * 2, tw = w / 16, th2 = h / 16, seed = (m.seed || 1) * 13 + 5;
   var rules = [], k;
   function rule(base, lt, dk, n, blade) { if (!base) return; var c = hx(base); rules.push([px32(c), px32(hx(shade(base, lt))), px32(hx(shade(base, -dk))), n, blade]); }
   rule(T.b, 0.16, 0.12, 5, 1); rule(shade(T.b, 0.035), 0.15, 0.12, 5, 1);

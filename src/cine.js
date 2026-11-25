@@ -13,7 +13,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 var U = DS.ui; if (!U || typeof document === 'undefined') return;
 var G = DS.G, esc = U.esc;
 var KINDS = { wed: '혼인', birth: '출생', adult: '성년', death: '이별', succ: '잇다', open: '새 가문', rank: '공훈', ticket: '모집권', pit: '갱도', fuse: '합일', ascend: '승급', fallx: '합일한 넋', wake: '깨어남', reopen: '다시 열린 가문', boss: '강적', lapse: '스무 해' };      // 2.3.2 lapse: 대가 끊겨 이야기가 처음으로 (깬 시나리오 띠가 끝에서부터 꺼진다)      // 2.3.0 boss: 큰 몸의 보스가 처음 깨어날 때      // 2.2.9: 합일 · 9 · 10단 · 8단 위의 죽음 · 세대가 바뀌어 깨어남 · 잠들었던 가문이 다시 열림
-var SND = { wed: 'wed', birth: 'birth', adult: 'level', death: 'cancel', succ: 'promo', open: 'promo', rank: 'level', ticket: 'coin', pit: 'star', fuse: 'fuse', ascend: 'fuse', fallx: 'mourn', wake: 'holy', reopen: 'fuse', boss: 'bossIn', lapse: 'mourn' };
+var SND = { wed: 'wed', birth: 'birth', adult: 'level', death: 'mourn', succ: 'promo', open: 'promo', rank: 'level', ticket: 'coin', pit: 'star', fuse: 'fuse', ascend: 'fuse', fallx: 'mourn', wake: 'holy', reopen: 'fuse', boss: 'bossIn', lapse: 'mourn' };
 var Q = [], cur = null, seenSave = null, tick = 0;
 DS.CINE = { full: 5000, fullMax: 6500, perCh: 28, short: 3500, shortMax: 4200, guard: 700, max: 6, wait: { wed: 1, birth: 1, death: 1, succ: 1, open: 1, fuse: 1, ascend: 1, fallx: 1, wake: 1, reopen: 1, lapse: 1 } };      // 2.2.5: full · short = 저절로 닫히는 것의 시간(ms, 글자마다 perCh 더 · Max 까지) · wait = 누를 때까지 기다리는 종류
 function mode() { var o = G.save && G.save.opt; var m = o && o.cine; return m === 'short' || m === 'off' ? m : 'full'; }

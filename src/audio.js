@@ -2,7 +2,7 @@
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
-var ctx = null, master = null, sfxG = null, bgmG = null, noiseBuf = null;
+var ctx = null, master = null, sfxG = null, bgmG = null, noiseBuf = null, cineG = null, cineOn = false;
 var opt = { sfx: true, bgm: true };
 var seq = { name: null, timer: null, step: 0, next: 0, g: null };
 
@@ -19,7 +19,8 @@ function graph(c, noComp) {      // 소리 길: 효과음·배경음 → 마스�
     out.connect(comp); comp.connect(lim); lim.connect(c.destination);
   } catch (e2) { out.connect(c.destination); }
   sfxG = c.createGain(); sfxG.gain.value = opt.sfx ? 1 : 0; sfxG.connect(master);
-  bgmG = c.createGain(); bgmG.gain.value = opt.bgm ? 1 : 0; bgmG.connect(master);
+  bgmG = c.createGain(); bgmG.gain.value = opt.bgm ? 1 : 0;
+  try { cineG = c.createGain(); cineG.gain.value = 1; bgmG.connect(cineG); cineG.connect(master); } catch (e3) { cineG = null; bgmG.connect(master); }      // 2.6: 사건 연출이 떠 있는 동안 배경음만 따로 낮춘다 (duck 의 잠깐 낮춤과 겹쳐도 서로 지우지 않게)
   noiseBuf = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate);
   var d = noiseBuf.getChannelData(0), r = 12345;
   for (var i = 0; i < d.length; i++) { r = (r * 1103515245 + 12345) & 0x7fffffff; d[i] = r / 0x3fffffff - 1; }      // 늘 같은 잡음 (점검 수치가 매번 같게)
@@ -132,7 +133,10 @@ var SFX = {
   // 2.1.1 전설 장비: 낮은 북 · 오르는 팡파르 · 길게 번지는 금빛 화음과 종
   legend: function () { tone(73, 73, 1.2, 'sine', 0.1); noise(0.5, 0.05, 400, 0.4, 0, 'lowpass'); [392, 523, 659, 784].forEach(function (f, i) { tone(f, f, 0.12, 'square', 0.05, 0.12 + i * 0.09); }); [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone(f, f, 1.3, i < 2 ? 'triangle' : 'square', i < 2 ? 0.07 : 0.03, 0.5); }); tone(1568, 1568, 0.9, 'triangle', 0.05, 0.62); tone(2093, 2093, 1.1, 'sine', 0.035, 0.8); },
   rare:   function () { tone(110, 110, 0.9, 'sine', 0.08); tone(880, 880, 0.5, 'triangle', 0.07, 0.05); tone(1320, 1320, 0.5, 'triangle', 0.045, 0.05); tone(1109, 1109, 0.7, 'triangle', 0.07, 0.4); tone(1661, 1661, 0.7, 'triangle', 0.045, 0.4); },
-  // 용병 전사: 내려앉는 단조 네 음과 낮은 지속음
+  // 2.6 혼인: 오르는 종 두 번과 번지는 화음 · 출생: 오르골 세 음
+  wed:    function () { [[784, 0], [1047, 0.24]].forEach(function (b) { tone(b[0], b[0], 0.55, 'sine', 0.07, b[1]); tone(b[0] * 2, b[0] * 2.01, 0.3, 'sine', 0.022, b[1]); tone(b[0] * 3, b[0] * 3, 0.1, 'triangle', 0.012, b[1]); }); [523, 659, 784, 1047].forEach(function (f, i) { tone(f, f, 0.95, i < 2 ? 'triangle' : 'sine', i < 2 ? 0.05 : 0.04, 0.52); }); },
+  birth:  function () { [1319, 1568, 2093].forEach(function (f, i) { tone(f, f, 0.34, 'sine', 0.06, i * 0.17); tone(f * 2, f * 2, 0.09, 'triangle', 0.012, i * 0.17); }); tone(1047, 1047, 0.5, 'sine', 0.02, 0.36); },
+  // 용병 전사 · 2.6 이별 연출: 내려앉는 단조 네 음과 낮은 지속음
   mourn:  function () { tone(98, 92, 1.5, 'sine', 0.09); [392, 370, 311, 262].forEach(function (f, i) { tone(f, f, i === 3 ? 0.8 : 0.3, 'triangle', 0.075, 0.1 + i * 0.3); }); tone(131, 131, 0.8, 'triangle', 0.05, 1.0); },
   // r32 필살기: 휙 하고 모였다가 낮은 한 방 위로 금빛 화음 · 필살 게이지가 다 찼을 때의 짧은 종
   ult:    function () { noise(0.18, 0.08, 1800, 0.7); tone(220, 880, 0.16, 'sawtooth', 0.05); noise(0.32, 0.26, 220, 0.6, 0.16, 'lowpass'); tone(98, 49, 0.3, 'square', 0.09, 0.16); [523, 659, 784, 1047].forEach(function (f) { tone(f, f, 0.45, 'triangle', 0.035, 0.2); }); },
@@ -147,8 +151,9 @@ var SFX = {
 // 2.7 까지는 효과음마다 크기가 제각각이었다(화살 −38dB·두드림 −43dB 가 배경음 −31dB 밑에 묻히고, 합일은 −22dB). 오프라인 렌더(DS.Audio.probe)로
 // 50ms 창의 최대 RMS 를 재어 갈래마다 같은 크기가 되게 곱한다: 조작 −32 · 전투 −27 · 치명타·폭발 −23 · 연출 −22 (dBFS, 압축기 앞). 배경음은 16초 RMS −38 로 곡끼리 맞춘다.
 var LVL = {"tap":3.63,"ok":1.95,"cancel":2.26,"step":1.3,"slash":2.26,"punch":2.04,"arrow":3.67,"magic":1.88,"skill":2.95,"hit":1.74,"crit":1.68,"miss":2.88,"die":2.14,"heal":2.95,"buff":1.95,"fire":3.2,"boom":1.3,"thunder":0.96,"water":2.29,"wind":3.35,"dark":2.42,"poison":3.31,"holy":2.6,"warn":2.63,"blink":2.37,"leap":2.69,"spawn":2.4,"sword":1.45,"phase":1.66,"level":3.71,"star":2.11,"win":2.37,"lose":1.97,"coin":2.26,"promo":2.09,"fuse":1.19,"pullHi":2.48,"rare":1.8,"mourn":1.62,"bossIn":2.02,"taunt":2.85,
-  "press":5.13,"open":2.45,"close":3.2,"tab":4.9,"deny":1.38,"ready":2.66,"coinTick":3.2,"coinLand":4.03,"flip":3.94,"swell":2.6,"slam":1.9,"heart":1.43,"swoosh":4.27,"ult":1.5,"ultReady":2.4};      // r26: 새 화면 소리 — 같은 probe 로 조작 −32 · 동전 똑딱 −40 · 기대 −27 · 띠 −22 · 심장 −27
-var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89,"erase":2.0};
+  "press":5.13,"open":2.45,"close":3.2,"tab":4.9,"deny":1.38,"ready":2.66,"coinTick":3.2,"coinLand":4.03,"flip":3.94,"swell":2.6,"slam":1.9,"heart":1.43,"swoosh":4.27,"ult":1.5,"ultReady":2.4,
+  "wed":1.78,"birth":2.6};      // 2.6: 같은 probe 로 혼인 −22 · 출생 −23.5 (오르골은 조금 작게)      // r26: 새 화면 소리 — 같은 probe 로 조작 −32 · 동전 똑딱 −40 · 기대 −27 · 띠 −22 · 심장 −27
+var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89,"erase":2.0,"mourn":1.93};
 
 // ── 배경음: 16분음표 시퀀서 ──
 // 음 이름 → 주파수
@@ -184,6 +189,9 @@ var TRACKS = {
   // r17 boss: 이름 지우기 — 느리고 낮은 반음 맴돌기 (북 없이)
   erase: { bpm: 56, lead: pat('E4 - F4 - E4 - - - D#4 - E4 - - - - - B3 - C4 - B3 - - - A#3 - B3 - - - - -'),
     bass: pat('E1 - - - - - - - E1 - - - - - - - F1 - - - - - - - E1 - - - - - - -'), lv: 0.04, bv: 0.07, type: 'sine', echo: true },
+  // 2.6 애도 — 전멸 카드 · 의식 · 교회 앞. 느린 여덟 마디 단조 (한 마디에 두 음, 북 없이)
+  mourn: { bpm: 60, lead: pat('A4 - - - C5 - - - B4 - - - A4 - - - G4 - - - A4 - - - E4 - - - - - - - F4 - - - A4 - - - G4 - - - E4 - - - F4 - - - E4 - D4 - E4 - - - - - - -'),
+    bass: pat('A2 - - - E3 - - - E2 - - - B2 - - - C3 - - - G2 - - - A2 - - - E2 - - - F2 - - - C3 - - - C2 - - - G2 - - - D2 - - - A2 - - - E2 - - - B2 - - -'), lv: 0.036, bv: 0.05, type: 'sine', echo: true },
   // 엔딩 — 따뜻한 장조
   ending: { bpm: 80, lead: pat('G4 - B4 - D5 - - - E5 - D5 - B4 - - - C5 - E5 - G5 - - - F#5 - E5 - D5 - - - G4 - B4 - D5 - - - G5 - F#5 - E5 - - - D5 - C5 - B4 - A4 - G4 - - - - - - -'),
     bass: pat('G2 - - - D3 - - - E2 - - - B2 - - - C3 - - - G2 - - - D3 - - - D2 - - - G2 - - - D3 - - - E2 - - - B2 - - - C3 - - - D3 - - - G2 - - - - - - -'), lv: 0.034, bv: 0.05, type: 'triangle', echo: true }
@@ -231,6 +239,8 @@ DS.Audio = {
     seq.step = 0; seq.next = now + (old ? 0.22 : 0.08);
     seq.timer = setInterval(function () { schedule(); }, 90);
   },
+  // 2.6: 사건 연출(DS.cine)이 떠 있는 동안 배경음을 db 만큼 낮춰 둔다 (닫히면 되돌린다). 아래에서 저절로 부른다
+  cineDuck: function (on, db) { if (!ctx || !cineG || on === cineOn) return; cineOn = !!on; try { var t = ctx.currentTime; cineG.gain.cancelScheduledValues(t); cineG.gain.setValueAtTime(cineG.gain.value, t); cineG.gain.setTargetAtTime(on ? Math.pow(10, -(db || 8) / 20) : 1, t, on ? 0.08 : 0.2); } catch (e) {} },
   has: function (name) { return !!(SFX[name] || TRACKS[name]); },
   names: function () { return { sfx: Object.keys(SFX), bgm: Object.keys(TRACKS) }; },
   // 개발용 점검: 같은 소리 길을 OfflineAudioContext 에 만들어 렌더한다 → Promise(AudioBuffer). 실제 재생 상태는 건드리지 않는다.
@@ -238,13 +248,13 @@ DS.Audio = {
   probe: function (what, o) {
     o = o || {};
     var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OAC) return null;
-    var sr = o.sr || 44100, secs = o.secs || 2, keep = [ctx, master, sfxG, bgmG, noiseBuf, seq, opt, T0];
+    var sr = o.sr || 44100, secs = o.secs || 2, keep = [ctx, master, sfxG, bgmG, noiseBuf, seq, opt, T0, cineG];
     var oc = new OAC(1, Math.ceil(secs * sr), sr);
     try {
       ctx = oc; opt = { sfx: true, bgm: true }; graph(oc, o.noComp);
       if (typeof what === 'string' && o.bgm && TRACKS[what]) { seq = { name: what, timer: null, step: 0, next: 0.02, g: null }; if (!o.raw) { seq.g = oc.createGain(); seq.g.gain.value = BGV[what] || 1; seq.g.connect(bgmG); } schedule(secs); }
       else (typeof what === 'string' ? [[what, 0]] : what).forEach(function (e) { T0 = e[1]; VOL = o.raw ? 1 : LVL[e[0]] || 1; if (SFX[e[0]]) SFX[e[0]](); VOL = 1; });
-    } finally { ctx = keep[0]; master = keep[1]; sfxG = keep[2]; bgmG = keep[3]; noiseBuf = keep[4]; seq = keep[5]; opt = keep[6]; T0 = keep[7]; }
+    } finally { ctx = keep[0]; master = keep[1]; sfxG = keep[2]; bgmG = keep[3]; noiseBuf = keep[4]; seq = keep[5]; opt = keep[6]; T0 = keep[7]; cineG = keep[8]; }
     return oc.startRendering();
   },
   stop: function () { if (seq.timer) clearInterval(seq.timer); seq.timer = null; seq.name = null; },
@@ -254,4 +264,5 @@ DS.Audio = {
   pause: function () { if (seq.timer) clearInterval(seq.timer); seq.timer = null; if (ctx && ctx.state === 'running') { try { ctx.suspend(); } catch (e) {} } },
   resume: function () { if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} } if (seq.name && !seq.timer) this.bgm(seq.name, true); }
 };
+if (typeof setInterval === 'function' && typeof document !== 'undefined') setInterval(function () { try { DS.Audio.cineDuck(!!(DS.cineBusy && DS.cineBusy()), 8); } catch (e) {} }, 120);      // 2.6: 연출이 뜨면 배경음 −8dB
 })();

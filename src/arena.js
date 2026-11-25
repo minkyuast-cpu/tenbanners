@@ -694,7 +694,7 @@ function stakes() { var cap = DS.tourneyBetCap(G().save), v = [0, Math.floor(cap
 function betLine(b) {
   if (!b || !b.stake || b.side == null) return '배팅 없이 관람';
   var e = entry(b.pick);
-  return (b.side ? '홍' : '청') + ' ' + esc(e ? e.name : '') + '에 ' + fmt(b.stake) + 'G · 맞히면 ' + fmt(Math.round(b.stake * b.odds)) + 'G';
+  return (b.side ? '홍' : '청') + ' ' + esc(e ? e.name : '') + '에 ' + fmt(b.stake) + '골드 · 맞히면 ' + fmt(Math.round(b.stake * b.odds)) + '골드';
 }
 function curBet() {
   var M = ST.M, b = ST.bet; if (!M || !b) return null;
@@ -715,7 +715,7 @@ function tbrHtml() {
     };
     h += '<div class="ar-tvs">' + side(a, 0) + '<i class="ar-vs">VS</i>' + side(b, 1) + '</div>';
     var sv = stakes();
-    h += '<div class="ar-tbet"><div class="ar-tbh"><b>배팅</b><small>보유 <b class="num">' + fmt(s.gold) + '</b>G · 한도 <b class="num">' + fmt(DS.tourneyBetCap(s)) + '</b>G</small></div><div class="ar-tchips">' +
+    h += '<div class="ar-tbet"><div class="ar-tbh"><b>배팅</b><small>보유 <b class="num">' + fmt(s.gold) + '</b>골드 · 한도 <b class="num">' + fmt(DS.tourneyBetCap(s)) + '</b>골드</small></div><div class="ar-tchips">' +
       sv.map(function (v, i) { return '<button data-ar="tstake" data-i="' + i + '"' + ((ST.six || 0) === i || (i === sv.length - 1 && (ST.six || 0) > i) ? ' aria-selected="true"' : '') + '>' + (v ? fmt(v) : '안 건다') + '</button>'; }).join('') + '</div>' +
       '<p class="ar-tbl' + (cb && cb.stake ? ' on' : '') + '">' + (cb && cb.side == null && cb && (ST.six || 0) > 0 ? '이길 쪽을 누르면 배팅이 걸린다' : betLine(cb)) + '</p></div>';
     h += '<div class="ar-tgo"><button class="btn gold" data-ar="twatch">' + LT.watch + '</button><button class="btn" data-ar="tquick">' + LT.quick + '</button></div><button class="ar-tall" data-ar="tall">' + LT.all + ' ›</button>';
@@ -732,7 +732,7 @@ function tchampHtml() {
     '<h2>' + esc(e.name) + '</h2><p class="ar-rsub">' + esc(e.place) + (e.house ? ' · ' + esc(e.house) : '') + '</p></div>' +
     '<div class="ar-tcr"><ul class="ar-tpath">' + path.map(function (p) { return '<li><small>' + p.r + '</small><b>' + esc(p.o ? p.o.name : '') + '</b></li>'; }).join('') + '</ul>' +
     '<p class="ar-tcast"><i>해설</i>' + esc(ST.cast || '') + '</p>' +
-    '<div class="ar-tsum"><span><small>배팅</small><b class="num">' + st.b + '번</b></span><span><small>적중</small><b class="num">' + st.h + '번</b></span><span><small>손익</small><b class="num ' + (st.net > 0 ? 'up' : st.net < 0 ? 'dn' : '') + '">' + (st.net > 0 ? '+' : '') + fmt(st.net) + 'G</b></span></div>' +
+    '<div class="ar-tsum"><span><small>배팅</small><b class="num">' + st.b + '번</b></span><span><small>적중</small><b class="num">' + st.h + '번</b></span><span><small>손익</small><b class="num ' + (st.net > 0 ? 'up' : st.net < 0 ? 'dn' : '') + '">' + (st.net > 0 ? '+' : '') + fmt(st.net) + '골드</b></span></div>' +
     '<div class="ar-rbtn"><button class="btn" data-ar="ttree">대진표</button><button class="btn gold" data-ar="tnew">새 대회</button><button class="btn" data-ar="x">나가기</button></div></div></div>';
   return h;
 }
@@ -769,7 +769,7 @@ function tResolve(M, wk) {      // 경기 끝: 대진표를 올리고, 배팅을
   if (b && !b.done) { pay = DS.tourneyBetSettle(s, b, wk); b.done = true; b.pay = pay; if (pay) T.st.h++; T.st.net += pay - b.stake; }
   var we = entry(wk), le = entry(wk === M.a ? M.b : M.a), up = !!(we && le && we.pow < le.pow);
   var wl = ST.luck && ST.luck[wk === M.a ? 0 : 1];
-  var txt = esc(DS.tourneyRoundName(T, M.r)) + ' · <b>' + esc(we ? we.name : '') + '</b> 승' + (wl && !b ? ' · ' + esc(DS.tourneyLuckText(wl)) : '') + (b ? (pay ? ' · 배팅 적중 <b class="num">+' + fmt(pay) + 'G</b>' : ' · 배팅 빗나감 <b class="num">−' + fmt(b.stake) + 'G</b>') : '');
+  var txt = esc(DS.tourneyRoundName(T, M.r)) + ' · <b>' + esc(we ? we.name : '') + '</b> 승' + (wl && !b ? ' · ' + esc(DS.tourneyLuckText(wl)) : '') + (b ? (pay ? ' · 배팅 적중 <b class="num">+' + fmt(pay) + '골드</b>' : ' · 배팅 빗나감 <b class="num">−' + fmt(b.stake) + '골드</b>') : '');
   ST.lastR = { m: M, pay: pay, stake: b ? b.stake : 0, upset: up, txt: txt, cast: say(up ? 'upset' : 'fav', { w: we ? we.name : '' }) };
   ST.flash = M;
   if (T.done && !T.rec) { T.rec = 1; var ce = entry(T.champ); DS.tourneyDone(s, { n: ce ? ce.name : '', h: ce ? ce.house : '', c: crestKey(ce), me: ce && !isChamp(ce) }); }
@@ -787,7 +787,7 @@ function tResult(el, R) {
   el.innerHTML = '<div class="ar-rcard"><small class="ar-rk">' + DS.tourneyRoundName(T, M.r) + (last ? '' : ' ' + (M.i + 1) + '경기') + ' · ' + (R.how === 'ko' ? '쓰러뜨려 이겼다' : '판정으로 이겼다') + '</small><span class="ar-rsp">' + sprOf(we, 4) + '</span><span class="ar-rcr">' + crestOf(we, 28) + '</span>' +
     '<h2>' + esc(we.name) + ' 승리</h2><p class="ar-rsub">' + (last ? '천하제일 등극' : DS.tourneyRoundName(T, M.r + 1) + ' 진출') + '</p>' +
     '<ul class="ar-rl">' + line(ST.D.A) + line(ST.D.B) + '<li class="ar-rt"><span>걸린 시간</span><b class="num">' + mmss(R.t) + '</b></li></ul>' +
-    (b ? '<p class="ar-tbr2 ' + (b.pay ? 'tok' : 'tno') + '">' + (b.pay ? '배팅 적중 · ' + fmt(b.stake) + 'G → <b class="num">' + fmt(b.pay) + 'G</b>' : '배팅 빗나감 · <b class="num">−' + fmt(b.stake) + 'G</b>') + '</p>' : '') +
+    (b ? '<p class="ar-tbr2 ' + (b.pay ? 'tok' : 'tno') + '">' + (b.pay ? '배팅 적중 · ' + fmt(b.stake) + '골드 → <b class="num">' + fmt(b.pay) + '골드</b>' : '배팅 빗나감 · <b class="num">−' + fmt(b.stake) + '골드</b>') + '</p>' : '') +
     '<p class="ar-tcast"><i>해설</i>' + esc(ST.lastR ? ST.lastR.cast : '') + '</p>' +
     '<div class="ar-rbtn one"><button class="btn gold" data-ar="tback">' + (last ? '시상식' : '대진표로') + '</button></div></div>';
   U().hydrate(el); el.hidden = false; void el.offsetWidth; el.classList.add('on'); A(b && b.pay ? 'coin' : 'win');

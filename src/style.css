@@ -5215,3 +5215,39 @@ html body #app#app .pkfr { display: inline-flex; gap: 4px; margin-right: 6px; ve
 html body #app#app .pcard2.back.hint3 { box-shadow: 0 0 0 1px #000, 0 0 14px color-mix(in srgb, var(--g3) 85%, transparent); }
 html body #app#app .pcard2.back.hint4 { box-shadow: 0 0 0 1px #000, 0 0 18px color-mix(in srgb, var(--g4) 95%, transparent); }
 html body #app#app .pcard2.back.hint5 { box-shadow: 0 0 0 1px #000, 0 0 24px var(--g5); }
+/* ═════════ 2.6 손맛 (feat-feel) ═════════ */
+/* 빈 기술 줄: 다음에 배울 기술 (흐린 그림 · 한 줄 · 가는 막대) */
+html body #app#app#app #s-game #bot.dock .sknone.f26nx { justify-content: flex-start; gap: 10px; padding: 0 12px; }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxi { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(236, 220, 186, .18); background: rgba(0, 0, 0, .35); opacity: .55; filter: grayscale(1); }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxt b { flex: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12.5px; font-weight: 500; color: var(--a-dim, #c4b89e); opacity: .9; }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxbar { display: block; height: 3px; border-radius: 2px; background: rgba(0, 0, 0, .5); box-shadow: inset 0 0 0 1px rgba(236, 220, 186, .1); overflow: hidden; }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxbar u { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #b38a45, #f0cf82); }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx small { flex: none; font-size: 11px; color: rgba(196, 184, 158, .75); }
+html body #app#app#app #s-game #bot.dock .arow.sk .skg.f26nx { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-style: normal; opacity: .6; }
+html body #app#app#app #s-game #bot.dock .arow.sk .skg.f26nx svg { filter: grayscale(1); opacity: .7; }
+html body #app#app#app #s-game #bot.dock .arow.sk .skg.f26nx small { font: 600 10px/1 var(--f-ui); color: rgba(196, 184, 158, .8); }
+/* 갓 배운 기술: 「NEW」 표 + 3초 맥박 */
+html body #app#app #s-game #bot .act > .newb { position: absolute; top: -5px; left: 50%; transform: translateX(-50%); z-index: 9; padding: 2px 5px; border-radius: 4px; font: 700 9px/1 var(--f-ui); font-style: normal; letter-spacing: .04em; color: #2a1d0e; background: linear-gradient(180deg, #fff0bf, #e0b25a); box-shadow: 0 1px 0 #000, 0 0 6px rgba(246, 207, 87, .6); pointer-events: none; }
+html body #app#app #s-game #bot .act.newp { animation: f26new 1s ease-in-out 3; }
+@keyframes f26new { 0%, 100% { box-shadow: 0 0 0 0 rgba(246, 207, 87, 0); filter: none; } 50% { box-shadow: 0 0 0 3px rgba(246, 207, 87, .55), 0 0 14px rgba(246, 207, 87, .5); filter: brightness(1.25); } }
+html.calm body #app#app #s-game #bot .act.newp { animation: none; box-shadow: 0 0 0 2px rgba(246, 207, 87, .5); }
+/* 승급 창: 오른 만큼 「+78」(초록) · 그 밑에 전 → 후 */
+.stats.grow .f26up b { color: var(--leaf, #86d46a); }
+.stats.grow .f26up small { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.2; color: var(--dim, #ab9f86); white-space: nowrap; }
+.result .kv .rpw .f26tri { font-style: normal; font-size: 10px; margin-right: 4px; color: var(--leaf, #86d46a); }
+/* 「저장됨」 한 박자 (메뉴 단추 아래) */
+#savedTick { position: absolute; z-index: 9000; left: 12px; top: 64px; display: flex; align-items: center; gap: 4px; padding: 3px 8px 3px 6px; border-radius: 10px; font: 600 11px/1.2 var(--f-ui, sans-serif); color: #e9f6dc; background: rgba(18, 26, 16, .88); border: 1px solid rgba(134, 212, 106, .5); box-shadow: 0 2px 6px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(-3px); pointer-events: none; transition: opacity .18s ease, transform .18s ease; white-space: nowrap; }
+#savedTick i { font-style: normal; color: #86d46a; }
+#savedTick.on { opacity: 1; transform: none; }
+/* 가게 주인의 한 줄 */
+.f26keep { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; padding: 6px 10px; border-radius: 10px; background: rgba(0, 0, 0, .28); border: 1px solid rgba(236, 220, 186, .12); }
+.f26keep .kf { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(236, 220, 186, .08); overflow: hidden; }
+.f26keep p { margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.f26keep b { font-size: 11px; font-weight: 600; color: var(--dim, #ab9f86); }
+.f26keep q { quotes: none; font-size: 13px; line-height: 1.35; color: var(--bone, #ece2cc); }
+.f26keep q::before { content: '「'; } .f26keep q::after { content: '」'; }
+/* 잠긴 기능은 한 줄 */
+.row.f26lock { opacity: .8; } .row.f26lock .lk { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(0, 0, 0, .3); color: var(--dim, #ab9f86); }
+.row.f26lock .tx small { color: var(--dim, #ab9f86); }
+.pity.f26why b { color: var(--bone, #ece2cc); font-weight: inherit; }

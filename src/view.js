@@ -84,6 +84,9 @@ var AMB = {
   snow: ['snow', 30, ['#ffffff', '#dfe8f0']]
 };
 
+// 2.6 계절의 공기: 온화한 땅(DS.seasonLand)은 봄에 꽃잎 · 가을에 낙엽 · 겨울에 눈 (여름은 지역의 것 그대로)
+var SEA_AMB = { 0: ['petal', 14, ['#ffd0dc', '#ffb3c6', '#ffffff']], 2: ['leaf', 14, ['#e08a3c', '#c0522a', '#eab04a']], 3: ['snow', 26, ['#ffffff', '#dfe8f0']] };
+function ambOf(theme, season) { return (season != null && SEA_AMB[season] && DS.seasonLand && DS.seasonLand(theme) ? SEA_AMB[season] : null) || AMB[theme]; }
 // 지역의 빛(2.8): 화면 가장자리를 테마 색으로 어둡게 + 아주 옅은 색조. [가장자리 어둠 0~1, 색조 rgba 또는 null]. 장면마다 64×64 한 장을 미리 그려 늘여 쓴다
 var VIG = {
   grass: [0.18, null], meadow: [0.16, 'rgba(255,240,180,.04)'], lake: [0.18, null], highland: [0.2, null], jungle: [0.26, 'rgba(60,120,40,.05)'], ruins: [0.26, null],
@@ -165,6 +168,7 @@ var V = View.prototype;
 
 V.setScene = function (sim, map) {
   this.sim = sim; this.map = map;
+  if (map.season == null && DS.seasonNow && DS.seasonLand && DS.seasonLand(map.theme)) { var sn0 = DS.seasonNow(); if (sn0 != null) map.season = sn0; }      // 2.6 계절: 온화한 땅은 달력의 계절 빛깔로 굽는다 (tiles.js palOf)
   this.maps = [DS.paintMap(map, 0), null];      // r4 hd: 2배 지도는 굽는 데 품이 들어, 물결 둘째 장은 장면이 뜬 뒤 쉴 때 굽는다 (그동안은 첫 장)
   // r30: 둘째 장은 덩이 일감으로 쉴 때 조금씩 (한 번에 굽던 때는 장면이 뜨고 1.5초 뒤 300ms 넘게 멈췄다). 한 조각은 8ms 안쪽, 남으면 다음 쉼에
   var selfM = this, mapM = map, job = null, ric = typeof requestIdleCallback === 'function', bake = function (dl) {
@@ -181,7 +185,7 @@ V.setScene = function (sim, map) {
   this.mw = map.rows[0].length; this.mh = map.rows.length;
   this.vu = {}; this.parts = []; this.floats = []; this.projs = []; this.lines = []; this.rings = []; this.shapes = []; this.tele = {};
   this.lastAtk = {}; this.lastSkill = null; this.stop = 0; this.flashA = 0; this.theme = map.theme || null; this.hotC = HOT[this.theme] || null; this.hot = !!this.hotC;
-  this.amb = []; var am = AMB[this.theme], ai;      // 공기 입자는 장면마다 한 번만 만든다 (프레임마다 새로 만들지 않는다)
+  this.amb = []; var am = this.ambA = ambOf(this.theme, map.season), ai;      // 공기 입자는 장면마다 한 번만 만든다 (프레임마다 새로 만들지 않는다)
   for (ai = 0; am && ai < am[1]; ai++) this.amb.push({ x: Math.random(), y: Math.random(), s: Math.random() });
   this.pois = map.pois || []; this.aim = null; this.mark = null; this.tgt = null; this.guide = null; this.pan = { x: 0, y: 0 }; this.snap = true;
   this.decor = map.decor || []; this.fallen = []; this.cer = {}; this.graves = []; this.dsUsed = {}; this.dq = []; this.dz = null; this.zk = 1; this.slowF = 1; this.lastSk = {};      // r16 fx: 오름 연출은 장면이 바뀌면 끝
@@ -206,7 +210,12 @@ V.resize = function () {
   this.W = cw; this.H = ch;
   var kb = Math.min(cw / (Math.min(this.mw || 12, 12.5) * 16), ch / (9.5 * 16));      // 2.2.1 까지의 배율 (폭 12.5칸 · 높이 9.5칸)
   var zo = DS.zoomOf ? DS.zoomOf() : 1, ins = this.inset || {}, kf = this.mw ? Math.min(cw / (this.mw * 16), Math.max(ch * 0.5, ch - (ins.top || 0) - (ins.bottom || 0)) / (this.mh * 16)) : 0;      // 2.2.2: 지도 보기(설정) — 보통은 가로·세로 1.3배 칸 · 단 지도 전체가 화면(위아래 판 사이)에 들어오는 배율보다 더 멀리 빼지는 않는다
-  this.k0 = Math.max(kb / zo, Math.min(kb, kf)); this.k = this.k0 * (this.zk || 1);      // r16 fx: k0 = 바탕 배율, k = 죽음 연출의 줌을 곱한 배율
+  this.k0 = Math.max(kb / zo, Math.min(kb, kf));
+  if (this.sim && this.sim.mode === 'town' && this.mw) {      // 2.6 마을: 지도가 위아래 판 사이를 꽉 채우고(세로 화면) 맹주를 따라 옆으로 민다 — 위아래의 빈 하늘을 메운다. 가로 화면은 폭을 채우고 위아래로 민다
+    var kt = Math.max((ch - (ins.top || 0) - (ins.bottom || 0)) / (this.mh * 16), cw / (this.mw * 16));
+    this.k0 = Math.max(this.k0, Math.min(kt, kb * 1.5));
+  }
+  this.k = this.k0 * (this.zk || 1);      // r16 fx: k0 = 바탕 배율, k = 죽음 연출의 줌을 곱한 배율
   this.snap = true;
 };
 V.sfx = function (name, arg) {
@@ -583,7 +592,23 @@ V.drawUltDim = function (g) {
 // 엔진 이벤트 → 연출
 V.handle = function (evs) {
   var self = this, sim = this.sim;
+  // 2.6: 한 기술이 셋 이상에게 같은 가호를 걸면 글자는 쓴 이 머리 위에 한 번만 (「전군 방어↑」) — 유닛마다 뜨던 글자 더미를 걷는다
+  var bi, be, bc = null, bg = null, bk;
+  for (bi = 0; bi < evs.length; bi++) { be = evs[bi];
+    if (be.t === 'skill') { bc = be.id; continue; }
+    if (be.t !== 'buff' || !(be.p > 0) || be.s === 'shd' || !bc || !this.vu[bc]) continue;
+    bk = bc + '|' + be.s; bg = bg || {}; (bg[bk] || (bg[bk] = [])).push(be);
+  }
+  if (bg) for (bk in bg) { if (bg[bk].length < 3) continue; try { this.buffAll(bk.split('|')[0], bk.split('|')[1], bg[bk]); } catch (x) {} }
   evs.forEach(function (e) { try { self.handle1(e, sim); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'fx:' + e.t); } });      // r30: 사건 하나의 그림 오류가 나머지를 막지 않게
+};
+V.buffAll = function (cid, st, list) {
+  var cv = this.vu[cid], cu = cv && cv.u, i, v, n = 0, sim = this.sim; if (!cu) return;
+  for (i = 0; i < list.length; i++) { list[i]._agg = 1; v = this.vu[list[i].id]; if (v) (v.bfT || (v.bfT = {}))[st] = this.time; }
+  if (!this.onScreen(cu.x, cu.y)) return;
+  if (cv.baT && cv.baT[st] && this.time - cv.baT[st] < 3) return; (cv.baT || (cv.baT = {}))[st] = this.time;
+  for (i = 0; i < sim.units.length; i++) if (sim.units[i].side === cu.side && !sim.units[i].dead) n++;
+  this.float(cu.x + fox(cu), cu.y + foy(cu), (list.length >= n ? '전군 ' : '아군 ') + (BUFFTXT[st] || st) + '↑', '#f6cf57', { dy: -10, delay: 0.15, life: 1.2 });
 };
 V.handle1 = function (e, sim) {
   var self = this;
@@ -698,7 +723,8 @@ V.handle1 = function (e, sim) {
       case 'castEnd': delete self.tele[e.tid]; break;
       case 'buff': case 'status':
         if (!on) break;
-        if (self.spd >= 2 && u.role === 'merc' && e.t === 'buff') break;
+        if (e._agg) break;      // 2.6: 쓴 이 머리 위의 한 줄이 대신한다 (V.buffAll)
+        if (u.role === 'merc' && e.t === 'buff') break;      // 2.6: 가문원마다 뜨는 버프 글자는 1배속에서도 생략 (전엔 2배속에서만)
         if (e.t === 'buff' && e.s === 'shd' && u.role !== 'cmd') break;      // 2.2.6: 보호막 글자는 가주에게만 (테가 이미 보인다)
         if (e.t === 'buff' && e.p > 0 && v.bfT && v.bfT[e.s] && self.time - v.bfT[e.s] < 3) break;      // 같은 가호가 3초 안에 다시 걸리면 글자는 한 번만 (호령이 겹칠 때)
         if (e.t === 'buff' && e.p > 0) (v.bfT || (v.bfT = {}))[e.s] = self.time;      // r36: 가장 빠른 배속(2): 용병마다 뜨는 버프 글자는 생략 (고리 연출은 기술 쪽에서 이미 나온다)
@@ -764,6 +790,7 @@ V.frame = function (dt, evs) {
   var Gs = DS.G && DS.G.save; this.spd = DS.spdOf ? DS.spdOf(Gs && Gs.opt && Gs.opt.speed) : 1;      // r36: 1 · 1.5 · 2
   var Gm = DS.G && DS.G.sim; this.spdV = Gm && Gm._er && DS.ERASE ? DS.ERASE.slow : Math.max(1, Math.min(2, this.spd));      // 1.0.4: 화면의 걸음·예고도 배속을 따른다 (전에는 걸음 그림이 늘 1배속이라 필드에서 배속이 안 먹는 것처럼 보였다)
   if (evs && evs.length) this.handle(evs);
+  if (this.time - (this.seaT || 0) > 1) { this.seaT = this.time; try { this.seasonTick(); } catch (x) {} }      // 2.6 계절
   if (this.cer) this.cerTick(dt);      // r16 fx: 오름 연출은 실제 시간 (히트스톱·배속과 무관)
   var rnow = typeof performance !== 'undefined' ? performance.now() : Date.now(); this.rdt = this.rLast ? Math.max(0, Math.min(0.1, (rnow - this.rLast) / 1000)) : dt; this.rLast = rnow;      // r30: 참 실제 시간 (dt 는 0.05 로 잘려 느린 폰에서 연출이 늘어졌다)
   if (this.dzTick && this.k0) this.k = this.k0 * this.dzTick(this.rdt);      // r16 fx: 죽음 연출의 줌(실제 시간)
@@ -897,7 +924,7 @@ V.drawTrans = function (g) {
 // 지역의 공기: 꽃가루·모래바람·안개와 반딧불·떠오르는 빛·재·불티·눈. 화면 기준으로 돌고, 카메라를 따라 조금 밀린다(시차).
 V.drawAmbient = function (g, dt) {
   if (this.rain && this.rain.length && (!this.lowFx || (DS.gfxOpt || {}).force)) this.drawRain(g, dt);
-  var A = AMB[this.theme], ps = this.amb;
+  var A = this.ambA || AMB[this.theme], ps = this.amb;
   if (!A || !ps || !ps.length) return;
   var kind = A[0], cols = A[2], t = this.time, vw = this.W / this.k, vh = this.H / this.k, cx = this.cam.x, cy = this.cam.y, i, p, x, y, w, h, a, c;
   for (i = 0; i < ps.length; i++) {
@@ -911,6 +938,8 @@ V.drawAmbient = function (g, dt) {
         break;
       case 'mote': p.y -= dt * (0.015 + p.s * 0.02); x += Math.sin(t + p.s * 20) * 0.01; a = 0.3 + 0.5 * Math.abs(Math.sin(t * 1.7 + p.s * 20)); if (p.s > 0.75) h = 2; break;
       case 'ember': p.y -= dt * (0.06 + p.s * 0.09); x += Math.sin(t * 2 + p.s * 30) * 0.015; a = 0.6 + 0.4 * Math.sin(t * 9 + p.s * 50); if (p.s > 0.5) h = 2; if (p.s > 0.9) w = 2; break;
+      case 'petal': p.y += dt * (0.03 + p.s * 0.03); p.x += dt * (0.018 + p.s * 0.02); x += Math.sin(t * 1.6 + p.s * 40) * 0.025; a = 0.75; w = 2; if (Math.sin(t * 5 + p.s * 60) > 0) { w = 1; h = 2; } break;      // 2.6 봄: 꽃잎이 뒤집히며 내린다
+      case 'leaf': p.y += dt * (0.045 + p.s * 0.04); p.x += dt * (0.03 + p.s * 0.03); x += Math.sin(t * 1.2 + p.s * 40) * 0.04; a = 0.85; w = 2; h = 2; if (Math.sin(t * 4 + p.s * 60) > 0.3) { w = 3; h = 1; } break;      // 2.6 가을: 낙엽이 흔들리며 떨어진다
       case 'ash': p.y += dt * (0.025 + p.s * 0.03); p.x += dt * 0.012; x += Math.sin(t * 0.9 + p.s * 20) * 0.015; a = 0.5; break;
       default: p.y += dt * (0.05 + p.s * 0.06); x += Math.sin(t * 1.1 + p.s * 25) * 0.02; a = 0.8; if (p.s > 0.7) { w = 2; h = 2; }      // 눈
     }
@@ -1000,10 +1029,28 @@ function bracket(g, x, y, w, h, c, n) {
   g.fillRect(x, y, n, 1); g.fillRect(x, y, 1, n); g.fillRect(x + w - n, y, n, 1); g.fillRect(x + w - 1, y, 1, n);
   g.fillRect(x, y + h - 1, n, 1); g.fillRect(x, y + h - n, 1, n); g.fillRect(x + w - n, y + h - 1, n, 1); g.fillRect(x + w - 1, y + h - n, 1, n);
 }
+// 2.6: 마을 사람은 두 자리(d.x · d.ax) 사이를 6~10초마다 오간다 (걷는 0.7초 동안 두 박자로 통통) · 서 있을 때는 두 장짜리 숨쉬기
 V.drawDecor = function (g, d) {
-  var cv = DS.spriteCanvas(d.sprite, null, { flip: d.flip, hd: 1 });
-  g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(d.x * 16 + 4.5, d.y * 16 + 12.5, 7, 0.5); g.fillRect(d.x * 16 + 3, d.y * 16 + 13, 10, 2); g.fillRect(d.x * 16 + 4.5, d.y * 16 + 15, 7, 0.5);
-  g.drawImage(cv, d.x * 16, d.y * 16 - 2 + (Math.sin(this.time * 2 + d.x) > 0.6 ? -1 : 0), lwOf(cv), lwOf(cv));
+  var x = d.x, flip = d.flip, hop = 0, t = this.time;
+  if (d.ax != null && !this.calmN) {
+    var P = 6 + ((d.x * 7 + d.y * 13) % 5), ph = t + d.x * 1.7 + d.y, cyc = Math.floor(ph / P), f = cyc > 0 ? (ph - cyc * P) / 0.7 : 1, at = cyc % 2 ? d.ax : d.x, from = cyc % 2 ? d.x : d.ax;
+    if (f < 1) { x = from + (at - from) * f; hop = Math.abs(Math.sin(f * Math.PI * 2)) * 1.5; flip = at < from; } else x = at;
+    if (d.poi) d.poi.dx = x - d.x;
+  }
+  var cv = DS.spriteCanvas(d.sprite, null, { flip: flip, hd: 1 });
+  g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x * 16 + 4.5, d.y * 16 + 12.5, 7, 0.5); g.fillRect(x * 16 + 3, d.y * 16 + 13, 10, 2); g.fillRect(x * 16 + 4.5, d.y * 16 + 15, 7, 0.5);
+  g.drawImage(cv, x * 16, d.y * 16 - 2 - hop + (hop ? 0 : (Math.floor(t * 1.4 + d.x * 0.37) & 1) ? -1 : 0), lwOf(cv), lwOf(cv));
+};
+// 2.6 계절이 바뀌면(들판 · 마을에서, 싸움 밖일 때) 지도를 그 계절 빛깔로 다시 굽고 공기도 바꾼다
+V.seasonTick = function () {
+  var m = this.map, sim = this.sim; if (!m || !sim || sim.mode === 'scn' || sim.combat || !DS.seasonNow || !DS.seasonLand || !DS.seasonLand(m.theme)) return;
+  var se = DS.seasonNow(); if (se == null || se === m.season) return;
+  m.season = se;
+  try { this.maps = [DS.paintMap(m, 0), null]; } catch (x) { return; }
+  var self = this, tok = (this.bakeTok = (this.bakeTok || 0) + 1);
+  setTimeout(function () { if (self.map !== m || self.bakeTok !== tok || self.maps[1]) return; try { self.maps[1] = DS.paintMap(m, 1, self.maps[0]); if (self.maps[0]) { self.maps[0]._src = null; self.maps[0]._keep = null; } } catch (x) { self.maps[1] = null; } }, 700);
+  var am = this.ambA = ambOf(this.theme, se), ai; this.amb = [];
+  for (ai = 0; am && ai < am[1]; ai++) this.amb.push({ x: Math.random(), y: Math.random(), s: Math.random() });
 };
 var shadowC = null;
 function softShadow() {      // r13 toon: 가운데가 짙고 가장자리로 흐려지는 타원 그림자 한 장 (64×24)

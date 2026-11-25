@@ -141,11 +141,12 @@ function start(sim, sc) {
   var e0 = sim.emit, m = M;
   sim.emit = function (e) { try { if (M === m) DS.msnSee(m, sim, e); } catch (x) {} return e0.call(this, e); };      // 이 싸움의 사건만 몰래 듣는다 (엔진은 그대로)
   if (DS.msnTrace) DS.msnTrace.push({ id: id, key: key, a: st.a[id] });
-  pill(true);
+  m.popDue = 1;      // 2.6 첫 박자: 말풍선은 시나리오 띠가 뜨고 0.8초 뒤에 들어온다 (띠 · 말풍선 · 싸움이 한꺼번에 쏟아지지 않게)
+  (function wait() { if (M !== m || !m.popDue) return; if (!G.beatArm && performance.now() >= (G.beatAt || 0) + 800) { m.popDue = 0; pill(true); return; } setTimeout(wait, 40); })();
 }
 DS.msnTrace = [];
 DS.msnCur = function () { return M; };
-DS.msnForce = function (k, n) { if (M) { M.key = k; if (n > 0) M.n = n; pill(true); } };      // 시험용: 지금 싸움의 조건을 바꾼다
+DS.msnForce = function (k, n) { if (M) { M.key = k; if (n > 0) M.n = n; M.popDue = 0; pill(true); } };      // 시험용: 지금 싸움의 조건을 바꾼다
 function el() {
   var e = document.getElementById('msn'); if (e) return e;
   var sg = document.getElementById('s-game'); if (!sg) return null;
@@ -172,7 +173,7 @@ setInterval(function () {
     if (sc && sim && !sc.pit && sim.mode === 'scn' && (!M || M.sim !== sim) && !G.ending) start(sim, sc);
     if (!sc || !M || M.scn !== sc) { var e = document.getElementById('msn'); if (e && !e.hidden) e.hidden = true; if (!sc) M = null; return; }
     if (M.popAt && performance.now() - M.popAt > 4600) { M.popAt = 0; }
-    if (!M.popAt) pill(false);
+    if (!M.popAt && !M.popDue) pill(false);
   } catch (x) { if (DS.DEBUG) throw x; }
 }, 250);
 // 결과 창: 판정 → 보상 → 원래 창 → 「다음」 줄 위에 단톡방 한 줄
