@@ -1144,7 +1144,7 @@ function detail(id, redraw) {
     list.forEach(function (ch) {
       var cur = DS.gear(ch[g.slot]), gain = DS.gearScore(g, ch) - DS.gearScore(cur, ch), dtx = diffHtml(ch, g), off = !DS.gearFits(ch.cls, g);
       if (dtx === '능력치 변화 없음') { gain = 0; if (cur && cur.id !== g.id && ((g.affix && g.affix.length) || (cur.affix && cur.affix.length))) dtx = '능력치 같음, 옵션만 다름'; }      // r4 forge: 숫자가 그대로인데 ▲ 가 뜨던 것 (audit F7)
-      h += '<div class="row">' + U.charSpr(ch, 2) + '<div class="tx"><b>' + esc(DS.charName(ch)) + (s.party.indexOf(ch.id) < 0 ? ' <i class="own">대기</i>' : '') + ' <em class="' + (gain < 0 ? 'neg' : '') + '">' + (gain > 0.5 ? '▲' : gain < -0.5 ? '▼' : '＝') + '</em></b>' +
+      h += '<div class="row">' + (U.gfC ? U.gfC(ch, 2) : U.charSpr(ch, 2)) + '<div class="tx"><b>' + esc(DS.charName(ch)) + (s.party.indexOf(ch.id) < 0 ? ' <i class="own">대기</i>' : '') + ' <em class="' + (gain < 0 ? 'neg' : '') + '">' + (gain > 0.5 ? '▲' : gain < -0.5 ? '▼' : '＝') + '</em></b>' +
         '<small>지금 ' + (cur ? esc(cur.name) : '없음') + '</small>' + (off ? '<span class="schips">' + offChip() + '</span>' : '') + (/^</.test(dtx) ? dtx : '<small>' + dtx + '</small>') + '</div><button class="btn small' + (gain > 0.5 ? ' gold' : '') + '" data-loot-wear="' + ch.id + '">장착</button></div>';
     });
     var er = DS.forgeOpen && DS.enhRate ? DS.enhRate(g) : 0;      // r4 forge: 무기·방어구는 여기서 바로 강화 (확률·부서짐을 단추 곁에)

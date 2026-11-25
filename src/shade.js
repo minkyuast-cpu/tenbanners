@@ -91,7 +91,7 @@ DS.shadeCands = function (s, max) {
   for (var i = 0; i < dd.length && out.length < (max || DS.SHADE.max); i++) {
     var d = dd[i], r = null; try { r = lookup(s, d.n); } catch (x) { r = null; }
     if (!r) continue;
-    out.push({ n: d.n, lw: String(d.lw || '').slice(0, 24), w: d.w, cls: r.cls, L: r.L, ult: ultOf(r, d.n, r.L) });
+    out.push({ n: d.n, lw: String(d.lw || '').slice(0, 24), w: d.w, cls: r.cls, L: r.L, ult: ultOf(r, d.n, r.L), g: (r.f && r.f.g) || r.sn.g || (r.p && r.p.g) || (r.p && r.p.k === 'c' ? DS.CAST_G || 3 : 0), lord: !!(r.p && r.p.k === 'c'), gp: r.f && r.f.id ? 'm' + r.f.id : r.p && r.p.m ? 'm' + r.p.m : r.p ? 'p' + r.p.id : '' });      // 2.6.0 g · lord · gp: 이름 고르기의 등급 테 (떠난 이도 테 색은 그대로)
   }
   return out;
 };
@@ -214,9 +214,10 @@ function pickOpen(b) {
   var el = document.createElement('div'); el.id = 'shadepick'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', T.head);
   el.innerHTML = '<p class="sph">' + esc(T.head) + '</p><small class="sps">' + esc(T.sub) + '</small><div class="spl">' + sim.shd.cands.map(function (c, i) {
     var C = DS.CLASSES[c.cls];
-    return '<button class="spn" data-i="' + i + '"><b>' + esc(c.n) + '</b><small>' + esc((C ? C.name : '') + (c.lw ? ' · 「' + c.lw + '」' : '')) + '</small></button>';
+    var t = DS.tierOfL(Math.max(1, +c.L || 1)), por = DS.gfr && U().sprTag ? DS.gfr(c.g, U().sprTag(DS.lookName(c.cls, t), '', 1.5), { dead: 1, lord: c.lord, who: c.gp, cls: 's' }) : '';
+    return '<button class="spn" data-i="' + i + '">' + por + '<b>' + esc(c.n) + '</b><small>' + esc((C ? C.name : '') + (c.lw ? ' · 「' + c.lw + '」' : '')) + '</small></button>';
   }).join('') + '</div><button class="spx" data-x="1" aria-label="닫기">' + (DS.icon ? DS.icon('close', 14) : '×') + '</button>';
-  sg.appendChild(el);
+  sg.appendChild(el); try { U().hydrate(el); } catch (x) {}
   var r = b && b.getBoundingClientRect ? b.getBoundingClientRect() : null, sr = sg.getBoundingClientRect();
   if (r) { el.style.bottom = Math.max(8, sr.bottom - r.top + 8) + 'px'; }
   el.addEventListener('click', function (e) {

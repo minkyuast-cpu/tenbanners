@@ -266,7 +266,7 @@ ITEM.mwing2 = [0, 2, ['w..............w', 'wk............kw', 'wwk..........kww'
 ].forEach(function (l, n) { SPR['mm_' + (n + 8)] = def(compose(l[0], l[1], l[2]), l[3]); });
 
 // ── 용병: 종류마다 네 가지 생김새, 등급은 장식색으로 ──
-var GR = ['', '#b5814f', '#7fcf6a', '#62b0ee', '#b181e6', '#f6cf57'];   // 등급색: 일반·고급·희귀·영웅·전설
+var GR = [''].concat([1, 2, 3, 4, 5].map(function (g) { return DS.gradeCol ? DS.gradeCol(g) : ['', '#b5814f', '#7fcf6a', '#62b0ee', '#b181e6', '#f6cf57'][g]; }));   // 등급색: 일반·고급·희귀·영웅·전설 (2.6.0: DS.GRADES 의 색 하나로 — 등급 테와 같은 빛)
 function merc(name, vars) {
   for (var g = 1; g <= 5; g++) vars.forEach(function (va, v) {
     var p = {}; for (var k in va[1]) p[k] = va[1][k]; p.b = GR[g];
@@ -604,7 +604,7 @@ DS.dressParse = function (s) {
 };
 DS.dressName = function (base, o) {
   if (!o) return base;
-  var p = []; if (o.w) p.push('w=' + o.w); if (o.a) p.push('a=' + o.a); if (o.g) p.push('g=' + o.g); if (o.x) p.push('x=' + o.x); if (o.f) p.push('f=1'); if (o.r) p.push('r=' + o.r);      // r27 r: 테두리 빛(가주가 된 부대원의 단 — 's' 은빛 4~7단 · 'g' 금빛 8단↑)
+  var p = []; if (o.w) p.push('w=' + o.w); if (o.a) p.push('a=' + o.a); if (o.g) p.push('g=' + o.g); if (o.x) p.push('x=' + o.x); if (o.f) p.push('f=1'); if (o.r) p.push('r=' + o.r); if (+o.v > 0 && +o.v <= 3) p.push('v=' + (+o.v));      // 2.6.0 v: 그 사람의 살빛 · 머리빛 (용병 생김새 번호 1~3 — 병과 옷을 입어도 제 얼굴)      // r27 r: 테두리 빛(가주가 된 부대원의 단 — 's' 은빛 4~7단 · 'g' 금빛 8단↑)
   return p.length ? base + '#' + p.join(',') : base;
 };
 // 나이 단계: 다른 팀의 칸(u.ageSt · ch 의 생년)에서 읽는다. 없으면 '' (지금 모습)
@@ -624,13 +624,14 @@ DS.unitDress = function (u) {
   var S = DS.G && DS.G.save, ch = null, m = null, o = {}, i;
   if (S && u.ch != null && S.chars) ch = S.chars[u.ch] || null;
   if (S && !ch && u.mid != null && S.mercs) for (i = 0; i < S.mercs.length; i++) if (S.mercs[i].id === u.mid) { m = S.mercs[i]; break; }
-  if (S && u.plook && u.bear && S.mercs) for (i = 0; i < S.mercs.length; i++) if (S.mercs[i].id === u.bear) { m = S.mercs[i]; break; }      // r27: 제 모습의 가주 — 나이·성별은 그 사람에게서
-  var e = (u.plook && m) || ch || m, p = linP(S, e);
+  var bm = null; if (S && u.bear && S.mercs) for (i = 0; i < S.mercs.length; i++) if (S.mercs[i].id === u.bear) { bm = S.mercs[i]; break; }      // r27 · 2.6.0: 가주 — 나이·성별·살빛은 깃발을 든 그 사람에게서 (옷은 가문 병과의 것)
+  var e = bm || ch || m, p = linP(S, e), pv = bm || (ch && ch.ps) || m;
   o.w = u.gearW !== undefined ? u.gearW : ch ? ch.w : null;
   o.a = u.gearA !== undefined ? u.gearA : ch ? ch.a : null;
   o.g = u.ageSt !== undefined ? u.ageSt : ageWord(S, e);
-  o.x = u.sx || (p && p.sx) || '';
+  o.x = u.sx || (p && p.sx) || (e && e.sx) || '';
   o.f = u.faded !== undefined ? !!u.faded : !!(p && (p.rv || p.ret));
+  if (u.role === 'cmd' && !u.plook && pv && pv.v) o.v = pv.v;      // 2.6.0: 병과 옷을 입은 가주 · 맹주의 제 살빛
   return o;
 };
 DS.unitSpriteName = function (u) {
@@ -643,19 +644,40 @@ DS.unitSpriteName = function (u) {
 };
 // r27: 가문(깃발) 한 줄의 「가주의 모습」 → [그림 이름, 빛깔, 크기 배율] 또는 null(대장 가문·빈 가문 — 병과 그림 그대로).
 //   tier 를 주면 그 단의 테두리 빛으로 (승급 창의 전·후)
+// 2.6.0 모습은 병과와 단을 따른다 (사용자: 「병과가 바뀌어도 외형이 그대로일 때가 있다 — 자연스럽게 바뀌게」).
+//   가주 = 그 가문 병과의 그 단 모습 (DS.lookName — 8단부터 윗길) + 가문의 무기 · 방어구 + 그 사람의 나이 · 성별 · 살빛. 승급하면 테두리 빛만이 아니라 옷이 바뀐다.
+//   막사에서 기다리는 이 = 받은 병과(m.nc · 아홉은 제 집)의 제 단 모습 (장비 없이). 맹주 가문원은 따르는 종류(소드맨 · 랜서 …)로 싸우니 그 종류의 모습 그대로.
+//   제 몸을 지닌 종족(그리폰 · 머맨 · 돌 정령 · 해골)과 큰 용병은 옷을 갈아입지 못한다 — 제 모습 그대로, 단은 테두리 빛(은 · 금)으로만 (DS.keepsBody).
+var HUMAN_KIND = { m_sword: 1, m_lancer: 1, m_pike: 1, m_archer: 1, m_sister: 1, m_templar: 1 };
+DS.keepsBody = function (who) { var M = who && who.type && DS.MERCS && DS.MERCS[who.type]; return !!(M && (M.big || !HUMAN_KIND[who.type])); };
+var bearerLook0 = DS.bearerLook;
+DS.bearerLook = function (who) { return bearerLook0 && DS.keepsBody(who) ? bearerLook0(who) : null; };      // 전투 사양(banner.js cmdSpec)이 읽는다: 사람 꼴이면 null → 가문 병과의 모습 [병과, 단]
+// 가문(깃발) 한 줄의 「가주의 모습」 → [그림 이름, 빛깔, 크기 배율] 또는 null(맹주 가문·빈 가문 — 병과 그림 그대로). tier 를 주면 그 단의 모습 (승급 창의 전·후)
 DS.charLook = function (ch, save, tier, who) {      // who: 그 사람을 직접 (방금 쓰러져 깃발에서 내려진 가주)
   var S = save || (DS.G && DS.G.save); if (!S || !ch || !DS.bearer || ch.id === +S.hero) return null;
   if (!who) { try { who = DS.bearer(S, ch); } catch (x) { who = null; } }
-  var bl = who && DS.bearerLook ? DS.bearerLook(who) : null; if (!bl) return null;
-  var t = tier || (DS.tierOfL ? DS.tierOfL(ch.L) : 1);
-  var p = linP(S, who);
-  if (t >= 8 && DS.RISE_OF && DS.RISE_OF[ch.cls]) return [DS.dressName(DS.lookName(ch.cls, t), { w: ch.w, a: ch.a, g: ageWord(S, who), x: (p && p.sx) || who.sx || '', f: !!(p && (p.rv || p.ret)) }), '', 1];      // 2.2.9: 8단부터는 가문 윗길의 모습 (장비 · 나이 · 성별은 그 사람의 것)
-  if (bl.big) return [bl.sprite, bl.pal, 0.75];
-  return [DS.dressName(bl.look.join('_'), { g: ageWord(S, who), x: (p && p.sx) || '', f: !!(p && (p.rv || p.ret)), r: DS.rimOf ? DS.rimOf(t) : '' }), '', 1];
+  if (!who || !who.type || !DS.MERCS || !DS.MERCS[who.type]) return null;
+  var t = tier || (DS.tierOfL ? DS.tierOfL(who.L != null && DS.pL ? DS.pL(who) : ch.L) : 1);
+  var p = linP(S, who), bl = bearerLook0 && DS.keepsBody(who) ? bearerLook0(who) : null;
+  if (bl && bl.big) return [bl.sprite, bl.pal, 0.75];
+  if (bl && !(t >= 8 && DS.RISE_OF && DS.RISE_OF[ch.cls])) return [DS.dressName(bl.look.join('_'), { g: ageWord(S, who), x: (p && p.sx) || '', f: !!(p && (p.rv || p.ret)), r: DS.rimOf ? DS.rimOf(t) : '' }), '', 1];
+  return [DS.dressName(DS.lookName(ch.cls, t), { w: ch.w, a: ch.a, g: ageWord(S, who), x: (p && p.sx) || who.sx || '', f: !!(p && (p.rv || p.ret)), v: who.v }), '', 1];
+};
+// 사람 하나(용병 기록)의 초상 → [그림 이름, 빛깔, 크기 배율]. 가주면 가문의 모습, 막사면 받은 병과의 제 단 모습, 그 밖(맹주 가문원 · 제 몸의 종족)은 종류의 모습
+DS.personLook = function (m, save) {
+  var S = save || (DS.G && DS.G.save), M = m && m.type && DS.MERCS && DS.MERCS[m.type];
+  if (!M) return m && m.cls && DS.CLASSES[m.cls] ? [DS.lookName(m.cls, DS.tierOfL(m.L || 1)), '', 1] : ['m_sword_1_0', '', 1];
+  if (M.big) return [M.sprite, M.pal, 0.75];
+  var own = [m.type + '_' + (m.g || 1) + '_' + (m.v || 0), '', 1];
+  if (!S || !S.chars || m.id == null) return own;
+  if (m.h && m.o && S.chars[m.o] && m.o !== +S.hero) { var cl = null; try { cl = DS.charLook(S.chars[m.o], S, 0, m); } catch (x) { cl = null; } return cl || own; }
+  var c = m.cast || m.nc;
+  if (!m.o && c && DS.CLASSES[c] && !DS.keepsBody(m)) { var p = linP(S, m); return [DS.dressName(DS.lookName(c, DS.tierOfL(DS.pL ? DS.pL(m) : m.L || 1)), { g: ageWord(S, m), x: (p && p.sx) || m.sx || '', f: !!(p && (p.rv || p.ret)), v: m.v }), '', 1]; }
+  return own;
 };
 DS.charSprite = function (ch, save) {      // 화면(초상·가계도)용: 지휘관 한 사람의 옷 입은 모습 이름 (game.js charSpr 이 이것을 쓰면 장비·나이가 초상에도 보인다)
   var S = save || (DS.G && DS.G.save), base = DS.lookName(ch.cls, DS.tierOfL ? DS.tierOfL(ch.L) : 1), p = linP(S, ch);
-  return DS.dressName(base, { w: ch.w, a: ch.a, g: ageWord(S, ch), x: p && p.sx || '', f: !!(p && (p.rv || p.ret)) });
+  return DS.dressName(base, { w: ch.w, a: ch.a, g: ageWord(S, ch), x: p && p.sx || '', f: !!(p && (p.rv || p.ret)), v: ch.ps && ch.ps.v });      // 2.6.0 v: 맹주가 된 이의 제 살빛
 };
 
 // ── 32px 무기 그림: 층(layer)에 그린 뒤 1px 외곽선을 둘러 몸 위에 얹는다 ──

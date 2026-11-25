@@ -365,8 +365,10 @@ function sprOf(e, px) {
   if (e.champ) return Ui.sprTag(DS.lookName(e.champ.cls, e.champ.tier), '', px);
   if (e.key === 'h') return Ui.charSpr(heroOf(s), px);
   if (e.seat === 'bear') return Ui.charSpr(e.ch, px, null, e.m);
+  var pl = DS.personLook ? DS.personLook(e.m, s) : null; if (pl) return Ui.sprTag(pl[0], pl[1], px * pl[2]);      // 2.6.0: 모습은 병과와 단을 따른다
   var M = DS.MERCS[e.m.type]; return M && M.big ? Ui.sprTag(M.sprite, M.pal, px * 0.75) : Ui.sprTag(e.m.type + '_' + e.m.g + '_' + (e.m.v || 0), '', px);
 }
+function frOf(e, px, sz) { return DS.gfr ? DS.gfr(e.champ ? 0 : e.g, sprOf(e, px), { lord: e.key === 'h', who: e.key === 'h' ? 'c' + G().save.hero : e.m && e.m.id != null ? 'm' + e.m.id : '', cls: sz || 'm' }) : sprOf(e, px); }      // 2.6.0: 명단 줄의 등급 테 초상
 function crestOf(e, sz) {
   try {
     if (e.champ) return DS.houseCrest(e.champ.hs, sz, { lord: 1 });
@@ -374,7 +376,7 @@ function crestOf(e, sz) {
     return e.seat === 'bar' ? '<i class="ar-nocrest" style="width:' + sz + 'px;height:' + sz + 'px"></i>' : DS.houseCrest(e.ch.cls, sz);
   } catch (x) { return ''; }
 }
-function gradeCol(g) { var Gd = DS.GRADES[g]; return Gd ? Gd.col : '#a7a1c2'; }
+function gradeCol(g) { return DS.gradeCol ? DS.gradeCol(g) : (DS.GRADES[g] || {}).col || '#a9a59b'; }      // 2.6.0: 등급색의 출처는 DS.GRADES 하나
 function entry(key) {
   if (key && key.indexOf('c:') === 0) { var r = (CH.list || []).filter(function (x) { return 'c:' + x.id === key; })[0]; return r ? { key: key, champ: r, name: r.name, house: r.house, place: '다른 맹주 · ' + r.tier + '단', g: r.g, pow: r.pow, rec: null } : null; }
   return (ST.roster || []).filter(function (e) { return e.key === key; })[0] || null;
@@ -426,12 +428,12 @@ function draw() {
 function slotHtml(i) {
   var e = entry(ST.sel[i]), on = ST.slot === i ? ' on' : '';
   if (!e) return '<button class="ar-slot ' + (i ? 'R' : 'L') + on + '" data-ar="slot" data-s="' + i + '"><span class="ar-sl0">' + (i ? '홍' : '청') + '</span><small>아래에서 고른다</small></button>';
-  return '<button class="ar-slot ' + (i ? 'R' : 'L') + on + '" data-ar="slot" data-s="' + i + '"><span class="ar-cor">' + (i ? '홍' : '청') + '</span><span class="ar-sp">' + sprOf(e, 2) + '</span><b>' + esc(e.name) + '</b><small>' + esc(e.place) + '</small><em class="num">' + fmt(e.pow) + '</em></button>';
+  return '<button class="ar-slot ' + (i ? 'R' : 'L') + on + '" data-ar="slot" data-s="' + i + '"><span class="ar-cor">' + (i ? '홍' : '청') + '</span><span class="ar-sp">' + frOf(e, 2) + '</span><b>' + esc(e.name) + '</b><small>' + esc(e.place) + '</small><em class="num">' + fmt(e.pow) + '</em></button>';
 }
 function rowHtml(e, used) {
   var r = e.rec, cur = ST.sel[ST.slot] === e.key;
   return '<li><button class="ar-row' + (cur ? ' cur' : '') + (used ? ' used' : '') + '" data-ar="pick" data-k="' + esc(e.key) + '"' + (used ? ' aria-disabled="true"' : '') + '>' +
-    '<span class="ar-sp">' + sprOf(e, 2) + '</span><span class="ar-cr">' + crestOf(e, 18) + '</span>' +
+    '<span class="ar-sp">' + frOf(e, 2) + '</span><span class="ar-cr">' + crestOf(e, 18) + '</span>' +
     '<span class="ar-nm"><b style="color:' + gradeCol(e.g) + '">' + esc(e.name) + '</b><small>' + esc(e.place) + (e.house ? ' · ' + esc(e.house) : '') + (e.ult ? ' · 필살기' : '') + '</small></span>' +
     '<span class="ar-pw"><b class="num">' + fmt(e.pow) + '</b><small>' + (r ? (r[0] || r[1] ? r[0] + '승 ' + r[1] + '패' : '첫 대결') : (e.champ && e.champ.at ? ago(e.champ.at) : '')) + '</small></span></button></li>';
 }
@@ -659,7 +661,7 @@ function tsetHtml() {
   var on = sel.map(entry).filter(Boolean), off = P.filter(function (e) { return sel.indexOf(e.key) < 0; }).sort(byPow);
   on.concat(off).forEach(function (e) {
     var i = sel.indexOf(e.key);
-    h += '<li><button class="ar-row ar-tsrow' + (i >= 0 ? ' in' : '') + '" data-ar="tent" data-k="' + esc(e.key) + '"><span class="ar-tseed">' + (i >= 0 ? (i + 1) : '+') + '</span><span class="ar-sp">' + sprOf(e, 2) + '</span><span class="ar-cr">' + crestOf(e, 18) + '</span>' +
+    h += '<li><button class="ar-row ar-tsrow' + (i >= 0 ? ' in' : '') + '" data-ar="tent" data-k="' + esc(e.key) + '"><span class="ar-tseed">' + (i >= 0 ? (i + 1) : '+') + '</span><span class="ar-sp">' + frOf(e, 2) + '</span><span class="ar-cr">' + crestOf(e, 18) + '</span>' +
       '<span class="ar-nm"><b style="color:' + gradeCol(e.g) + '">' + esc(e.name) + '</b><small>' + esc(e.place) + (e.house ? ' · ' + esc(e.house) : '') + '</small></span><span class="ar-pw"><b class="num">' + fmt(e.pow) + '</b><small>' + (i >= 0 ? (i + 1) + '번 시드' : '빠짐') + '</small></span></button></li>';
   });
   h += '</ul><p class="ar-rule">' + LT.rule + '</p><div class="ar-foot"><button class="btn gold wide" data-ar="tgo"' + (n >= TN.min ? '' : ' disabled') + '>' + LT.go + ' <small>' + (n >= TN.min ? n + '명' : '') + '</small></button></div></div>';
@@ -709,7 +711,7 @@ function tbrHtml() {
     var a = entry(M.a), b = entry(M.b), od = ST.odds, cb = curBet();
     var side = function (e, i) {
       var shut = !od[i], on = ST.bet.side === i;
-      return '<button class="ar-tside ' + (i ? 'R' : 'L') + (on ? ' on' : '') + (shut ? ' shut' : '') + '" data-ar="tpick" data-s="' + i + '"' + (shut ? ' aria-disabled="true"' : '') + '><span class="ar-cor">' + (i ? '홍' : '청') + '</span><span class="ar-sp">' + sprOf(e, 2) + '</span><span class="ar-tsn"><span class="ar-cr">' + crestOf(e, 16) + '</span><b>' + esc(e.name) + '</b></span><small class="num">' + fmt(e.pow) + '</small><em>' + (shut ? '배팅 마감' : '배당 <b class="num">' + od[i].toFixed(2) + '</b>') + '</em></button>';
+      return '<button class="ar-tside ' + (i ? 'R' : 'L') + (on ? ' on' : '') + (shut ? ' shut' : '') + '" data-ar="tpick" data-s="' + i + '"' + (shut ? ' aria-disabled="true"' : '') + '><span class="ar-cor">' + (i ? '홍' : '청') + '</span><span class="ar-sp">' + frOf(e, 2) + '</span><span class="ar-tsn"><span class="ar-cr">' + crestOf(e, 16) + '</span><b>' + esc(e.name) + '</b></span><small class="num">' + fmt(e.pow) + '</small><em>' + (shut ? '배팅 마감' : '배당 <b class="num">' + od[i].toFixed(2) + '</b>') + '</em></button>';
     };
     h += '<div class="ar-tvs">' + side(a, 0) + '<i class="ar-vs">VS</i>' + side(b, 1) + '</div>';
     var sv = stakes();

@@ -222,7 +222,8 @@ var M_LANCER = [{ a: '#8a94a8', A: '#5b6480', h: '#8a6a4a' }, { a: '#7a5a4a', A:
 var M_GRIF = [{ a: '#d8b46a', p: '#a8843f', c: '#f1ead9' }, { a: '#b0a08a', p: '#7d6a50', c: '#8a94a8' }, { a: '#e9e2d0', p: '#62b0ee', c: '#ffffff' }, { a: '#8a5a36', p: '#e0525e', c: '#d8b46a' }];
 var M_MER = [{ a: '#3a6a8a', e: '#62b0ee', E: '#3572b8', g: '#cdd5e3' }, { a: '#2f6b5a', e: '#4fd0a0', E: '#2f9a6a', g: '#f6cf57' }, { a: '#5a4a8a', e: '#9fe8ec', E: '#58a0b0', g: '#e9e2d0' }, { a: '#3a4a6a', e: '#8fa0d0', E: '#5b6aa0', g: '#b5814f' }];
 var M_GOL = [{ m: '#b9a58a', M: '#8a765c', x: '#62e0ff' }, { m: '#9aa8a0', M: '#6b7a72', x: '#b6ff5a' }, { m: '#b08a7a', M: '#7d5a4c', x: '#ffd24a' }, { m: '#8a8aa8', M: '#5c5c7a', x: '#ff9de1' }];
-var GR = ['', '#9a7048', '#6aa85a', '#5a92c8', '#9a72c8', '#d8b450'];
+var PCUE = [null, { s: '#d9a877', S: '#a8754a', _ph: '#4a3020' }, { s: '#f3c9a1', S: '#cf9670', _ph: '#b8863c' }, { s: '#9a6a46', S: '#6e4a30', _ph: '#2a2420' }];      // 2.6.0: 생김새 번호 1~3 의 살빛 · 머리빛 (0 = 병과 그림 그대로)
+var GR = [''].concat([1, 2, 3, 4, 5].map(function (g) { return DS.gradeCol ? DS.gradeCol(g) : ['', '#9a7048', '#6aa85a', '#5a92c8', '#9a72c8', '#d8b450'][g]; }));      // 2.6.0: 용병 그림의 등급 장식색도 DS.GRADES 의 색 (등급 테와 같은 빛)
 DS.ART_TABLE = { HUM: HUM, MERC: MERC };
 
 // 방어구 장비 → 묘사
@@ -232,7 +233,12 @@ function aDesc(id) {
   return { cat: A.cat, line: A.line, t: t, grade: A.grade || 0, sh: lg ? lg.sh : null, m: lg ? lg.m : MAT[t], acc: lg ? lg.acc : ACC[t], gem: lg ? lg.gem : (A.grade === 4 ? '#b181e6' : '#62b0ee') };
 }
 // 이름 + 옷차림 → 그리기 묘사 { kind, S, lw }
-function specOf(name, palKey, dress) {
+function specOf(name, palKey, dress) {      // 2.6.0: 병과 모습(병과_단)에 옷차림의 v= 가 있으면 그 사람의 살빛 · 머리빛을 얹는다 (병과 옷을 입어도 제 얼굴)
+  var sp = specOf0(name, palKey, dress), mv = dress && /(?:^|,)v=([1-3])/.exec(dress);
+  if (sp && sp.S && sp.S.pal && mv && /^[a-z]+_\d+$/.test(name)) sp.S.pal = mx(sp.S.pal, PCUE[+mv[1]]);
+  return sp;
+}
+function specOf0(name, palKey, dress) {
   var o = dress && DS.dressParse ? DS.dressParse(dress) : {}, m, look;
   var base = { age: o.g || '', sx: o.x || '', faded: !!o.f, w: o.w ? DS.artWDesc(o.w) : null, a: o.a ? aDesc(o.a) : null };
   if ((m = /^([a-z]+)_(\d+)$/.exec(name))) {

@@ -370,7 +370,7 @@ function shieldP(g, S, pose) {
 
 // ── 머리 ──
 var HAIRLESS = { helm: 1, plume: 1, horned: 1, hood: 1, mask: 1, veil: 1, darkhood: 1, skull: 1, bald: 1, knot: 1 };
-function hairCol(S) { var h = S.head; if (S.age === 'elder') return mute('#e6e2da'); if (h === 'tricorn' || h === 'mitre' || h === 'wizhat') return mute(S.pal.hair || '#6b4a32'); return S.C('h'); }
+function hairCol(S) { var h = S.head; if (S.age === 'elder') return mute('#e6e2da'); if (S.pal._ph) return mute(S.pal._ph);      /* 2.6.0: 그 사람의 머리빛 (옷차림의 v=) */ if (h === 'tricorn' || h === 'mitre' || h === 'wizhat') return mute(S.pal.hair || '#6b4a32'); return S.C('h'); }
 function isF(S) { return S.sx === 'f' || (!S.sx && (S.head === 'tiara' || S.head === 'veil')); }
 function headBack(g, S) {
   var C = S.C, h = S.head, hc = hairCol(S);

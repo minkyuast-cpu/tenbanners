@@ -580,11 +580,32 @@ DS.skOld = function (id, cls) {      // 옛 기술 id → 새 id (필살기는 D
 DS.skAlias = function (id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(DS.SK_ALIAS, id) ? DS.SK_ALIAS[id] : id; };
 // 등급: 이름, 능력 배율, 모집 확률(%), 색
 DS.GRADES = [null,
-  { name: '일반', mul: 0.85, p: 10, col: '#a7a1c2' },      // r35: 모집은 귀하게, 대신 가운데를 넓게 (10 · 30 · 30 · 20 · 10)
+  { name: '일반', mul: 0.85, p: 10, col: '#a9a59b' },      // r35: 모집은 귀하게, 대신 가운데를 넓게 (10 · 30 · 30 · 20 · 10)
   { name: '고급', mul: 1.0, p: 30, col: '#7fcf6a' },
   { name: '희귀', mul: 1.15, p: 30, col: '#5fc4d6' },
   { name: '영웅', mul: 1.32, p: 20, col: '#b181e6' },
   { name: '전설', mul: 1.52, p: 10, col: '#f0b64a' }];      // r44: 1.5 → 1.52 (전설 가솔은 종류가 달라도 희귀 평균 밑으로 내려가지 않는다 · 전설/일반 1.79배). 가주·맹주의 등급 배율은 banner.js DS.BN.gmul
+// ───────── 2.6.0 등급 테: 사람이 보이는 모든 곳의 초상 테두리. 색의 출처는 위 DS.GRADES[g].col 하나 (CSS --g1…--g5 · 용병 그림의 장식색도 여기서 받는다) ─────────
+//   규칙: 테 색 = 그 「사람」의 등급. 가문원 · 막사 · 가주 = 사람 기록의 g, 맹주 = ch.ps.g (없으면 희귀 — DS.CAST_G). 맹주는 같은 등급색 테 위에 작은 왕관 표(.lord).
+//   빈 가문 · 등급을 모르는 이 = g0 (잿빛 점선). 떠난 이는 테 색 그대로, 초상만 잿빛(.dead). 색만으로 가르지 않게 테 안 왼쪽 위에 등급 눈금 1~5 개.
+DS.gradeNum = function (g) { g = Math.round(+g || 0); return g >= 1 && g <= 5 ? g : 0; };
+DS.gradeCol = function (g) { var G0 = DS.GRADES[DS.gradeNum(g)]; return G0 ? G0.col : '#8a867d'; };
+DS.gfrCls = function (g, o) { o = o || {}; return 'gfr g' + DS.gradeNum(g) + (o.lord ? ' lord' : '') + (o.dead ? ' dead' : '') + (o.cls ? ' ' + o.cls : ''); };
+// DS.gfr(등급, 초상 HTML, { who: 사람 열쇠('m12' · 'c1' — 시험이 같은 사람을 찾는다), lord, dead, cls }) → 테 두른 초상
+DS.gfr = function (g, inner, o) { o = o || {}; return '<span class="' + DS.gfrCls(g, o) + '"' + (o.who ? ' data-gp="' + String(o.who).replace(/[^\w:-]/g, '') + '"' : '') + '>' + (inner || '') + '</span>'; };
+// 가문 한 줄의 테 등급: 맹주 가문 = 맹주, 다른 가문 = 가주 (빈 가문 0)
+DS.gradeOfCh = function (save, ch) {
+  if (!save || !ch) return 0;
+  if (ch.id === +save.hero) return ch.vac ? 0 : DS.gradeNum((ch.ps && ch.ps.g) || DS.CAST_G || 3);
+  var b = DS.bearer ? DS.bearer(save, ch) : null; return b ? DS.gradeNum(b.g || 3) : 0;
+};
+DS.gradeVars = function () {      // CSS 변수 --g1…--g5 (밝은 색) · --g1d…--g5d (어두운 짝) 를 DS.GRADES 에서
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  var st = document.documentElement.style, dk = function (h) { var n = parseInt(h.slice(1), 16); return '#' + [n >> 16 & 255, n >> 8 & 255, n & 255].map(function (v) { return ('0' + Math.round(v * 0.42).toString(16)).slice(-2); }).join(''); };
+  for (var g = 1; g <= 5; g++) { st.setProperty('--g' + g, DS.GRADES[g].col); st.setProperty('--g' + g + 'd', dk(DS.GRADES[g].col)); }
+  st.setProperty('--g0', '#8a867d');
+};
+DS.gradeVars();
 // 2.2.0: 통솔(지휘관이 이끄는 가솔에게 주던 버프·패널티 표 DS.LEAD)은 없어졌다 — 가솔이 없다. 호령 기술은 모든 아군에게 절반 세기로 걸린다
 // 병과의 호령(지휘 기술) id
 DS.ORDER = { inf: 'cmd_inf', cav: 'cmd_cav', fly: 'cmd_fly', mar: 'cmd_mar', pike: 'cmd_pike', arc: 'charisma', cle: 'cmd_cle', mon: 'cmd_mon', mag: 'cmd_mag', sha: 'cmd_sha', bm: 'cmd_bm', tm: 'charisma', mm: 'cmd_mm' };
