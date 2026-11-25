@@ -104,7 +104,7 @@ DS.lgMul = function (s, k) { return OFF ? 1 : 1 + DS.lgVal(s, k) / 100; };      
 DS.lgTitle = function (s) { s = S(s); var n = s && s.lg ? s.lg.gens : 0, U = DS.LG_UNLOCK; if (!n) return ''; var u = U[Math.min(n, U.length - 1)]; return (u && u.ttl) || ''; };
 
 // ── 셈: 한 대의 점수 줄 ──
-var ROW_N = { scn: '깬 장', boss: '쓰러뜨린 우두머리', king: '어스름의 왕', head: '살아남은 가주', kid: '태어난 아이', name: '지킨 이름', brk: '한계 돌파', don: '가문에 바친 재물', lost: '잃은 사람' };
+var ROW_N = { scn: '깬 장', boss: '쓰러뜨린 우두머리', king: '어스름의 왕', head: '살아남은 가주', kid: '태어난 아이', name: '지킨 이름', brk: '한계 돌파', don: '가문에 바친 재물', lost: '싸우다 잃은 사람' };
 DS.LG_ROW = ROW_N;
 function logs(s) { return (s.lin && s.lin.log) || []; }
 function bossN(ids) { var n = 0; ids.forEach(function (id) { var b = DS.scn && DS.scn(id); if (b && b.boss && id !== DS.SCENARIOS.length) n++; }); return n; }
@@ -113,6 +113,21 @@ function headsAlive(s) {
   return n;
 }
 function since(s, t0, t) { var n = 0; logs(s).forEach(function (e) { if (e && e.t === t && (e.tm || 0) >= t0 && (t !== 'death' || !(e.x && /천수/.test(e.x.why || '')))) n++; }); return n; }
+// 2.6.1: 싸우다 잃은 사람 = 가계 기록의 죽음(천수는 빼고) + 가계 기록에 남지 않은 추모 기록.
+//   가계도 밖의 사람(가문원 · 혼인하지 않은 가주)은 빈 관이 없으면 가계 기록이 생기지 않는다(lineage.js DS.linMercDied) — 예전에는 깃대에 이름이 열 개여도 「잃은 사람 없음」으로 나왔다.
+//   추모 기록의 때: f.tm (2.6.1 부터 적는다) → 가계 기록의 때 → 없으면 바로 앞 기록의 때 (추모 기록은 쓰러진 차례대로다)
+function lostSince(s, t0) {
+  var n = since(s, t0, 'death'), P = (s.lin && s.lin.P) || {}, last = 0;
+  (s.fallen || []).forEach(function (f) {
+    if (!f || typeof f !== 'object') return;
+    var p = f.pid && P[f.pid], tm = f.tm != null && isFinite(+f.tm) ? +f.tm : p && p.d && p.d.tm != null ? +p.d.tm : null;
+    if (tm != null) last = tm; else tm = last;
+    if ((p && p.d) || /천수/.test(f.why || '')) return;      // 가계 기록에 죽음이 적혔으면 위에서 셌다 · 천수는 잃은 것이 아니다
+    if (tm >= t0) n++;
+  });
+  return n;
+}
+DS.lgLost = lostSince;
 // k: 'main' (메인 맺음) · 'gen' (다음 세대의 장) · 'retro' (옛 저장) · gens: retro 에서 마친 장 수(메인 포함)
 DS.lgRows = function (s, g, k, gens) {
   var P = DS.LG.pt, L = LG(s), e = s.eg || {}, t0 = k === 'gen' ? (e.t0 || 0) : 0, many = k === 'retro' ? Math.max(1, gens || 1) : 1, rows = [];
@@ -125,7 +140,7 @@ DS.lgRows = function (s, g, k, gens) {
   var er = s.erLast, nm = er && (k === 'retro' || er.g === g) ? Math.max(0, Math.round(+er.saved || 0)) : 0; rows.push(['name', nm, nm * P.name]);
   var bk = Math.min(DS.LG.brkMax * many, L.brk); if (bk) rows.push(['brk', bk, bk * P.brk]);
   if (L.don.pts) rows.push(['don', L.don.gold, L.don.pts]);
-  var lost = since(s, t0, 'death'); rows.push(['lost', lost, Math.max(DS.LG.lostMin * many, lost * P.lost)]);
+  var lost = lostSince(s, t0); rows.push(['lost', lost, Math.max(DS.LG.lostMin * many, lost * P.lost)]);
   return rows;
 };
 // 결산을 확정한다: 점수를 더하고, 등급이 올랐으면 고를 가호를 쌓는다. 화면은 lg.pend 를 보고 의식을 띄운다

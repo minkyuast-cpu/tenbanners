@@ -1704,7 +1704,7 @@ DS.bnPickOpen = bnPick;
 function natTag(ch, m) { if (!DS.bnNative || !m || !m.type) return ''; var ok = DS.bnNative(ch.cls, m); return '<i class="nat ' + (ok ? 'ok' : 'no') + '">' + (ok ? '태생 맞음' : '태생 다름') + '</i>'; }
 function natAsk(ch, m, yes) {
   var nm = m.ttl || m.n || DS.MERCS[m.type].name, nat = DS.nativeName(m), hn = DS.flagName(ch.cls), cn = DS.CLASSES[ch.cls].name;
-  var q = overlay('<div class="result natask"><h2>태생 병과가 다릅니다</h2><p>' + gfM(m, 3, 'l') + '</p><p><b>' + esc(nm) + '(' + esc(nat) + ')</b>' + esc(josa(nm, '은는').slice(nm.length)) + ' ' + esc(hn) + '(' + esc(cn) + ')의 기술을 제 능력치로 씁니다. 몸이 맞지 않아 능력치가 조금 줄어듭니다.</p><p class="dim">그래도 가주로 세울까요?</p>' +
+  var q = overlay('<div class="result natask"><h2>태생 병과가 다르다</h2><p>' + gfM(m, 3, 'l') + '</p><p><b>' + esc(nm) + '(' + esc(nat) + ')</b>' + esc(josa(nm, '은는').slice(nm.length)) + ' ' + esc(hn) + '(' + esc(cn) + ')의 기술을 제 능력치로 쓴다. 몸이 맞지 않아 능력치가 조금 줄어든다.</p><p class="dim">그래도 가주로 세울까?</p>' +
     '<button class="btn gold wide" id="yesNat">세운다</button><button class="btn wide" data-close>취소</button></div>', 'modal center');
   $('#yesNat', q).addEventListener('click', function () { q.close(); yes(); });
   return q;
@@ -2104,7 +2104,7 @@ function tabHelp() {
     ['사람과 가문', '가문', [
       '연맹에는 <b>맹주</b> 한 명과 가문들이 있다. 가문들이 모여 <b>' + esc(DS.allyFull ? DS.allyFull(G.save) : '연맹') + '</b>을 이룬다. 맹주는 자기가 선 가문의 가주다. 연맹의 이름은 대가 바뀌어도 그대로다.',
       '<b>싸움에는 셋이 나간다.</b> 맹주와 고른 가주 둘이다. 맹주의 어른 가문원은 늘 함께 싸운다. 나머지 가주는 쉰다. 쉬는 가주는 싸우지 않아 쓰러지지 않고, 나이는 그대로 먹는다.',
-      '출전은 부대 탭 가주 카드의 <b>출전, 쉼</b> 단추를 눌러 그 자리에서 바꾼다. 시나리오와 갱도 입구에서는 얼굴을 눌러 바꾼다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러지거나 가문이 비면 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
+      '출전은 부대 탭 가주 카드의 <b>출전, 쉼</b> 단추를 눌러 그 자리에서 바꾼다. 시나리오와 갱도 입구에서는 얼굴을 눌러 바꾼다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러져도 뒤를 이을 사람이 있으면 그 가문이 그대로 나가고, 가문이 비면 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
       '가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
       '사람의 자리는 셋이다. <b>가주</b>는 가문을 이끌고 싸운다. <b>막사</b>는 모집한 영웅이 기다리는 곳 하나로, 가문에 매이지 않고 싸우지 않는다. <b>가문원</b>은 맹주 집 사람(아이, 배우자)으로, 어른이면 모두 맹주를 따라 싸운다.',
       '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 공훈은 가문에 남는다. <b>떠난 가주나 맹주가 입던 장비는 모두 가방으로 돌아온다.</b> 뒤를 이은 사람은 장비 없이 시작하니 가문 창에서 다시 입힌다.',
@@ -2182,7 +2182,7 @@ function tabHelp() {
       '모두 함께 나이를 먹는다. 1배속으로 10분이 한 해다.',
       '나이는 인물 정보 위쪽에 크게, 목록과 가문 카드에 작게 표시된다.',
       '늙으면 <b>노년</b> 표시가 붙고 공격과 마공이 조금 줄어든다. 15살이 안 된 아이는 <b>어린</b>, 72살을 넘기면 <b>장수</b> 표시가 붙는다.',
-      '수명은 아무도 모른다. 노년이 다가오면 후계자를 미리 정해 두는 것이 좋다. 인수인계는 살아 있을 때 한다.',
+      '수명은 아무도 모른다. 노년이 다가오면 후계를 미리 정해 두자. 인수인계는 살아 있을 때 한다.',
       '<b>맹주 넘기기</b>: 맹주 인물 정보 맨 아래에서, 살아 있는 맹주가 자리를 넘길 수 있다. 받을 수 있는 사람은 맹주가 쓰러졌을 때와 같다(어른 자식, 막사의 같은 병과, 다른 가문의 가주). <b>넘긴 맹주는 기운을 모두 쏟고 눈을 감는다. 되돌릴 수 없다.</b> 입던 장비는 가방으로 돌아오고 무기는 유품이 된다. 스무 해는 흐르지 않는다. 싸우는 동안에는 넘길 수 없다.']],
     ['세계', 0, [
       '<b>사람은 두 번 죽는다.</b> 숨이 멎을 때 한 번, 아무도 그 이름을 부르지 않을 때 또 한 번.',
@@ -2796,7 +2796,7 @@ function lgChronHtml(list, plain) {
     while (j < rows.length && rows[j].k === e.k && heads[j] === heads[i]) j++;
     if (!plain && j - i >= 3) {      // 같은 일이 셋 넘게: 한 줄로 접는다 (누르면 편다)
       var key = 'lgc:' + LGCF + ':' + e.k + ':' + ((e.raw && e.raw.tm) || 0) + ':' + i, on = !!FOLD[key];
-      html += '<li class="run k-' + esc(e.k) + (on ? ' on' : '') + '"><button class="lgrun" data-pfold="' + esc(key) + '" aria-expanded="' + on + '"><i>' + (LG_KIND[e.k] || '기록') + '</i><span>' + (LG_KIND[e.k] || '기록') + ' ' + (j - i) + '건</span><em aria-hidden="true">' + (on ? '▾' : '▸') + '</em></button></li>';
+      html += '<li class="run k-' + esc(e.k) + (on ? ' on' : '') + '"><button class="lgrun" data-pfold="' + esc(key) + '" aria-expanded="' + on + '"><i>' + (LG_KIND[e.k] || '기록') + '</i><span>' + (j - i) + '건</span><em aria-hidden="true">' + (on ? '▾' : '▸') + '</em></button></li>';
       if (on) for (var q = i; q < j; q++) html += lgcRow(rows[q], all);
       i = j; continue;
     }

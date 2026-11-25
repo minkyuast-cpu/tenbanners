@@ -371,6 +371,7 @@ function emptyCoffins(s) { var c = s.coffins; return c ? Math.max(0, c.have - c.
 // 용병(아이 포함)이 죽었다 (DS.loseMerc 뒤에 부른다: m = 잃은 용병). 가계도에 오른 이거나 빈 관이 있으면 사람으로 남긴다.
 DS.linMercDied = function (s, m, at, why) {
   var evs = []; if (!m) return evs;
+  var fl = s.fallen, fr = fl && fl.length ? fl[fl.length - 1] : null; if (fr && m.id && fr.id === m.id && fr.tm == null) fr.tm = Math.round(s.time || 0);      // 2.6.1: 추모 기록에 쓰러진 때 — 가계 기록이 없는 사람도 「싸우다 잃은 사람」 셈에 든다 (legacy.js lostSince)
   var P = L0(s).P, p = m.pid && P[m.pid] && P[m.pid].m === m.id ? P[m.pid] : null, fb = m.h && m.o && s.chars[m.o] ? m.o : 0;      // ⑭-3: 쓰러질 때 깃발을 들고 있었는가 (관에 모실 수 있는 이)
   if (!p && !emptyCoffins(s) && !(s.eg && s.eg.pass)) return evs;      // ⑰-1: 관은 누구나 (빈 관이 있을 때 임시 사람)      // 3.3.0: 스무 해 창 동안은 빈 관이 없어도 사람으로 남긴다 (끝 면에서 내려 묻고 모실 수 있게)
   if (!p) { mercFix(m); p = mkP(s, { k: 'm', sn: m.sn, n: m.n, sx: m.sx, type: m.type, g: m.g, m: 0, gv: 1, ttl: m.ttl }); }

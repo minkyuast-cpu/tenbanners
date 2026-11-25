@@ -212,7 +212,7 @@ module.exports = async (page, shot, L) => {
   // ───────── ③ 맹주 넘기기 ─────────
   // 꺼진 단추와 까닭
   c = await ev(() => { var t = DS.newSave('혼자', 'mag'); return DS.nkCan(t); });
-  A(!c.ok && /넘겨받을 사람이 없다/.test(c.why), 'no eligible successor → not allowed: ' + c.why);
+  A(!c.ok && /받을 사람이 없다/.test(c.why), 'no eligible successor → not allowed: ' + c.why);
   await setup('한울');
   await L.edit(page, function () { var h = s.chars[s.hero]; s.gear['sword.A~keen7'] = 1; DS.equip(s, h, 'sword.A~keen7'); s.coffins.have = 1; });
   // 시나리오 중 · 싸우는 중: 판정이 읽는 깃발(G.scn · sim.combat)을 한 박자 세워 단추가 꺼지고 까닭이 보이는지 본다 (진짜 싸움을 벌이면 그 뒤처리가 아래 흐름과 섞인다)
