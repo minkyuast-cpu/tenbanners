@@ -189,7 +189,8 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var s = DS.G.save, raw = JSON.parse(JSON.stringify(s)); raw.hpity = 'x'; raw.ver = '2.2.3'; var f = DS.fixSave(raw); return { same: DS.charList(f).length === DS.charList(s).length, hp: f.hpity, shut: DS.closedCls(f).length }; });
   A(c.same && c.hp === 0, 'old save keeps every joined house (hpity sanitized to ' + c.hp + ', closed ' + c.shut + ')');
   // ⑥ 싸움에서 가주가 쓰러진다: 막사에 같은 병과가 있으면 싸움 뒤 그이가 잇는다 / 없으면 빈 가문 (레벨·단도 잃는다)
-  await ev(() => { var s = DS.G.save; DS.charList(s).forEach(function (ch) { if (ch.cls === 'cle' || ch.cls === 'arc') DS.sbOf(s, ch.id).forEach(function (m) { DS.loseMerc(s, m.id); }); }); var m = DS.addMerc(s, DS.heroType('arc'), 3, 0); m.o = 0; m.sb = 1; m.nc = 'arc'; m.L = 25; DS.mercTidy(s); DS.sortieSet(s, DS.charList(s).filter(ch => ch.cls === 'cle' || ch.cls === 'arc').map(ch => ch.id)); DS.rebuildParty();
+  await ev(() => { var s = DS.G.save; DS.charList(s).forEach(function (ch) { if (ch.cls === 'cle' || ch.cls === 'arc') DS.sbOf(s, ch.id).forEach(function (m) { DS.loseMerc(s, m.id); }); }); var m = DS.addMerc(s, DS.heroType('arc'), 3, 0); m.o = 0; m.sb = 1; m.nc = 'arc'; DS.sortieSet(s, DS.charList(s).filter(ch => ch.cls === 'cle' || ch.cls === 'arc').map(ch => ch.id));
+    window.__hl = m.L = Math.max.apply(null, DS.sortieCands(s).filter(ch => !DS.sortieOn(s, ch.id)).map(ch => DS.pL(DS.bearer(s, ch, 1))).concat([25])); DS.mercTidy(s); DS.rebuildParty();      // 2.6.1: 이을 사람은 쉬는 가주만큼 센 사람 (한참 처지면 자리를 내준다 — 아래 ⑥-2)
     var f0 = DS.sortieNewsText; window.__sn = []; DS.sortieNewsText = function (sv) { var t = f0(sv); if (t) window.__sn.push(t); return t; }; });      // 2.2.8: 나간 두 가주가 쓰러진다 · 저절로 채운 소식을 적어 둔다
   await ev(() => { DS.G.quiet = true; DS.startScenario(DS.scn(9)); }); await L.sleep(800);
   c = await ev(() => {
@@ -204,8 +205,8 @@ module.exports = async (page, shot, L) => {
   await L.sleep(1500);
   await ev(() => { DS.G.sim.win(); }); await L.sleep(500);
   await L.settle(page, 30000); await L.sleep(2500);
-  c = await ev((o) => { var s = DS.G.save, arc = s.chars[o.arc], cle = s.chars[o.cle], b = DS.bearer(s, arc); return { arcB: b ? b.id : 0, was: o.arcB, arcL: arc.L, bL: b ? b.L : 0, cleVac: DS.vacant(s, cle), cleL: cle.L, cleFight: s.party.indexOf(cle.id) >= 0, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.ch === cle.id && u.role === 'cmd').length, fallen: (s.fallen || []).length }; }, c);
-  A(c.arcB && c.arcB !== c.was && c.arcL === c.bL && c.bL === 25, '가주 died in battle → same-class 막사 person took the seat at own level (L ' + c.bL + ')');
+  c = await ev((o) => { var s = DS.G.save, arc = s.chars[o.arc], cle = s.chars[o.cle], b = DS.bearer(s, arc); return { hl: window.__hl, arcB: b ? b.id : 0, was: o.arcB, arcL: arc.L, bL: b ? b.L : 0, cleVac: DS.vacant(s, cle), cleL: cle.L, cleFight: s.party.indexOf(cle.id) >= 0, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.ch === cle.id && u.role === 'cmd').length, fallen: (s.fallen || []).length }; }, c);
+  A(c.arcB && c.arcB !== c.was && c.arcL === c.bL && c.bL === c.hl, '가주 died in battle → same-class 막사 person took the seat at own level (L ' + c.bL + ')');
   {      // 2.2.8: 나간 가주가 쓰러지면 쉬는 가주 가운데 가장 센 이로 저절로 채운다 (2.6.1: 뒤를 이은 사람이 섰으면 그 가문은 그대로) · 알린다 · 칩은 맹주가 맨 앞, 그다음 격자 차례
     const k = await ev((o) => { var s = DS.G.save, top = [o.arc, DS.sortieRank(s).filter(ch => ch.id !== o.arc)[0].id].sort(), so = s.sortie.map(e => e.h).sort();      // 2.6.1: 뒤를 이은 가문(궁병)은 출전에 남고, 빈 가문(승려)의 자리만 가장 센 이가 채운다
       return { chips: Object.keys(DS.G.chipEls), party: s.party.slice(), hero: s.hero, top: top, so: so, sn: window.__sn.join(' / '), units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.role === 'cmd').map(u => u.ch).sort() }; }, c0chips);
@@ -213,6 +214,14 @@ module.exports = async (page, shot, L) => {
     A(JSON.stringify(k.so) === JSON.stringify(k.top) && k.party.indexOf(c0chips.cle) < 0, 'both sortie 가주 fell → the house an heir took over stays out (2.6.1), the vacant one is replaced by the strongest resting 가주 (' + k.so.join(',') + ')');
     A(/대신/.test(k.sn) && (k.sn.match(/출전/g) || []).length >= 2, 'the player is told who stepped in: 「' + k.sn + '」');
     A(k.units.length === 3 && k.units.join() === k.party.slice().sort().join(), 'the field units are the new three (' + k.units.join(',') + ')');
+    // ⑥-2 (2.6.1): 뒤를 이은 가주가 쉬는 가주보다 DS.SORTIE_GAP 레벨 넘게 처지면 자리를 내주고, 그 안쪽이면 남는다 (저장을 베껴서 본다)
+    const w = await ev((o) => {
+      function run(d) { var a = JSON.parse(JSON.stringify(DS.G.save)), arc = a.chars[o.arc], b = DS.bearer(a, arc, 1), top = Math.max.apply(null, DS.sortieCands(a).filter(ch => !DS.sortieOn(a, ch.id)).map(ch => DS.pL(DS.bearer(a, ch, 1))));
+        a.sortie.forEach(e => { if (e.h === arc.id) { e.m = -1; e.n = '옛 가주'; } }); b.L = arc.L = Math.max(1, top - d); delete a.sortieNews;
+        var so = DS.sortieFix(a); return { on: so.indexOf(arc.id) >= 0, n: so.length, news: DS.sortieNewsText(a), top: top, L: b.L }; }
+      return { hold: !!(DS.sortieHold && DS.sortieHold()), gap: DS.SORTIE_GAP, weak: run(DS.SORTIE_GAP), near: run(DS.SORTIE_GAP - 1) }; }, c0chips);
+    A(!w.hold && w.gap > 0 && !w.weak.on && w.weak.n === 2 && /옛 가주 대신 .+ 출전/.test(w.weak.news), 'an heir ' + w.gap + ' levels below the best resting 가주 gives up the seat and the player is told (L' + w.weak.L + ' vs L' + w.weak.top + ': 「' + w.weak.news + '」)');
+    A(w.near.on && w.near.n === 2, 'an heir within ' + (w.gap - 1) + ' levels keeps the seat (L' + w.near.L + ' vs L' + w.near.top + ')');
   }
   A(c.cleVac && !c.cleFight && c.units === 0 && c.cleL === 1, '가주 died with no same-class 막사 person → vacant (L 1), not fighting');
   await ev(() => DS.openMenu('party')); await L.sleep(500); await shot('party_vacant');

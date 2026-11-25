@@ -377,7 +377,7 @@ module.exports = async (page, shot, L) => {
   await ev(() => { DS.G.quiet = true; DS.enterZone('haemil'); }); await sleep(900); await L.closeAll(page);
   c = await ev(() => {
     var s = DS.G.save, h = s.chars[s.hero], so = s.sortie.map(function (e) { return e.h; }), Ac = s.chars[so[0]], Bc = s.chars[so[1]];
-    var heir = DS.addMerc(s, DS.baseMercTypes(Ac.cls)[0], 3, 0); heir.sb = 1; heir.nc = DS.houseCls(Ac); heir.L = 12; heir.n = '뒤이음'; DS.mercTidy(s); DS.pSync(s);
+    var heir = DS.addMerc(s, DS.baseMercTypes(Ac.cls)[0], 3, 0); heir.sb = 1; heir.nc = DS.houseCls(Ac); heir.L = Math.max(1, Math.max.apply(null, DS.sortieCands(s).filter(function (ch) { return !DS.sortieOn(s, ch.id); }).map(function (ch) { return DS.pL(DS.bearer(s, ch, 1)); }).concat([1])) - (DS.SORTIE_GAP - 1)); heir.n = '뒤이음';      // 2.6.1: 쉬는 가주보다 조금 낮다 (DS.SORTIE_GAP 안쪽 — 그보다 처지면 자리를 내준다: t50_people ⑥-2) DS.mercTidy(s); DS.pSync(s);
     s.gear = {}; h.w = null;                                             // 맹주의 무기 칸을 비운다 — 가방에 무기가 생기면 맹주가 먼저 집어 갈 판
     ['w', 'a'].forEach(function (sl) { var id = String(Ac[sl] || '').replace(/\+\d+$/, '') + '+6'; if (DS.gear(id)) Ac[sl] = id; });      // A 의 장비는 +6 — 전리품과 헷갈리지 않고, 누구라도 탐낼 물건
     var up = null; ['+5', '+4', '+3'].some(function (x) { var id = String(Bc.a || '').replace(/\+\d+$/, '') + x, g = DS.gear(id); if (g && DS.canEquip(Bc, id) && DS.gearScore(g, Bc) > DS.gearScore(DS.gear(Bc.a), Bc)) { up = id; return true; } return false; });
@@ -410,9 +410,9 @@ module.exports = async (page, shot, L) => {
   await shot('r4_heir_offer');
   await ev(() => document.querySelector('.ov .gbd [data-gbd]').click()); await sleep(600);
   c = await ev(() => { var s = DS.G.save, g = window.__g, Ac = s.chars[g.A], b = DS.bearer(s, Ac), rest = DS.sortieCands(s).filter(function (ch) { return !DS.sortieOn(s, ch.id); }), pa = DS.sortiePow(s, Ac);
-    return { w: Ac.w, a: Ac.a, head: b ? b.id : 0, held: Object.keys(DS.gbHeld(s)).length, on: DS.sortieOn(s, g.A), m: (s.sortie.filter(function (e) { return e.h === g.A; })[0] || {}).m, stronger: rest.filter(function (ch) { return DS.sortiePow(s, ch) > pa; }).length, party: s.party.indexOf(g.A) >= 0, so: s.sortie.map(function (e) { return e.h; }) }; });
+    return { w: Ac.w, a: Ac.a, head: b ? b.id : 0, held: Object.keys(DS.gbHeld(s)).length, on: DS.sortieOn(s, g.A), m: (s.sortie.filter(function (e) { return e.h === g.A; })[0] || {}).m, stronger: rest.filter(function (ch) { return DS.pL(DS.bearer(s, ch, 1)) > DS.pL(b); }).length, party: s.party.indexOf(g.A) >= 0, so: s.sortie.map(function (e) { return e.h; }) }; });
   A(c.head === (await ev(() => window.__g.heir)) && c.w === (await ev(() => window.__g.aw)) && c.a === (await ev(() => window.__g.aa)) && c.held === 0, 'one tap: the heir wears what the house wore (' + c.w + ', ' + c.a + '); nothing is held any more');
-  A(c.on && c.m === c.head && c.party && c.stronger > 0, 'the house stays in the sortie under its new head (출전 ' + c.so.join(',') + ') although ' + c.stronger + ' resting 가주 are stronger');
+  A(c.on && c.m === c.head && c.party && c.stronger > 0, 'the house stays in the sortie under its new head (출전 ' + c.so.join(',') + ') although ' + c.stronger + ' resting 가주 are a few levels higher');
   await L.closeAll(page);
   // 규칙만: 가주가 바뀐 가문은 남고, 빈 가문의 자리만 가장 센 이가 채운다
   c = await ev(() => { var s = DS.G.save, g = window.__g, Bc = s.chars[g.B], bb = DS.bearer(s, Bc), hold = DS.sortieHold; DS.sortieHold = null; try { DS.loseMerc(s, bb.id); DS.sbOf(s, Bc.id).forEach(function (m) { DS.loseMerc(s, m.id); }); DS.mercTidy(s); var so = DS.sortieFix(s); var top = DS.sortieRank(s, DS.sortieCands(s).filter(function (ch) { return ch.id !== g.A; }))[0]; return { so: so, A: g.A, B: g.B, top: top ? top.id : 0, news: DS.sortieNewsText(s) }; } finally { DS.sortieHold = hold; } });

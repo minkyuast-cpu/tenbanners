@@ -439,6 +439,7 @@ DS.sortieCands = function (save) {      // 출전할 수 있는 가주의 가문
   var hid = +save.hero;
   return DS.charList(save).filter(function (ch) { return ch.id !== hid && !ch.down && !ch.vac && !!(DS.bearer && DS.bearer(save, ch, 1)); });
 };
+DS.SORTIE_GAP = 5;      // 2.6.1: 뒤를 이은 가주가 쉬는 가주보다 이만큼(레벨) 처지면 출전 자리를 내준다
 DS.sortiePow = function (save, ch) { var p = 0; try { p = DS.cardPower ? DS.cardPower(save, ch) : 0; } catch (x) { p = 0; } return p || (ch ? ch.L : 0); };
 DS.sortieRank = function (save, list) { return (list || DS.sortieCands(save)).slice().sort(function (a, b) { return DS.sortiePow(save, b) - DS.sortiePow(save, a) || DS.houseOrd(a, b); }); };
 function sortieWho(save, ch) { var b = DS.bearer ? DS.bearer(save, ch, 1) : null; return b ? (b.ttl || b.n || DS.flagName(ch.cls)) : DS.flagName(ch.cls); }
@@ -447,10 +448,16 @@ DS.sortieFix = function (save) {
   if (DS.sortieHold && DS.sortieHold()) return (save.sortie || []).map(function (e) { return e.h; });
   var fresh = !Array.isArray(save.sortie), cur = fresh ? [] : save.sortie, cands = DS.sortieCands(save), ok = {}, keep = [], gone = [], N = DS.SORTIE_N(), heirs = [];
   cands.forEach(function (ch) { ok[ch.id] = ch; });
+  var inCur = {}, benchL = 0; cur.forEach(function (e) { if (e) inCur[e.h] = 1; });
+  cands.forEach(function (ch) { if (!inCur[ch.id]) benchL = Math.max(benchL, DS.pL(DS.bearer(save, ch, 1))); });      // 쉬는 가주 가운데 가장 높은 레벨
   cur.forEach(function (e) {
     var ch = e && ok[e.h], b = ch && DS.bearer(save, ch, 1);
-    // 2.6.1: 가주가 바뀌어도(뒤를 이었다) 그 가문은 출전에 남는다 — 예전에는 자리가 비고 가장 센 가문이 들어와, 장비 없이 선 후계의 가문이 말없이 빠졌다
-    if (ch && b && keep.length < N && keep.every(function (k) { return k.h !== ch.id; })) { if (e.m && e.m !== b.id) heirs.push({ out: e.n || '', in: sortieWho(save, ch), h: ch.id, why: 'heir' }); keep.push({ h: ch.id, m: b.id }); return; }
+    // 2.6.1: 가주가 바뀌어도(뒤를 이었다) 그 가문은 출전에 남는다 — 예전에는 자리가 비고 가장 센 가문이 들어와, 장비 없이 선 후계의 가문이 말없이 빠졌다.
+    //   다만 후계가 쉬는 가주보다 레벨이 DS.SORTIE_GAP 넘게 처지면 예전처럼 자리를 내준다 (장비가 아니라 레벨로 견준다 — 약한 후계가 남아 부대가 처지지 않게). 소식 줄로 알린다
+    if (ch && b && keep.length < N && keep.every(function (k) { return k.h !== ch.id; })) {
+      if (e.m && e.m !== b.id) { if (DS.pL(b) + DS.SORTIE_GAP <= benchL) { gone.push(e); return; } heirs.push({ out: e.n || '', in: sortieWho(save, ch), h: ch.id, why: 'heir' }); }
+      keep.push({ h: ch.id, m: b.id }); return;
+    }
     // 가주가 막 쓰러져 비었지만 막사에 이을 사람(같은 병과)이 있다: 자리를 맡아 둔다 — 싸움 밖에서 곧 그 사람이 선다 (banner.js DS.sbTick). 그동안 그 가문은 싸우는 목록(DS.partyIds)에 들지 않는다
     var vch = e && save.chars[e.h];
     if (vch && e.h !== +save.hero && !vch.down && DS.vacant && DS.vacant(save, vch) && DS.sbOf && DS.sbOf(save, vch.id).length && keep.length < N && keep.every(function (k) { return k.h !== vch.id; })) { keep.push({ h: vch.id, m: e.m || 0, n: e.n || '', wait: 1 }); return; }
