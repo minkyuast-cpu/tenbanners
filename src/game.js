@@ -236,7 +236,9 @@ function storyLines(lines) {
     else if (self === 1 && r.one != null && (r.head || (one[r.one] && one[r.one] !== l.c))) return null;
     if (self === 1) { if (r.nm) w = r.nm; if (r.c) c = r.c; if (r.one != null && !one[r.one]) one[r.one] = l.c; }
     if (c === 'hero') { var hc = G.save && G.save.chars[G.save.hero]; c = hc ? hc.cls : ''; }
-    return w === l.w && c === l.c && t === l.t ? l : { w: w, c: c, t: t };
+    if (w === l.w && c === l.c && t === l.t) return l;
+    var nl = { w: w, c: c, t: t }; if (l.roll) nl.roll = l.roll; if (l.chat) nl.chat = l.chat;      // 2.6.0: 이름 낭독 · 말풍선 표시는 화자 칸이 바뀌어도 남는다
+    return nl;
   }
   return lines.map(castLine).filter(function (l) { return l != null; });
 }
@@ -244,32 +246,130 @@ DS.storyResolve = function (lines) {      // 화면에 뜨는 그대로: [{ w, c
   if (lines && !(lines instanceof Array)) lines = [lines];
   return storyLines(lines || []).map(function (l) { var o = !!l && typeof l === 'object'; return { w: o && l.w ? fill(l.w) : '', c: (o && l.c) || '', t: lineText(l), anc: !!(o && l.anc) }; });
 };
-function story(lines, cb, who) {
+// 2.6.0 이야기 창의 결: 타자(18ms/자 — 첫 탭은 줄을 마저 띄우고 둘째 탭이 넘긴다) · 화자가 바뀌면 초상이 튄다 · ◀ 앞 줄 다시 보기 · 갓 뜬 줄은 잠깐 넘어가지 않는다(두 번 누름이 한 줄을 건너뛰지 않게)
+//   줄의 roll — 이름 낭독: 이름을 한 사람씩 가운데에 빛과 함께 띄우고 상자에 모은다. roll: 1 = 글이 「. 」로 이은 이름들(「…」 안이면 그 안, 앞의 「그리고 」는 머리말) · roll: [이름…] = 글 안의 그 이름들
+//   opt.stage — 무대(도입 · 엔딩, stage.js): { cls, bg(요소), kind(l, i) 줄의 갈래, fade(i, l, kind) 떠오르는 시간, hold(i, l) 넘기기 전에 머무는 시간, onLine(i, l, kind, o, 다시 보기), out(끝, o) }
+//   조용한 시험(G.quiet)과 움직임 줄이기는 모두 바로 뜬다. 글 상자의 .who · .line 은 언제나 온 글을 지닌다(타자는 보이는 몫만 가른다).
+var TW_MS = 18, ROLL_MS = 520;
+function rollOf(l, text) {
+  if (!l || typeof l !== 'object' || !l.roll || typeof text !== 'string') return null;
+  var parts = [], cur = 0, end = text.length, m, x;
+  if (l.roll instanceof Array) {
+    var names = l.roll.map(function (n) { return String(n == null ? '' : n); }).filter(Boolean); if (!names.length) return null;
+    cur = text.indexOf(names[0]); if (cur < 0) return null;
+    var lead = text.slice(0, cur);
+    for (var i = 0; i < names.length; i++) { var at = text.indexOf(names[i], cur); if (at < 0) return null; var e = at + names[i].length; e += /^\.?\s*/.exec(text.slice(e))[0].length; parts.push({ n: names[i], t: text.slice(cur, e) }); cur = e; }
+    return { lead: lead, parts: parts, tail: text.slice(cur) };
+  }
+  m = /「([^」]*)」/.exec(text); if (m) { cur = m.index + 1; end = cur + m[1].length; }
+  x = /^(그리고|또)\s+/.exec(text.slice(cur, end)); if (x) cur += x[0].length;
+  var body = text.slice(cur, end), re = /([^.]+)(\.\s*|$)/g;
+  while ((x = re.exec(body))) { if (x[1].trim()) parts.push({ n: x[1].trim(), t: x[0] }); else if (parts.length) parts[parts.length - 1].t += x[0]; }
+  if (!parts.length || parts.map(function (q) { return q.t; }).join('') !== body) return null;
+  return { lead: text.slice(0, cur), parts: parts, tail: text.slice(end) };
+}
+DS.storyRoll = rollOf;
+function story(lines, cb, who, opt) {
   if (lines && !(lines instanceof Array)) lines = [lines];
   if (lines) { try { lines = storyLines(lines); } catch (x) {} }
   if (!lines || !lines.length) { if (cb) cb(); return; }
-  var i = 0, done = false, n = lines.length;
-  var o = overlay('<div class="story-box"><span class="sp"></span><p class="who"></p><p class="line"></p>' + (n > 2 ? '<button class="skip">건너뛰기 ▸▸</button>' : '') + '<span class="next"></span></div>', 'story modal');
+  var ST = (opt && opt.stage) || null, i = 0, done = false, n = lines.length, rv = null, lockT = 0, lastKey = null, holdT = 0;
+  function inst() { return !!G.quiet || calm(); }
+  var o = overlay('<div class="story-box"><span class="sp"></span><p class="who"></p><p class="line"></p>' + (n > 2 ? '<button class="skip">건너뛰기 ▸▸</button>' : '') + '<button class="back" aria-label="앞 줄 다시 보기" hidden>◀</button><span class="next"></span></div>', 'story modal' + (ST ? ' stg ' + (ST.cls || '') : ''));
+  var box = $('.story-box', o), lineEl = $('.line', o), whoEl = $('.who', o), sp = $('.sp', o), nextEl = $('.next', o), backEl = $('.back', o);
+  if (ST && ST.bg) o.insertBefore(ST.bg, o.firstChild);
+  if (ST) { var shS = $('.sheet', o); [$('.skip', o), backEl, nextEl].forEach(function (x) { if (x) shS.appendChild(x); }); }      // 무대: 건너뛰기 · ◀ · 넘김 표시는 글 상자 밖(화면 가장자리)에 — 말풍선이 움직여도 따라가지 않는다
+  if (ST && ST.init) { try { ST.init(lines, o); } catch (x) {} }
   var tt = $('#toast'); if (tt) { tt.classList.remove('on'); clearTimeout(toastT); }      // 이야기 창이 열리면 떠 있던 토스트(튜토리얼 등)는 걷는다 — 글 상자가 둘 겹치지 않게 (QA K8)
-  function end() { if (done) return; done = true; o.close(); if (cb) cb(); }
-  function put() {
-    var l = lines[i], obj = !!l && typeof l === 'object', sp = $('.sp', o), box = $('.story-box', o), pic = '';
+  function end() {
+    if (done) return; done = true; stop();
+    var fin = function () { o.close(); if (cb) cb(); };
+    if (ST && ST.out && !inst()) { try { ST.out(fin, o); } catch (x) { fin(); } } else fin();
+  }
+  function stop() { if (rv && rv.stop) rv.stop(); rv = null; clearTimeout(holdT); var rc = $('.roll-c', o); if (rc) rc.remove(); }
+  function shown(byTap) {      // 줄이 다 떴다
+    rv = null; box.classList.remove('typing');
+    var hold = ST && ST.hold && !inst() ? +ST.hold(i, lines[i]) || 0 : 0;
+    lockT = inst() ? 0 : Math.max(lockT, performance.now() + Math.max(hold, byTap ? 140 : 0));
+    box.classList.toggle('wait', hold > 0); clearTimeout(holdT);
+    if (hold > 0) holdT = setTimeout(function () { box.classList.remove('wait'); }, hold);
+  }
+  function typeLine(text) {      // 타자: 보이는 몫(.tw)과 아직 안 보이는 몫(.tw-r, 자리는 차지한다 — 줄바꿈이 흔들리지 않는다)
+    var chars = Array.from(text), k = 0, t0 = performance.now(), me = {};
+    lineEl.innerHTML = '<span class="tw"></span><span class="tw-r"></span>';
+    var a = lineEl.firstChild, b = lineEl.lastChild; b.textContent = text;
+    me.stop = function () { me.off = 1; };
+    me.fin = function () { me.off = 1; lineEl.textContent = text; };
+    rv = me; box.classList.add('typing');
+    (function f(now) {
+      if (me.off || !o.isConnected) return;
+      var kk = Math.min(chars.length, Math.floor((now - t0) / TW_MS) + 1);
+      if (kk !== k) { k = kk; a.textContent = chars.slice(0, k).join(''); b.textContent = chars.slice(k).join(''); }
+      if (k >= chars.length) { me.fin(); shown(); return; }
+      requestAnimationFrame(f);
+    })(t0);
+  }
+  function fadeLine(text, ms) {      // 무대의 줄: 천천히 떠오른다
+    var me = {}, t = 0;
+    lineEl.textContent = text; box.style.setProperty('--rv', ms + 'ms'); box.classList.remove('rvin'); void box.offsetWidth; box.classList.add('rvin', 'typing');
+    me.stop = function () { clearTimeout(t); box.classList.remove('rvin'); };
+    me.fin = me.stop; rv = me;
+    t = setTimeout(function () { if (rv === me) { me.stop(); shown(); } }, ms);
+  }
+  function rollLine(R, now) {      // 이름 낭독
+    lineEl.innerHTML = esc(R.lead) + R.parts.map(function (p) { return '<span class="rn">' + esc(p.t) + '</span>'; }).join('') + '<span class="rn rt">' + esc(R.tail) + '</span>';
+    var sps = $$('.rn', lineEl), k = 0, me = {}, t = 0, c = null;
+    var all = function () { sps.forEach(function (x) { x.classList.add('on'); }); if (c) c.remove(); c = null; };
+    if (now) { all(); return; }
+    c = h('<div class="roll-c" aria-hidden="true"><i></i><b></b></div>'); o.appendChild(c);
+    me.stop = function () { clearTimeout(t); if (c) c.remove(); c = null; };
+    me.fin = function () { clearTimeout(t); all(); };
+    rv = me; box.classList.add('typing', 'rolling');
+    (function step() {
+      if (!o.isConnected || rv !== me) return;
+      if (k > 0) sps[k - 1].classList.add('on');      // 앞 이름은 상자에 모인다
+      if (k >= R.parts.length) { all(); box.classList.remove('rolling'); shown(); return; }
+      $('b', c).textContent = R.parts[k].n; c.classList.remove('on'); void c.offsetWidth; c.classList.add('on'); A('ready'); k++;
+      t = setTimeout(step, ROLL_MS);
+    })();
+  }
+  function put(noAnim) {
+    var l = lines[i], obj = !!l && typeof l === 'object', pic = '', text = lineText(l), kind = '', quick = !!noAnim || inst();
+    stop();
     if (obj && l.c) { try { pic = speakerSpr(l.c); } catch (x) { pic = ''; } }
-    $('.who', o).textContent = obj && l.w ? fill(l.w) : (who || '');
-    $('.line', o).textContent = lineText(l);
+    whoEl.textContent = obj && l.w ? fill(l.w) : (who || '');
     sp.innerHTML = pic; hydrate(sp);
+    var key = obj ? (l.c || '') + '|' + (l.w || '') : '';
+    if (pic && key !== lastKey && lastKey !== null && !quick) { sp.classList.remove('pop'); void sp.offsetWidth; sp.classList.add('pop'); } else sp.classList.remove('pop');      // 화자가 바뀌면 초상이 튄다
+    lastKey = key;
     box.classList.toggle('talk', obj && !!(l.w || l.c)); box.classList.toggle('pic', !!pic);
     box.classList.toggle('memo', obj && l.w === '전장 메모');      // 이야기 속 목소리가 아니라 조작 안내
     box.classList.toggle('anc', obj && (!!l.anc || l.w === '선대 단톡방' || /^(선대|단톡방 ·) /.test(l.w || '')));      // 2.4.0: 선대의 훈수 (초상이 바랜다)
-    $('.next', o).textContent = (n > 2 ? (i + 1) + ' / ' + n + '  ' : '') + (i >= n - 1 ? '▼ 닫기' : '▼ 눌러서 계속');
+    box.classList.remove('typing', 'rolling', 'rvin', 'wait');
+    if (ST) { try { kind = ST.kind ? ST.kind(l, i) || '' : ''; } catch (x) { kind = ''; } box.dataset.k = kind; }
+    nextEl.textContent = (n > 2 ? (i + 1) + ' / ' + n + '  ' : '') + (i >= n - 1 ? '▼ 닫기' : '▼ 눌러서 계속');
+    backEl.hidden = i === 0;
+    lockT = performance.now() + (inst() ? 0 : 220);      // 갓 뜬 줄: 같은 두 번 누름의 둘째 탭이 이 줄을 넘기지 않는다
+    var R = null; try { R = rollOf(l, text); } catch (x) { R = null; }
+    var fd = ST && ST.fade && !quick ? +ST.fade(i, l, kind) || 0 : 0;
+    if (R) { rollLine(R, quick); if (quick) shown(); }
+    else if (quick || (ST && !fd)) { lineEl.textContent = text; shown(); }
+    else if (fd) fadeLine(text, fd);
+    else typeLine(text);
+    if (ST && ST.onLine) { try { ST.onLine(i, l, kind, o, !!noAnim); } catch (x) { if (DS.DEBUG) throw x; } }
   }
   o.addEventListener('click', function (e) {
-    if (performance.now() - o.born < 250) return;      // 연 탭의 click 이 넘김으로 읽히지 않게
+    var now = performance.now();
+    if (done || now - o.born < 250) return;      // 연 탭의 click 이 넘김으로 읽히지 않게
+    if (e.target.closest && e.target.closest('.skip')) { A('tap'); end(); return; }
+    if (e.target.closest && e.target.closest('.back')) { if (i > 0) { A('tap'); i--; put(true); } return; }      // ◀ 앞 줄을 다시 본다
+    if (now < lockT) return;
     A('tap');
-    if (e.target.closest && e.target.closest('.skip')) { end(); return; }
-    if (++i >= n) end(); else put();
+    if (rv) { var r0 = rv; rv = null; r0.fin(); box.classList.remove('rolling'); shown(true); return; }      // 첫 탭: 줄을 마저 띄운다
+    if (++i >= n) { i = n - 1; end(); } else put();
   });
   put();
+  return o;
 }
 DS.ui = { josa: josa, $: $, $$: $$, h: h, esc: esc, sprTag: sprTag, charSpr: charSpr, toast: toast, banner: banner, overlay: overlay, closeAll: closeAll, story: story, A: A, persist: persist, load: load, wipeSave: wipeSave, show: show, hydrate: hydrate,
   deny: deny, haptic: haptic, calm: calm, countUp: countUp, coach: coach, vban: vban, svg: icon, fmtN: fmtN };
@@ -283,7 +383,7 @@ function placeParty(sim, x, y, starts) {
   var s = G.save;
   var egp = !!(DS.egPassOn && DS.egPassOn(s));      // 3.3.0: 스무 해 창이 열려 있으면 빈자리는 그 창의 멈춤이 정한다 (안전망이 먼저 채우지 않는다)
   if (!G.riteBusy && !egp && DS.linVacant && DS.linVacant(s).length) { (DS.linAutoAll(s) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(s, e.ev), 4200); }); }      // 안전망: 의식을 거치지 않은 빈자리는 출전 전에 채운다
-  if (!egp && !G.scn && !sim.combat && DS.sbTick) bnNote(DS.sbTick(s));      // 2.2.0: 싸움 밖이면 빈 가문은 막사의 같은 병과가 곧바로 잇는다 (마을에서 천수로 떠난 가주 · 방출 · 판 올림 뒤)
+  if (!egp && !G.scn && !sim.combat && DS.sbTick && !G.church) bnNote(DS.sbTick(s));      // 2.2.0: 싸움 밖이면 빈 가문은 막사의 같은 병과가 곧바로 잇는다 (마을에서 천수로 떠난 가주 · 방출 · 판 올림 뒤)
   if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 · 2.2.8: 출전 목록(s.party) = 맹주 + 출전한 가주 둘
   sortieNote();
   if (!egp && !s.party.some(function (id) { return s.chars[id] && !s.chars[id].down; })) reviveAll();
@@ -326,7 +426,7 @@ function refreshUnits(full) {
 function rebuildParty() {
   var sim = G.sim; if (!sim) return;
   syncVitals();
-  var me = sim.byId[G.sel] || sim.cmds()[0], x = me ? me.x : 1, y = me ? me.y : 1;
+  var me = sim.byId[G.sel] || sim.cmds()[0], at0 = !me && G.zone && G.zone.town && !G.scn ? churchPos(G.zone.id) : null, x = me ? me.x : at0 ? at0.x : 1, y = me ? me.y : at0 ? at0.y : 1;      // 2.6.0: 설 사람이 아무도 없던 마을(맹주를 잃은 의식 중)에서는 교회 문 앞에 선다 (예전: 지도 구석)
   sim.units.filter(function (u) { return u.side === 'ally'; }).forEach(function (u) { sim.remove(u); delete G.view.vu[u.id]; });
   placeParty(sim, x, y);
   sim.units.forEach(function (u) { if (u.side === 'ally' && !G.view.vu[u.id]) G.view.vu[u.id] = G.view.mkVu(u, true); });
@@ -378,6 +478,7 @@ DS.lvText = lvText;
 function enterZone(id, from, pos) {
   var z = DS.buildZone(id), s = G.save;
   syncVitals();
+  if (DS.stageClear) DS.stageClear();      // 2.6.0: 엔딩 · 교회의 장막은 새 장면에 들어설 때 걷힌다 (stage.js)
   G.zone = z; G.scn = null; G.aim = null; G.bossId = null; G.pendPoi = null; G.ending = false; G.wasCombat = false; G.gain = { exp: 0, gold: 0, loot: [] };
   G.goal = null; G.bcast = null; G.mercSeen = false; G.stats = { kills: {}, dmg: {} }; G.dangerOn = false; G.bearLost = [];
   s.zone = id; s.visited[id] = true; if (z.town) s.town = id;
@@ -391,7 +492,7 @@ function enterZone(id, from, pos) {
     mk: function (type, o) { return DS.fieldSpec(type, o.L, { x: o.x, y: o.y, grp: o.grp, zone: id, save: s }); } });      // 2.2.7: DS.fieldSpec (tune.js — 세기 0.72 · 체력 · 공격 손잡이) · zone: 기획팀 정예 무리가 어느 지역인지 안다
   G.sim = sim; G.lost = []; if (DS.shadeUI) DS.shadeUI.off();
   var sbS = [];
-  if (!(DS.egPassOn && DS.egPassOn(s))) { if (DS.sbTick) sbS = DS.sbTick(s); if (DS.mercTidy) DS.mercTidy(s); }      // 2.2.0: 가주가 떠난 가문은 막사의 같은 병과가 잇는다 · 3.3.0: 스무 해 창 동안은 편성을 건드리지 않는다
+  if (!(DS.egPassOn && DS.egPassOn(s)) && !G.church) { if (DS.sbTick) sbS = DS.sbTick(s); if (DS.mercTidy) DS.mercTidy(s); }      // 2.2.0: 가주가 떠난 가문은 막사의 같은 병과가 잇는다 · 3.3.0: 스무 해 창 동안은 편성을 건드리지 않는다 · 2.6.0: 교회의 의식 앞에서는 미룬다 (의식이 먼저 — 예전 차례 그대로)
   placeParty(sim, start.x, start.y);
   sim.hunt = false;
   if (DS.fieldEnter) DS.fieldEnter(sim, z, s);      // r47: 들판의 기습·필드 보스 (field.js)
@@ -418,6 +519,7 @@ DS.enterZone = enterZone;
 function startScenario(s) {
   var sv = G.save, me = G.sim.byId[G.sel];
   syncVitals();
+  if (DS.stageClear) DS.stageClear(true);
   G.ret = G.keepRet || { zone: G.zone.id, pos: me ? { x: me.x, y: me.y } : null }; G.keepRet = null;      // 2.2.3: 갱도 층을 잇달아 들어가면 처음 들어온 자리로 돌아간다
   sortieFree(function () { if (DS.mercTidy) DS.mercTidy(sv); });      // 2.2.8: 출전 목록 = 맹주 + 출전한 가주 둘 (+ 가문원) — 들판 싸움이 막 끝나지 않았어도 들어가기 전에 자리를 채운다
   sortieNote();
@@ -498,7 +600,8 @@ function linEnd(win) {
   G.lineageQ = (G.lineageQ || []).concat(q);
 }
 // 쌓인 가계도 사건을 화면에 넘긴다. lineage_ui 의 DS.openLineageRite(queue, done) 가 있으면 그 창(후계 의식·관·출생 알림)이, 없으면 자동으로 후계를 정하고 토스트로.
-function lineageFlush(cb) {
+function lineageFlush(cb, mine) {
+  if (!mine && $('#stgkeep.rite')) return;      // 2.6.0: 교회의 의식이 열려 있다 — 그 의식이 대기열을 모두 다룬다 (마을에 들어설 때의 나이 소식도 거기에 실린다)
   if (DS.egPassOn && DS.egPassOn(G.save)) { if (cb) cb(); return; }      // 3.3.0: 스무 해 창 동안은 그 창이 다룬다
   var sv = G.save, q = G.lineageQ || [], fin = function () { G.riteBusy = false; if (DS.linVacant && DS.linVacant(sv).length) (DS.linAutoAll(sv) || []).forEach(function (e) { if (e.ev) later(DS.linEvText(sv, e.ev), 4200); }); if (sv.runs && sv.runs.n !== G.runsN) { G.runsN = sv.runs.n; DS.markPois(); } persist(); if (cb) cb(); };      // 2.3.2: 대가 끊겨 깬 시나리오가 사라졌으면 입구 표시 · 목표 줄을 곧바로
   G.lineageQ = [];
@@ -536,8 +639,28 @@ function onLose() {
       '<p class="dim">' + (hd ? '교회에서 맹주의 뒤를 이을 사람을 정한다. ' : '') + '가주를 잃은 가문은 막사의 같은 병과가 잇는다. 없으면 빈 가문으로 남는다.</p>' +
       (pitF ? '<div class="pitrb two"><button class="btn gold" data-pitre="' + pitF + '">다시 도전<small class="num">' + pitF + '층</small></button><button class="btn" data-close>나가기<small>교회로</small></button></div></div>' : '<button class="btn gold wide" data-close>교회로</button></div>'), 'modal center');      // 2.2.3: 갱도에서 지면 같은 층 다시 · 나가기
     if (pitF) o.addEventListener('click', function (e) { if (e.target.closest('[data-pitre]')) { A('ok'); G.pitGo = pitF; o.close(); } });
-    o.onclose = function () { lineageFlush(function () { if (G.pitGo) pitChain(true); else backToField(true); }); };
+    o.onclose = function () { if (G.pitGo || !toChurch()) lineageFlush(function () { if (G.pitGo) pitChain(true); else backToField(true); }); };      // 갱도 「다시 도전」은 그 자리에서 잇는다
   }, 1400);
+}
+// 2.6.0: 전멸 뒤의 추도 · 후계는 싸움터가 아니라 교회에서. 「교회로」 → 검게 가라앉는다 → 마을의 교회 문 앞(HUD 는 걷힌다) → 어둑한 바탕과 촛불 위에서 의식 → 다시 밝아진다.
+//   차례는 예전 그대로다: 의식이 먼저, 막사의 자동 계승(DS.sbTick) · 자동 후계(안전망)는 그 뒤 — 의식이 끝나면 예전처럼 마을에 들어선다(enterZone). 돌려주는 것: 교회에서 치렀는가
+function toChurch() {
+  var sv = G.save; if (!DS.riteVeil || !sv || !(DS.linVacant && DS.linVacant(sv).length) || (DS.egPassOn && DS.egPassOn(sv))) return false;
+  var enter = function () {
+    var ok = false;
+    G.church = true; G.riteBusy = true;      // 마을에 들어설 때 빈 맹주 자리를 저절로 채우지 않게 (placeParty 의 안전망 · sbTick)
+    try { backToField(true); ok = true; } catch (x) { loopErr(x, 'church'); } finally { G.church = false; }
+    if (!ok) { G.riteBusy = false; lineageFlush(function () { backToField(true); }); return; }
+    G.pendBan = null; G.pendCamp = null;
+    DS.riteVeil(true, { label: DS.ZONES[sv.town] ? DS.ZONES[sv.town].name + ' 교회' : '교회' });
+    G.hold++;
+    lineageFlush(function () {
+      G.riteBusy = false; G.hold = Math.max(0, G.hold - 1);
+      try { backToField(true); } catch (x) { loopErr(x, 'church2'); }      // 예전과 같은 끝: 의식 뒤에 마을에 들어선다 (장막은 여기서 걷힌다)
+    }, true);
+  };
+  if (DS.stageFade) DS.stageFade(enter, 420); else enter();
+  return true;
 }
 
 // ───────── 조작 ─────────
@@ -686,6 +809,7 @@ function pressed() {
 function openPoi(p) {
   G.pendPoi = null;
   if (pressed()) { toast('적이 가까이 있어 들어갈 수 없다'); return; }
+  if (p.kind === 'pole' && DS.poleOpen) { A('ok'); DS.poleOpen(); return; }      // 2.6.0: 마을 한가운데의 깃대 (stage.js)
   if (p.t === 'npc') { A('tap'); story(npcLine(p.look) || [p.text], null, '마을 사람'); return; }
   if (p.t === 'arena') { if (DS.arenaOpen) { A('ok'); DS.arenaOpen(); } return; }      // r39 연무장
   if (p.t === 'shop') {
@@ -1319,9 +1443,14 @@ function retreatAsk(fell, goneNm, goneM) {
   var sv = G.save, dn = downNames(), live = G.sim ? G.sim.cmds().length : 0, html;
   if (fell) {
     var nm = goneNm || DS.charName(fell);
-    html = '<div class="result fell"><span class="fellpic">' + charSpr(fell, 3, 0, goneM) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
-      '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + (goneNm ? '돌아오지 못한다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
-      '<p class="dim">물러나면 남은 사람을 지킨다. 남은 가문 ' + live + '개와 가문원은 살아 돌아가고 얻은 경험치와 골드도 남는다. ' + esc(goneNm ? DS.flagName(fell.cls) + '은 막사에 같은 병과가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : nm + '의 자리는 후계가 잇는다.') + '</p>' +
+    // 2.6.0: 두 줄만 — 나머지는 「자세히」 뒤에. 마지막 한마디가 있으면 그 말을 먼저
+    var lwF = fellLW(fell, goneM);
+    html = '<div class="result fell fell2"><span class="fellpic">' + charSpr(fell, 3, 0, goneM) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
+      (lwF ? '<q class="felllw">「' + esc(lwF) + '」</q>' : '') +
+      '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> 돌아오지 못한다.</p>' +
+      '<p>지금 물러나면 남은 사람은 산다.</p>' +
+      '<button class="lnk fellmore" data-fellmore="1" aria-expanded="false">자세히 ▸</button>' +
+      '<p class="dim felldet" hidden>' + (goneNm ? '' : '맹주의 죽음은 이 싸움이 끝날 때 정해진다. 이기든 물러나든 돌아오지 못한다. ') + '물러나면 남은 가문 ' + live + '개와 가문원은 살아 돌아가고 얻은 경험치와 골드도 남는다. ' + esc(goneNm ? DS.flagName(fell.cls) + '은 막사에 같은 병과가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : nm + '의 자리는 후계가 잇는다.') + '</p>' +
       '<button class="btn red wide" id="yesRet">퇴각</button><button class="btn wide" data-close>계속 싸우기</button></div>';
   } else {
     html = '<div class="result"><h2>퇴각할까?</h2><p>얻은 경험치와 골드는 남는다.</p>' +
@@ -1333,13 +1462,14 @@ function retreatAsk(fell, goneNm, goneM) {
   // 쓰러짐 창은 싸움 도중 저절로 뜬다 — 전장을 누르던 손가락이 「물러난다」에 떨어져 읽지도 못하고 판을 버리지 않게 잠깐 잠근다 (직접 연 퇴각 창은 그대로)
   if (fell) { yes.disabled = true; setTimeout(function () { if (yes.isConnected) yes.disabled = false; }, 800); }
   yes.addEventListener('click', function () { if (fell && performance.now() - o.born < 800) return; o.close(); doRetreat(); });
+  fellMore(o);
   return o;
 }
 // 물러난다: 쓰러진 지휘관이 있으면 그 죽음을 여기서 확정하고(가계도 훅 linEnd — 진 판으로 센다) 후계 의식을 거친 뒤 들판으로. 아무도 쓰러지지 않았으면 예전 그대로.
 function doRetreat() {
   if (G.ending) return; G.ending = true; DS.Audio.bgm(null);
   var back = function () { backToField(false); flushPromos(); };
-  if (downNames().length && DS.linSettle) { linEnd(false); persist(); lineageFlush(back); }
+  if (downNames().length && DS.linSettle) { linEnd(false); persist(); var veil = !!(DS.riteVeil && DS.linVacant && DS.linVacant(G.save).length && !(DS.egPassOn && DS.egPassOn(G.save))); if (veil) DS.riteVeil(true, { solid: 1 }); lineageFlush(back, veil); }      // 2.6.0: 맹주를 잃고 물러났으면 의식은 싸움터를 가린 어둑한 장막 위에서 (들판으로 돌아가면 걷힌다)
   else back();
 }
 // 그 판(시나리오 한 판·들판의 한 싸움)에서 첫 지휘관이 쓰러졌다: 싸움을 멈추고 알린다. 둘째부터는 토스트.
@@ -1356,11 +1486,19 @@ function cmdFell(u, gone) {
   var hunt = !!sim.hunt;
   if (hunt) { sim.hunt = false; sv.opt.hunt = false; renderSys(); }
   toastOff();
-  overlay('<div class="result fell"><span class="fellpic">' + charSpr(ch, 3, 0, gone || null) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
-    '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> ' + esc(gone ? '돌아오지 못한다. ' + DS.flagName(ch.cls) + '은 막사에 같은 병과가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : '이 싸움이 끝나면 돌아오지 못한다.') + '</p>' +
-    '<p class="dim">' + (hunt ? '자동 사냥을 멈췄다. ' : '') + '쓰러진 이는 돌아오지 않는다. 남은 이들은 적에게서 멀어지면 싸움에서 벗어난다.</p>' +
+  var lwF = fellLW(ch, gone);
+  var of = overlay('<div class="result fell fell2"><span class="fellpic">' + charSpr(ch, 3, 0, gone || null) + '</span><h2>' + esc(nm) + ' 쓰러짐</h2>' +
+    (lwF ? '<q class="felllw">「' + esc(lwF) + '」</q>' : '') +
+    '<p><b>' + esc(josa(nm, '이가')) + ' 쓰러졌다.</b> 돌아오지 못한다.</p>' +
+    '<p>남은 이들은 적에게서 멀어지면 싸움에서 벗어난다.</p>' +
+    '<button class="lnk fellmore" data-fellmore="1" aria-expanded="false">자세히 ▸</button>' +
+    '<p class="dim felldet" hidden>' + (hunt ? '자동 사냥을 멈췄다. ' : '') + esc(gone ? DS.flagName(ch.cls) + '은 막사에 같은 병과가 있으면 그이가 잇고, 없으면 빈 가문이 된다.' : '맹주의 죽음은 이 싸움이 끝날 때 정해진다. 그 자리는 후계가 잇는다.') + '</p>' +
     '<button class="btn wide" data-close>확인</button></div>', 'modal center');
+  fellMore(of);
 }
+// 2.6.0 쓰러짐 창: 마지막 한마디(맹주는 가계 기록, 가주는 그 사람의 기록) · 「자세히」 접기
+function fellLW(ch, gone) { try { var sv = G.save, P = sv.lin && sv.lin.P, p = !gone && P && ch && ch.pid ? P[ch.pid] : null; return String((gone && gone.lw) || (p && p.lw) || ''); } catch (x) { return ''; } }
+function fellMore(o) { var more = $('[data-fellmore]', o); if (more) more.addEventListener('click', function () { var d = $('.felldet', o), on = d.hidden; d.hidden = !on; more.setAttribute('aria-expanded', on ? 'true' : 'false'); more.textContent = on ? '자세히 ▾' : '자세히 ▸'; A('tap'); }); }
 function pulseRetreat() { var q = $('#quest'); if (!q || !q._retreat) return; q.classList.remove('pulse'); void q.offsetWidth; q.classList.add('pulse'); clearTimeout(q._pt); q._pt = setTimeout(function () { q.classList.remove('pulse'); }, 5200); }
 // 지휘관이 위태롭다: HP 절반 아래 첫 순간에 약초를 가리키고(저장에서 한 번), 35% 아래로 내려가면 정보 줄에 알린다 — 저장에서 처음이면 잠깐 멈춘다.
 function cmdLow(u) {
@@ -1556,7 +1694,7 @@ function onEvents(evs) {
           else if (dch && DS.bearer) { bm0 = DS.bearer(sv, dch); if (bm0) { if (!e.flee) keepLW(u, bm0); gone = bearerFell(u, bm0, true); } }      // r32: 한마디를 먼저 남겨야 추모·가계 기록에 들어간다
           if (dch && (u.ch === sv.hero || gone) && !e.flee) dsMs = deathFx(u, e, gone || bm0, u.flag != null ? !!u.flag : true, gone ? (gone.ttl || gone.n) : DS.charName(dch));
           if (!gone && u.ch !== sv.hero) cmdFell(u, gone);
-          else if (dsMs > 0) (function (u0, g0) { setTimeout(function () { if (G.sim === sim) cmdFell(u0, g0); }, dsMs + 150); })(u, gone);      // 장면이 먼저, 창(쓰러짐 안내)은 그 뒤
+          else if (dsMs > 0) (function (u0, g0) { setTimeout(function () { if (G.sim === sim) cmdFell(u0, g0); }, G.quiet ? dsMs + 150 : Math.max(1600, dsMs + 700)); })(u, gone);      // 장면이 먼저, 창(쓰러짐 안내)은 그 뒤 · 2.6.0: 줌이 다 풀린 뒤에 (적어도 1.6초)
           else cmdFell(u, gone);
         }
         if (u && u.side === 'enemy' && e.by && !e.flee) bark(sim.byId[e.by], 'kill');      // r32 전투 대사

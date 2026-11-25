@@ -201,6 +201,7 @@ function buildTown(id, Z) {
   });
   var spots = [[8, 8], [11, 13], [4, 13], [14, 7]];
   (Z.npcs || []).forEach(function (t, i) { pois.push({ t: 'npc', x: spots[i][0], y: spots[i][1], text: t, look: i }); });
+  if (DS.poleInfo && g[9][10] === '.') pois.push({ t: 'npc', kind: 'pole', x: 10, y: 9, look: 0, sprite: 'pole', text: '', label: DS.poleInfo(DS.G && DS.G.save).name, lx: 10, ly: 7.15 });      // 2.6.0: 마을 한가운데의 깃대 — 마을 사람처럼 한 칸을 막고 곁에서 누르면 열린다 (stage.js DS.poleOpen · 20번 전에는 「낡은 깃발」)
   return { w: w, h: h, rows: rowsOf(g), pois: pois, spawns: [], seed: 3 };
 }
 // 지역에 들어설 때 서는 자리
