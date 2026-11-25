@@ -80,7 +80,7 @@ function play(ev) {
   if (k === 'boss') dur = md === 'short' || calm ? 2400 : 3800;
   if (k === 'handover') dur = calm ? Math.max(dur, 4200) : 9000;      // 2.6.0: 「짧게」여도 기운이 다 건너가고 글이 뜰 때까지는 둔다
   var por = ev.por || [], fx = '';
-  for (var n = 0; n < (k === 'death' || k === 'fallx' || k === 'lapse' ? 7 : k === 'fuse' || k === 'ascend' || k === 'handover' ? 12 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
+  for (var n = 0; n < (k === 'death' || k === 'fallx' || k === 'lapse' ? 7 : k === 'fuse' || k === 'ascend' ? 12 : 10); n++) fx += '<i style="--i:' + n + '"></i>';
   var stage = '';
   if (k === 'wed') stage = face(por[0] || '', 'cl') + '<span class="cring" aria-hidden="true"><i></i><i></i></span>' + face(por[1] || '', 'cr');
   else if (k === 'birth') stage = (por[1] ? face(por[1], 'cp cl') : '') + face(por[0] || '<i class="cbaby"></i>', 'cb') + (por[2] ? face(por[2], 'cp cr') : '');

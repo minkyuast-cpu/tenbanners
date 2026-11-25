@@ -267,13 +267,14 @@ module.exports = async (page, shot, L) => {
   await page.mouse.click(hx, hy); await sleep(400);      // 짧게 한 번 누른다
   c = await ev(() => ({ alive: !DS.G.save.chars[DS.G.save.hero].vac && DS.G.save.chars[DS.G.save.hero].pid === window.__o.pid, hint: document.querySelector('.nkhn').textContent, cine: !!document.querySelector('.cine') }));
   A(c.alive && !c.cine && c.hint === '길게 누르고 있어야 넘어간다', 'a plain tap does not hand over (「' + c.hint + '」)');
-  await page.mouse.move(hx, hy); await page.mouse.down(); await sleep(650);
+  await page.mouse.move(hx, hy); await page.mouse.down(); await sleep(450);
   c = await ev(() => +getComputedStyle(document.querySelector('#nkHold')).getPropertyValue('--p'));
   await shot('r1_confirm_hold');
   await page.mouse.up(); await sleep(300);
   const c2 = await ev(() => ({ alive: DS.G.save.chars[DS.G.save.hero].pid === window.__o.pid, p: +getComputedStyle(document.querySelector('#nkHold')).getPropertyValue('--p'), cine: !!document.querySelector('.cine') }));
-  A(c > 0.3 && c < 0.75 && c2.alive && c2.p === 0 && !c2.cine, 'letting go early stops it (filled ' + Math.round(c * 100) + '%, back to 0)');
-  await page.mouse.move(hx, hy); await page.mouse.down(); await sleep(1750); await page.mouse.up();
+  A(c > 0.15 && c < 0.9 && c2.alive && c2.p === 0 && !c2.cine, 'letting go early stops it (filled ' + Math.round(c * 100) + '%, back to 0)');
+  const tH = Date.now(); await page.mouse.move(hx, hy); await page.mouse.down(); await waitFor(() => !!document.querySelector('.cine.ck-handover') || !document.querySelector('#nkHold'), null, 6000); const held = Date.now() - tH; await page.mouse.up();      // 다 찰 때까지 누르고 있는다 (1.4초)
+  A(held >= 1300, 'it takes a deliberate long press (' + held + ' ms held before anything happens)');
   // 연출: 누를 때까지 기다리는 종류 · 처음 1.6초는 눌러도 닫히지 않는다 · 끝까지 본다
   c = await waitFor(() => { var el = document.querySelector('.cine.ck-handover'); return el ? { info: DS.cineInfo(), ov: document.querySelectorAll('#app .ov:not(.ghost)').length } : null; });
   A(c && c.info.k === 'handover' && c.info.hold && c.ov === 0, 'the hand-over cinematic starts (waits for a tap, all windows closed)');
@@ -281,7 +282,7 @@ module.exports = async (page, shot, L) => {
   await at(900); await page.mouse.click(195, 700); await sleep(100);
   A(await ev(() => !!document.querySelector('.cine.ck-handover')), 'a stray tap in the first second does not skip it');
   await at(1300); const fr1 = await shot('r1_cine_1_face');
-  await at(2700); const fr2 = await shot('r1_cine_2_stream');
+  await at(2300); const fr2 = await shot('r1_cine_2_stream');
   c = await ev(() => { var el = document.querySelector('.cine'), o = getComputedStyle(el.querySelector('.chvo')), m = [].slice.call(el.querySelectorAll('.chvm')).filter(function (x) { return +getComputedStyle(x).opacity > 0.3; }).length; return { motes: m, n: el.querySelectorAll('.chvm').length, oldOp: +o.opacity, was: +getComputedStyle(el.querySelector('.chvp.was')).opacity, tag: el.querySelector('.chvt').getBoundingClientRect().left, nameO: el.querySelector('.chvl.o').textContent, nameN: el.querySelector('.chvl.n').textContent, fc: getComputedStyle(el).getPropertyValue('--fc').trim() }; });
   A(c.motes >= 3 && c.n === 26 && c.was > 0.9 && c.tag < 150 && c.nameO === '한울' && c.fc === await ev(() => DS.FLAG.inf), 'mid-way: ' + c.motes + ' motes of 기운 in the house colour (' + c.fc + ') are crossing, the 「맹주」 mark is still over ' + c.nameO);
   await at(4250); const fr3 = await shot('r1_cine_3_fall');

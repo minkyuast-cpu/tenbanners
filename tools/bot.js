@@ -6,6 +6,7 @@
 //   BOTLAPSE=n (2.3.2): n번을 깬 뒤 한 번 대를 일부러 끊는다 — 대가 끊기면 깬 시나리오가 모두 사라지니(DS.lapseRestart) 봇은 1번부터 다시 걷는다.
 //     요약의 lapses: [{ lost 잃은 시나리오 수, top, h 끊긴 때(시간), back 그 번호까지 되찾는 데 든 시간, forced }] · 저절로 끊긴 대도 같은 칸에 (forced 0)
 //   BOTSAVE=파일 BOTSAVEAT=15: 그 시나리오를 깬 판을 저장 글(JSON)로 쓰고 끝낸다 (화면 시험용 중반 저장)
+//   BOTNOKEEP=1 (2.6.0): 뒤를 이은 이에게 선대가 입던 것을 먼저 입히지 않는다 — 출전 셋이 가방에서 먼저 고르던 첫 판 (비교용: 대를 이은 가문이 남은 것만 입어 다시 합일하는 긴 판이 잦았다)
 //   끝에 한 줄 요약과 「BOT {json}」 (hours · cleared · wipes · deaths · vacancies · recruits …).
 //
 // 정책 (사람이 하듯이, 단순하게):
@@ -161,10 +162,15 @@ function fuseMaybe(gate) {
   return k;
 }
 // 2.6.0 떠난 이의 장비는 가방으로: 뒤를 이은 가주 · 맹주는 빈 칸으로 선다 — 사람이 「장비 자동 착용」을 누르듯 다시 입힌다.
-//   출전 셋이 먼저 가방에서 가장 좋은 것을 고르고(DS.lootAutoEquip), 쉬는 가문은 빈 칸이 있을 때만 남은 것으로 채운다 (쉬는 가문의 멀쩡한 장비는 예전처럼 건드리지 않는다)
+//   ① 뒤를 이은 이(빈 칸이 있는 가문)는 먼저 선대가 입던 것을 가방에서 찾아 입는다 (사람이 「아버지 것을 아들에게」 하듯 — 출전 셋이 그 가문의 장비를 먼저 집어 가 후계가 남은 것만 입지 않게)
+//   ② 출전 셋이 가방에서 가장 좋은 것을 고르고(DS.lootAutoEquip) ③ 쉬는 가문은 그래도 빈 칸이 있을 때만 남은 것으로 채운다 (쉬는 가문의 멀쩡한 장비는 예전처럼 건드리지 않는다)
+const worn = {};      // 가문 번호 → { w, a } 그 가문이 마지막으로 입고 있던 것
+function seatedCh(ch) { return !ch.vac && !ch.down && (ch.id === s.hero || !!D.bearer(s, ch, 1)); }
 function equipAll() {
+  if (!process.env.BOTNOKEEP) D.charList(s).forEach(ch => { const o = worn[ch.id]; if (!o || !seatedCh(ch)) return; ['w', 'a'].forEach(sl => { if (!ch[sl] && o[sl] && s.gear[o[sl]] > 0 && D.equip(s, ch, o[sl])) st.reKeep = (st.reKeep || 0) + 1; }); });
   D.lootAutoEquip(s);
-  D.charList(s).forEach(ch => { if (s.party.indexOf(ch.id) >= 0 || ch.vac || ch.down || (ch.w && ch.a)) return; if (ch.id !== s.hero && !D.bearer(s, ch, 1)) return; if (D.autoEquip(s, ch)) st.reEquip = (st.reEquip || 0) + 1; });
+  D.charList(s).forEach(ch => { if (s.party.indexOf(ch.id) >= 0 || !seatedCh(ch) || (ch.w && ch.a)) return; if (D.autoEquip(s, ch)) st.reEquip = (st.reEquip || 0) + 1; });
+  D.charList(s).forEach(ch => { const o = worn[ch.id] = worn[ch.id] || {}; ['w', 'a'].forEach(sl => { if (ch[sl]) o[sl] = ch[sl]; }); });
 }
 function prep() {
   tidy();
@@ -413,7 +419,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
   }
 }
 const H = (st.simT + st.over) / 3600;
-const out = { cls, seed, main, g2, hours: +H.toFixed(2), choices: st.choices || 0, heirlooms: Object.keys(s.gh || {}).filter(k => s.gh[k] && s.gh[k].hl).length, reEquip: st.reEquip || 0, bare: D.gearBare ? D.gearBare(s).length : 0, bag: Object.keys(s.gear || {}).reduce((n, k) => n + s.gear[k], 0), shade: st.shade || 0, shadeAuto: st.shadeAuto || 0, shadeDmg: Math.round(st.shadeDmg || 0), shadeEnd: st.shadeEnd || {}, shAt: st.shAt || {}, cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
+const out = { cls, seed, main, g2, hours: +H.toFixed(2), choices: st.choices || 0, heirlooms: Object.keys(s.gh || {}).filter(k => s.gh[k] && s.gh[k].hl).length, reEquip: st.reEquip || 0, reKeep: st.reKeep || 0, bare: D.gearBare ? D.gearBare(s).length : 0, bag: Object.keys(s.gear || {}).reduce((n, k) => n + s.gear[k], 0), shade: st.shade || 0, shadeAuto: st.shadeAuto || 0, shadeDmg: Math.round(st.shadeDmg || 0), shadeEnd: st.shadeEnd || {}, shAt: st.shAt || {}, cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
   births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, lapses: st.lapses || [], g2lapse: st.g2lapse || 0, runs: s.runs || null, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, openGold: st.openGold || 0, xDeaths: st.xDeaths || 0, xNat: st.xNat || 0, erCall: st.erCall || 0, erCover: st.erCover || 0, erased: st.erased || 0, retreats: st.retreats || 0, retX: st.retX || 0, fieldRet: st.fieldRet || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
