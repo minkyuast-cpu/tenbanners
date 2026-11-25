@@ -8,6 +8,8 @@
 // ④ 진짜 화면에서: 도입부 · 1 · 13 · 30번 도입 · 엔딩 · 다음 세대의 장 도입 · 보스 등장 연출 · 마을 사람 — 오류 없이 끝까지 넘어간다
 // ⑤ 2.4.1 그 밖의 글 표(성격 말버릇 · 가문명 버릇 말 · 전투 대사 · 마지막 한마디 · 별명 · 현상 수배 · 연무장 · 뽑기 한마디 · 장비 내력 · 들판 · 가문의 유산 · 필살기 한 줄 · 연대기 · 대 끊김 · 출신)도 같은 잣대로:
 //    빈 글이 없다 · 덜 채운 '{…}' 가 없다 · 한 줄 60자 안쪽(머리 위에 뜨는 글은 더 짧게) · 도움말은 진짜 화면에서 빈 줄 · 덜 채운 글이 없고 「세계」 묶음이 보인다
+// ⑧ 2.6.0 판마다 가운데가 있다: 새 판 · 열 가문이 다 열린 판에서 도입 8~14줄 · 맺음 8~17줄 · 맹주가 판마다 입을 연다 · 단톡방 한마디로 끝나는 맺음은 셋에 하나 아래 ·
+//    「삼백 년」은 정해 둔 판에만 · 「나 때는」은 서른 판에 셋 아래 · 전장 메모 열세 줄은 글자 그대로 · 열 가문이 막마다(1~10 · 11~20 · 21~30) 선대의 입으로도 지금 가주의 입으로도 말한다 · 싸움 도중의 한마디 표
 'use strict';
 module.exports = async function (page, shot, L) {
   const ev = (fn, arg) => page.evaluate(fn, arg);
@@ -354,5 +356,46 @@ module.exports = async function (page, shot, L) {
   A(has(N.i21, /지도로 찾았다/) && has(Cb.i21, /앞장서 찾았다/) && !has(N.o29, /고갯마루 손님|장작|흥얼/) && has(Ca.o29, /고갯마루 손님/) && has(Cb.o29, /장작도, 솥도/) && has(Cb.o29, /흥얼거림/) && has(Ca.end, /표지판/) && has(Cb.end, /빈손으로/) && has(Ca.end, /막내 올림/) && has(Cb.end, /열두 장/) && !has(N.end, /표지판|빈손|막내 올림|열두 장/),
     '21 intro · 29 outro · ending follow the choices and stay as written when nothing is chosen yet');
   A(N.eg29.length + 3 === Ca.eg29.length && has(Cb.eg29, /지게/) && has(Ca.eg29, /덜 삐뚤다/), 'next-generation 29 intro adds the three choice lines of this generation (' + Ca.eg29.slice(-3).join(' / ') + ')');
+  // ── ⑧ 2.6.0 판마다 가운데가 있다 ──
+  const MEMO = ['용암 위에 오래 서 있으면 탄다. 멈추지 말고 지나갈 것.', '다리는 좁다. 양옆 여울로 돌아가는 길도 있다.', '붉은 칸은 곧 내려찍힌다. 틱이 남아 있으면 알아서 피한다.', '그 칸으로 직접 걸어 들어가지만 말 것.', '볼코는 물에 서면 강해진다. 뭍으로 끌어내라.',
+    '누리도 물에 서면 강해진다. 못 한가운데로 따라 들어가지 말 것.', '하늘에서 돌이 떨어진다. 붉은 칸이 보이면 흩어져라.', '보스는 없다. 세 차례 습격을 모두 막아라.', '일바의 유혹은 틱 게이지를 비운다. 한꺼번에 다가서지 말 것.', '카르단은 용암을 밟아도 타지 않는다. 따라 들어가지 말 것.',
+    '역병은 부대 전체에 독을 건다. 정화와 치유를 아끼지 말 것.', '서리 숨결은 넓게 퍼진다. 붉은 칸이 보이면 멀리 흩어져라.', '쓰러뜨려도 끝이 아니다. 문 너머의 것이 따라 나온다.'];
+  const v6 = await ev((MEMO) => {
+    var keep = DS.G.save, KS = Object.keys(DS.CAST_NAME), bad = [], o = { rows: [] };
+    function run(sv) { DS.G.save = sv; var r = {}; DS.SCENARIOS.forEach(function (sc) { r[sc.id] = { i: DS.storyResolve(sc.intro), o: DS.storyResolve(sc.outro) }; }); return r; }
+    function act(n) { return n <= 10 ? 0 : n <= 20 ? 1 : 2; }
+    try {
+      var fresh = run(DS.newSave('줄수', 'inf')), all = DS.newSave('줄수', 'inf'); DS.houseOpenN(all, 9); DS.mercTidy(all); var open = run(all);
+      var anc = {}, live = {}, memo = [], chatEnd = 0, na = 0, heroIn = 0; KS.forEach(function (k) { anc[k] = [0, 0, 0]; live[k] = [0, 0, 0]; });
+      for (var n = 1; n <= 30; n++) {
+        [['새 판', fresh], ['열 가문', open]].forEach(function (st) { var I = st[1][n].i.length, O = st[1][n].o.length; if (I < 8 || I > 14) bad.push(st[0] + ' ' + n + '번 도입 ' + I + '줄'); if (O < 8 || O > 17) bad.push(st[0] + ' ' + n + '번 맺음 ' + O + '줄'); });
+        var F = fresh[n].i.concat(fresh[n].o), P = open[n].i.concat(open[n].o), txt = F.map(function (l) { return l.t; }).join('\n');
+        if (fresh[n].o[fresh[n].o.length - 1].w === '선대 단톡방') chatEnd++;
+        if (F.some(function (l) { return l.w === '줄수'; })) heroIn++;
+        na += txt.split('나 때는').length - 1;
+        if (/삼백 년/.test(txt) && [4, 12, 13, 20, 21, 27, 28, 30].indexOf(n) < 0) bad.push(n + '번에 「삼백 년」');
+        F.forEach(function (l) { if (l.w === '전장 메모') memo.push(l.t); if (l.anc && l.c && anc[l.c]) anc[l.c][act(n)]++; });
+        P.forEach(function (l) { if (!l.anc && l.c && live[l.c] && l.w !== '줄수') live[l.c][act(n)]++; });
+        o.rows.push(n + ':' + fresh[n].i.length + '/' + fresh[n].o.length);
+      }
+      KS.forEach(function (k) { if (k === 'inf') return; if (anc[k].some(function (v) { return !v; })) bad.push('선대 ' + DS.CAST_NAME[k] + ' 가 말이 없는 막: ' + anc[k].join('/')); if (live[k].some(function (v) { return !v; })) bad.push(k + ' 가주가 말이 없는 막: ' + live[k].join('/')); });
+      if (anc.inf.some(function (v) { return !v; })) bad.push('선대 바우 가 말이 없는 막: ' + anc.inf.join('/'));      // 맹주가 보병이라 로저스는 두 저장 모두 선대가 말한다
+      if (memo.join('|') !== MEMO.join('|')) bad.push('전장 메모가 달라졌다: ' + memo.filter(function (t) { return MEMO.indexOf(t) < 0; }).join(' / ') + ' (' + memo.length + '줄)');
+      var f30 = fresh[30], o30 = open[30];
+      o.gate = { anc: f30.i.filter(function (l) { return l.w === '선대 서슬' && /교대 왔다, 먼동/.test(l.t); }).length, live: o30.i.filter(function (l) { return !l.anc && /교대 왔다/.test(l.t); }).length,
+        hushA: f30.o.filter(function (l) { return /아늑하지 않아/.test(l.t); }).length, hushL: o30.o.filter(function (l) { return !l.anc && /아늑하지 않아/.test(l.t); }).length,
+        call: f30.o.filter(function (l) { return l.w === '선대 달래' && /옥분이네/.test(l.t); }).length + o30.o.filter(function (l) { return !l.anc && /옥분이네/.test(l.t); }).length };
+      o.chatEnd = chatEnd; o.na = na; o.heroIn = heroIn; o.memo = memo.length;
+      var T = DS.BANTER_TXT, bn = 0; DS.SCENARIOS.forEach(function (sc) { if (sc.boss && !(T.boss[sc.boss] && T.boss[sc.boss].length)) bad.push('한마디 없는 보스 ' + sc.boss); });
+      Object.keys(T.boss).forEach(function (k) { T.boss[k].forEach(function (p) { p.forEach(function (t) { if (!t) return; bn++; if (/undefined|NaN|\{[^}]*\}/.test(t) || Array.from(t).length > 16) bad.push('한마디 ' + k + ' | ' + t); }); }); });
+      o.banter = bn;
+    } finally { DS.G.save = keep; }
+    o.bad = bad; return o;
+  }, MEMO);
+  if (v6.bad.length) console.log(v6.bad.slice(0, 30).join('\n'));
+  console.log('     도입/맺음 줄 수(새 판) ' + v6.rows.join(' '));
+  A(v6.bad.length === 0 && v6.heroIn === 30 && v6.memo === 13, 'every stage has a middle (intro 8–14, outro 8–17 lines in a fresh save and with all ten houses open), the 맹주 speaks in all ' + v6.heroIn + ' stages, the ' + v6.memo + ' battlefield memos are word for word, 「삼백 년」 only where the number is the point, every house speaks in every act in both voices' + (v6.bad.length ? ' — ' + v6.bad.length + ' problems' : ''));
+  A(v6.chatEnd <= 10 && v6.na <= 3, 'outros ending on a 단톡방 line: ' + v6.chatEnd + ' of 30 (≤ 10) · 「나 때는」 in the thirty stages: ' + v6.na + ' (≤ 3)');
+  A(v6.gate.anc === 1 && v6.gate.live === 1 && v6.gate.hushA === 0 && v6.gate.hushL === 1 && v6.gate.call === 2 && v6.banter >= 100, 'stage 30 reads in both voices (선대 서슬 「교대 왔다, 먼동」 / the living 프레이; the hush line only from a living 아담스; 옥분이네 from either 달래) · ' + v6.banter + ' mid-battle bubbles ≤ 16 chars');
   console.log('story done');
 };
