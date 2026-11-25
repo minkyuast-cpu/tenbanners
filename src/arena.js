@@ -457,7 +457,8 @@ function fightHtml() {
   var a = entry(ST.sel[0]), b = entry(ST.sel[1]);
   function bar(e, i) { return '<div class="ar-hp ' + (i ? 'R' : 'L') + '"><span class="ar-cr">' + crestOf(e, 18) + '</span><b>' + esc(e.name) + '</b><i class="ar-bar"><u></u><s></s></i><i class="ar-ub"><u></u></i></div>'; }
   return '<div class="ar-fight"><div class="ar-hud">' + bar(a, 0) + '<b class="ar-clock num">0:00</b>' + bar(b, 1) + '</div>' +
-    '<div class="ar-stage"><canvas class="px ar-cv"></canvas><div class="ar-cut" hidden></div><div class="ar-ko" hidden></div></div>' +
+    '<div class="ar-stage"><canvas class="px ar-cv"></canvas><i class="ar-std T" aria-hidden="true"></i><i class="ar-std B" aria-hidden="true"></i><div class="ar-cut" hidden></div><div class="ar-ko" hidden></div></div>' +
+    '<p class="ar-tcast ar-cast" aria-live="polite"><i>해설</i><span></span></p>' +      // 2.6.1: 겨루는 화면에도 해설 한 줄 (무술대회의 것과 같은 꼴)
     '<div class="ar-ctl"><button class="sy" data-ar="pause"><b>Ⅱ</b><small>멈춤</small></button><button class="sy" data-ar="spd"><b>' + ST.spd + '×</b><small>속도</small></button>' + (ST.T ? '<button class="sy" data-ar="tskip"><b>»</b><small>결과만</small></button>' : '<button class="sy" data-ar="quit"><b>✕</b><small>그만</small></button>') + '</div>' +
     introHtml(a, b) + '<div class="ar-res" hidden></div></div>';
 }
@@ -500,7 +501,7 @@ function start() {
   if (!a || !b) { U().toast('그 사람을 세울 수 없다'); ST.scr = ST.T ? 'tbr' : 'pick'; draw(); return; }
   ST.scr = 'fight'; ST.pause = false; draw();
   var D = DS.arenaDuel(a, b, ST.T ? { luck: ST.luck } : undefined); if (!D) { ST.scr = ST.T ? 'tbr' : 'pick'; draw(); return; }
-  ST.D = D; ST.phase = 'intro'; ST.koAt = 0; ST.said = {};
+  ST.D = D; ST.phase = 'intro'; ST.koAt = 0; ST.said = {}; ST.stdSig = ''; ST.half = 0;
   var cv = ST.root.querySelector('.ar-cv'), V = new DS.View(cv);
   ST.view = V; V.mtag = 'all';
   V.setScene(D.sim, { rows: AR.map, theme: 'highland', seed: 39, pois: [], decor: [] });
@@ -518,6 +519,9 @@ function begin() {
   ST.phase = 'fight'; clearTimeout(ST.tm); clearTimeout(ST.tm2);
   var intro = ST.root.querySelector('.ar-intro'); if (intro) { intro.classList.add('out'); setTimeout(function () { if (intro.parentNode) intro.remove(); }, 260); }
   barkSoon(ST.D.A, 'open', 200); barkSoon(ST.D.B, 'open', 1500);
+  var ea = entry(ST.sel[0]), eb = entry(ST.sel[1]), D0 = ST.D;
+  castSay(ST.T && ST.cast ? ST.cast : sayIn(L.duel, 'open', { a: ea ? ea.name : '', b: eb ? eb.name : '' }));
+  if (!ST.T && ea && eb) setTimeout(function () { if (!ST || ST.D !== D0 || ST.phase !== 'fight') return; var hi = ea.pow >= eb.pow ? ea : eb, lo = hi === ea ? eb : ea, q = hi.pow / Math.max(1, lo.pow); castSay(q < 1.12 ? say('even', {}) : say('lop', { f: hi.name, u: lo.name })); }, 3200);
   if (ST.T && ST.luck && ST.view) [ST.D.A, ST.D.B].forEach(function (u, i) { var k = ST.luck[i]; if (k) ST.view.float(u.x, u.y, DS.tourneyLuckText(k), k.f >= 1 ? '#9fe08a' : '#ff9a8a', { dy: -22, life: 2.2, s: 1 }); });
 }
 function bark(u, kind) { if (!ST || !ST.view || !u || (G().save.opt && G().save.opt.bark === false)) return; ST.view.bark(u.id, pick(L[kind]), 2.1); }
@@ -535,13 +539,14 @@ function loop(now) {
     if (ST.koAt && ST.loser) ST.view.vu[ST.loser] && (ST.view.vu[ST.loser].alpha = 0.45);
   } catch (x) { if (DS.loopErr) DS.loopErr(x, 'arena'); }
   for (var i = 0; i < evs.length; i++) onEv(evs[i]);
-  hud();
+  hud(); stands();
+  if (ST.phase === 'fight' && !ST.half && D.t > AR.tmax / 2) { ST.half = 1; castSay(sayIn(L.duel, 'half', {})); }
   if (D.done && ST.phase === 'fight') finish();
 }
 function onEv(e) {
   var D = ST.D;
-  if (e.t === 'ult') { var u = D.sim.byId[e.id], S = SK[e.sk]; if (u && S) cut(u, S); }
-  if (e.t === 'hit' && (e.id === 'arA' || e.id === 'arB')) { var v = D.sim.byId[e.id]; if (v && !ST.said[v.id] && v.hp > 0 && v.hp < v.mhp * 0.35) { ST.said[v.id] = 1; bark(v, 'low'); } }
+  if (e.t === 'ult') { var u = D.sim.byId[e.id], S = SK[e.sk]; if (u && S) { cut(u, S); castSay(sayIn(L.duel, 'ult', { w: nameOf(u), s: S.name })); } }
+  if (e.t === 'hit' && (e.id === 'arA' || e.id === 'arB')) { var v = D.sim.byId[e.id]; if (v && !ST.said[v.id] && v.hp > 0 && v.hp < v.mhp * 0.35) { ST.said[v.id] = 1; bark(v, 'low'); castSay(sayIn(L.duel, 'low', { u: nameOf(v) })); } }
 }
 function cut(u, S) {
   var el = ST.root.querySelector('.ar-cut'); if (!el) return;
@@ -575,6 +580,7 @@ function finish() {
   if (ST.T) tResolve(ST.M, wk);      // 무술대회: 대진표와 배팅만 (1:1 재미 기록에는 넣지 않는다)
   else try { recAdd(s, wk, lk, champ); U().persist(); } catch (x) {}
   ST.res = { win: win, lose: lose, how: D.how, t: D.t, dmg: D.dmg, ults: D.ults };
+  castSay(ST.T && ST.lastR && ST.lastR.m === ST.M && ST.lastR.cast ? ST.lastR.cast : sayIn(L.duel, D.how === 'ko' ? 'ko' : 'time', { w: nameOf(win), l: nameOf(lose) }));
   ST.tm = setTimeout(function () { if (ST && ST.D === D) bark(win, 'win'); }, 1000);
   ST.tm2 = setTimeout(function () { if (ST && ST.D === D) result(); }, U().calm() ? 700 : 1900);
 }
@@ -612,6 +618,28 @@ var LT = L.t = {
     champ: ['{w:이가} 천하제일의 자리에 올랐습니다!', '오늘의 천하제일은 {w}입니다. 내일은 모릅니다.', '{w}, 천하제일! 선대 단톡방이 기립했습니다.']
   }
 };
+// 2.6.1 겨루는 화면의 해설 (1:1 대결 · 무술대회 경기). 한 줄 40자 안쪽. {a} 청 · {b} 홍 · {w} 이긴 쪽 · {l} 진 쪽 · {u} 몰리는 쪽 · {s} 필살기 이름
+L.duel = {
+  open: ['연무장 문이 열렸습니다. 관중석 절반은 선대입니다.', '{a} 대 {b}. 다치는 건 자존심뿐입니다.', '중계에 저, 훈수에 선대 단톡방입니다.'],
+  ult: ['{w}의 필살기, 「{s}」! 관중석이 일어났습니다.', '나왔습니다, 「{s}」. 선대들도 받아 적습니다.', '{w:이가} 아껴 둔 것을 꺼냈습니다.'],
+  low: ['{u:이가} 흔들립니다. 단톡방이 조용해졌습니다.', '{u}, 위태롭습니다. 그래도 서 있습니다.', '{u:이가} 밀립니다. 기합이 필요합니다.'],
+  half: ['절반이 지났습니다. 아직 둘 다 서 있습니다.', '길어집니다. 판정까지 갈지도 모릅니다.'],
+  ko: ['끝났습니다. {w}의 승리!', '{w:이가} 이겼습니다. 진 쪽이 밥값을 냅니다.', '{l:이가} 넘어졌습니다. 다친 건 자존심뿐입니다.'],
+  time: ['시간이 다 됐습니다. 판정은 {w}의 승리.', '판정입니다. {w:이가} 조금 더 버텼습니다.']
+};
+function sayIn(tab, kind, m) { return pick(tab[kind] || ['']).replace(/\{(\w)(?::(\S+?))?\}/g, function (_, k, j) { var n = (m && m[k]) || ''; return j ? U().josa(n, j) : n; }); }
+function castSay(txt) {      // 해설 줄을 바꾼다 (같은 글이면 그대로)
+  if (!ST || !ST.root || !txt) return; var el = ST.root.querySelector('.ar-cast span'); if (!el || el.textContent === txt) return;
+  el.textContent = txt; var p = el.parentNode; p.classList.remove('pop'); void p.offsetWidth; p.classList.add('pop'); ST.castAt = performance.now();
+}
+function nameOf(u) { var e = u && entry(u.arKey); return e ? e.name : ''; }
+// 관중석: 싸움터(지도) 위아래의 빈 띠를 채운다. 지도가 화면에서 차지하는 자리를 재어 띠의 높이를 맞춘다 (바뀔 때만 손댄다)
+function stands() {
+  var V = ST && ST.view, r = ST && ST.root; if (!V || !r || !V.screenOf || !V.mh) return;
+  var top = Math.round(V.screenOf(0, 0).y - 8 * V.k), bot = Math.round(V.H - (V.screenOf(0, V.mh - 1).y + 8 * V.k)), sig = top + ':' + bot; if (ST.stdSig === sig) return; ST.stdSig = sig;
+  var T = r.querySelector('.ar-std.T'), B = r.querySelector('.ar-std.B');
+  if (T) { T.style.height = Math.max(0, top) + 'px'; T.hidden = top < 14; } if (B) { B.style.height = Math.max(0, bot) + 'px'; B.hidden = bot < 14; }
+}
 function say(kind, m) {
   return pick(LT.cast[kind]).replace(/\{(\w)(?::(\S+?))?\}/g, function (_, k, j) { var n = m[k] || ''; return j ? U().josa(n, j) : n; });
 }

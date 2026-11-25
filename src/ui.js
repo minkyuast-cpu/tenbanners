@@ -15,7 +15,7 @@ function pills(list) { list = (list || []).filter(Boolean); return list.length ?
 function foldBtn(key, label, sub) { var on = !!FOLD[key]; return '<button class="pfold' + (on ? ' on' : '') + '" data-pfold="' + key + '" aria-expanded="' + on + '"><b>' + label + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '<i aria-hidden="true">' + (on ? '▾' : '▸') + '</i></button>'; }
 // r8 menus (ux 3): 같은 종류(제목+틀)의 창이 이미 열려 있으면 그 창과 그 위에 쌓인 창들을 닫고 그 자리에 다시 연다 — 지휘관 → 가계도 → 사람 → 지휘관 … 으로 겹이 끝없이 쌓이지 않게.
 // 사이에 확인 창(modal)이나 sheet 가 아닌 창이 끼어 있으면 건드리지 않고 예전처럼 위에 쌓는다.
-var SHEET_STEP = { '가문 사람|sub lgs': ['가문|', '인물|sub', '대장|sub'] };
+var SHEET_STEP = { '가문 사람|sub lgs': ['가문|', '인물|sub', '맹주|sub'] };
 function sheetReuse(kind) {
   var st = Array.prototype.slice.call(document.querySelectorAll('.ov:not(.ghost)')), at = -1, i;
   for (i = 0; i < st.length; i++) if (st[i].shKind === kind) { at = i; break; }
@@ -80,7 +80,7 @@ function gfC(ch, px, sz, o) {
 U.gfM = gfM; U.gfC = gfC;
 // ── 다른 팀이 만드는 것들: 없으면 지금처럼 동작한다 ──
 function LORE() { return DS.LORE || {}; }
-function lt(x) { var t = x && typeof x === 'object' ? x.t : x; return String(t == null ? '' : t).replace(/\{hero\}/g, (G.save && G.save.name) || '대장'); }      // LORE 의 한 줄 → 글
+function lt(x) { var t = x && typeof x === 'object' ? x.t : x; return String(t == null ? '' : t).replace(/\{hero\}/g, (G.save && G.save.name) || '맹주'); }      // LORE 의 한 줄 → 글
 function A2(name, old) { var Au = DS.Audio; A(Au && Au.has && !Au.has(name) ? old : name); }      // 새 효과음. 없다고 알려 주면 예전 소리로
 function partyFirst() {
   var s = G.save, list = DS.charList(s);
@@ -652,7 +652,7 @@ function mercInfo(id, parent) {
 }
 // 사람 창 (맹주). 같은 틀 — 내보내기 대신 혼인과 개명
 function heroInfo(parent) {
-  var o = sheet('대장', function () {
+  var o = sheet('맹주', function () {
     var s = G.save, ch = s.chars[s.hero]; if (!ch) return '';
     var p = ch.ps || {}, seat = { k: 'hero', ch: ch }, u = null; try { u = seatSpec(seat, p); } catch (x) { u = null; }
     var tags = '<i class="rtag r-hero">맹주</i>' + gbadge(p.g || 3) + '<i class="ctag">' + (p.type && DS.MERCS[p.type] ? DS.MERCS[p.type].name : '사람') + '</i>' + (ch.sx ? '<i class="ctag sx-' + esc(ch.sx) + '">' + esc(lgSexTxt(ch.sx)) + '</i>' : '') + agTag(ch);
@@ -1066,6 +1066,37 @@ function sortieBar(s, where) {
 }
 DS.sortiePick = function () { return DS.openMenu('party'); };      // 옛 이름: 고르기 창은 없어졌다 — 부대 탭의 가주 카드에서 고른다
 // ───────── 시나리오 입구 ─────────
+// 2.6.1: 입구 창의 「보스 전리품」 — 그 보스만 떨어뜨리는 전설. 찾은 적이 있으면 그림과 이름, 아니면 ???
+function gateLoot(s) {
+  var sv = G.save, uq = !s.pit && DS.bossUniq ? DS.bossUniq(s) : []; if (!uq.length || !DS.legFound) return '';
+  return '<dt>보스 전리품</dt><dd class="gloot">' + uq.map(function (id) {
+    var fd = DS.legFound(sv, id), g = DS.gear(id);
+    return fd && g ? '<span class="gl on">' + (DS.iconHtml ? DS.iconHtml('gear', id, { size: 24 }) : '') + '<b>' + esc(g.short || g.name) + '</b>' + (fd === 2 ? '' : '<small>받은 적 있음</small>') + '</span>'
+      : '<span class="gl"><i class="glq" aria-hidden="true">?</i><b>???</b><small>아직 못 찾았다</small></span>';
+  }).join('') + '</dd>';
+}
+// 2.6.1: 전설 도감 — 가방 탭의 「전설 도감」 단추가 연다. 찾은 것은 그림과 나온 곳, 못 찾은 것은 그림자와 나오는 곳
+function dexWhere(x) {
+  var zn = x.zone && DS.ZONES[x.zone] ? DS.ZONES[x.zone].name : '', sc = x.scn ? DS.scn(x.scn) : null;
+  if (x.kind === 'pit') return x.found ? '바닥 없는 갱도' : '바닥 없는 갱도 깊은 곳';
+  if (x.kind === 'zone') return x.found ? zn + '의 적' : zn + '의 적이 드물게';
+  if (x.kind === 'scn') return x.found ? x.scn + '번 ' + (sc ? sc.name : '') + '의 보상' : zn + '의 시나리오 보상';
+  return x.found ? x.scn + '번 ' + (x.boss || (sc ? sc.name : '')) : zn + '의 보스';
+}
+DS.openDex = function () {
+  var pick = '';
+  var o = sheet('전설 도감', function () {
+    var s = G.save, dex = DS.legDex(s), n = dex.filter(function (x) { return x.found; }).length, sel = dex.filter(function (x) { return x.id === pick; })[0];
+    var html = '<p class="dexhd"><b class="num">' + n + '</b> / ' + dex.length + ' <small>그림자는 아직 못 찾은 전설이다. 누르면 나오는 곳이 보인다.</small></p>';
+    html += '<div class="dexsel' + (sel ? (sel.found ? ' on' : ' no') : '') + '" aria-live="polite">' + (sel ? '<b>' + esc(sel.found ? sel.name : '???') + '</b><small>' + esc(dexWhere(sel)) + (sel.found === 1 ? ' · 지금은 없다' : '') + '</small><p>' + esc(sel.found ? sel.lore : '아직 찾지 못했다.') + '</p>' : '<small>칸을 누르면 여기에 뜬다.</small>') + '</div><div class="dexg">';
+    dex.forEach(function (x) {
+      html += '<button class="dexc' + (x.found ? ' on' : ' no') + (x.found === 1 ? ' had' : '') + (x.id === pick ? ' cur' : '') + '" data-dex="' + esc(x.id) + '" aria-label="' + esc(x.found ? x.name : '아직 못 찾은 전설, ' + dexWhere(x)) + '"><span class="dexi">' + (DS.iconHtml ? DS.iconHtml('gear', x.id, { size: 36 }) : '') + '</span><b>' + esc(x.found ? x.name : '???') + '</b><small>' + esc(dexWhere(x)) + '</small></button>';
+    });
+    return html + '</div>';
+  }, 'sub dex');
+  o.addEventListener('click', function (e) { var b = e.target.closest('[data-dex]'); if (!b) return; A('tap'); pick = b.dataset.dex; var sb = $('.sb', o), top = sb.scrollTop; o.draw(); sb.scrollTop = top; });
+  return o;
+};
 function rewardText(s) {
   var r = s.reward || {}, out = [], sv = G.save;
   if (s.pit) return fmtN(DS.scnGold(s)) + '골드';
@@ -1103,7 +1134,7 @@ DS.openGate = function (s, lock) {
     pl = DS.partyL(sv); low = DS.recLow ? !!DS.recLow(sv, s) : pl < rec - 2; rtg = DS.recTag ? DS.recTag(sv, s) : { tag: '', cls: '', tc: '' }; hp = partyHp();
     return '<div class="gate-head">' + (B ? sprTag(B.sprite, B.pal, 3) : '<span class="noboss">방어전</span>') + '<div><h2>' + esc(s.name) + '</h2><p>' + (B ? '<b class="boss">' + esc(B.name) + '</b>' + (title ? ', ' + esc(title) : '') : '세 차례 습격을 모두 막아라') + '</p>' + bigLine(B) + '</div></div>' +
     '<dl class="facts"><dt>권장</dt><dd>' + lv(rec) + (s.tier ? ', ' + s.tier + '단 전용' : '') + (rec !== s.L ? ' <small class="dim">적 ' + lv(s.L) + '</small>' : '') + '</dd><dt>우리 부대</dt><dd class="' + rtg.cls + '">' + (DS.partySpecs ? DS.partySpecs(sv).length + '명, ' : '') + '평균 ' + lv(pl) + (rtg.tag ? ' <i class="tagw ' + rtg.tc + '">' + rtg.tag + '</i>' : '') + '</dd>' +
-    '<dt>적</dt><dd class="foes">' + foes + '</dd>' + (moves.length ? '<dt>보스의 기술</dt><dd class="moves">' + moves.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</dd>' : '') + '<dt>보상</dt><dd>' + esc(rewardText(s)) + '</dd></dl>' +
+    '<dt>적</dt><dd class="foes">' + foes + '</dd>' + (moves.length ? '<dt>보스의 기술</dt><dd class="moves">' + moves.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</dd>' : '') + '<dt>보상</dt><dd>' + esc(rewardText(s)) + '</dd>' + gateLoot(s) + '</dl>' +
     sortieBar(sv, 'gate') +      // 2.2.8: 출전 셋 · 바꾸기
     (empt ? '<p class="soft">빈 가문 ' + empt + '곳은 싸우지 않는다. <button class="lnk2" data-go="party">부대</button></p>' : '') +
     (hp < 0.6 ? '<p class="lock">부대 체력 ' + Math.round(hp * 100) + '% (자동 회복 안 됨)</p>' : '') +
@@ -1168,7 +1199,8 @@ DS.openPit = function (lock) {
 };
 // ───────── 결과·승급 ─────────
 // 출전 지휘관 가운데 가방의 장비로 더 좋아질 수 있는 사람 수 (DS.autoEquip 과 같은 셈)
-function upgradable() {
+function upgradable() { var s = G.save; return DS.gbWithout ? DS.gbWithout(s, upgradable0) : upgradable0(); }      // 2.6.1: 죽음으로 막 돌아온 장비는 그 가문의 새 가주에게 먼저 묻는다 — 여기서는 세지 않는다 (handover.js DS.gbWithout)
+function upgradable0() {
   var s = G.save, n = 0;
   s.party.forEach(function (id) {
     var ch = s.chars[id]; if (!ch) return;
@@ -1374,7 +1406,8 @@ DS.showResult = function (s, out, cb) {
     var pg = e.target.closest('[data-pitgo]'); if (pg) { A('ok'); G.pitGo = +pg.dataset.pitgo; o.close(); return; }      // 2.2.3: 창을 닫으면 그 층으로 (game.js onWin 의 끝 → pitChain)
     var ub = e.target.closest('[data-upg]'); if (!ub) return;
     var sv2 = G.save, names = [];
-    sv2.party.forEach(function (id) { var c = sv2.chars[id]; if (c && DS.autoEquip(sv2, c)) names.push(DS.charName(c)); });
+    var eqAll = function () { sv2.party.forEach(function (id) { var c = sv2.chars[id]; if (c && DS.autoEquip(sv2, c)) names.push(DS.charName(c)); }); };
+    if (DS.gbWithout) DS.gbWithout(sv2, eqAll); else eqAll();      // 2.6.1: 떠난 가주의 장비는 뒤를 이을 사람 몫으로 남겨 둔다
     DS.refreshUnits(); U.persist(); A(names.length ? 'ok' : 'cancel');
     ub.outerHTML = '<p class="upg done">' + (names.length ? '<b>장비 교체</b>' + pills(names) + '<small>쓰던 것은 가방으로</small>' : '바꿀 장비 없음') + '</p>';
   });
@@ -1398,21 +1431,54 @@ function bestEnh(sv) {
   DS.charList(sv).forEach(function (c) { see(c.w); }); Object.keys(sv.gear || {}).forEach(see);
   return best;
 }
+// 2.6.1 기록 = 가문 포스터: 맹주 한 대에 한 줄(테 두른 초상 · 가문력 해 · 어떻게 떠났는가) → 숫자(차오른다) → 걸음마다 가장 멀리 간 판 → 깃대로 가는 단추.
+//   저장 칸은 더하지 않는다 (가계 기록 · save.runs · save.fallen 을 읽기만). 엔딩 무대(stage.js)의 약속은 그대로: h2 「○○의 가문」 · [data-cu] 숫자 · .names i · 「계속」.
+function recGens(sv) {
+  var out = [], data = [], P = (sv.lin && sv.lin.P) || {}, hc = sv.chars[sv.hero], y0 = 1;
+  try { data = DS.poleData ? DS.poleData(sv) : []; } catch (x) { data = []; }
+  if (!data.length) data = [{ g: 1, cur: 1, names: [] }];
+  data.forEach(function (g) {
+    var pid = g.hd ? g.hd.pid : hc && hc.pid, r = pid && P[pid], p = pid ? lgP(pid) : null, d = r && r.d, end = g.hd && d && d.tm != null ? lgCalAt(d.tm).yr : 0;
+    var why = !g.hd ? (hc && hc.vac ? '뒤를 정하는 중' : '지금의 맹주') : d && d.nk ? '자리를 넘기고 눈을 감음' : d && /천수/.test(d.why || '') ? '천수를 누림' : d && d.why && d.why !== '전사' ? d.why : (d && d.at ? d.at + '에서 쓰러짐' : '싸우다 쓰러짐');
+    out.push({ g: g.g, name: g.hd ? g.hd.n : (hc && !hc.vac ? DS.charName(hc) : g.head || ''), p: p, cur: !g.hd, y0: y0, y1: end, why: why, lost: g.names.length - (g.hd ? 1 : 0) });
+    if (end) y0 = end;
+  });
+  return out;
+}
 DS.showRecord = function (cb, ending) {
   var sv = G.save, t = Math.floor(+sv.time || 0), fl = sv.fallen || [], be = bestEnh(sv), cleared = Object.keys(sv.cleared || {}).length;
   var fz = DS.fuseProg ? DS.fuseProg(sv).fused : 0;      // r42: 합일한 사람 수
-  var html = '<div class="result record"><p class="eyebrow">' + (ending ? '엔딩' : '기록') + '</p>' + (ending ? scene('ending') : '') + '<h2>' + esc(sv.name) + '의 가문</h2><dl class="rec">' +
-    (t >= 60 ? '<dt>플레이 시간</dt><dd><b class="num">' + (t >= 3600 ? Math.floor(t / 3600) + '</b>시간 <b class="num">' : '') + Math.floor(t % 3600 / 60) + '</b>분</dd>' : '') +
-    '<dt>끝낸 시나리오</dt><dd><b class="num"' + (ending ? ' data-cu="' + cleared + '"' : '') + '>' + cleared + '</b> / ' + DS.SCENARIOS.length + (sv.pitBest > 0 ? ', 갱도 최고 ' + sv.pitBest + '층' : '') + '</dd>' +
-    (sv.runs && sv.runs.n ? '<dt>다시 걸은 길</dt><dd>대가 끊겨 <b class="num">' + sv.runs.n + '</b>번 처음부터, 가장 멀리 <b class="num">' + sv.runs.best + '</b>번</dd>' : '') +      // 2.3.2
-    '<dt>쓰러뜨린 적</dt><dd><b class="num"' + (ending ? ' data-cu="' + (sv.kills || 0) + '"' : '') + '>' + fmtN(ending ? fmtN(sv.kills || 0) : (sv.kills || 0)) + '</b></dd>' +
-    '<dt>합일한 사람</dt><dd>' + (fz ? '<b class="num"' + (ending ? ' data-cu="' + fz + '"' : '') + '>' + fz + '</b>명' : '아직 없음') + '</dd>' +
-    '<dt>최고 강화</dt><dd>' + (be ? '<span class="' + enhCls(be.enh) + '">' + esc(be.name) + '</span>' : '아직 없음') + '</dd></dl>';
-  html += '<h5>깃대에 새긴 이름들 ' + (fl.length ? fl.length + '명' : '') + '</h5>' +
+  var cu = function (n) { return '<b class="num" data-cu="' + n + '">' + fmtN(n) + '</b>'; }, gens = [];
+  try { gens = lgOn() ? recGens(sv) : []; } catch (x) { gens = []; if (DS.DEBUG) throw x; }
+  var html = '<div class="result record poster"><p class="eyebrow">' + (ending ? '엔딩' : '기록') + '</p>' + (ending ? scene('ending') : '') + '<h2>' + esc(sv.name) + '의 가문</h2>' +
+    (DS.allyFull ? '<p class="recally">' + esc(DS.allyFull(sv)) + (DS.calNow ? ' · 가문력 ' + fmtN(DS.calNow(sv).yr) + '년' : '') + '</p>' : '');
+  if (gens.length) html += '<ol class="recg">' + gens.map(function (g) {
+    return '<li' + (g.cur ? ' class="cur"' : '') + '><span class="rgp">' + (g.p ? lgFr(g.p, 'm') : '') + '</span><span class="rgt"><b><i class="num">' + g.g + '대</i> ' + esc(g.name) + '</b><small>' + (g.y1 ? '가문력 ' + fmtN(g.y0) + '~' + fmtN(g.y1) + '년' : '가문력 ' + fmtN(g.y0) + '년~') + ' · ' + esc(g.why) + '</small></span>' +
+      (g.lost > 0 ? '<span class="rgl" title="이 대에 깃대에 새긴 이름"><b class="num">' + fmtN(g.lost) + '</b>이름</span>' : '') + '</li>';
+  }).join('') + '</ol>';
+  html += '<div class="recn">' +
+    '<span><b>' + cu(cleared) + '<small> / ' + DS.SCENARIOS.length + '</small></b><i>끝낸 시나리오</i></span>' +
+    '<span><b>' + cu(sv.kills || 0) + '</b><i>쓰러뜨린 적</i></span>' +
+    '<span><b>' + (fz ? cu(fz) + '<small>명</small>' : '<small>아직 없음</small>') + '</b><i>합일한 사람</i></span>' +
+    (t >= 60 ? '<span><b>' + (t >= 3600 ? '<b class="num">' + fmtN(Math.floor(t / 3600)) + '</b><small>시간 </small>' : '') + '<b class="num">' + Math.floor(t % 3600 / 60) + '</b><small>분</small></b><i>플레이 시간</i></span>' : '') +
+    (sv.pitBest > 0 ? '<span><b><b class="num">' + fmtN(sv.pitBest) + '</b><small>층</small></b><i>갱도 최고</i></span>' : '') +
+    '<span class="wide"><b class="ren">' + (be ? '<span class="' + enhCls(be.enh) + '">' + esc(be.name) + '</span>' : '<small>아직 없음</small>') + '</b><i>최고 강화</i></span></div>';
+  if (sv.runs && sv.runs.n) {      // 2.3.2 · 2.6.1: 걸음마다 가장 멀리 간 판
+    var hs = sv.runs.hist || [], w0 = sv.runs.n - hs.length, top = DS.scnTop ? DS.scnTop(sv) : cleared;
+    html += '<h5>다시 걸은 길</h5><p class="recw-s">대가 끊겨 <b class="num">' + fmtN(sv.runs.n) + '</b>번 처음부터, 가장 멀리 <b class="num">' + sv.runs.best + '</b>번</p><ol class="recw">' +
+      hs.map(function (h, i) { return '<li><i>' + (w0 + i + 1) + '번째 걸음</i><u><s style="width:' + Math.round(h.top / DS.SCENARIOS.length * 100) + '%"></s></u><b class="num">' + h.top + '번</b></li>'; }).join('') +
+      '<li class="cur"><i>' + (sv.runs.n + 1) + '번째 걸음</i><u><s style="width:' + Math.round(top / DS.SCENARIOS.length * 100) + '%"></s></u><b class="num">' + (top ? top + '번' : '첫 판') + '</b></li></ol>';
+  }
+  var PI = DS.poleInfo ? DS.poleInfo(sv) : { name: '깃대', where: '깃대에 새긴 이름' };
+  html += '<h5>' + esc(PI.where) + (fl.length ? ' ' + fmtN(fl.length) + '명' : '') + '</h5>' +
     (fl.length ? '<p class="names' + (ending ? ' rise' : '') + '">' + fl.map(function (f, i) { return '<i style="color:' + gcol(f.g) + (ending ? ';--i:' + Math.min(i, 40) : '') + '">' + esc(f.n || (DS.MERCS[f.type] ? DS.MERCS[f.type].name : '')) + '</i>'; }).join('') + '</p>' : '<p class="dim">새길 이름이 없다. 한 사람도 잃지 않았다.</p>');
+  if (!ending && DS.poleOpen && !busy()) html += '<button class="btn wide recpole" data-recpole="1">' + esc(PI.name) + ' 보러 가기</button>';
   html += '<button class="btn gold wide stick" data-close>' + (ending ? '계속' : '닫기') + '</button></div>';
   var o = overlay(html, 'modal center');
-  if (ending) setTimeout(function () { $$('[data-cu]', o).forEach(function (el, i) { setTimeout(function () { U.countUp(el, +el.dataset.cu, 900); }, i * 260); }); }, U.calm && U.calm() ? 0 : 380);      // 2.6.0: 엔딩의 기록은 숫자가 차오른다 (움직임 줄이기면 바로 끝값)
+  U.hydrate(o);
+  var calm = U.calm && U.calm();
+  setTimeout(function () { $$('[data-cu]', o).forEach(function (el, i) { setTimeout(function () { U.countUp(el, +el.dataset.cu, ending ? 900 : 600); }, ending ? i * 260 : i * 90); }); }, calm ? 0 : ending ? 380 : 120);      // 2.6.0: 엔딩의 기록은 숫자가 차오른다 · 2.6.1: 메뉴에서 열어도 (움직임 줄이기면 바로 끝값)
+  o.addEventListener('click', function (e) { if (e.target.closest('[data-recpole]')) { A('tap'); cb = null; o.close(); DS.poleOpen(); } });
   o.onclose = function () { if (cb) cb(); };
 };
 DS.showPromo = function (p, cb) {
@@ -1903,6 +1969,10 @@ function tabBag() {      // r12: 줄 문법 = 그림 · 이름 ×n · 풀이 한
   return html;
 }
 // r4 map: 지도 탭 — 가 본 지역·시나리오 입구를 누르면 바로 이동 (game.js DS.warpTo). 칸: 이름·권장 단·여기·현상 수배·다음 시나리오
+function mapThumb(id) {      // 2.6.1: 지역 칸 위쪽의 땅 빛깔 띠 (그 지역 타일 테마의 바닥 · 언덕 · 나무 색)
+  var Z = DS.ZONES[id], T = Z && DS.THEMES && DS.THEMES[Z.theme]; if (!T) return '';
+  return '<i class="mzth" aria-hidden="true" style="--tb:' + T.b + ';--td:' + T.d + ';--tl:' + T.l + ';--th:' + (T.hill || T.l) + ';--tt:' + (Z.town ? (T.wall || '#8a6a48') : (T.tree || T.d)) + '"></i>';
+}
 function mapPitZone() { for (var id in DS.ZONES) if ((DS.ZONES[id].gates || []).some(function (g) { return g.dungeon; })) return id; return null; }
 function mapRecT(L) { var v = DS.recOfL ? DS.recOfL(L) : L; return DS.tierOfL(v > 0 ? Math.round(v) : L); }
 function mapZoneT(id) { var r = DS.zoneRec ? DS.zoneRec(id) : [1, 1]; return [DS.tierOfL(r[0]), DS.tierOfL(r[1])]; }      // 2.2.3: 들판의 권장 단 (잰 표)
@@ -1933,8 +2003,10 @@ function tabMap() {
     else { var zt = mapZoneT(id), a = zt[0], b = zt[1]; sub = (a === b ? '' : a + '~') + b + '단'; if (tier < a) cls += ' hard'; else if (tier > b) cls += ' easy'; }
     if (id === here) cls += ' here';
     if (next && next.zone === id) cls += ' goal';
+    var zs = DS.SCENARIOS.filter(function (sc) { return sc.zone === id; }), zall = zs.length > 0 && zs.every(function (sc) { return s.cleared[sc.id]; });      // 2.6.1: 그 지역의 판을 모두 끝냈으면 깃발
+    if (zall) cls += ' zdone';
     cells += '<button class="' + cls + link + '" style="grid-column:' + (p[0] + 1) + ';grid-row:' + (p[1] + 1) + '" data-z="' + id + '"' + (id === here ? ' aria-current="location"' : '') + ' aria-label="' + esc(Z.name) + '">' +
-      (id === here ? '<i class="mzhere">여기</i>' : '') + (bty[id] ? '<i class="mzbty" title="현상 수배">수배' + (bty[id] > 1 ? ' ' + bty[id] : '') + '</i>' : '') +
+      mapThumb(id) + (zall ? '<i class="mzflag" title="이 지역의 시나리오를 모두 끝냈다" aria-label="모두 끝냄"></i>' : '') + (id === here ? '<i class="mzhere">여기</i>' : '') + (bty[id] ? '<i class="mzbty" title="현상 수배">수배' + (bty[id] > 1 ? ' ' + bty[id] : '') + '</i>' : '') +
       '<b>' + esc(Z.name) + '</b><small>' + (DS.zoneDanger && DS.zoneDanger(id) ? '⚠ ' : '') + sub + '</small></button>';
   }
   // 빈 왼쪽 위(지역이 없는 칸들)에 지금 위치·다음 목표 카드 — 칸 배치가 바뀌어 자리가 없으면 지도 위에 따로 둔다
@@ -1951,16 +2023,24 @@ function tabMap() {
   // 시나리오: 다음 것 먼저 크게, 끝낸 것은 누르면 그 입구 앞으로, 잠긴 것은 한 줄로 줄인다
   var rows = '', done = [], lockN = 0, lockT = {};
   DS.SCENARIOS.forEach(function (sc) { if (s.cleared[sc.id]) done.push(sc); else if (!(next && next.id === sc.id)) { lockN++; if (sc.tier) lockT[sc.tier] = (lockT[sc.tier] || 0) + 1; } });
+  // 2.6.1: 줄마다 보스 얼굴 · 이번 대의 훈수 · 3 · 13 · 24번에서 고른 길 · 보스 전리품(찾았으면 그림, 아니면 ?). 읽기만 한다 (저장 칸 없음)
   function scRow(sc, isNext) {
-    var why = mapScnWhy(sc), z = DS.ZONES[sc.zone], hereG = G.zone && !G.scn && G.zone.id === sc.zone;
-    return '<button class="msl' + (isNext ? ' next' : ' done') + (why ? ' off' : '') + '" data-scn="' + sc.id + '"><i class="num">' + sc.id + '</i><span class="tx"><b>' + esc(sc.name) + '</b><small>' + esc(z.name) + ', ' + (isNext ? '권장 ' + lv(DS.recLOf ? DS.recLOf(sc) : sc.L) : '완료 (다시 도전)') + (why && isNext ? '<em>' + esc(why.replace(z.name + ' — ', '')) + '</em>' : '') + '</small></span>' +
+    var why = mapScnWhy(sc), z = DS.ZONES[sc.zone], hereG = G.zone && !G.scn && G.zone.id === sc.zone, B = sc.boss && DS.BOSSES[sc.boss], tg = '';
+    if (!isNext) tg += DS.msnDone && DS.msnDone(s, sc.id) ? '<i class="mt ok">훈수 ✓</i>' : '<i class="mt">훈수</i>';
+    var ck = DS.chPick ? DS.chPick(s, sc.id) : '', CT = DS.CHOICE_TXT && DS.CHOICE_TXT[sc.id];
+    if (ck && CT && CT[ck] && CT[ck].tag) tg += '<i class="mt ch">' + esc(CT[ck].tag) + '</i>';
+    var uq = DS.bossUniq ? DS.bossUniq(sc) : [], got = uq.filter(function (u) { return DS.legFound && DS.legFound(s, u); });
+    if (uq.length) tg += got.length ? '<i class="mt lt ok">' + (DS.iconHtml ? DS.iconHtml('gear', got[0], { size: 18 }) : '') + '전리품 ✓</i>' : '<i class="mt lt">전리품 ?</i>';
+    return '<button class="msl' + (isNext ? ' next' : ' done') + (why ? ' off' : '') + '" data-scn="' + sc.id + '"><i class="num">' + sc.id + '</i><span class="mface">' + (B ? sprTag(B.sprite, B.pal, 1.5) : '<i>방어</i>') + '</span><span class="tx"><b>' + esc(sc.name) + '</b><small>' + esc(z.name) + (isNext ? ', 권장 ' + lv(DS.recLOf ? DS.recLOf(sc) : sc.L) : '') + (why && isNext ? '<em>' + esc(why.replace(z.name + ' — ', '')) + '</em>' : '') + '</small>' + (tg ? '<span class="mtags">' + tg + '</span>' : '') + '</span>' +
       '<span class="go">' + (why ? '잠김' : hereG ? '입구로' : '바로 가기') + '</span></button>';
   }
-  html += '<h4>시나리오</h4>' + (s.runs && s.runs.n ? '<p class="msl-run">' + (s.runs.n + 1) + '번째 걸음. 대가 끊겨 처음부터 다시 걷는다. 지난 길은 ' + s.runs.best + '번까지 갔다</p>' : '') + '<div class="mslist">';      // 2.3.2
+  var scT = DS.SCENARIOS.length, walk = s.runs && s.runs.n ? s.runs.n + 1 : 0;
+  html += '<h4>시나리오</h4><p class="msl-run"><span class="mrh"><b class="num">' + scT + '</b>판 가운데 <b class="num">' + done.length + '</b>판' + (walk ? ' · ' + walk + '번째 걸음' : '') + '</span><i class="mbar" aria-hidden="true"><u style="width:' + Math.round(done.length / scT * 100) + '%"></u></i>' +
+    (walk ? '<small>대가 끊겨 처음부터 다시 걷는다. 지난 길은 ' + s.runs.best + '번까지 갔다</small>' : '') + '</p><div class="mslist">';      // 2.3.2 · 2.6.1: 걸음 수 앞에 「30판 가운데 n판」
   if (next) rows += scRow(next, true);
   else rows += '<p class="hint">모든 시나리오를 마쳤다.</p>';
   var pz = mapPitZone();
-  if (pz && s.visited[pz]) { var pf = s.pitBest || 0, pw = tier < 5 ? '5단부터 입장 가능' : (DS.warpWhy ? DS.warpWhy(pz) : ''); rows += '<button class="msl pit' + (pw ? ' off' : '') + '" data-wpit="1"><i class="num">' + (pf || 1) + '층</i><span class="tx"><b>바닥 없는 갱도</b><small>' + esc(DS.ZONES[pz].name) + ', ' + (pf ? '최고 ' + pf + '층, 끝없는 층' : '끝없는 층') + (pw && tier < 5 ? '<em>' + pw + '</em>' : '') + '</small></span><span class="go">' + (tier < 5 ? '잠김' : pw ? '잠김' : '바로 가기') + '</span></button>'; }
+  if (pz && s.visited[pz]) { var pf = s.pitBest || 0, pw = tier < 5 ? '5단부터 입장 가능' : (DS.warpWhy ? DS.warpWhy(pz) : ''); rows += '<button class="msl pit' + (pw ? ' off' : '') + '" data-wpit="1"><i class="num">' + (pf || 1) + '층</i><span class="mface"><i>갱도</i></span><span class="tx"><b>바닥 없는 갱도</b><small>' + esc(DS.ZONES[pz].name) + ', ' + (pf ? '최고 ' + pf + '층, 끝없는 층' : '끝없는 층') + (pw && tier < 5 ? '<em>' + pw + '</em>' : '') + '</small></span><span class="go">' + (tier < 5 ? '잠김' : pw ? '잠김' : '바로 가기') + '</span></button>'; }
   if (done.length) { rows += '<p class="mshd">끝낸 시나리오 ' + done.length + (done.length > 1 ? ', 최근 것부터' : '') + '</p>'; done.slice().reverse().forEach(function (sc) { rows += scRow(sc, false); }); }
   if (lockN) rows += '<p class="mslock">아직 열리지 않은 시나리오 ' + lockN + '개. 앞 시나리오를 끝내면 하나씩 열린다' + Object.keys(lockT).map(function (t) { return ', ' + t + '단 전용 ' + lockT[t]; }).join('') + '</p>';
   return html + rows + '</div>';
@@ -2095,7 +2175,7 @@ function tabHelp() {
       '<b>인물 탭</b>의 「배우자 고르기」에서 혼인할 수 있는 사람과 아이의 예상 등급을 보고, 줄의 「혼인」으로 바로 맺는다.',
       '혼인하면 <b>해마다 확률로</b> 아이가 태어난다. 첫해가 가장 높고, 해가 갈수록, 아이가 늘수록 드물어진다.',
       '아이의 등급은 <b>배우자의 등급</b>을 닮는다. 운에 따라 한 단계 오르거나 내린다.',
-      '대장 인물 정보의 <b>혼인 칸</b>에서 함께한 햇수, 아이 수, 다음 해 출산 확률을 볼 수 있다.',
+      '맹주 인물 정보의 <b>혼인 칸</b>에서 함께한 햇수, 아이 수, 다음 해 출산 확률을 볼 수 있다.',
       '아이는 가계도에서 자라 15살에 <b>가문원</b>이 되어 맹주를 따라 싸운다. 빈 가문이 있으면 그 가문의 가주로 보낼 수 있다.', '<b>아이는 귀하다.</b> 영웅 모집은 비싸고, 가문원은 쓰러지면 돌아오지 않는다.',
       '아이가 태어나면 선대 단톡방이 잠깐 순해진다. 능력치와는 상관없다.']],
     ['나이', 0, [
@@ -2103,7 +2183,7 @@ function tabHelp() {
       '나이는 인물 정보 위쪽에 크게, 목록과 가문 카드에 작게 표시된다.',
       '늙으면 <b>노년</b> 표시가 붙고 공격과 마공이 조금 줄어든다. 15살이 안 된 아이는 <b>어린</b>, 72살을 넘기면 <b>장수</b> 표시가 붙는다.',
       '수명은 아무도 모른다. 노년이 다가오면 후계자를 미리 정해 두는 것이 좋다. 인수인계는 살아 있을 때 한다.',
-      '<b>맹주 넘기기</b>: 대장 인물 정보 맨 아래에서, 살아 있는 맹주가 자리를 넘길 수 있다. 받을 수 있는 사람은 맹주가 쓰러졌을 때와 같다(어른 자식, 막사의 같은 병과, 다른 가문의 가주). <b>넘긴 맹주는 기운을 모두 쏟고 눈을 감는다. 되돌릴 수 없다.</b> 입던 장비는 가방으로 돌아오고 무기는 유품이 된다. 스무 해는 흐르지 않는다. 싸우는 동안에는 넘길 수 없다.']],
+      '<b>맹주 넘기기</b>: 맹주 인물 정보 맨 아래에서, 살아 있는 맹주가 자리를 넘길 수 있다. 받을 수 있는 사람은 맹주가 쓰러졌을 때와 같다(어른 자식, 막사의 같은 병과, 다른 가문의 가주). <b>넘긴 맹주는 기운을 모두 쏟고 눈을 감는다. 되돌릴 수 없다.</b> 입던 장비는 가방으로 돌아오고 무기는 유품이 된다. 스무 해는 흐르지 않는다. 싸우는 동안에는 넘길 수 없다.']],
     ['세계', 0, [
       '<b>사람은 두 번 죽는다.</b> 숨이 멎을 때 한 번, 아무도 그 이름을 부르지 않을 때 또 한 번.',
       '<b>어스름의 왕</b>은 죽이지 않고 이름을 지운다. 부를 사람이 없는 이름부터 가져간다.',
@@ -2159,7 +2239,7 @@ function wedWhy(m) {
   var a = agInfo(m); if (a && a.young) return '아직 어리다';
   var w = lgWhyNot('ch', hero.id, 'merc', m.id); if (w) return w;
   var p = lgLivePid('merc', m.id); if (p && p.rv) return '돌아온 이는 혼인하지 않는다';
-  var hp = lgLivePid('ch', hero.id); if (hp && hp.rv) return '대장이 돌아온 이다';
+  var hp = lgLivePid('ch', hero.id); if (hp && hp.rv) return '맹주가 돌아온 이다';
   return '';
 }
 function heroSpouse() { var s = G.save, hero = heroCh(), P = LS() && LS().P, hp = hero && hero.pid && P ? P[hero.pid] : null; return hp && hp.sp && P[hp.sp] ? { hp: hp, sp: P[hp.sp] } : null; }
@@ -2255,10 +2335,10 @@ function pplKey() {
 // 인물 탭 위 안내: 대장이 혼인할 수 있으면 배우자감 수, 혼인했으면 한 줄
 function wedNote(canWed) {
   var sp = heroSpouse(), all = lgAll();
-  if (sp) { var q = all[sp.sp.id]; return '<div class="wednote on"><i class="lgring" aria-hidden="true"></i><span><b>' + esc(pst('marriedNote', '대장은 혼인했다')) + '</b><small>' + esc((q ? q.name : '') + ', ' + birthWord().t) + '</small></span><button class="btn small" data-wedopen="1">혼인</button></div>'; }
+  if (sp) { var q = all[sp.sp.id]; return '<div class="wednote on"><i class="lgring" aria-hidden="true"></i><span><b>' + esc(pst('marriedNote', '맹주는 혼인했다')) + '</b><small>' + esc((q ? q.name : '') + ', ' + birthWord().t) + '</small></span><button class="btn small" data-wedopen="1">혼인</button></div>'; }
   if (!canWed) return '';
   var c = wedCands().length;      // 2.6.0: 단추 하나 — 혼인 창(후보 목록)이 바로 열린다
-  return '<div class="wednote"><i class="lgring" aria-hidden="true"></i><span><b>' + esc(pst('canWed', '대장이 혼인할 수 있다')) + '</b><small>' + esc(pst('candN', '배우자 후보')) + ' ' + c + '명, ' + esc(pst('wedRule', '아이는 해마다 확률로 태어난다')) + '</small></span><button class="btn small' + (c ? ' gold' : '') + '" data-wedopen="1">배우자 고르기</button></div>';
+  return '<div class="wednote"><i class="lgring" aria-hidden="true"></i><span><b>' + esc(pst('canWed', '맹주가 혼인할 수 있다')) + '</b><small>' + esc(pst('candN', '배우자 후보')) + ' ' + c + '명, ' + esc(pst('wedRule', '아이는 해마다 확률로 태어난다')) + '</small></span><button class="btn small' + (c ? ' gold' : '') + '" data-wedopen="1">배우자 고르기</button></div>';
 }
 function peopleClick(e, o) {
   var b;
@@ -2420,7 +2500,7 @@ function wedTipTick() {
   var top = $('#top'), q = $('#quest'); if (!top) return;
   s.opt.wedTip = 1; U.persist();
   var el = document.createElement('div'); el.id = 'wedtip'; el.setAttribute('role', 'status');
-  el.innerHTML = '<i class="lgring" aria-hidden="true"></i><span><b>' + esc(pst('tipTitle', '대장이 혼인할 수 있다')) + '</b><small>' + esc(pst('tipSub', '인물 탭에서 배우자 후보 확인')) + '</small></span><button class="btn small gold" data-wt="go">보기</button><button class="btn small wtx" data-wt="x" aria-label="끄기">끄기</button>';
+  el.innerHTML = '<i class="lgring" aria-hidden="true"></i><span><b>' + esc(pst('tipTitle', '맹주가 혼인할 수 있다')) + '</b><small>' + esc(pst('tipSub', '인물 탭에서 배우자 후보 확인')) + '</small></span><button class="btn small gold" data-wt="go">보기</button><button class="btn small wtx" data-wt="x" aria-label="끄기">끄기</button>';
   if (q && q.nextSibling) top.insertBefore(el, q.nextSibling); else top.appendChild(el);
   el.addEventListener('click', function (e) { var b = e.target.closest('[data-wt]'); if (!b) return; A('tap'); el.remove(); if (b.dataset.wt === 'go') wedSheet(null); });
   setTimeout(function () { if (el.isConnected) el.remove(); }, 20000);
@@ -2573,7 +2653,7 @@ function lgEvents() {
   var all = lgAll();
   return (L.log || []).filter(Boolean).map(function (e) {
     var t = DS.linEvText ? lgTry(function () { return DS.linEvText(G.save, e); }) : null;
-    if (typeof t !== 'string' || !t) { var C = LGU().chronicle || {}, a = all[e.a], b = all[e.b], x = e.x || {}; t = lgFill(C[e.t] || '{a} — {t}', { a: a ? a.name : '누군가', b: b ? b.name : '', at: x.at || '', why: x.why || '', t: LG_KIND[e.t] || e.t }); }
+    if (typeof t !== 'string' || !t) { var C = LGU().chronicle || {}, a = all[e.a], b = all[e.b], x = e.x || {}; t = lgFill(C[e.t] || '{a}, {t}.', { a: a ? a.name : '누군가', b: b ? b.name : '', at: x.at || '', why: x.why || '', t: LG_KIND[e.t] || e.t }); }
     var k = e.t === 'part' && e.x && e.x.why === '합일' ? 'fuse' : e.t === 'gone' ? 'part' : e.t === 'death' && e.x && /천수/.test(e.x.why || '') ? 'nat' : e.t;
     return { k: k, s: e.s, at: (e.x && e.x.at) || '', text: t, who: [e.a, e.b].concat((e.x && e.x.pa) || []).filter(Boolean).map(String), raw: e };
   });
@@ -2589,11 +2669,24 @@ function lgTag(p) {
   if (p.coffin) return '<small class="dd">관에 모심</small>';
   if (!p.alive) return '<small class="dd">' + esc(p.ag ? agWord(p.ag) + (p.died && /천수/.test(p.died.why || '') ? ', 천수' : '') : p.died && p.died.s != null ? lgWhen(p.died) + ' 잠듦' : '잠듦') + '</small>';
   if (p.young) return '<small class="gn yg">' + esc(agWord(p.ag) + ', ' + (AGL().youngTag || '15살에 성년')) + '</small>';      // r6 나이: 아직 막사에 들지 않은 아이
-  return p.gen ? '<small class="gn"><i>' + p.gen + '대</i>' + (p.ad ? '<i>양' + (p.sx === 'f' ? '녀' : '자') + '</i>' : '') + (p.ag ? '<i class="agt' + (p.ag.old ? ' old' : '') + '">' + p.ag.y + '살</i>' : p.kind === 'ch' ? '<i>대장</i>' : '') + '</small>' : '';      // r45 ui: 쉼표 → 칸
+  return p.gen ? '<small class="gn"><i>' + p.gen + '대</i>' + (p.ad ? '<i>양' + (p.sx === 'f' ? '녀' : '자') + '</i>' : '') + (p.ag ? '<i class="agt' + (p.ag.old ? ' old' : '') + '">' + p.ag.y + '살</i>' : p.kind === 'ch' ? '<i>맹주</i>' : '') + '</small>' : '';      // r45 ui: 쉼표 → 칸
+}
+function lgNowPid() { var s = G.save, h = s && s.chars[s.hero]; return h && !h.vac && h.pid ? h.pid : 0; }      // 2.6.1: 지금의 맹주 (가계도에서 금빛 테 · 열 때 여기에 맞춘다)
+// 가계도 왼쪽의 「1대 / 2대」: 그린 뒤에 줄(깊이)마다 높이를 재어 붙인다. 옆으로 밀어도 왼쪽에 남는다 (li.lggens — sticky)
+function lgGenLabels(body) {
+  U.$$('.lgt', body).forEach(function (tree) {
+    var old = tree.querySelector(':scope > li.lggens'); if (old) old.remove();
+    var rows = {}, base = tree.getBoundingClientRect().top;
+    U.$$('.cp', tree).forEach(function (cp) { var d = 0, el = cp.parentNode; while (el && el !== tree) { if (el.tagName === 'UL') d++; el = el.parentNode; } var n0 = cp.querySelector('.lgn'), r = n0 ? n0.getBoundingClientRect() : null, g = n0 ? +n0.dataset.gen || 0 : 0; if (!r) return; if (!rows[d]) rows[d] = { top: r.top - base + r.height / 2, g: 0 }; if (g && (!rows[d].g || g < rows[d].g)) rows[d].g = g; });
+    var ks = Object.keys(rows).map(Number).sort(function (a, b) { return a - b; }); if (ks.length < 2) return;
+    var g0 = rows[ks[0]].g || 1, li = document.createElement('li'); li.className = 'lggens'; li.setAttribute('aria-hidden', 'true');
+    li.innerHTML = ks.map(function (d, i) { return '<i style="top:' + Math.round(rows[d].top) + 'px">' + (g0 + i) + '대</i>'; }).join('');
+    tree.insertBefore(li, tree.firstChild);
+  });
 }
 function lgNode(p, cur) {
   if (!p) return '';
-  return '<button class="lgn s-' + (p.sx || 'x') + (p.alive ? '' : ' dead') + (p.young ? ' yg' : '') + (p.ag && p.ag.old && p.alive ? ' old' : '') + (p.fused ? ' fz' : '') + (p.fu ? ' ms' : '') + (p.ad ? ' ad' : '') + (p.kind === 'ch' && p.alive ? ' cmd' : '') + (cur === p.id ? ' cur' : '') + '" data-lgp="' + esc(p.id) + '">' +
+  return '<button class="lgn s-' + (p.sx || 'x') + (p.alive ? '' : ' dead') + (p.young ? ' yg' : '') + (p.ag && p.ag.old && p.alive ? ' old' : '') + (p.fused ? ' fz' : '') + (p.fu ? ' ms' : '') + (p.ad ? ' ad' : '') + (p.kind === 'ch' && p.alive ? ' cmd' : '') + (cur === p.id ? ' cur' : '') + (lgNowPid() === p.id ? ' now' : '') + '" data-lgp="' + esc(p.id) + '" data-gen="' + (p.gen || 0) + '">' +
     '<span class="ps">' + lgFr(p, 's') + '</span><b' + (p.grade && p.alive ? ' style="color:' + gcol(p.grade) + '"' : '') + '>' + esc(p.name) + '</b>' +
     '<small class="lgr">' + (p.sx ? '<i class="sx sx-' + esc(p.sx) + '">' + esc(lgSexTxt(p.sx)) + '</i>' : '') + esc(String((p.kind === 'ch' ? p.role : p.full || p.role) || '').replace(/,\s*/g, ' ')) + '</small>' + lgTag(p) + '</button>';
 }
@@ -2657,7 +2750,7 @@ function lgCard(id, parent) {
       (!p.alive && R.lw ? '<dt>마지막 말</dt><dd class="lw">「' + esc(R.lw) + '」</dd>' : '') +
       (p.m ? '<dt>전공</dt><dd><span class="schips">' + DS.chip('함께한 전투', String(p.m.b || 0)) + DS.chip('쓰러뜨린 적', String(p.m.k || 0)) + (DS.mercTitle && DS.mercTitle(p.m) ? '<span class="sch tag">「' + esc(DS.mercTitle(p.m)) + '」</span>' : '') + '</span></dd>' : '') + '</dl>';
     var ev = lgEvents().filter(function (e) { return e.who.indexOf(String(p.id)) >= 0; });
-    if (ev.length) html += '<h4>기록</h4>' + lgChronHtml(ev);
+    if (ev.length) html += '<h4>기록</h4>' + lgChronHtml(ev, true);
     if (DS.rnBtn) html += DS.rnBtn('p', p.id);      // r10 social: 개명권 (대장·용병·아이 — 그 밖의 사람은 빈 글)
     var btn = p.alive && p.ref ? '<button class="btn wide" data-lgopen="1">' + (p.kind === 'ch' ? '가문 정보' : '인물 정보') + '</button>' : '';
     return html + (btn ? '<div class="foot">' + btn + '</div>' : '');
@@ -2670,22 +2763,51 @@ function lgCard(id, parent) {
   return o;
 }
 // ── 연대기: 시간순, 「시나리오 n 뒤」가 바뀔 때마다 머리줄
-var LG_KIND = { wed: '혼인', part: '이별', birth: '출생', adopt: '입양', death: '잠듦', heir: '계승', kin: '먼 친척', grief: '슬픔', fuse: '합일', coffin: '관', bury: '묻음', revive: '돌아옴', recall: '돌아옴', hand: '맡김', nat: '천수', adult: '성년', elder: '노년', rename: '개명' };
+var LG_KIND = { wed: '혼인', part: '이별', birth: '출생', adopt: '입양', death: '잠듦', heir: '계승', kin: '먼 친척', grief: '슬픔', fuse: '합일', coffin: '관', bury: '묻음', revive: '돌아옴', recall: '돌아옴', hand: '맡김', nat: '천수', adult: '성년', elder: '노년', rename: '개명', succ: '계승', lead: '계승', castHeir: '계승', lapse: '끊김', house: '문패' };
 function lwLine(t) { return t ? '<small class="lw">마지막 말 「' + esc(t) + '」</small>' : ''; }
-function lgChronHtml(list) {
-  var last = null, html = '<ol class="lgc">';
-  list.forEach(function (e) {
-    var head = lgWhen(e) || '처음';
-    if (head !== last) { html += '<li class="hd">' + esc(head) + '</li>'; last = head; }
-    var lw0 = e.k === 'death' && e.raw && e.raw.a && LS() && LS().P[e.raw.a] ? LS().P[e.raw.a].lw : '';      // r32: 잠든 이의 마지막 말
-    html += '<li class="k-' + esc(e.k) + '"><i>' + (LG_KIND[e.k] || '기록') + '</i><span>' + esc(e.text || '') + (e.at && (e.text || '').indexOf(e.at) < 0 ? ' <small>' + esc(e.at) + '</small>' : '') + (lw0 ? ' <small class="lw">「' + esc(lw0) + '」</small>' : '') + '</span></li>';
-  });
+// 2.6.1 연대기: 머리는 가문력 해와 계절 · 같은 일이 셋 넘게 이어지면 한 줄로 접는다(「합일 8건」) · 줄마다 테 두른 작은 초상 · 거르기 단추 · 죽음 줄은 어두운 띠.
+//   사건은 종류와 사람 번호로 저장되어 있고(save.lin.log) 글은 읽을 때 만든다 — 옛 저장도 새 글로 읽힌다.
+var LGCF = 'all';      // 거르기 (이 판 동안만 기억)
+var LGC_GRP = { wed: 'fam', part: 'fam', birth: 'fam', adopt: 'fam', adult: 'fam', elder: 'fam', rename: 'fam', death: 'end', nat: 'end', heir: 'end', kin: 'end', succ: 'end', lead: 'end', castHeir: 'end', hand: 'end', coffin: 'end', bury: 'end', revive: 'end', recall: 'end', lapse: 'end', grief: 'end', fuse: 'fuse' };
+// 사건의 때(플레이 초 tm) → 가문력. 달력은 스무 해 건너뛰기로 플레이 시간보다 앞서 갈 수 있다 — 태어난 때(달력으로 적힌다)를 닻으로 삼아 가장 가까운 닻의 차이를 쓴다
+function lgCalAt(tm) {
+  var s = G.save, Yr = (DS.AGE && DS.AGE.year) || 600, L = LS(), anc = [[+s.time || 0, ((s.cal && +s.cal.t) || +s.time || 0) - (+s.time || 0)]], off = anc[0][1], best = Infinity;
+  if (L) (L.log || []).forEach(function (e) { var p = e && e.t === 'birth' && L.P[e.a]; if (p && p.by != null && e.tm != null) anc.push([e.tm, p.by - e.tm]); });
+  anc.forEach(function (a) { var d = Math.abs(a[0] - tm); if (d < best) { best = d; off = a[1]; } });
+  var c = Math.max(0, (+tm || 0) + off), se = Math.min(3, Math.floor((c % Yr) / (Yr / 4)));
+  return { yr: Math.floor(c / Yr) + 1, season: se, text: '가문력 ' + fmtN(Math.floor(c / Yr) + 1) + '년 ' + ((DS.SEASONS && DS.SEASONS[se]) || '') };
+}
+function lgcRow(e, all) {
+  var r = e.raw || {}, p = all[r.a], dk = e.k === 'death' || e.k === 'nat' || e.k === 'bury' || e.k === 'lapse';
+  var lw0 = e.k === 'death' && r.a && LS() && LS().P[r.a] ? LS().P[r.a].lw : '';      // r32: 잠든 이의 마지막 말
+  return '<li class="k-' + esc(e.k) + (dk ? ' dk' : '') + '"><i>' + (LG_KIND[e.k] || '기록') + '</i><span class="lgcp">' + (p && p.spr ? lgFr(p, 's') : '') + '</span><span>' + esc(e.text || '') + (e.at && (e.text || '').indexOf(e.at) < 0 ? ' <small>' + esc(e.at) + '</small>' : '') + (lw0 ? ' <small class="lw">「' + esc(lw0) + '」</small>' : '') + '</span></li>';
+}
+function lgChronHtml(list, plain) {
+  var all = lgAll(), n = { all: list.length, fam: 0, end: 0, fuse: 0 }, html = '';
+  list.forEach(function (e) { var g = LGC_GRP[e.k]; if (g) n[g]++; });
+  if (!plain) html += '<nav class="lgcf" role="group" aria-label="연대기 거르기">' + [['all', '모두'], ['fam', '혼인·출생'], ['end', '죽음·계승'], ['fuse', '합일']].map(function (f) { return '<button class="chipbtn" data-lgcf="' + f[0] + '"' + (LGCF === f[0] ? ' aria-pressed="true"' : '') + '>' + f[1] + ' <i class="num">' + n[f[0]] + '</i></button>'; }).join('') + '</nav>';
+  var rows = plain || LGCF === 'all' ? list : list.filter(function (e) { return LGC_GRP[e.k] === LGCF; });
+  if (!rows.length) return html + '<p class="hint">이 갈래에는 아직 적힌 일이 없다.</p>';
+  var heads = rows.map(function (e) { return e.raw && e.raw.tm != null ? lgCalAt(e.raw.tm).text : lgWhen(e) || '처음'; }), last = null, i = 0;
+  html += '<ol class="lgc v2">';
+  while (i < rows.length) {
+    var e = rows[i], j = i;
+    if (heads[i] !== last) { html += '<li class="hd">' + esc(heads[i]) + '</li>'; last = heads[i]; }
+    while (j < rows.length && rows[j].k === e.k && heads[j] === heads[i]) j++;
+    if (!plain && j - i >= 3) {      // 같은 일이 셋 넘게: 한 줄로 접는다 (누르면 편다)
+      var key = 'lgc:' + LGCF + ':' + e.k + ':' + ((e.raw && e.raw.tm) || 0) + ':' + i, on = !!FOLD[key];
+      html += '<li class="run k-' + esc(e.k) + (on ? ' on' : '') + '"><button class="lgrun" data-pfold="' + esc(key) + '" aria-expanded="' + on + '"><i>' + (LG_KIND[e.k] || '기록') + '</i><span>' + (LG_KIND[e.k] || '기록') + ' ' + (j - i) + '건</span><em aria-hidden="true">' + (on ? '▾' : '▸') + '</em></button></li>';
+      if (on) for (var q = i; q < j; q++) html += lgcRow(rows[q], all);
+      i = j; continue;
+    }
+    html += lgcRow(e, all); i++;
+  }
   return html + '</ol>';
 }
 // ── 「가문」 창: 가계도 / 연대기 / 관
 DS.openLineage = function (tab, focus, parent) {
   if (!lgOn()) { toast('가문 기록이 아직 없다'); return null; }
-  var cur = tab || 'tree', logSeen = false, o = null;
+  var cur = tab || 'tree', logSeen = false, treeSeen = false, o = null;
   o = sheet('가문', function () {
     var ev = lgEvents(), cf = lgCoffins();
     var html = '<nav class="lgtab">' + [['tree', '가계도'], ['log', '연대기 ' + ev.length], ['coffin', '관' + (cf ? ' ' + cf.used + '/' + cf.have : '')]].filter(function (t) { return t[0] !== 'coffin' || cf; })
@@ -2696,11 +2818,14 @@ DS.openLineage = function (tab, focus, parent) {
     return html;
   }, 'lgs', function (body, ov) {
     var L0 = LS(), hh = ov.querySelector('.sh h3'); if (hh && DS.crestHtml && L0 && !hh.dataset.crest) { hh.dataset.crest = '1'; hh.innerHTML = (DS.houseCrestOf && G.save.chars[G.save.hero] ? DS.houseCrestOf(G.save, G.save.chars[G.save.hero], 24) : DS.crestHtml(L0.sur || L0.hn || '', 24)) + ' ' + esc(DS.houseName ? lgTry(function () { return DS.houseName(G.save); }) || '가문' : '가문'); }      // r12: 그래픽 2차, 제목 앞 문패 문장
-    U.$$('[data-lgwrap]', body).forEach(function (w) { var c = $('.lgn.cur', w); if (c) w.scrollLeft = Math.max(0, c.offsetLeft + c.offsetWidth / 2 - w.clientWidth / 2); });
+    if (cur === 'tree') { try { lgGenLabels(body); } catch (x) { if (DS.DEBUG) throw x; } }
+    U.$$('[data-lgwrap]', body).forEach(function (w) { var c = $('.lgn.cur', w) || $('.lgn.now', w); if (c) { var cr = c.getBoundingClientRect(), wr = w.getBoundingClientRect(); w.scrollLeft = Math.max(0, w.scrollLeft + (cr.left + cr.width / 2) - (wr.left + wr.width / 2)); } });      // 2.6.1: 고른 사람이 없으면 지금 맹주를 가운데에
+    if (cur === 'tree' && !treeSeen) { treeSeen = true; var nn = $('.lgn.cur', body) || $('.lgn.now', body); if (nn) { var nr = nn.getBoundingClientRect(), br = body.getBoundingClientRect(); if (nr.bottom > br.bottom - 8 || nr.top < br.top + 8) body.scrollTop += (nr.top + nr.height / 2) - (br.top + br.height / 2); } }      // 처음 열 때 한 번: 맹주가 보이는 데까지 내린다
     if (cur === 'log' && !logSeen) { body.scrollTop = body.scrollHeight; logSeen = true; }      // 연대기는 맨 아래(가장 최근)부터
   });
   o.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-lgtab]'); if (t) { cur = t.dataset.lgtab; logSeen = false; A('tap'); $('.sb', o).scrollTop = 0; o.draw(); return; }
+    var t = e.target.closest('[data-lgtab]'); if (t) { cur = t.dataset.lgtab; logSeen = false; treeSeen = false; A('tap'); $('.sb', o).scrollTop = 0; o.draw(); return; }
+    var cf = e.target.closest('[data-lgcf]'); if (cf) { LGCF = cf.dataset.lgcf; logSeen = false; A('tap'); o.draw(); return; }      // 2.6.1: 연대기 거르기
     var pb = e.target.closest('[data-lgp]'); if (pb) { A('tap'); focus = pb.dataset.lgp; lgCard(pb.dataset.lgp, o); return; }
     if (lgHouseClick(e, o)) return;
     if (lgCoffinClick(e, o)) return;
@@ -2741,7 +2866,7 @@ function lgSpouseRow(kind, ref) {
   var mood = p && p.mood ? ' ' + lgMoodTxt(p.mood) : '';
   var bd = sp && DS.linBond ? lgTry(function () { return DS.linBond(G.save, p.id); }) : null;
   var sub = sp ? (kids.length ? '자식 ' + kids.length + '명: ' + kids.map(function (k) { return (k.full || k.name) + (k.alive ? (k.young && k.ag ? '(' + k.ag.y + '살)' : '') : '(잠듦)'); }).join(', ') : '아직 자식이 없다') + ''      /* r16 person: 4.0 은 해마다 굴린다 — 옛 「정 n/3」 줄은 뺐다 (혼인 칸이 다음 해 가망을 보인다) */
-    : p && p.pa.length && !kids.length ? (p.ad ? '양' + (p.sx === 'f' ? '녀' : '자') + ', ' : '') + '부모 ' + p.pa.map(function (x) { return all[x] ? all[x].name + (all[x].alive ? '' : '(잠듦)') : ''; }).filter(Boolean).join(', ') + '. ' + (kind === 'merc' ? '대장과 혼인할 수 있다.' : '혼인할 수 있다.')
+    : p && p.pa.length && !kids.length ? (p.ad ? '양' + (p.sx === 'f' ? '녀' : '자') + ', ' : '') + '부모 ' + p.pa.map(function (x) { return all[x] ? all[x].name + (all[x].alive ? '' : '(잠듦)') : ''; }).filter(Boolean).join(', ') + '. ' + (kind === 'merc' ? '맹주와 혼인할 수 있다.' : '혼인할 수 있다.')
     : kids.length ? '자식 ' + kids.length + '명: ' + kids.map(function (k) { return (k.full || k.name) + (k.alive ? (k.young && k.ag ? '(' + k.ag.y + '살)' : '') : '(잠듦)'); }).join(', ')
     : (kind === 'merc' ? '맹주와 혼인할 수 있다. ' : '가주나 막사의 사람과 혼인할 수 있다. ') + '성별이 달라야 한다.';
   var html = '<h4>집안 <i class="own">' + esc(p && p.sur ? p.sur + ' 가문' : '') + (p && p.gen ? ' ' + p.gen + '세' : '') + '</i></h4><div class="row lgrow"><div class="tx"><b>' + (sp ? '배우자 ' + esc(sp.name) : '배우자 없음') + ' <i class="own">' + esc(lgSexTxt(sp ? sp.sx : sx)) + '</i>' + mood + '</b>' +
@@ -2766,7 +2891,7 @@ function lgLivePid(kind, ref) { var x = kind === 'ch' ? G.save.chars[ref] : merc
 function lgWhyNot(k1, r1, k2, r2) {
   var s = G.save, x1 = k1 === 'ch' ? s.chars[r1] : mercById(r1), x2 = k2 === 'ch' ? s.chars[r2] : mercById(r2);
   if (!x1 || !x2) return '찾을 수 없다';
-  if (k1 !== 'ch' && k2 !== 'ch') return '한쪽은 대장이어야 한다';
+  if (k1 !== 'ch' && k2 !== 'ch') return '한쪽은 맹주여야 한다';
   if (x1.sx && x2.sx && x1.sx === x2.sx) return '성별이 같으면 맺을 수 없다';
   var p1 = lgLivePid(k1, r1), p2 = lgLivePid(k2, r2);
   if ((p1 && p1.sp) || (p2 && p2.sp)) return '이미 배우자가 있다';
@@ -2988,12 +3113,12 @@ function lgRite(ev, cb, griefs, seen) {
         '<p class="ep">' + LT.fall.map(function (l) { return esc(lgFill(l, lpV())); }).join('<br>') + '</p>' +
         (lpCleared() ? '<div class="lpscn"><p><b>깬 시나리오 ' + lpCleared() + '개</b>가 사라진다. 1번부터 다시</p>' + U.lpStrip(DS.scnTop ? DS.scnTop(s) : lpCleared()) + '</div>' : '') +      // 2.3.2
         '<ul class="lgafter"><li>스무 해가 흐른다. 모두 스무 살을 더 먹는다</li>' + (lpCleared() ? '<li class="lploss">깬 시나리오는 사라진다. 1번 시나리오부터 다시 걷는다</li>' + (DS.egActive && DS.egActive(s) ? '<li class="lploss">' + DS.egGen(s) + '대째의 장도 닫힌다. 30번을 다시 깨면 다음 장이 열린다</li>' : '') + '<li>다시 깨면 처음 깬 보상(골드, 장비, 모집권)을 또 받는다</li>' : '') + '<li>가문과 사람, 레벨, 장비, 가방, 깃대, 관은 남는다</li><li>금고의 절반을 잃는다' + (lost ? ' (' + U.fmtN(lost) + '골드)' : '') + '</li><li>빈 깃발은 다시 세워야 한다. 모집권 ' + DS.LAPSE.tickets + '장을 받는다</li>' +
-        '<li>' + (yk ? esc(josa(yk.name, '이가')) + ' 자라 뒤를 잇는다' : '새 대장이 옛 깃발을 든다. 이름과 가문 이름을 고른다') + '</li></ul>' +
+        '<li>' + (yk ? esc(josa(yk.name, '이가')) + ' 자라 뒤를 잇는다' : '새 맹주가 옛 깃발을 든다. 이름과 가문 이름을 고른다') + '</li></ul>' +
         '<button class="btn gold wide" data-lgstep="lpass">스무 해를 보낸다</button><button class="btn wide" data-lgstep="mourn">← 추도로</button>';
     } else if (step === 'lname') {
       var hk = LPH.k, gh = DS.GRAND_HOUSES || [], oldN = LS().hn || DS.houseOf(LS().sur || '');
-      html = '<p class="eyebrow">새 대장</p><h2>누가 깃발을 드나</h2>' +
-        '<label class="fld lpfld"><span>새 대장의 이름 (8자까지)</span><input id="lpName" maxlength="8" value="' + esc(LPH.n) + '" autocomplete="off" enterkeyhint="done"></label>' +
+      html = '<p class="eyebrow">새 맹주</p><h2>누가 깃발을 드나</h2>' +
+        '<label class="fld lpfld"><span>새 맹주의 이름 (8자까지)</span><input id="lpName" maxlength="8" value="' + esc(LPH.n) + '" autocomplete="off" enterkeyhint="done"></label>' +
         '<h5>가문 이름</h5><div class="lphouse" role="group"><button data-lphouse="keep"' + (hk === 'keep' ? ' aria-pressed="true"' : '') + '><b>옛 이름을 잇는다</b><small>' + esc(oldN) + '</small></button>' +
         gh.map(function (g) { return '<button data-lphouse="' + esc(g[0]) + '"' + (hk === g[0] ? ' aria-pressed="true"' : '') + '><b>' + esc(DS.houseOf(g[0])) + '</b><small>' + esc(g[1]) + '</small></button>'; }).join('') + '</div>' +
         '<p class="lgwarn">정하면 되돌릴 수 없다.</p><button class="btn gold wide" id="lpYes">깃발을 든다</button>';
@@ -3087,7 +3212,7 @@ function lgRite(ev, cb, griefs, seen) {
     if (heir && c && c.name && heir !== c.name) lines.push(lgFill(LGU().heirName || '이제 {b:은는} {heir:으로} 불린다.', { b: c.name, heir: heir }));
     lines.push(lgFill(lgPick(H.will) || '', v));
     A(kk === 'merc' ? 'holy' : 'level');
-    story(lines.filter(Boolean), function () { if (cb) cb(); nfLater({ k: 'c', id: s.hero }, '새 대장, 처음 이름 정하기 (무료)'); }, kk === 'merc' ? '입양' : kk === 'kin' ? '먼 친척' : '계승');      // r32: 새 대장의 이름을 값없이 (의식이 다 끝나고 창이 걷힌 뒤)
+    story(lines.filter(Boolean), function () { if (cb) cb(); nfLater({ k: 'c', id: s.hero }, '새 맹주, 처음 이름 정하기 (무료)'); }, kk === 'merc' ? '입양' : kk === 'kin' ? '먼 친척' : '계승');      // r32: 새 대장의 이름을 값없이 (의식이 다 끝나고 창이 걷힌 뒤)
   }
   draw();
   return o;
@@ -3465,7 +3590,7 @@ function renderTitle() {
     (r && !s ? '<p class="welcome"><b>회귀자로 맞이합니다.</b> 예전 기록에 따라 특전을 드립니다. 진행은 처음부터입니다.</p>' : '') +
     (s ? '<button class="btn gold wide" id="btnCont">이어하기 <small>' + esc(s.name) + ', ' + DS.ZONES[s.zone].name + '</small></button>' : '') +
     (!nv && arch ? '<p class="welcome arch"><b>새 판이 열렸다. 이전 기록은 보관되었다.</b> ' + esc(DS.VERSION) + ' 은 처음부터 시작합니다. 옛 저장은 지우지 않고 이 기기에 그대로 두지만, 이어 하거나 사람을 데려오지는 않습니다.</p>' : '') +
-    (nv ? '' : '<button class="btn wide' + (s || oldEra() ? '' : ' gold') + '" id="btnNew">' + (r && !s ? '회귀자로 새로 시작' : oldEra() ? '새 대장으로 시작' : '새로 시작') + '</button>') +
+    (nv ? '' : '<button class="btn wide' + (s || oldEra() ? '' : ' gold') + '" id="btnNew">' + (r && !s ? '회귀자로 새로 시작' : oldEra() ? '새 맹주로 시작' : '새로 시작') + '</button>') +
     '<div class="tver"><button id="btnNotes" class="lnk">공지사항<i class="dot"' + (fresh ? '' : ' hidden') + '></i></button><span class="num">v' + DS.VERSION + '</span></div>' +
     '<p class="title-note">저장은 이 브라우저에 남습니다.</p></div>';
   if (s && DS.lgTitleRow) { try { DS.lgTitleRow(el, s); } catch (x) {} }      // r33 legacy: 가문 이름과 등급
@@ -3488,7 +3613,7 @@ DS.openNewEra = function () {      // r42 (2.0.0): 옛 판 저장(1.x)은 이어
 };
 var newEra0 = function (raw, hasSave) {
   var L = DS.oldPeople(raw), ver = '', pick = -1; try { ver = JSON.parse(raw).ver || ''; } catch (e) {}
-  var SRC = { hero: '옛 대장', cmd: '가주였던 이', merc: '사람', young: '아이', coffin: '관 속' };
+  var SRC = { hero: '옛 맹주', cmd: '가주였던 이', merc: '사람', young: '아이', coffin: '관 속' };
   function face(p) {
     try {
       if (p.cls && DS.CLASSES[p.cls]) return sprTag(DS.lookName(p.cls, DS.CLASSES[p.cls].start || 1), '', 2);
@@ -3497,12 +3622,12 @@ var newEra0 = function (raw, hasSave) {
     return '<span class="q">？</span>';
   }
   function body() {
-    var h = '<p class="hint">고른 사람이 첫 대장이 됩니다. 이름, 외모, 특성은 그대로 가져오고 레벨과 장비는 처음부터 시작합니다.</p>' + (hasSave ? '<p class="lock">4.0 진행이 있습니다. 새로 시작하면 덮어씁니다.</p>' : ''), last = '';
+    var h = '<p class="hint">고른 사람이 첫 맹주가 됩니다. 이름, 외모, 특성은 그대로 가져오고 레벨과 장비는 처음부터 시작합니다.</p>' + (hasSave ? '<p class="lock">4.0 진행이 있습니다. 새로 시작하면 덮어씁니다.</p>' : ''), last = '';
     L.forEach(function (p, i) {
       if (p.src !== last) { last = p.src; h += '<h4>' + SRC[p.src] + '</h4>'; }
       h += '<button class="row merc erow' + (i === pick ? ' on' : '') + '" data-era="' + i + '">' + face(p) + '<span class="mn"><b>' + esc(p.name) + '</b>' + (p.g ? ' ' + gpips(p.g) : '') + '<small>' + esc(String(p.note || '').replace(/\s*—\s*/g, ', ')) + (p.t && DS.TRAITS[p.t] ? ', ' + DS.TRAITS[p.t].name : '') + '</small></span></button>';
     });
-    h += '<div class="dangerz one"><button class="btn wide" data-era-new="1">새 대장으로 시작</button></div>';
+    h += '<div class="dangerz one"><button class="btn wide" data-era-new="1">새 맹주로 시작</button></div>';
     return h;
   }
   function foot() {
@@ -3578,7 +3703,7 @@ function newGame(hasSave, r) {
   var pick = 'inf', perk = r ? DS.returneePerk(r) : null, ghI = Math.floor(Math.random() * ((DS.GRAND_HOUSES || [1]).length));      // 1.0.7: 맹주 가문 이름을 고른다 (처음엔 무작위 하나)
   var ghName = function () { var g = DS.GRAND_HOUSES && DS.GRAND_HOUSES[ghI]; return g ? g[0] : ''; };
   var o = overlay('<header class="sh"><h3>새로 시작</h3></header><div class="sb ngsb"><div class="ngl">' +
-    '<label class="fld"><span>대장의 이름</span><input id="cmdName" maxlength="8" value="' + esc((r && r.name) || '대장') + '" autocomplete="off"></label>' +
+    '<label class="fld"><span>맹주의 이름</span><input id="cmdName" maxlength="8" value="' + esc((r && r.name) || '맹주') + '" autocomplete="off"></label>' +
     (DS.GRAND_HOUSES ? '<p class="hint">연맹의 이름</p><div class="gh-pick ngh">' + DS.GRAND_HOUSES.map(function (g, i) { return '<button class="gh' + (i === ghI ? ' on' : '') + '" data-gh="' + i + '"><b>' + esc(g[0]) + '</b><small>' + esc(g[1]) + '</small></button>'; }).join('') + '</div><p class="nghd">' + esc((DS.GRAND_HOUSES[ghI] || [])[1] || '') + '</p>' : '') +
     (perk ? '<div class="perkbox"><b>' + esc(perk.rank) + ' 특전</b><ul>' + perk.lines.slice(1).map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>' : '') +
     (hasSave ? '<p class="lock">저장된 진행이 있습니다. 새로 시작하면 덮어씁니다.</p>' : '') + '</div><div class="ngr">' +
@@ -3593,7 +3718,7 @@ function newGame(hasSave, r) {
     var d = $('.ndet', o); if (d && d.scrollIntoView && e.isTrusted) { try { d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (x) {} }
   });
   $('#goNew', o).addEventListener('click', function () {
-    var name = Array.from((($('#cmdName', o).value || '').trim())).slice(0, 8).join('') || '대장';      // 한글 입력기가 조합 중에 maxlength 를 넘길 수 있다
+    var name = Array.from((($('#cmdName', o).value || '').trim())).slice(0, 8).join('') || '맹주';      // 한글 입력기가 조합 중에 maxlength 를 넘길 수 있다
     A('ok'); o.close();
     G.save = DS.newSave(name, pick);
     if (DS.GRAND_HOUSES && DS.GRAND_HOUSES[ghI] && DS.allySet) { try { DS.allySet(G.save, DS.GRAND_HOUSES[ghI][0]); } catch (x) {} }      // 2.1.0: 고른 이름은 연맹의 이름 (맹주의 가문은 병과의 가문명)

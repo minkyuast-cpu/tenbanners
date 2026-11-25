@@ -281,7 +281,7 @@ DS.oldPeople = function (raw) {
   Object.keys(s.chars).forEach(function (id) {
     var c = s.chars[id]; if (!c || !DS.CLASSES[c.cls] || c.vac) return;
     var pid = pidOf(c), p = pid ? P[pid] : null, isH = c === hero;
-    var n = isH ? (s.name || (p && p.n) || '대장') : p && p.gv ? p.n : (DS.CAST_NAME && DS.CAST_NAME[c.cls]) || (p && p.n) || DS.tierName(c.cls, DS.tierOfL(+c.L || 1));
+    var n = isH ? (s.name || (p && p.n) || '맹주') : p && p.gv ? p.n : (DS.CAST_NAME && DS.CAST_NAME[c.cls]) || (p && p.n) || DS.tierName(c.cls, DS.tierOfL(+c.L || 1));
     var sn = isH ? ((s.lin && s.lin.sur) || '') : p && p.gv ? p.sn : (DS.LIN_HOUSE && DS.LIN_HOUSE[c.cls]) || (p && p.sn) || '';
     add({ src: isH ? 'hero' : 'cmd', id: +id, n: n, sn: sn, sx: c.sx || (p && p.sx), cls: c.cls, ttl: isH ? c.name || '' : '', g: 0, note: DS.CLASSES[c.cls].name + ' ' + (DS.tierOfL(+c.L || 1)) + '단' }, pid);
   });
@@ -305,7 +305,7 @@ DS.oldCls = function (o) { if (!o || !o.cls || !DS.CLASSES[o.cls]) return null; 
 // DS.newFromOld(사람, 병과, 옛 판 이름) → 새 저장. 가져오는 것: 이름·성·성별·종류·생김·특성·버릇·등급(없으면 희귀)·별명. 레벨 1 · 공훈 0 · 나이 18 · 장비/유물/혼인/가족 없음
 DS.newFromOld = function (o, cls, from) {
   cls = cls || DS.oldCls(o) || 'inf';
-  var s = DS.newSave(o.n || '대장', cls), h = s.chars[s.hero], ps = h.ps;
+  var s = DS.newSave(o.n || '맹주', cls), h = s.chars[s.hero], ps = h.ps;
   if (o.type && DS.MERCS[o.type]) ps.type = o.type;
   ps.g = o.g >= 1 && o.g <= 5 ? o.g : DS.CAST_G;
   if (o.t && DS.TRAITS[o.t]) ps.t = o.t;

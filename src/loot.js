@@ -647,6 +647,22 @@ function legReach(save, id) {
   if (p[0] === 'scn') return !!(save.cleared && save.cleared[+p[1]]);
   var n = bossScn(f); return !!(n && save.cleared && save.cleared[n]);
 }
+// 2.6.1 전설 도감 — 저장 칸을 더하지 않는다. 찾았다 = 지금 가졌다(2) · 그 보스에게서 받은 적이 있다(save.lootGot) · 처음 깨면 주는 판을 깼다(1). 들판 것은 지금 가진 것만 안다
+DS.legFound = function (save, id) {
+  if (!save || !id || !UNIQ[id.split('.')[0]] || !legOf(id)) return 0;
+  if (legOwned(save, id)) return 2;
+  var f = legOf(id).from || '';
+  if (f.indexOf('zone:') === 0) return 0;
+  if (f.indexOf('scn:') === 0) return save.cleared && save.cleared[+f.slice(4)] ? 1 : 0;
+  return save.lootGot && save.lootGot[f] ? 1 : 0;
+};
+// 도감의 줄: { id, name, lore, kind 'boss' | 'zone' | 'scn' | 'pit', scn 판 번호, zone 지역, boss 보스 이름, found 0 | 1 | 2 }
+DS.legDex = function (save) {
+  return legIds().map(function (id) {
+    var L = legOf(id), f = L.from || '', p = f.split(':'), n = p[0] === 'scn' ? +p[1] : p[0] === 'zone' ? 0 : bossScn(f), sc = n && DS.scn ? DS.scn(n) : null;
+    return { id: id, name: L.n, lore: L.lore || '', kind: p[0] === 'zone' ? 'zone' : p[0] === 'scn' ? 'scn' : n ? 'boss' : 'pit', scn: n, zone: p[0] === 'zone' ? p[1] : sc ? sc.zone : '', boss: p.length === 1 ? bossName(f) || '' : '', found: DS.legFound(save, id) };
+  });
+};
 DS.legPool = function (zone) { return legIds().filter(function (id) { return legOf(id).from === 'zone:' + zone; }); };
 // 아직 없는 전설 하나 (깃술 조각·가호 보상): 그 지역 것 → 닿은 것 → 아무것. 다 가졌으면 null
 DS.legNext = function (save, zone, rnd) {      // rnd 가 없으면 정해진 하나 (게시판에 미리 보이는 이름과 받는 것이 같게)
@@ -1070,7 +1086,9 @@ DS.lootUI = {
   bag: function (save) {
     lootState(save);
     var ids = bagIds(save), fancy = fancyCount(save), sl = sellList(save, true), si = bselInfo(save), h = '';
-    h += '<h4>장비 ' + ids.length + '종 <small class="lcount' + (fancy >= DS.DROP.bag ? ' full' : '') + '">유니크·전설 ' + fancy + ' / ' + DS.DROP.bag + '</small></h4>';
+    var dex = DS.legDex(save), dn = dex.filter(function (x) { return x.found; }).length;      // 2.6.1: 소지 한도 옆에 전설 도감으로 가는 단추
+    h += '<h4>장비 ' + ids.length + '종 <small class="lcount' + (fancy >= DS.DROP.bag ? ' full' : '') + '">유니크·전설 ' + fancy + ' / ' + DS.DROP.bag + '</small></h4>' +
+      '<button class="pfold dexlk" data-loot-dex="1"><b>전설 도감 <em class="num">' + dn + ' / ' + dex.length + '</em></b><small>찾은 전설과 아직 못 찾은 전설이 나오는 곳</small><i aria-hidden="true">▸</i></button>';
     if (!ids.length) return h + '<p class="hint">가방에 남는 장비가 없다.</p>';
     h += DS.ui.listTools([['grade', '등급'], ['score', '좋은 순'], ['kind', '종류']].map(function (s) { return '<button data-loot-sort="' + s[0] + '"' + (sortBy === s[0] ? ' aria-pressed="true"' : '') + '>' + s[1] + '</button>'; }).join(''), '',
       (si.n ? '<b class="num">' + si.n + '</b>점 선택 <button class="lnk" data-loot-pick="none">해제</button>' : '여럿 골라 한꺼번에 판다') + (sl.n ? ' <button class="lnk" data-loot-pick="all">정리할 ' + sl.n + '점 선택</button>' : ''));
@@ -1100,6 +1118,7 @@ DS.lootUI = {
     root.addEventListener('click', function (e) {
       var U = DS.ui, s = DS.G.save, t = e.target, b;
       if (!t.closest) return;
+      if ((b = t.closest('[data-loot-dex]'))) { U.A('tap'); if (DS.openDex) DS.openDex(); return; }
       if ((b = t.closest('[data-loot-sort]'))) { sortBy = b.dataset.lootSort; U.A('tap'); redraw(); return; }
       if ((b = t.closest('[data-loot-low]'))) { lowOpen = !lowOpen; U.A('tap'); redraw(); return; }
       if ((b = t.closest('[data-loot-ck]'))) { var id = b.dataset.lootCk; if (BSEL[id]) delete BSEL[id]; else BSEL[id] = 1; U.A('tap'); redraw(); return; }

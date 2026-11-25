@@ -46,6 +46,21 @@ function gearBack(s, ch) {
   return out;
 }
 DS.gearBack = gearBack;
+// 2.6.1: 죽음으로 돌아온 장비는 그 가문의 새 가주(새 맹주)에게 먼저 묻는다. 그때까지 결과 창의 「자동 장착」은 그 장비를 다른 가문에 입히지 않는다.
+//   저장에 남기지 않는다 (이 판을 연 동안만 — 다시 열면 풀린다). 풀리는 때: 새로 선 사람에게 「장비가 없다」를 물었을 때(입히든 미루든) · 잇는 이 없이 빈 가문으로 남았을 때 · 그 싸움터를 떠났을 때(다음 싸움의 결과 창은 지난 싸움의 것을 맡아 두지 않는다) · 다른 저장을 읽었을 때.
+var HOLD = { s: null, b: null, m: {} };      // { 가문 번호: { 식별자: 수 } } · b = 그 싸움터 (DS.G.sim)
+function simNow() { return (DS.G && DS.G.sim) || null; }
+function holdAdd(s, chId, ids) { if (!ids || !ids.length) return; if (HOLD.s !== s || HOLD.b !== simNow()) HOLD = { s: s, b: simNow(), m: {} }; var h = HOLD.m[chId] = HOLD.m[chId] || {}; ids.forEach(function (id) { h[id] = (h[id] || 0) + 1; }); }
+DS.gbRelease = function (s, chId) { if (HOLD.s !== s) return; if (chId == null) HOLD.m = {}; else delete HOLD.m[chId]; };
+DS.gbHeld = function (s) { var out = {}; if (HOLD.s !== s || HOLD.b !== simNow()) return out; for (var c in HOLD.m) for (var id in HOLD.m[c]) out[id] = (out[id] || 0) + HOLD.m[c][id]; return out; };
+DS.gbHeldFor = function (s, chId) { return HOLD.s === s && HOLD.b === simNow() && HOLD.m[chId] ? Object.keys(HOLD.m[chId]) : []; };
+// 맡아 둔 장비를 가방에서 잠깐 빼고 fn 을 돌린 뒤 되돌린다 (fn 은 그 장비를 보지 못한다)
+DS.gbWithout = function (s, fn) {
+  var held = DS.gbHeld(s), took = {}, id, r;
+  for (id in held) { var n = Math.min(held[id], (s.gear && s.gear[id]) || 0); if (n > 0) { took[id] = n; s.gear[id] -= n; if (!(s.gear[id] > 0)) delete s.gear[id]; } }
+  try { r = fn(); } finally { for (id in took) s.gear[id] = (s.gear[id] || 0) + took[id]; }
+  return r;
+};
 DS.gbTxt = function (n) { return n > 0 ? fill(DS.GB_TXT.line, { n: n }) : ''; };
 DS.gbOf = function (s, pid) { var p = s && s.lin && s.lin.P && s.lin.P[pid]; return p && p.d && +p.d.gb > 0 ? Math.round(+p.d.gb) : 0; };
 // 가주가 들던 물건이 방금 가방으로 돌아왔는가 (bearerFell · ageCheck 가 죽음 바로 앞에서 DS.giveMercItem(…, null) 을 부른다) — 같은 순간(save.time)의 같은 사람만 센다
@@ -64,7 +79,7 @@ if (md0) DS.linMercDied = function (s, m, at, why) {
   var evs = md0.apply(this, arguments);
   if (!fb) return evs;
   try {
-    var n = gearBack(s, fb).length;
+    var back = gearBack(s, fb), n = back.length; holdAdd(s, fb.id, back);
     if (itBack && itBack.s === s && itBack.id === m.id && itBack.t === (+s.time || 0)) n++;
     itBack = null;
     var d = (evs || []).filter(function (e) { return e && e.t === 'death'; })[0], p = d && s.lin && s.lin.P ? s.lin.P[d.a] : null;
@@ -84,7 +99,7 @@ if (ls0) DS.linSettle = function (s, at) {
     if (!e || e.t !== 'death' || e.k !== 'c' || e.ch == null) return;
     var ch = s.chars[e.ch], p = s.lin && s.lin.P && s.lin.P[e.a]; if (!ch) return;
     if (nkFlag && nkFlag === ch.id && p && p.d) { p.d.why = DS.NK.why; p.d.nk = 1; e.nk = 1; if (e.ev) { e.ev.x = e.ev.x || {}; e.ev.x.why = DS.NK.why; } }
-    var n = gearBack(s, ch).length;
+    var back = gearBack(s, ch), n = back.length; holdAdd(s, ch.id, back);
     e.gb = n; if (p && p.d && n) p.d.gb = n;
   }); } catch (x) { if (DS.DEBUG) throw x; }
   return evs;
@@ -327,7 +342,7 @@ function bareDlg(ids, opt) {
   opt = opt || {};
   var s = G.save, T = DS.GB_TXT, chs = (ids || []).map(function (id) { return s.chars[id]; }).filter(function (ch) { return seated(s, ch) && (!ch.w || !ch.a); });
   var pl = DS.gearPlan(s, chs).filter(function (o) { return (!o.ch.w && o.w) || (!o.ch.a && o.a); });
-  if (!pl.length && !opt.lines) { if (opt.done) opt.done(); return null; }
+  if (!pl.length && !opt.lines) { (ids || []).forEach(function (id) { DS.gbRelease(s, id); }); if (opt.done) opt.done(); return null; }
   var hero = pl.some(function (o) { return o.ch.id === +s.hero; }), h = '<div class="result lgrite gbd"><p class="eyebrow">' + esc(opt.eye || (hero ? T.eyeH : T.eyeC)) + '</p>' + (opt.spr ? '<div class="lgdead heir">' + opt.spr + '</div>' : '') + '<h2>' + esc(opt.title || T.title) + '</h2>';
   (opt.lines || []).forEach(function (l) { if (l) h += '<p class="' + (l.cls || 'gbn') + '">' + esc(l.t || l) + '</p>'; });
   if (pl.length) {
@@ -345,19 +360,20 @@ function bareDlg(ids, opt) {
     var n = DS.gearPlanDo(s, DS.gearPlan(s, pl.map(function (x) { return x.ch; })));
     A('ok'); after(); if (n) U.toast(fill(T.done, { n: n }), 2200); o.close();
   });
-  o.onclose = function () { if (opt.done) opt.done(); };
+  o.onclose = function () { (ids || []).forEach(function (id) { DS.gbRelease(s, id); }); if (opt.done) opt.done(); };      // 2.6.1: 물었으니 맡아 둔 장비를 푼다 (미뤘으면 누구든 입을 수 있다)
   return o;
 }
 DS.gearBareOpen = bareDlg;
 // 새로 선 사람을 기다렸다가(이별 · 잇는 연출과 창이 모두 걷힌 뒤) 한 번에 묻는다
 var NQ = [], nqS = null;
 function nudge(id) { if (nqS !== G.save) { NQ = []; nqS = G.save; } if (NQ.indexOf(id) < 0) NQ.push(id); }
-setInterval(function () { if (!NQ.length || !G.save || nqS !== G.save || (G.quiet && !DS.gbUi)) { NQ = []; return; } if (!quiet() || G.hold > 0) return;      // 자동 시험(DS.G.quiet)에서는 묻지 않는다 — 시험이 이 창을 볼 때는 DS.gbUi = true (판의 선택지 DS.chUi 와 같은 약속)
+setInterval(function () { if (!NQ.length || !G.save || nqS !== G.save || (G.quiet && !DS.gbUi)) { if (NQ.length && G.save && nqS === G.save) NQ.forEach(function (id) { DS.gbRelease(G.save, id); }); NQ = []; return; } if (!quiet() || G.hold > 0) return;      // 자동 시험(DS.G.quiet)에서는 묻지 않는다 — 시험이 이 창을 볼 때는 DS.gbUi = true (판의 선택지 DS.chUi 와 같은 약속)
    var ids = NQ; NQ = []; try { bareDlg(ids); } catch (x) { if (DS.DEBUG) throw x; } }, 800);
 var sb0 = DS.sbTick;
 if (sb0) DS.sbTick = function (s) {      // 막사의 사람이 빈 가문을 이었다
   var out = sb0.apply(this, arguments);
   if (s === G.save) (out || []).forEach(function (e) { if (e && e.t === 'sbSeat' && e.ch) nudge(e.ch); });
+  try { if (HOLD.s === s) Object.keys(HOLD.m).forEach(function (id) { var ch = s.chars[+id]; if (+id !== +s.hero && (!ch || !(DS.bearer && DS.bearer(s, ch, 1)))) delete HOLD.m[id]; }); } catch (x) { if (DS.DEBUG) throw x; }      // 2.6.1: 잇는 이 없이 빈 가문으로 남았으면 맡아 둔 장비를 푼다
   return out;
 };
 var or0 = DS.openLineageRite;
@@ -480,7 +496,7 @@ DS.nkOpen = function (parent) {
     if (r.gb) lines.push({ t: DS.gbTxt(r.gb), cls: 'gbn gbl2' });
     if (r.tk) lines.push({ t: fill(T.gift, { n: r.tk }), cls: 'gbn' });
     bareDlg([s.hero], { eye: T.eyeE, title: r.name, spr: nh ? U.charSpr(nh, 4) : '', lines: lines, done: function () {
-      if (DS.nfAsk) setTimeout(function () { if (!document.querySelector('#app .ov:not(.ghost)') && !busy()) DS.nfAsk({ k: 'c', id: s.hero }, null, '새 대장, 처음 이름 정하기 (무료)'); }, 500);      // 새 대장의 이름을 값없이 (후계 의식과 같다)
+      if (DS.nfAsk) setTimeout(function () { if (!document.querySelector('#app .ov:not(.ghost)') && !busy()) DS.nfAsk({ k: 'c', id: s.hero }, null, '새 맹주, 처음 이름 정하기 (무료)'); }, 500);      // 새 대장의 이름을 값없이 (후계 의식과 같다)
     } });
   }
   o.addEventListener('click', function (e) {

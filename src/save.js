@@ -202,14 +202,14 @@ DS.curse = function (s, top) {
   s.news = (s.news || []).concat([
     '되감기의 저주 — 미안합니다. 지난 판은 성장이 너무 빨랐습니다. 균형을 바로잡느라, ' + top + '단까지 올랐던 부대를 2단으로 되돌렸습니다.',
     '동료와 골드, 가방의 장비는 그대로입니다. 이야기는 그 무렵의 시나리오부터 다시 이어집니다.',
-    '사과의 뜻으로 전설 용병 한 명을 대장 곁에 보냈습니다. 쓰러지면 돌아오지 않습니다.']);
+    '사과의 뜻으로 전설 용병 한 명을 맹주 곁에 보냈습니다. 쓰러지면 돌아오지 않습니다.']);
 };
 // 빠진 칸을 채우고 어긋난 값을 바로잡는다. 살릴 수 없으면 null.
 DS.fixSave = function (s) {
   if (!s || typeof s !== 'object' || !s.chars || typeof s.chars !== 'object') return null;
   var was26 = s.r26 === 1;      // 2.6.0: 「병과에 맞지 않는 장비 −50%」를 이미 아는 저장인가 (채움보다 먼저 — handover.js DS.r26Fix)
   var wasBn = s.bn === 1;      // 4.0: 「표시가 있었나」는 채움보다 먼저 (bn 은 기본값 채움에 걸리지 않는다 — 표시가 틀려도 DS.bnFix 의 불변식이 바로잡는다)
-  var def = DS.newSave('대장', 'inf'), k, id, hid0 = own(s.chars, s.hero) ? +s.hero : 0;
+  var def = DS.newSave('맹주', 'inf'), k, id, hid0 = own(s.chars, s.hero) ? +s.hero : 0;
   for (k in def) if (s[k] === undefined && k !== 'chars' && k !== 'party' && k !== 'hero' && k !== 'nid' && k !== 'lin' && k !== 'coffins' && k !== 'cal' && k !== 'bn' && k !== 'us' && k !== 'sortie') s[k] = def[k];      // r42: us(필살기 씨앗)는 새 판에서만 — 없는 저장은 eg.seed 로 (결정적)      // 가계도·관은 DS.linFix 가 채운다 (새 판의 사람 명부를 옮겨 오지 않게)
   ['items', 'opt', 'seen', 'visited', 'cleared'].forEach(function (g) {
     if (!s[g] || typeof s[g] !== 'object' || Array.isArray(s[g])) s[g] = def[g];
@@ -220,7 +220,7 @@ DS.fixSave = function (s) {
   for (k in DS.GONE_ITEMS || {}) if (own(s.items, k)) { gone += (s.items[k] || 0) * DS.GONE_ITEMS[k].price; delete s.items[k]; }
   if (gone > 0) { s.gold = (+s.gold || 0) + gone; DS.goneGold = (DS.goneGold || 0) + gone; }
   delete s.relics; if (s.seen && typeof s.seen === 'object') { delete s.seen.rdry; delete s.seen.rsalt; for (k in s.seen) if (/^rpit\d+$/.test(k)) delete s.seen[k]; }      // 2.1.0: 유물은 없어졌다 — 옛 저장의 유물 칸·굴림 기록은 조용히 지운다
-  s.name = typeof s.name === 'string' && s.name ? s.name : '대장';
+  s.name = typeof s.name === 'string' && s.name ? s.name : '맹주';
   if (s.perk && typeof s.perk === 'object') s.perk.exp = Math.max(0, Math.min(0.2, +s.perk.exp || 0)); else s.perk = null;
   if (!Array.isArray(s.news)) s.news = [];
   var maxId = 0, n = 0;

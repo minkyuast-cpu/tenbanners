@@ -428,7 +428,8 @@ DS.popOf = function (save, chId) { return DS.mercsOf(save, chId).length; };
 DS.reserve = function (save) { return (save.mercs || []).filter(function (m) { return !m.o; }); };      // 막사 (DS.barracks 와 같다 — 옛 이름)
 // 2.2.8 출전: 맹주 + 고른 가주 둘 (DS.PARTY_MAX = 3). 나머지 가주는 쉰다 — 싸우지 않고, 싸움에서 쓰러지지 않고, 출전한 이가 얻는 경험치의 DS.BAL.sortieExp 를 함께 얻는다.
 //   맹주 가문의 어른 가문원은 예전처럼 맹주 깃발을 따라 함께 싸운다 (출전 셋에 들지 않는다 · 고르지 않는다).
-//   save.sortie = [{ h: 가문 번호, m: 고를 때의 가주(사람) 번호 }] — 가주가 쓰러지거나 바뀌었거나 가문이 비면 그 자리는 빈다 → 남은 가주 가운데 가장 센 이가 저절로 (DS.sortieFix)
+//   save.sortie = [{ h: 가문 번호, m: 고를 때의 가주(사람) 번호 }] — 가문이 비면(가주가 쓰러지고 이을 이가 없다) 그 자리는 빈다 → 남은 가주 가운데 가장 센 이가 저절로 (DS.sortieFix)
+//   2.6.1: 뒤를 이은 사람이 섰으면 그 가문은 그대로 출전한다 (가주 번호만 새 사람으로)
 //   저절로 채운 일은 save.sortieNews 에 [{ out: 빠진 이 이름 | '', in: 들어온 이 이름, why: 'down' | 'vac' | 'new' }] (화면이 읽고 비운다). save.sortie 가 없던 옛 저장은 말없이 가장 센 둘
 //   싸우는 동안(DS.sortieHold() — 화면이 단다)은 고치지 않는다 (싸움 중에 다른 가문이 끼어들지 않게)
 DS.SORTIE_N = function () { return Math.max(0, (DS.PARTY_MAX || 3) - 1); };
@@ -444,21 +445,25 @@ function sortieWho(save, ch) { var b = DS.bearer ? DS.bearer(save, ch, 1) : null
 DS.sortieFix = function (save) {
   if (!save || !save.chars) return [];
   if (DS.sortieHold && DS.sortieHold()) return (save.sortie || []).map(function (e) { return e.h; });
-  var fresh = !Array.isArray(save.sortie), cur = fresh ? [] : save.sortie, cands = DS.sortieCands(save), ok = {}, keep = [], gone = [], N = DS.SORTIE_N();
+  var fresh = !Array.isArray(save.sortie), cur = fresh ? [] : save.sortie, cands = DS.sortieCands(save), ok = {}, keep = [], gone = [], N = DS.SORTIE_N(), heirs = [];
   cands.forEach(function (ch) { ok[ch.id] = ch; });
   cur.forEach(function (e) {
     var ch = e && ok[e.h], b = ch && DS.bearer(save, ch, 1);
-    if (ch && b && (!e.m || e.m === b.id) && keep.length < N && keep.every(function (k) { return k.h !== ch.id; })) { keep.push({ h: ch.id, m: b.id }); return; }
+    // 2.6.1: 가주가 바뀌어도(뒤를 이었다) 그 가문은 출전에 남는다 — 예전에는 자리가 비고 가장 센 가문이 들어와, 장비 없이 선 후계의 가문이 말없이 빠졌다
+    if (ch && b && keep.length < N && keep.every(function (k) { return k.h !== ch.id; })) { if (e.m && e.m !== b.id) heirs.push({ out: e.n || '', in: sortieWho(save, ch), h: ch.id, why: 'heir' }); keep.push({ h: ch.id, m: b.id }); return; }
+    // 가주가 막 쓰러져 비었지만 막사에 이을 사람(같은 병과)이 있다: 자리를 맡아 둔다 — 싸움 밖에서 곧 그 사람이 선다 (banner.js DS.sbTick). 그동안 그 가문은 싸우는 목록(DS.partyIds)에 들지 않는다
+    var vch = e && save.chars[e.h];
+    if (vch && e.h !== +save.hero && !vch.down && DS.vacant && DS.vacant(save, vch) && DS.sbOf && DS.sbOf(save, vch.id).length && keep.length < N && keep.every(function (k) { return k.h !== vch.id; })) { keep.push({ h: vch.id, m: e.m || 0, n: e.n || '', wait: 1 }); return; }
     if (e && save.chars[e.h] && e.h !== +save.hero) gone.push(e);      // 맹주가 된 가문은 소식 없이 빠진다
   });
-  var news = [], left = DS.sortieRank(save, cands.filter(function (ch) { return keep.every(function (k) { return k.h !== ch.id; }); }));
+  var news = heirs.filter(function (n) { return n.out && n.out !== n.in; }), left = DS.sortieRank(save, cands.filter(function (ch) { return keep.every(function (k) { return k.h !== ch.id; }); }));
   while (keep.length < N && left.length) {
     var ch = left.shift(), b = DS.bearer(save, ch, 1); keep.push({ h: ch.id, m: b.id });
     if (fresh) continue;
     var g = gone.shift(), gch = g && save.chars[g.h], vac = gch && !(DS.bearer && DS.bearer(save, gch, 1));
     news.push({ out: g ? (g.n || (gch ? DS.flagName(gch.cls) : '')) : '', in: sortieWho(save, ch), h: ch.id, why: !g ? 'new' : vac ? 'vac' : 'down' });
   }
-  keep.forEach(function (k) { var ch = save.chars[k.h]; k.n = sortieWho(save, ch); });      // 이름 (빠질 때의 소식에 쓴다)
+  keep.forEach(function (k) { var ch = save.chars[k.h]; if (k.wait) delete k.wait; else k.n = sortieWho(save, ch); });      // 이름 (빠질 때의 소식에 쓴다 — 맡아 둔 자리는 떠난 가주의 이름 그대로)
   save.sortie = keep;
   if (news.length) save.sortieNews = (save.sortieNews || []).concat(news).slice(-6);
   return keep.map(function (k) { return k.h; });
@@ -752,7 +757,7 @@ DS.enemySpec = function (type, L, o) {
 // ── 저장 데이터 ──
 DS.newSave = function (name, heroCls) {
   var s = {
-    v: DS.SAVE_V || 11, name: name || '대장', nid: 1, chars: {}, party: [], hero: 0, gold: 300,
+    v: DS.SAVE_V || 11, name: name || '맹주', nid: 1, chars: {}, party: [], hero: 0, gold: 300,
     items: { herb: 5, mana: 2, endo: 1 }, cleared: {}, visited: { haemil: true },
     gear: {}, mercs: [], mnid: 1, sortie: [], tickets: 2, pity: 0, fallen: [],      // r35: 처음 모집권 1장 (예전 2장) · 2.2.4: 다시 2장 — 가문이 영웅관에서만 열리니 첫 두 가문을 바로 열 수 있게 (초반에 셋이 함께 싸운다)
    

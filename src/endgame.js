@@ -152,7 +152,7 @@ function goneNames(s, g) {
   ((s.lin && s.lin.log) || []).forEach(function (ev) { if (ev && ev.t === 'death' && (ev.tm || 0) >= t0 && P[ev.a] && !seen[ev.a]) { seen[ev.a] = 1; var n = nm(s, ev.a); if (!seen['n:' + n]) { seen['n:' + n] = 1; out.push(n); } } });
   return out;
 }
-function headNm(s) { var h = s.chars && s.chars[s.hero]; try { return (h && DS.charName(h, s)) || s.name || '대장'; } catch (x) { return s.name || '대장'; } }
+function headNm(s) { var h = s.chars && s.chars[s.hero]; try { return (h && DS.charName(h, s)) || s.name || '맹주'; } catch (x) { return s.name || '맹주'; } }
 function flatSpk(out, hn) {      // 이야기 창 한 줄씩 — 말에는 초상 키(먼동·왕·대장)
   var flat = [];
   out.forEach(function (l) { if (l && typeof l === 'object') l.t.forEach(function (x) { var o = { w: l.w, t: x }, c = SPK[l.w] || (hn && l.w === hn ? 'hero' : ''); if (c) o.c = c; flat.push(o); }); else flat.push(l); });

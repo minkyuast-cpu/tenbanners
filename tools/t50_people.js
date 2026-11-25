@@ -206,11 +206,11 @@ module.exports = async (page, shot, L) => {
   await L.settle(page, 30000); await L.sleep(2500);
   c = await ev((o) => { var s = DS.G.save, arc = s.chars[o.arc], cle = s.chars[o.cle], b = DS.bearer(s, arc); return { arcB: b ? b.id : 0, was: o.arcB, arcL: arc.L, bL: b ? b.L : 0, cleVac: DS.vacant(s, cle), cleL: cle.L, cleFight: s.party.indexOf(cle.id) >= 0, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.ch === cle.id && u.role === 'cmd').length, fallen: (s.fallen || []).length }; }, c);
   A(c.arcB && c.arcB !== c.was && c.arcL === c.bL && c.bL === 25, '가주 died in battle → same-class 막사 person took the seat at own level (L ' + c.bL + ')');
-  {      // 2.2.8: 나간 가주가 쓰러지면 쉬는 가주 가운데 가장 센 둘로 저절로 채운다 · 알린다 · 칩은 맹주가 맨 앞, 그다음 격자 차례
-    const k = await ev((o) => { var s = DS.G.save, top = DS.sortieRank(s).slice(0, 2).map(ch => ch.id).sort(), so = s.sortie.map(e => e.h).sort();
+  {      // 2.2.8: 나간 가주가 쓰러지면 쉬는 가주 가운데 가장 센 이로 저절로 채운다 (2.6.1: 뒤를 이은 사람이 섰으면 그 가문은 그대로) · 알린다 · 칩은 맹주가 맨 앞, 그다음 격자 차례
+    const k = await ev((o) => { var s = DS.G.save, top = [o.arc, DS.sortieRank(s).filter(ch => ch.id !== o.arc)[0].id].sort(), so = s.sortie.map(e => e.h).sort();      // 2.6.1: 뒤를 이은 가문(궁병)은 출전에 남고, 빈 가문(승려)의 자리만 가장 센 이가 채운다
       return { chips: Object.keys(DS.G.chipEls), party: s.party.slice(), hero: s.hero, top: top, so: so, sn: window.__sn.join(' / '), units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead && u.role === 'cmd').map(u => u.ch).sort() }; }, c0chips);
     A(k.chips0 !== k.chips && k.chips.length === 3 && k.chips[0] === 'c' + k.hero && k.chips.join() === k.party.map(id => 'c' + id).join(), 'chip order after auto-fill: 맹주 first, then grid order (' + k.chips.join(' ') + ')');
-    A(JSON.stringify(k.so) === JSON.stringify(k.top) && k.party.indexOf(c0chips.cle) < 0, 'both sortie 가주 fell → the two strongest resting 가주 go out (' + k.so.join(',') + ')');
+    A(JSON.stringify(k.so) === JSON.stringify(k.top) && k.party.indexOf(c0chips.cle) < 0, 'both sortie 가주 fell → the house an heir took over stays out (2.6.1), the vacant one is replaced by the strongest resting 가주 (' + k.so.join(',') + ')');
     A(/대신/.test(k.sn) && (k.sn.match(/출전/g) || []).length >= 2, 'the player is told who stepped in: 「' + k.sn + '」');
     A(k.units.length === 3 && k.units.join() === k.party.slice().sort().join(), 'the field units are the new three (' + k.units.join(',') + ')');
   }

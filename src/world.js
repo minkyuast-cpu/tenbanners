@@ -230,7 +230,7 @@ DS.routeExit = function (from, to) {
 // 화자 표시를 모르는 화면에서도 읽히도록, 줄을 글자로 바꾸면 「화자: 글」이 된다 ({hero} 도 이름으로 바뀐다).
 function Line(w, c, t) { this.w = w; if (c) this.c = c; this.t = t; }
 Object.defineProperty(Line.prototype, 'toString', { value: function () {
-  var nm = (DS.G && DS.G.save && DS.G.save.name) || '대장';
+  var nm = (DS.G && DS.G.save && DS.G.save.name) || '맹주';
   return ((this.w ? this.w + ': ' : '') + this.t).replace(/\{hero\}/g, nm);
 } });
 // 열 가문의 가주 열 사람 (이야기 글 안에서만 쓰는 이름 — 화면의 지휘관 이름은 클래스명 그대로다)

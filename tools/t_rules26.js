@@ -370,6 +370,55 @@ module.exports = async (page, shot, L) => {
   await ev(() => { DS.G.save.opt.cine = 'full'; }); await L.closeAll(page);
   c = await ev(() => DS.NK_TXT.chatN[0]);
   A(/또 살아서 넘겼다/.test(c), 'a later hand-over gets a different 단톡방 line (「' + c + '」)');
+  // ───────── ④ 2.6.1: 떠난 가주의 장비는 뒤를 이을 사람 몫 · 뒤를 이은 가문은 출전에 남는다 ─────────
+  //   결과 창의 「자동 장착」은 그 싸움에서 죽음으로 돌아온 장비를 다른 가문에 입히지 않는다 (handover.js DS.gbWithout) → 새 가주에게 「장비가 없다」로 먼저 묻는다.
+  //   장비 없이 선 후계는 전투력이 낮다 — 그래도 그 가문은 출전에 남는다 (meta.js DS.sortieFix).
+  await L.closeAll(page); await setup('보람');
+  await ev(() => { DS.G.quiet = true; DS.enterZone('haemil'); }); await sleep(900); await L.closeAll(page);
+  c = await ev(() => {
+    var s = DS.G.save, h = s.chars[s.hero], so = s.sortie.map(function (e) { return e.h; }), Ac = s.chars[so[0]], Bc = s.chars[so[1]];
+    var heir = DS.addMerc(s, DS.baseMercTypes(Ac.cls)[0], 3, 0); heir.sb = 1; heir.nc = DS.houseCls(Ac); heir.L = 12; heir.n = '뒤이음'; DS.mercTidy(s); DS.pSync(s);
+    s.gear = {}; h.w = null;                                             // 맹주의 무기 칸을 비운다 — 가방에 무기가 생기면 맹주가 먼저 집어 갈 판
+    ['w', 'a'].forEach(function (sl) { var id = String(Ac[sl] || '').replace(/\+\d+$/, '') + '+6'; if (DS.gear(id)) Ac[sl] = id; });      // A 의 장비는 +6 — 전리품과 헷갈리지 않고, 누구라도 탐낼 물건
+    var up = null; ['+5', '+4', '+3'].some(function (x) { var id = String(Bc.a || '').replace(/\+\d+$/, '') + x, g = DS.gear(id); if (g && DS.canEquip(Bc, id) && DS.gearScore(g, Bc) > DS.gearScore(DS.gear(Bc.a), Bc)) { up = id; return true; } return false; });
+    if (up) s.gear[up] = 1;
+    DS.rebuildParty(); DS.ui.persist();
+    window.__g = { A: Ac.id, B: Bc.id, aw: Ac.w, aa: Ac.a, am: DS.bearer(s, Ac).id, up: up, heir: heir.id, ba: Bc.a };
+    return window.__g;
+  });
+  A(c.aw && c.aa && c.up, 'setup: sortie 가주 A wears ' + c.aw + ' / ' + c.aa + ', the bag holds one real upgrade for B (' + c.up + '), the 맹주 has no weapon');
+  await ev(() => { DS.G.quiet = true; DS.startScenario(DS.scn(9)); }); await sleep(900);
+  await ev(() => { var sim = DS.G.sim, g = window.__g; sim.kill(sim.byId['c' + g.A], null); });
+  await waitFor(() => { var s = DS.G.save, g = window.__g; return !s.mercs.some(function (m) { return m.id === g.am; }); });
+  c = await ev(() => { var s = DS.G.save, g = window.__g, h = s.chars[s.hero], pl = DS.gearPlan(s, [h])[0], held = DS.gbHeld(s);
+    return { bw: s.gear[g.aw] || 0, ba: s.gear[g.aa] || 0, held: Object.keys(held).sort().join(), want: pl ? pl.w : '', free: DS.gbWithout(s, function () { var q = DS.gearPlan(s, [h])[0]; return q ? q.w || '' : ''; }), back: (s.gear[g.aw] || 0) }; });
+  A(c.bw >= 1 && c.ba >= 1 && c.held === [(await ev(() => window.__g.aw)), (await ev(() => window.__g.aa))].sort().join(), 'A falls in the scenario: both pieces are in the bag and held for the heir (' + c.held + ')');
+  A(c.want && !c.free && c.back >= 1, 'without the hold the 맹주 would take the dead 가주\'s weapon (' + c.want + '); with it the plan finds nothing, and the bag is unchanged afterwards');
+  await ev(() => { DS.G.sim.win(); });
+  c = await waitFor(() => { var b = document.querySelector('.ov [data-upg]'); return b ? b.textContent.replace(/\s+/g, ' ') : ''; }, null, 15000);
+  const nUp = await ev(() => { var s = DS.G.save, n = function () { return s.party.filter(function (id) { var ch = s.chars[id]; return ch && ['w', 'a'].some(function (sl) { var cur = DS.gearScore(DS.gear(ch[sl]), ch); return Object.keys(s.gear).some(function (gid) { var g = DS.gear(gid); return g && g.slot === sl && s.gear[gid] > 0 && DS.canEquip(ch, gid) && DS.gearScore(g, ch) > cur; }); }); }).length; }; return { held: DS.gbWithout(s, n), all: n(), heldN: Object.keys(DS.gbHeld(s)).length }; });
+  A(/자동 장착/.test(c) && c.indexOf('가문 ' + nUp.held + '개') >= 0, 'result screen: 「' + c + '」 — counted without the returned pieces (' + nUp.held + ' houses with the hold, ' + nUp.all + ' if the heir\'s gear were up for grabs; ' + nUp.heldN + ' pieces held)');
+  await shot('r4_result_upg');
+  await ev(() => document.querySelector('.ov [data-upg]').click()); await sleep(400);
+  c = await ev(() => { var s = DS.G.save, g = window.__g, h = s.chars[s.hero], worn = DS.charList(s).filter(function (ch) { return ch.w === g.aw || ch.a === g.aa; }).length; return { hw: h.w, ba: s.chars[g.B].a, ba0: g.ba, bw: s.gear[g.aw] || 0, baa: s.gear[g.aa] || 0, worn: worn, done: (document.querySelector('.ov .upg.done') || {}).textContent || '' }; });
+  A(c.hw !== (await ev(() => window.__g.aw)) && /장비 교체/.test(c.done) && c.bw === 1 && c.baa === 1 && c.worn === 0, '「장비 교체」 dressed the others and left the dead 가주\'s +6 weapon and armour in the bag for the heir (맹주 took ' + (c.hw || 'nothing') + '): ' + c.done.replace(/\s+/g, ' '));
+  // 결과 창을 닫으면: 이별 → 추도 → 막사의 같은 병과가 잇는다 → 「장비가 없다」가 그 장비를 후계에게 먼저 내민다
+  await ev(() => { var b = document.querySelector('.ov .result [data-close], .ov [data-close]'); if (b) b.click(); });
+  for (let i = 0; i < 50; i++) { const st = await ev(() => ({ cine: DS.cineBusy(), gbd: !!document.querySelector('.ov .gbd'), ov: !!document.querySelector('#app .ov:not(.ghost)'), story: !!document.querySelector('.ov.story') })); if (st.gbd) break; if (st.cine) await ev(() => DS.cineSkip()); else if (st.story) await L.skipStory(page, 4); else if (st.ov) await ev(() => { var b = document.querySelector('#app .ov:not(.ghost) [data-close]'); if (b) b.click(); else DS.ui.closeAll(); }); await sleep(500); }
+  c = await waitFor(() => { var o = document.querySelector('.ov .gbd'); return o ? { t: o.innerText.replace(/\n+/g, ' / '), btn: !!o.querySelector('[data-gbd]') } : null; }, null, 8000);
+  A(c && /뒤이음/.test(c.t) && /무기 /.test(c.t) && c.btn, 'the heir is offered the gear first: ' + (c && c.t));
+  await shot('r4_heir_offer');
+  await ev(() => document.querySelector('.ov .gbd [data-gbd]').click()); await sleep(600);
+  c = await ev(() => { var s = DS.G.save, g = window.__g, Ac = s.chars[g.A], b = DS.bearer(s, Ac), rest = DS.sortieCands(s).filter(function (ch) { return !DS.sortieOn(s, ch.id); }), pa = DS.sortiePow(s, Ac);
+    return { w: Ac.w, a: Ac.a, head: b ? b.id : 0, held: Object.keys(DS.gbHeld(s)).length, on: DS.sortieOn(s, g.A), m: (s.sortie.filter(function (e) { return e.h === g.A; })[0] || {}).m, stronger: rest.filter(function (ch) { return DS.sortiePow(s, ch) > pa; }).length, party: s.party.indexOf(g.A) >= 0, so: s.sortie.map(function (e) { return e.h; }) }; });
+  A(c.head === (await ev(() => window.__g.heir)) && c.w === (await ev(() => window.__g.aw)) && c.a === (await ev(() => window.__g.aa)) && c.held === 0, 'one tap: the heir wears what the house wore (' + c.w + ', ' + c.a + '); nothing is held any more');
+  A(c.on && c.m === c.head && c.party && c.stronger > 0, 'the house stays in the sortie under its new head (출전 ' + c.so.join(',') + ') although ' + c.stronger + ' resting 가주 are stronger');
+  await L.closeAll(page);
+  // 규칙만: 가주가 바뀐 가문은 남고, 빈 가문의 자리만 가장 센 이가 채운다
+  c = await ev(() => { var s = DS.G.save, g = window.__g, Bc = s.chars[g.B], bb = DS.bearer(s, Bc), hold = DS.sortieHold; DS.sortieHold = null; try { DS.loseMerc(s, bb.id); DS.sbOf(s, Bc.id).forEach(function (m) { DS.loseMerc(s, m.id); }); DS.mercTidy(s); var so = DS.sortieFix(s); var top = DS.sortieRank(s, DS.sortieCands(s).filter(function (ch) { return ch.id !== g.A; }))[0]; return { so: so, A: g.A, B: g.B, top: top ? top.id : 0, news: DS.sortieNewsText(s) }; } finally { DS.sortieHold = hold; } });
+  A(c.so.indexOf(c.A) >= 0 && c.so.indexOf(c.B) < 0 && c.so.indexOf(c.top) >= 0 && /출전/.test(c.news), 'rule: a vacant house leaves the sortie and the strongest resting 가주 steps in, the heir\'s house stays (' + c.so.join(',') + ' · ' + c.news + ')');
+  await ev(() => { DS.rebuildParty(); DS.ui.persist(); });
+
   const bad = await L.badText(page, 'body'); A(!bad.length, 'no NaN/undefined on screen');
   console.log('frames: ' + [fr1, fr2, fr3, fr4, fr5].join(' '));
   console.log('rules26 done');

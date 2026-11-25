@@ -77,9 +77,9 @@ function L0(s) {
 function surOf(name) { var t = String(name || '대장'), h = 0; for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return DS.SURNAMES[Math.abs(h) % DS.SURNAMES.length]; }
 function tierStart(L) { return (DS.tierOfL(L) - 1) * DS.LV_PER_TIER + 1; }
 // 집의 이름: 주인공 가문은 주인공 이름, 아니면 지금의 클래스명
-function callBase(s, ch) { return ch.id === s.hero ? (s.name || '대장') : DS.tierName(ch.cls, DS.tierOfL(ch.L)); }
+function callBase(s, ch) { return ch.id === s.hero ? (s.name || '맹주') : DS.tierName(ch.cls, DS.tierOfL(ch.L)); }
 // 대장의 호: 「민규 2세」. ⑬ 가문이 옮겨 가며 고른 호는 lin.gb = { b: 이름, o: 대수 기준 } — 그 뒤 「{b} {gen − o}세」 (1세도 적는다)
-function heroName(s, gen) { var gb = s.lin && s.lin.gb; if (gb && typeof gb.b === 'string' && gb.b) return gb.b + ' ' + Math.max(1, gen - (+gb.o || 0)) + '세'; return (s.name || '대장') + (gen > 1 ? ' ' + gen + '세' : ''); }
+function heroName(s, gen) { var gb = s.lin && s.lin.gb; if (gb && typeof gb.b === 'string' && gb.b) return gb.b + ' ' + Math.max(1, gen - (+gb.o || 0)) + '세'; return (s.name || '맹주') + (gen > 1 ? ' ' + gen + '세' : ''); }
 DS.heroName = heroName;
 function houseSn(s, ch) { return L0(s).sur; }      // 4.0: 혼인·출산·후계는 대장 한 집뿐이다
 
@@ -235,12 +235,12 @@ function bkey(a, b) { return Math.min(a, b) + ':' + Math.max(a, b); }
 DS.linCanWed = function (s, a, b, opt) {
   var A = refOf(s, a), B = refOf(s, b);
   if (!A || !B || !A.ent || !B.ent) return { ok: false, why: '찾을 수 없다' };
-  if (A.k !== 'c' && B.k !== 'c') return { ok: false, why: '혼인은 대장만 한다' };
+  if (A.k !== 'c' && B.k !== 'c') return { ok: false, why: '혼인은 맹주만 한다' };
   if (A.p.id === B.p.id) return { ok: false, why: '같은 사람입니다' };
   var sa = A.k === 'c' ? A.ent.sx : (mercFix(A.ent), A.ent.sx), sb = B.k === 'c' ? B.ent.sx : (mercFix(B.ent), B.ent.sx);
   if (sa === sb) return { ok: false, why: '성별이 같으면 혼인하지 못한다' };
   if (A.p.sp || B.p.sp) return { ok: false, why: '이미 배우자가 있다' };
-  if ((A.k === 'c' && (A.ent.vac || A.ent.down)) || (B.k === 'c' && (B.ent.vac || B.ent.down))) return { ok: false, why: '쓰러진 대장입니다' };
+  if ((A.k === 'c' && (A.ent.vac || A.ent.down)) || (B.k === 'c' && (B.ent.vac || B.ent.down))) return { ok: false, why: '쓰러진 맹주입니다' };
   if (related(s, A.p, B.p)) return { ok: false, why: '가까운 혈육입니다' };
   if (A.p.rv || B.p.rv) return { ok: false, why: '한 번 돌아온 이는 새로 혼인하지 않는다' };      // 3.3.0 규칙 16
   if (!(opt && opt.anywhere) && DS.G && DS.G.save === s && (DS.G.scn || (DS.G.sim && DS.G.sim.combat))) return { ok: false, why: '싸우는 동안에는 혼인하지 못한다' };      // 2.1.0: 마을 일은 어디서나 (시나리오·전투 중만 막는다)
@@ -433,7 +433,7 @@ function evKindBad(k) { return k in Object.prototype; }      // 깨진 저장의
 // 잇는 것: 「{이름} N세」 · 가문의 성 · 대장의 깃발 · 유지 2판. 깃발의 레벨은 깎이지 않는다(LIN_LOSS 없음). 핏줄은 고인의 공훈과 제 공훈 가운데 큰 쪽, 양자는 제 공훈.
 // ⑬·⑯ 양자가 대장과 다른 병과의 깃발을 들고 있던 사람이면 가문의 문패가 바뀐다 (move) — 대장 깃발은 그대로, 문패(이름 opt.house · 문장 lin.hs · 호 opt.ho)만 새로 건다.
 // 문패: lin.hn = 지금 가문 이름(없으면 「{성}가」), lin.hns = [{ n 옛 이름, hs 옛 문장, g 대, s 판 }] 옛 문패들
-DS.houseName = function (s) { var h = s && s.chars && s.chars[s.hero]; if (h && DS.flagHouse) { var n = DS.flagHouse(s, h.cls); if (n) return n; } var Lr = L0(s); return DS.houseOf(Lr.sur || '') || '대장 가문'; };      // 2.1.0: 맹주가 선 가문 줄의 이름 (다른 가문과 같은 규칙 — 문패가 옮겨 가지 않는다)
+DS.houseName = function (s) { var h = s && s.chars && s.chars[s.hero]; if (h && DS.flagHouse) { var n = DS.flagHouse(s, h.cls); if (n) return n; } var Lr = L0(s); return DS.houseOf(Lr.sur || '') || '맹주 가문'; };      // 2.1.0: 맹주가 선 가문 줄의 이름 (다른 가문과 같은 규칙 — 문패가 옮겨 가지 않는다)
 DS.houseDefault = function (s, p, bf) { return (p && (p.osn || p.sn) ? DS.houseOf(p.osn || p.sn) : bf ? DS.castHouse(bf.cls) : '새 가문'); };      // 「스타크 가문」 — 가장 긴 가문명(6자)도 문패 규칙(띄어쓰기 빼고 8자)에 든다
 // ⑱ 이름 규칙 하나 (개명·문패·호): 한글·영문 1~8자(띄어쓰기는 세지 않는다), 금칙어(욕설·운영진 사칭) 거르기
 DS.NAME_BAN = ['운영', '관리자', 'GM', 'gm', 'admin', '개발자', '시발', '씨발', '병신', '좆', '존나', '새끼', 'fuck', 'shit'];
@@ -549,7 +549,7 @@ DS.linSucceed = function (s, chId, pick, opt) {
   var hpR = m.hp == null ? 1 : m.hp, mgr = m.gr;
   var seat = ch;
   if (move) {      // 2.1.0: 바뀌는 것은 맹주가 누구인가뿐 — 맹주 자리(s.hero)가 그 사람의 가문 줄로 간다 (맹주의 병과 = 그 사람의 병과). 가문 이름·공훈·연맹 이름은 그대로, 옛 맹주의 가문은 자동 후계를 맞는다
-    var gen1 = dgen + 1, own = p.n || m.n || '대장', ho = opt.ho || { k: 'new' };      // 호: 「{이름} 1세」부터 (고르면 대수를 잇거나 직접)
+    var gen1 = dgen + 1, own = p.n || m.n || '맹주', ho = opt.ho || { k: 'new' };      // 호: 「{이름} 1세」부터 (고르면 대수를 잇거나 직접)
     if (ho.k === 'free' && DS.linHoOK(ho.t)) { var mt = /^(.+?) ?([0-9]{1,3})세$/.exec(String(ho.t).trim()); if (mt) Lr.gb = { b: mt[1], o: gen1 - +mt[2] }; else Lr.gb = { b: String(ho.t).trim(), o: gen1 - 1, one: 1 }; }
     else if (ho.k === 'cont') Lr.gb = { b: own, o: 0 };
     else Lr.gb = { b: own, o: gen1 - 1 };
@@ -674,7 +674,7 @@ DS.linLapse = function (s, chId, opt) {
   var nm = DS.rnClean ? DS.rnClean(opt.name) : String(opt.name || '').trim().slice(0, 8);
   if (nm && DS.nameOK && !DS.nameOK(nm)) nm = '';
   if (DS.CAST_NAME && nm && Object.keys(DS.CAST_NAME).some(function (k) { return DS.CAST_NAME[k] === nm; })) nm = '';
-  if (!nm) nm = p.n || hc.name || '대장';
+  if (!nm) nm = p.n || hc.name || '맹주';
   s.name = nm; p.n = nm; p.gv = 1; delete p.nf; delete p.ttl;
   Lr.gb = { b: nm, o: (p.gen || 1) - 1, one: 1 }; hc.name = nm;
   var pick = String(opt.house || 'keep'), grand = (DS.GRAND_HOUSES || []).map(function (g) { return g[0]; }), sur0 = Lr.sur;
@@ -828,7 +828,7 @@ DS.linBury = function (s, i) {
 };
 // 가주의 호: 「하람 · 한울 2세」 (아이의 제 이름이 앞에). 시조는 제 이름만
 DS.heroCall = function (s) {
-  var ch = s && s.chars && s.chars[s.hero]; if (!ch) return (s && s.name) || '대장';
+  var ch = s && s.chars && s.chars[s.hero]; if (!ch) return (s && s.name) || '맹주';
   var p = ch.pid && L0(s).P[ch.pid], call = DS.charName(ch);
   var own = p && p.gv && p.n ? p.n : '';
   return own && own !== call && call.indexOf(own) < 0 ? own + ' (' + call + ')' : call;

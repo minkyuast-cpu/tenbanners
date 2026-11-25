@@ -48,14 +48,15 @@ var BE = DS.OnlineBE = {
   savePath4: function (uid) { return 'saves4/' + uid; },      // 2.1: 다시 새로 시작 — saves3 은 보관만      // r42 (2.0.0): 새 시대 — 사람마다 단·레벨. 옛 문서(saves2 · saves)는 읽지도 쓰지도 않는다 (보관)      // 4.0: v10 은 새 문서에만 (㉑ 옛 문서는 읽기 전용 보관)
   T: {
     nope: '<p class="hint onl-no">이 사이트에는 Firebase 설정이 없어 현황이 안 보입니다. 게임은 그대로 됩니다.</p>',
+    noWhy: '이 사이트에는 Firebase 설정이 없어 현황을 불러오지 못합니다. 게임은 그대로 됩니다.', noBtn: '',
     pubNoId: '로그인하면 내 기록도 올라갑니다. 목록은 로그인 없이 보입니다.',
     pubOff: 'Firebase 설정이 없어 기록을 못 올립니다.',
     pubDenied: '권한이 없어 기록을 못 올렸습니다. 로그아웃했다가 다시 로그인하세요.',
-    pubWho: '대장 이름과 진행이 이 사이트를 여는 모두에게 보입니다.',
+    pubWho: '맹주 이름과 진행이 이 사이트를 여는 모두에게 보입니다.',
     cloudNoId: '로그인하면 저장을 계정에 올려 다른 기기에서 이어 합니다.',
     cloudOff: 'Firebase 설정이 없어 클라우드 저장을 못 씁니다.',
     cloudDenied: '권한이 없어 클라우드 저장을 못 썼습니다. 로그아웃했다가 다시 로그인하세요.',
-    foot: '대장 이름과 진행만 보입니다. 로그인 계정의 이름, 메일, 사진은 올리지 않습니다.',
+    foot: '맹주 이름과 진행만 보입니다. 로그인 계정의 이름, 메일, 사진은 올리지 않습니다.',
     askWho: '이 사이트를 여는 모든 사람에게', askNot: '로그인 계정의 이름, 사진, 메일은 올리지 않습니다.',
     liveN: function (n) { return n ? '최근 5분 안에 다른 ' + n + '명이 접속했습니다' : '최근 5분 안에 접속한 다른 모험가는 없습니다'; }
   },
@@ -103,8 +104,9 @@ var BE = DS.OnlineBE = {
       return '<div class="row fb-row fb-out"><div class="tx"><b>계정 <i class="own">로그인 안 함</i></b><small>로그인하면 클라우드에 저장하고 현황에 기록을 올립니다.' + (PVL.length > 1 ? sep : '') + '</small></div></div>' +
         '<div class="fb-btns">' + PVL.map(function (k) { return pvBtn(k, '', 'wide'); }).join('') + '</div>';
     }
-    return '<div class="row fb-row"><div class="tx"><b>계정 <i class="own">' + (PVN[pvOf(u)] || '') + ' 로그인함</i></b><small>' + esc(who(u)) + (u.email ? ', ' + esc(u.email) : '') + '<br>이 이름과 메일은 나만 봅니다. 현황에는 대장 이름과 진행만 올라갑니다.' + (PVL.length > 1 ? sep : '') + '</small></div><button class="btn small" data-fb="out">로그아웃</button></div>';
+    return '<div class="row fb-row"><div class="tx"><b>계정 <i class="own">' + (PVN[pvOf(u)] || '') + ' 로그인함</i></b><small>' + esc(who(u)) + (u.email ? ', ' + esc(u.email) : '') + '<br>이 이름과 메일은 나만 봅니다. 현황에는 맹주 이름과 진행만 올라갑니다.' + (PVL.length > 1 ? sep : '') + '</small></div><button class="btn small" data-fb="out">로그아웃</button></div>';
   },
+  loginHtml: function () { return S.off || !S.auth || S.user || !PVL.length ? '' : '<div class="fb-btns onl-login">' + PVL.map(function (k) { return pvBtn(k, '', 'wide'); }).join('') + '</div>'; },      // 2.6.1: 현황 탭의 로그인 단추 (설정 탭의 것과 같다)
   titleHook: function () { bar(); }
 };
 function beat() {

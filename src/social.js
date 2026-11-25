@@ -51,7 +51,7 @@ DS.rnTarget = function (s, ref) {
   }
   if (k === 'c') {
     ch = s.chars && s.chars[id]; if (!ch) return { why: '찾을 수 없다' };
-    if (ch.id !== s.hero) return { why: '가문 가운데 이름을 바꾸는 것은 대장뿐이다' };
+    if (ch.id !== s.hero) return { why: '가문 가운데 이름을 바꾸는 것은 맹주뿐이다' };
     if (ch.vac) return { why: '빈자리다' };
     p = ch.pid && P(s)[ch.pid] && P(s)[ch.pid].c === ch.id ? P(s)[ch.pid] : null;
     return { kind: 'hero', ch: ch, p: p, name: DS.charName(ch), sur: '', given: DS.charName(ch) };

@@ -44,7 +44,7 @@ DS.castHero = function (s) {
 DS.castNow = function (s, k) {
   var P = s && s.lin && s.lin.P, hero = k === 'hero';
   if (!s || !P || !s.chars || !(hero || (DS.CAST_NAME && DS.CAST_NAME[k]))) return 0;
-  if (!hero && DS.castHero(s) === k) { var mn = ''; try { mn = DS.charName(s.chars[s.hero], s); } catch (x) { mn = ''; } return { st: 1, nm: mn || s.name || '대장', c: 'hero', me: 1 }; }
+  if (!hero && DS.castHero(s) === k) { var mn = ''; try { mn = DS.charName(s.chars[s.hero], s); } catch (x) { mn = ''; } return { st: 1, nm: mn || s.name || '맹주', c: 'hero', me: 1 }; }
   if (hero) {
     var hc = s.chars[s.hero]; if (!hc) return 0;
     if (hc.vac) return { st: 2 };
@@ -63,7 +63,7 @@ DS.castNow = function (s, k) {
   if (flag.id === s.hero) {      // 주인공 자신의 병과는 배역이 아니다. r42: 맹주 가문이 그 집으로 옮겨 왔으면(그 집 사람이 대를 이었다) 그 배역의 목소리는 대장이다
     var seen = false; for (var q in P) if (P[q].cast === k) { seen = true; break; }
     if (!seen) return 0;
-    var mn2 = ''; try { mn2 = DS.charName(flag, s); } catch (x) { mn2 = ''; } return { st: 1, nm: mn2 || s.name || '대장', c: 'hero', me: 1 };
+    var mn2 = ''; try { mn2 = DS.charName(flag, s); } catch (x) { mn2 = ''; } return { st: 1, nm: mn2 || s.name || '맹주', c: 'hero', me: 1 };
   }
   var b = DS.bearer ? DS.bearer(s, flag) : null;
   return b ? { st: 1, nm: b.ttl || b.n || '' } : { st: 2 };

@@ -210,7 +210,7 @@ function histInit() {
   });
 }
 // 이야기 창: 한 줄씩 넘긴다. 줄은 글(지문) 또는 { w: 화자, c: 초상(병과·보스·적 키), t: 대사 }. 글 안의 {hero} 는 주인공 이름.
-function fill(t) { return String(t == null ? '' : t).replace(/\{hero\}/g, (G.save && G.save.name) || '대장'); }
+function fill(t) { return String(t == null ? '' : t).replace(/\{hero\}/g, (G.save && G.save.name) || '맹주'); }
 function lineText(l) { return fill(l && typeof l === 'object' ? l.t : l); }
 function speakerSpr(c) {
   var C = DS.CLASSES[c], B = DS.BOSSES[c], E = DS.ENEMIES[c], s = G.save;
@@ -925,6 +925,7 @@ function vetBadge(r) {
   return '<i class="vet v' + r + (st ? ' st st' + st : '') + '" title="가문 공훈 ' + nm + '" aria-label="가문 공훈 ' + nm + '"><svg viewBox="0 0 12 12" width="12" height="12">' + g + '</svg>' + (st ? '<b class="vst">' + '★★★'.slice(0, st) + '</b>' : '') + '</i>';
 }
 DS.vetBadge = vetBadge;
+function chipNameW(t) { var w = 0; Array.from(String(t || '')).forEach(function (c) { w += /[\u1100-\u11ff\u3000-\u9fff\uac00-\ud7a3\uff00-\uffef]/.test(c) ? 1 : c === ' ' ? 0.3 : /[A-Z0-9mwMW]/.test(c) ? 0.66 : 0.55; }); return w; }      // 이름의 너비 (한글 한 자 = 1)
 function renderChips() {
   var box = $('#chips'), sv = G.save, sim = G.sim; box.innerHTML = ''; G.chipEls = {};
   if (DS.partyOrder) sv.party = DS.partyOrder(sv, sv.party);      // 2.2.3: 맹주 → 다른 가문(부대 탭 격자 차례). 덧붙여진 낡은 차례를 바로잡는다
@@ -934,9 +935,11 @@ function renderChips() {
     var ch = sv.chars[id]; if (!ch) return;
     var uid = 'c' + id, u = sim && sim.byId[uid];
     var nm = DS.charName(ch);      // 클래스명은 길다 — 이름은 한 줄을 통째로 쓰고, 단·레벨은 얼굴 아래에 둔다
+    // 2.6.1: 「봇 2세」가 「봇 …」으로 잘렸다 — 대수(「2세」)는 초상 왼쪽 아래의 작은 표로 옮기고 이름 칸은 이름만 쓴다. 긴 이름은 글씨를 줄이고, 그래도 넘치면 두 줄 (style.css .cn.n3 · .two · .tiny)
+    var gm = /^(.*\S)\s+(\d+)세$/.exec(nm), base = gm ? gm[1] : nm, nw = chipNameW(base), ncl = nw > 6.2 ? ' two tiny' : nw > 3.1 ? ' two' : nw > 2.6 ? ' n3' : '';
     // r26 art: 둥근 초상 테(--hc 가문 색) · 문장은 테 왼쪽 위 · 레벨은 초상 밑 알약 · 이름 옆 작은 「n단」 · 체력 막대 뒤에 흰 잔상(lag)
-    var el = h('<button class="chip' + (u ? '' : ' down') + '" data-u="' + uid + '" style="--hc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '"><span class="por ' + DS.gfrCls(DS.gradeOfCh(sv, ch), { lord: id === sv.hero }) + '" data-gp="' + (id === sv.hero ? 'c' + id : (DS.bearer && DS.bearer(sv, ch) ? 'm' + DS.bearer(sv, ch).id : '')) + '">' + charSpr(ch, 1.5) + '</span>' + (DS.houseCrestOf ? '<i class="ccr">' + DS.houseCrestOf(sv, ch, 16) + '</i>' : '') + (id === sv.hero && DS.lgBadge ? DS.lgBadge(sv).replace('lgxgen', 'lgxgen chipg') : '') + '<em class="lv num">' + DS.tierOfL(ch.L) + '단 <i>Lv' + DS.lvOfL(ch.L) + '</i></em>' +
-      vetBadge(vetOfCh(sv, ch)) + '<span class="cn' + (nm.length >= 7 ? ' long' : '') + '"><b>' + esc(nm) + '</b></span><small class="tr clv num">Lv' + DS.lvOfL(ch.L) + '</small>' +
+    var el = h('<button class="chip' + (u ? '' : ' down') + '" data-u="' + uid + '" title="' + esc(nm) + '" aria-label="' + esc(nm) + '" style="--hc:' + (DS.FLAG[ch.cls] || '#c9a96a') + '"><span class="por ' + DS.gfrCls(DS.gradeOfCh(sv, ch), { lord: id === sv.hero }) + '" data-gp="' + (id === sv.hero ? 'c' + id : (DS.bearer && DS.bearer(sv, ch) ? 'm' + DS.bearer(sv, ch).id : '')) + '">' + charSpr(ch, 1.5) + '</span>' + (gm ? '<i class="cgen num" aria-hidden="true">' + gm[2] + '세</i>' : '') + (DS.houseCrestOf ? '<i class="ccr">' + DS.houseCrestOf(sv, ch, 16) + '</i>' : '') + (id === sv.hero && DS.lgBadge ? DS.lgBadge(sv).replace('lgxgen', 'lgxgen chipg') : '') + '<em class="lv num">' + DS.tierOfL(ch.L) + '단 <i>Lv' + DS.lvOfL(ch.L) + '</i></em>' +
+      vetBadge(vetOfCh(sv, ch)) + '<span class="cn' + ncl + '"><b>' + esc(base) + '</b></span><small class="tr clv num">Lv' + DS.lvOfL(ch.L) + '</small>' +
       '<span class="bars"><i class="hp"><u class="lag"></u><u class="v"></u></i><i class="mp"><u></u></i><i class="tk"><u></u></i></span><span class="md"></span><i class="urd" aria-hidden="true">필</i><i class="crs" aria-hidden="true">예</i><span class="ghost">' + icon('skull', 16) + '<b>쓰러짐</b><small>' + esc(nm) + '</small></span></button>');
     el.addEventListener('click', function () {
       DS.Audio.unlock();

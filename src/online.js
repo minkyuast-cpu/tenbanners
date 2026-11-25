@@ -50,7 +50,7 @@ function summary(s) {
   for (k in s.chars) { var c = s.chars[k]; if (c && c.L) top = Math.max(top, DS.tierOfL(c.L)); }
   for (k in (s.cleared || {})) if (s.cleared[k]) cleared++;
   merged = DS.fuseUnions ? DS.fuseUnions(s).length : 0;      // 1.0.1: 묶음 수 (자유 합일)
-  return { name: clean(s.name, 8) || '대장', cls: hero.cls || 'inf', tier: hero.L ? DS.tierOfL(hero.L) : 1, cleared: cleared, top: top, merged: merged, time: Math.round(+s.time || 0), zone: own(DS.ZONES, s.zone) ? s.zone : '' };
+  return { name: clean(s.name, 8) || '맹주', cls: hero.cls || 'inf', tier: hero.L ? DS.tierOfL(hero.L) : 1, cleared: cleared, top: top, merged: merged, time: Math.round(+s.time || 0), zone: own(DS.ZONES, s.zone) ? s.zone : '' };
 }
 // 남이 올린 문서 → 그릴 수 있는 줄 (모르는 칸·엉뚱한 값은 버리거나 범위 안으로)
 function rng(v, lo, hi) { return typeof v === 'number' && isFinite(v) && v === Math.floor(v) && v >= lo && v <= hi ? v : null; }
@@ -71,14 +71,18 @@ function cloudSum(d) { var r = d && d.sum && typeof d.sum === 'object' ? row('x'
 // ── 백엔드별 글: 기본(claude.ai). web 판은 BE.T 로 덮는다 ──
 var T = {
   nope: '<p class="hint onl-no">여기서는 현황이 안 보입니다. 로그인한 상태로 열면 보입니다. 게임은 그대로 됩니다.</p>',
+  // 2.6.1: 현황을 못 불러올 때 — 이 탭이 무엇을 보여 주는지와 볼 수 있는 길 (noWhat · noWhy · noBtn 새 집 열기)
+  noWhat: '현황은 다른 모험가들의 진행을 보는 곳입니다. 누가 몇 번 시나리오까지 갔는지, 지금 누가 접속해 있는지 보입니다.',
+  noWhy: '지금은 계정 없이 열려 있어 목록을 불러오지 못합니다. 새 집에서 구글로 로그인하면 현황이 보이고, 저장도 계정에 올라갑니다. 게임은 여기서도 그대로 됩니다.',
+  noBtn: '새 집에서 로그인하기 ↗',
   pubNoId: '이 보기에서는 계정을 몰라 못 올립니다. 목록은 보입니다.',
   pubOff: '로그인한 상태로 열면 내 기록도 올라갑니다.',
   pubDenied: '보기 전용 링크라 기록은 못 올립니다. 목록은 보입니다.',
-  pubWho: '대장 이름과 진행이 이 링크를 가진 모두에게 보입니다.',
+  pubWho: '맹주 이름과 진행이 이 링크를 가진 모두에게 보입니다.',
   cloudNoId: '이 화면에서는 계정을 알 수 없어 쓸 수 없습니다. 로그인한 상태로 여세요.',
   cloudOff: '로그인한 상태로 열면 저장이 계정에 올라가 다른 기기에서 이어 합니다.',
   cloudDenied: '보기 전용 링크라 클라우드 저장을 못 씁니다.',
-  foot: '모험가의 대장 이름과 진행만 보입니다. 계정 이름은 올리지 않습니다.',
+  foot: '모험가의 맹주 이름과 진행만 보입니다. 계정 이름은 올리지 않습니다.',
   askWho: '이 게임 링크를 가진 모든 사람에게', askNot: '계정 이름, 사진, 메일은 올리지 않습니다.',
   liveN: function (n) { return n ? '지금 다른 ' + n + '명이 게임을 열어 두었습니다' : '지금 게임을 연 다른 사람은 없습니다'; }
 };
@@ -160,7 +164,7 @@ function pubOn() { return !!G().save; }      // 4.0 사용자 결정: 현황 공
 function pubNote() {      // 첫 공개 때 한 번만 한 줄 알림
   var s = G().save; if (!s || !s.opt || s.opt.pubNote) return;
   s.opt.pubNote = 1; try { if (U().persist) U().persist(); } catch (e) {}
-  toast('대장 이름과 진행이 현황판에 공개된다.', 4200);
+  toast('맹주 이름과 진행이 현황판에 공개된다.', 4200);
 }
 
 // ── 공개 기록: players/<uid>, 바뀌었을 때만, 최소 60초 간격 ──
@@ -236,14 +240,20 @@ function sorted() {
 
 // ── 그리기 ──
 var NOPE = T.nope;
+// 2.6.1: 꺼진 현황 탭 — 회색 한 줄 대신 「무엇을 보는 곳인가 · 왜 안 보이나 · 볼 수 있는 길」. 탭을 숨기지 않는다 (상태가 늦게 정해져 탭이 생겼다 사라지면 옆 탭이 손가락 밑에서 밀린다)
+function offBody() {
+  var btn = BE.loginHtml ? BE.loginHtml() : '', url = DS.WEB_URL || '';
+  if (!btn && T.noBtn && url && BE.name !== 'firebase') btn = '<a class="btn gold wide onl-go" href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(T.noBtn) + '</a>';
+  return '<div class="onl-off"><div class="onl-demo" aria-hidden="true"><i></i><i></i><i></i></div><p class="onl-what">' + esc(T.noWhat) + '</p><p class="hint onl-no">' + esc(T.noWhy) + '</p>' + btn + '</div>';
+}
 function hasLive() { return BE.onlineSet ? true : !!O.room; }
 function tabBody() {
   if (O.st === 'wait') return '<p class="hint">현황을 불러오는 중…</p>';
-  if (O.st !== 'ready') return NOPE;
+  if (O.st !== 'ready') return T.noWhat ? offBody() : NOPE;
   var on = onlineSet(), html = '';
   // 내 기록 공개 상태
   var mine = pubOn();
-  html += '<div class="row onl-me"><div class="tx"><b>내 기록 <i class="own">공개</i></b><small>' + pubLine() + '</small></div></div>';
+  html += '<div class="row onl-me"><div class="tx"><b>내 기록 <i class="own">' + (O.uid ? '공개' : '로그인 안 함') + '</i></b><small>' + pubLine() + '</small></div></div>' + (!O.uid && BE.loginHtml ? BE.loginHtml() : '');      // 2.6.1: 로그인하지 않았으면 그 자리에 로그인 단추
   html += '<div class="onl-bar"><div class="seg" role="group" aria-label="정렬">' + [['prog', '진행순'], ['recent', '최근순']].map(function (x) { return '<button data-onl-sort="' + x[0] + '"' + (O.sort === x[0] ? ' aria-pressed="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>' +
     (hasLive() ? '<small class="onl-live"><i class="onl-dot"></i>' + T.liveN(on.others) + '</small>' : '') + '</div>';
   html += hornTab();      // r10: 「오늘의 소문」 접힌 줄 (웹 판만)
@@ -309,7 +319,7 @@ function redraw() {
 O.ask = ask; O.T = T; O.esc = esc; O.redraw = redraw;
 O.sumOf = summary; O.sumBox = sumBox; O.upAsk = function () { upAsk(); }; O.canWrite = canWrite;      // r7 migrate: 이사 창이 같은 요약 상자·올리기 흐름을 쓴다
 O.cloudGet = function () { if (O.st !== 'ready' || !O.uid || !O.db) return Promise.resolve(null); return cget().then(function (d) { return d && typeof d.data === 'string' ? { raw: d.data, at: +d.at || 0, sum: cloudSum(d), old: d.src === 'old' } : null; }, function () { return null; }); };
-O.tab = function () { setTimeout(watch, 0); try { return '<div id="onlBox" class="onl">' + tabBody() + '</div>'; } catch (e) { return NOPE; } };
+O.tab = function () { setTimeout(watch, 0); try { return '<div id="onlBox" class="onl">' + tabBody() + '</div>'; } catch (e) { if (DS.DEBUG) throw e; return NOPE; } };
 O.opt = function () { if (O.st === 'ready' && O.uid && O.cloudState !== 'loading' && Date.now() - (O.checkAt || 0) > 30000) setTimeout(cloudCheck, 0);      // 설정을 열 때 클라우드 쪽을 다시 본다 (다른 기기에서 올렸는지)
   try { return '<h4>온라인</h4><div id="onlOpt" class="onl">' + optBody() + '</div>'; } catch (e) { return ''; } };
 
@@ -514,7 +524,7 @@ function hornSend(b) {
   var now = Date.now(), day = kstDay(now), M = meta().horn || {}, low = b.k !== 'fuse' && b.n < HN.big;
   if (M.day !== day) M = { day: day, c: 0, at: +M.at || 0 };
   if (now - (+M.at || 0) < HN.gap || M.c >= HN.day || (low && M.c >= HN.low)) return;      // 기기에서 먼저 거른다 (규칙도 같은 것을 건다)
-  var nm = clean(G().save.name, 8) || '대장', uid = O.uid, ref;
+  var nm = clean(G().save.name, 8) || '맹주', uid = O.uid, ref;
   try { ref = O.db.doc('horn/' + uid); } catch (e) { return; }
   HS.sending = true;
   safeCall(function () { return ref.get(); }).then(function (snap) {

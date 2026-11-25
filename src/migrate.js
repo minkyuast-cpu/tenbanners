@@ -264,7 +264,7 @@ function doImport(r) {
 function welcome(s, src, pubOff) {
   var sm = sumOf(s), o = onl(), can = !!(o && o.canWrite && o.canWrite()), fbOn = !!(o && o.st === 'ready'), BE = DS.OnlineBE, acct = '';
   if (!can && fbOn && BE && BE.acctRow) { try { acct = BE.acctRow(o); } catch (e) { acct = ''; } }
-  var html = '<h2>' + (src === 'web' ? '공식 주소에' : '새 집에') + ' 옮겨 왔습니다</h2><p>「' + esc(sm.name) + '」 대장의 진행입니다.</p><p class="dim">맹주 1, 사람 ' + sm.mercs + ', 가문 ' + sm.chars + ', 시나리오 ' + sm.cleared + ', 장비 ' + sm.gear + '</p>' +
+  var html = '<h2>' + (src === 'web' ? '공식 주소에' : '새 집에') + ' 옮겨 왔습니다</h2><p>「' + esc(sm.name) + '」 맹주의 진행입니다.</p><p class="dim">맹주 1, 사람 ' + sm.mercs + ', 가문 ' + sm.chars + ', 시나리오 ' + sm.cleared + ', 장비 ' + sm.gear + '</p>' +
     (can ? '<p>브라우저에만 있는 저장은 지워질 수 있습니다. 클라우드에 올려 두면 다른 기기에서도 이어 합니다.</p><button class="btn gold wide" id="mvUp">클라우드에 올리기</button><button class="btn wide" data-close id="mvLater">나중에</button>'
       : (fbOn ? '<p>브라우저에만 있는 저장은 지워질 수 있습니다. 로그인해 클라우드에 올려 두세요.</p>' + (acct ? '<div class="mvacct">' + acct + '</div>' : '') : '') + '<button class="btn ' + (acct ? '' : 'gold ') + 'wide" data-close id="mvLater">' + (acct ? '나중에' : '이어 하기') + '</button>');
   var q = ov(html, 'mvok'); if (!q) { if (DS.showNews) DS.showNews(); return; }
@@ -465,7 +465,12 @@ function card() {
     if (sig === cardSig && (hide ? l : c)) return;
     cardSig = sig;
     if (c) c.remove(); if (l) l.remove();
-    if (!hide) { var w = document.createElement('div'); w.innerHTML = cardHtml(); var nc = w.firstChild, nb = document.getElementById('btnNew'); tb.insertBefore(nc, nb && nb.parentNode === tb ? nb : tb.firstChild); cardLink(nc); }      // 「이어하기」 아래 — 매일 하던 사람이 접힘선 아래로 밀리지 않게 (review F-1)
+    var nb = document.getElementById('btnNew');
+    if (!hide && !WEB && !lsCur() && !hasCloud()) {      // 2.6.1: 옮길 판이 없는 처음 온 분께는 큰 카드 대신 「새로 시작」 아래 한 줄 (하는 일은 같다 — 새 집을 새 탭으로 연다)
+      var ln = document.createElement('p'); ln.id = 'mvCard'; ln.className = 'mvline';
+      ln.innerHTML = '<a id="mvGoNew" href="' + esc(DS.WEB_URL) + '" target="_blank" rel="noopener">다른 기기에서 하던 판이 있다면 <b>새 집에서 이어 하기 ↗</b></a>';
+      if (nb && nb.parentNode === tb) tb.insertBefore(ln, nb.nextSibling); else tb.insertBefore(ln, tb.firstChild);
+    } else if (!hide) { var w = document.createElement('div'); w.innerHTML = cardHtml(); var nc = w.firstChild; tb.insertBefore(nc, nb && nb.parentNode === tb ? nb : tb.firstChild); cardLink(nc); }      // 「이어하기」 아래 — 매일 하던 사람이 접힘선 아래로 밀리지 않게 (review F-1)
     else { var tv = tb.querySelector('.tver'); if (tv) { var b = document.createElement('button'); b.id = 'btnMove'; b.className = 'lnk'; b.dataset.mv = 'show'; b.textContent = lnkName(); tv.insertBefore(b, tv.lastChild); } }
   } catch (e) {}
 }
