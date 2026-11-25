@@ -155,6 +155,18 @@ module.exports = async function (page, shot, L, X) {
   c = await ev((b) => ({ glow: !!document.querySelector('.ov.poleov .pl-n.call'), same: JSON.stringify([DS.G.save.fallen, DS.G.save.lin, DS.G.save.seen, DS.G.save.gold]) === b }), before);
   A(!c.glow && c.same, 'the glow fades after about 2 s and nothing in the save changed (cosmetic only)');
   await land('pole_landscape');
+  // 유품: 그 사람이 남긴 장비가 있으면 카드에 한 줄 (저장은 시험 뒤에 되돌린다)
+  c = await ev((nm) => {
+    var s = DS.G.save, h = s.chars[s.hero], id = h.w, keep = s.gh ? JSON.stringify(s.gh) : null; if (!id || !DS.gear(id)) return { skip: 1 };
+    s.gh = s.gh || {}; s.gh[id] = { h: [], hl: { n: nm, p: 0, lw: '', at: '', hc: h.id, hn: '', k: 'c', N: 1, g: 1 } };
+    DS.ui.closeAll(); DS.poleOpen();
+    var o = document.querySelector('.ov.poleov:not(.ghost)'), b = [].filter.call(o.querySelectorAll('.pl-n'), function (x) { return x.textContent === nm; })[0]; b.click();      // 닫히는 창의 복제본(.ghost)은 빼고
+    var k = o.querySelector('.pl-card'), dts = [].map.call(k.querySelectorAll('dt'), function (d) { return d.textContent; }), i = dts.indexOf('유품'), out = { has: i >= 0, t: i >= 0 ? k.querySelectorAll('dd')[i].textContent : '', gear: DS.gear(id).short || DS.gear(id).name };
+    if (keep == null) delete s.gh; else s.gh = JSON.parse(keep);
+    return out;
+  }, pick);
+  A(c.skip || (c.has && c.t.indexOf(c.gear) === 0 && /들고 있다/.test(c.t)), 'name card links the heirloom they left: ' + (c.skip ? '(no weapon to test with)' : c.t));
+  await sleep(300); await shot('pole_heirloom');
   await ev(() => { DS.ui.closeAll(); DS.openShop('merc'); }); await sleep(400);
   c = await ev(() => { var o = document.querySelector('#app .ov'), b = o.querySelector('[data-polego]'); return { link: b ? b.textContent : '', old: !!o.querySelector('[data-pfold="mfl"]') }; });
   A(/추모 \d+명/.test(c.link) && /맹세의 깃대/.test(c.link) && !c.old, 'recruit shop: the memorial fold is now a link to the pole (' + c.link + ')');

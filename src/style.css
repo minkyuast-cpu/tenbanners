@@ -5042,7 +5042,7 @@ html body #app#app #vban.rage b { font-size: 30px; background: linear-gradient(1
 .rfoot .msnres em { grid-column: 1 / -1; font-style: normal; font-size: var(--fs-s); color: #9fb0c8; } .rfoot .msnres.ok em { color: #f6cf57; }
 .rfoot .msnres em small { margin-left: 6px; color: var(--dim, #8a8aa0); }
 /* ───────── 2.6.0 연출 (stage.js · game.js story()) ─────────
-   ① 이야기 창의 결: 타자 · 초상 튐 · ◀ · 이름 낭독  ② 무대(도입 · 엔딩)  ③ 장막(엔딩의 해돋이 · 교회의 촛불)  ④ 깃대  ⑤ 쓰러짐 창
+   ① 이야기 창의 결: 타자 · 초상 튀기 · ◀ · 이름 낭독  ② 무대(도입 · 엔딩)  ③ 장막(엔딩의 해돋이 · 교회의 촛불)  ④ 깃대  ⑤ 쓰러짐 창
    움직임 줄이기(html.calm · 기기 설정)면 모두 멈춘다 — 줄 넘김은 game.js 가 바로 띄운다. */
 .story-box .line .tw-r { visibility: hidden; }
 .story-box .back { position: absolute; left: 8px; bottom: 6px; min-width: 40px; min-height: 32px; padding: 0 10px; font-size: var(--fs-m); font-family: var(--f-11); color: var(--mute, #a59c8a); background: transparent; border: 1px solid transparent; border-radius: 99px; opacity: .75; }
@@ -5085,7 +5085,6 @@ html body #app .ov.story.stg .sheet > .back { position: absolute; left: 12px; bo
 .stg-pro .stg-cv { width: 100%; max-width: 520px; height: auto; margin-top: 13vh; opacity: 0; transition: opacity 1.2s ease; }
 .stg-pro[data-beat="b"] .stg-cv { opacity: 1; } .stg-pro[data-beat="c"] .stg-cv { opacity: .42; }
 html body #app .ov.story.stg-pro[data-beat="a"] .story-box .line { font-size: 24px; letter-spacing: .03em; }
-.stg-pro[data-beat="b"] .sheet { justify-content: flex-start; padding-top: calc(13vh + min(100vw, 520px) * .445 + 30px); }
 .stg-log { display: grid; gap: 8px; width: 100%; max-width: 420px; margin: 0 0 8px; justify-items: start; }
 .stg-log:empty { display: none; }
 .sbub { max-width: 86%; display: grid; gap: 2px; text-align: left; padding: 8px 12px; border-radius: 10px; background: rgba(22, 20, 30, .92); border: 1px solid rgba(185, 196, 216, .5); box-shadow: 0 6px 18px rgba(0, 0, 0, .4); opacity: .5; }
@@ -5097,8 +5096,8 @@ html body #app .ov.story.stg .story-box[data-k="hero"] { align-self: flex-end; b
 html body #app .ov.story.stg .story-box[data-k="chat"] .who, html body #app .ov.story.stg .story-box[data-k="hero"] .who, html body #app .ov.story.stg .story-box[data-k="talk"] .who { font-size: var(--fs-s); font-family: var(--f-11); letter-spacing: 0; color: #b9c4d8; }
 html body #app .ov.story.stg .story-box[data-k="hero"] .who { color: #e0c088; justify-self: end; }
 html body #app .ov.story.stg .story-box[data-k="chat"] .line, html body #app .ov.story.stg .story-box[data-k="hero"] .line, html body #app .ov.story.stg .story-box[data-k="talk"] .line { font-size: var(--fs-l); font-family: var(--f-14); line-height: 1.5; color: #eef1f7; text-shadow: none; text-wrap: wrap; }
-.stg-pro .stg-log, .stg-pro .story-box { margin-left: 0; margin-right: 0; }
-.stg-pro[data-beat="c"] .sheet { align-items: stretch; max-width: 464px; margin: 0 auto; }
+html body #app .ov.story.stg-pro .story-box[data-k="chat"], html body #app .ov.story.stg-pro .story-box[data-k="talk"] { margin-left: max(0px, calc(50% - 210px)); }
+html body #app .ov.story.stg-pro .story-box[data-k="hero"] { margin-right: max(0px, calc(50% - 210px)); }
 @keyframes sbIn { 0% { opacity: 0; transform: translate(-18px, 6px); } 100% { opacity: 1; transform: none; } }
 @keyframes sbInR { 0% { opacity: 0; transform: translate(18px, 6px); } 100% { opacity: 1; transform: none; } }
 /* 엔딩: 줄은 가운데 하나씩. 말하는 이는 얼굴과 이름을 위에 */
@@ -5108,7 +5107,6 @@ html body #app .ov.story.stg-end .story-box[data-k="hero"] .who, html body #app 
 html body #app .ov.story.stg-end .story-box[data-k="chat"] .who { color: #b9c4d8; }
 html body #app .ov.story.stg-end .story-box[data-k="hero"] .line, html body #app .ov.story.stg-end .story-box[data-k="talk"] .line { font-size: 20px; line-height: 1.6; color: #efe6d0; text-shadow: 0 1px 0 #000, 0 0 14px rgba(5, 4, 10, .9); text-wrap: balance; }
 html body #app .ov.story.stg-end .story-box[data-k="chat"] .line { padding: 8px 14px; border-radius: 10px; background: rgba(22, 20, 30, .9); border: 1px solid rgba(185, 196, 216, .5); box-shadow: 0 6px 18px rgba(0, 0, 0, .4); font-size: var(--fs-l); text-wrap: balance; }
-.stg-end .sheet { padding-top: 34vh; }
 .stg-end .stg-log { justify-items: center; margin-bottom: 14px; }
 .stg-end .roll-c { top: 17%; }
 .sbub.k-one, .sbub.k-re { opacity: 1; animation: sbIn .3s ease-out both; }
@@ -5186,10 +5184,9 @@ html body #app#app .ov.poleov .sheet { height: 100%; max-height: 100%; border-ra
 /* 엔딩 기록: 이름이 차례로 떠오른다 */
 .names.rise i { animation: stgIn .5s ease both; animation-delay: calc(.9s + var(--i, 0) * .09s); }
 @media (orientation: landscape) and (max-height: 560px) {
-  .stg-pro .stg-cv { width: auto; height: 46vh; margin-top: 5vh; }
-  .stg-pro[data-beat="b"] .sheet, .stg-pro[data-beat="c"] .sheet { justify-content: flex-end; padding-top: 0; padding-bottom: 58px; }
+  .stg-pro .stg-cv { width: auto; height: 50vh; margin-top: 3vh; }
+  .ov.story.stg-pro[data-beat="b"] .sheet, .ov.story.stg-pro[data-beat="c"] .sheet, .ov.story.stg-end .sheet { justify-content: flex-end; padding-bottom: 56px; }
   .stgkeep.end .stg-cv { width: auto; height: 60vh; margin-top: 3vh; }
-  .stg-end .sheet { justify-content: flex-end; padding-top: 0; padding-bottom: 54px; }
   html body #app .ov.story.stg .story-box .line { font-size: 18px; line-height: 1.45; }
   html body #app .ov.story.stg-pro[data-beat="a"] .story-box .line { font-size: 21px; }
   html body #app .ov.story.stg-end .story-box.pic .sp { width: 44px; height: 44px; margin-bottom: 2px; }
