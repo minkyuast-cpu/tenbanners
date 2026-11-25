@@ -254,7 +254,7 @@ DS.poleData = function (s) {
     var p = f.pid && P[f.pid], tm = p && p.d && p.d.tm != null ? p.d.tm : null;
     if (tm != null) { var k = 0; while (k < gens.length - 1 && tm > gens[k].tm) k++; gi = Math.max(gi, k); }
     var ch = f.f && s.chars && s.chars[f.f], cls = ch ? ch.cls : (f.cast && DS.CLASSES[f.cast] ? f.cast : '');
-    gens[gi].names.push({ n: f.n, nk: f.nk || '', role: [ch ? DS.flagName(ch.cls, s) + ' 가주' : '', DS.MERCS[f.type] ? DS.MERCS[f.type].name : ''].filter(Boolean).join(', '), at: f.at || '', why: (p && p.d && p.d.why) || '', lw: f.lw || (p && p.lw) || '', k: f.k || 0, b: f.b || 0, L: f.L || 0, gr: f.g || 1, cls: cls, type: f.type || '', pid: f.pid || 0, lord: !!ch });
+    gens[gi].names.push({ n: f.n, nk: f.nk || '', role: [ch ? DS.flagName(ch.cls, s) + ' 가주' : '', DS.MERCS[f.type] ? DS.MERCS[f.type].name : ''].filter(Boolean).join(', '), at: f.at || '', why: (p && p.d && p.d.why) || '', lw: f.lw || (p && p.lw) || '', k: f.k || 0, b: f.b || 0, L: f.L || 0, gr: f.g || 1, cls: cls, type: f.type || '', pid: f.pid || 0, mid: f.id || 0, lord: !!ch });
   });
   gens.forEach(function (g) { if (g.hd) g.names.push(g.hd); });
   return gens.filter(function (g) { return g.names.length || g.cur; });
@@ -289,7 +289,7 @@ DS.poleOpen = function () {
     '<div class="pl-card" hidden></div></div>';
   var o = U.overlay(html, 'modal poleov'), card = $('.pl-card', o), cur = null, callT = 0;
   function show(e) {
-    cur = e; var hl = heirloomOf(s, e), f = faceOf(e);
+    cur = e; var hl = heirloomOf(s, e), f = faceOf(e); if (f && DS.gfr) f = DS.gfr(e.gr, f, { who: e.mid ? 'm' + e.mid : '', dead: 1, cls: 'l' });      // 등급 테는 떠난 뒤에도 그 색 그대로 (초상만 잿빛)
     card.innerHTML = '<div class="pc-in"><span class="pc-f">' + f + '</span><div class="pc-t"><p class="pc-nk">' + esc([e.nk, e.g + '대'].filter(Boolean).join(' · ')) + '</p><h3 style="color:' + gcol(e.gr) + '">' + esc(e.n) + '</h3>' +
       (e.role ? '<p class="pc-r">' + esc(e.role) + (e.L ? ', ' + esc(DS.lvText ? DS.lvText(e.L) : 'Lv' + e.L) : '') + '</p>' : '') + '</div></div>' +
       '<dl class="pc-d">' + (e.at ? '<dt>쓰러진 곳</dt><dd>' + esc(e.at) + (e.why && e.why !== '전사' ? ', ' + esc(e.why) : '') + '</dd>' : '') +

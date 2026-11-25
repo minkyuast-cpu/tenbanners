@@ -21,7 +21,7 @@ module.exports = async (page, shot, L) => {
       [[22, '새싹', 'f', 3], [18, '다온', 'm', 4]].forEach(function (k) { var m = DS.addMerc(s, 'm_sword', k[3], s.hero); m.kn = 1; m.L = k[0]; m.n = k[1]; m.by = s.cal.t - 20 * 600; m.ls = 70; var p = DS.linMkP(s, { k: 'm', sn: s.lin.sur, n: m.n, sx: k[2], gen: hp.gen + 1, pa: [hp.id], type: m.type, g: m.g, m: m.id, gv: 1, hb: 1 }); m.pid = p.id; });
       var sb = DS.addMerc(s, 'm_sword', 4, 0); sb.sb = 1; sb.nc = 'inf'; sb.L = 30; sb.n = '막사이';
       var ot = DS.addMerc(s, 'm_archer', 2, 0); ot.sb = 1; ot.nc = 'arc'; ot.L = 12; ot.n = '활잡이';
-      var sp = DS.addMerc(s, 'm_sister', 3, 0); sp.sb = 1; sp.nc = 'mon'; sp.L = 20; sp.n = '고운'; sp.sx = h.sx === 'f' ? 'm' : 'f';
+      var sp = DS.addMerc(s, 'm_sister', 3, 0); sp.sb = 1; sp.nc = 'mon'; sp.L = 20; sp.n = '고운'; sp.sx = h.sx === 'f' ? 'm' : 'f'; window.__spid = sp.id;      // 「고운」은 영웅관 이름 풀에도 있다 — 배우자는 id 로 찾는다
       DS.mercTidy(s); DS.pSync(s);
       DS.linWed(s, { c: s.hero }, { m: sp.id }, { anywhere: true });
       DS.mercTidy(s); DS.pSync(s);
@@ -191,7 +191,7 @@ module.exports = async (page, shot, L) => {
   A(/공훈은 가문에 남는다\. 선대의 장비는 가방으로 돌아왔다\. 새 맹주는 장비 없이 시작한다/.test(c) && !/장비와 공훈은 가문에 남는다/.test(c), 'confirm step no longer promises the gear: 「…선대의 장비는 가방으로 돌아왔다. 새 맹주는 장비 없이 시작한다」');
   await shot('r2_rite_confirm');
   await page.click('#yesHeir'); await sleep(600); await L.skipStory(page); await sleep(600);
-  for (let i = 0; i < 12; i++) { const st = await ev(() => ({ cine: DS.cineBusy(), gbd: !!document.querySelector('.ov .gbd'), ov: !!document.querySelector('#app .ov:not(.ghost)') })); if (st.gbd) break; if (st.cine) await ev(() => DS.cineSkip()); else if (st.ov) await ev(() => { var b = document.querySelector('#app .ov:not(.ghost) [data-close]'); if (b) b.click(); else DS.ui.closeAll(); }); await sleep(700); }
+  for (let i = 0; i < 30; i++) { const st = await ev(() => ({ cine: DS.cineBusy(), gbd: !!document.querySelector('.ov .gbd'), ov: !!document.querySelector('#app .ov:not(.ghost)') })); if (st.gbd) break; if (st.cine) await ev(() => DS.cineSkip()); else if (st.ov) await ev(() => { var b = document.querySelector('#app .ov:not(.ghost) [data-close]'); if (b) b.click(); else DS.ui.closeAll(); }); await sleep(700); }
   c = await ev(() => { var o = document.querySelector('.ov .gbd'), s = DS.G.save, h = s.chars[s.hero]; return { t: o ? o.innerText.replace(/\n+/g, ' / ') : '', w: h.w, a: h.a, vac: !!h.vac, name: DS.charName(h) }; });
   A(!c.vac && c.w == null && c.a == null && /새 맹주/.test(c.t) && /장비가 없다/.test(c.t) && /장비 자동 착용/.test(c.t), 'new 맹주 ' + c.name + ' stands with empty slots and gets the nudge: ' + c.t);
   await page.click('.ov .gbd [data-gbd]'); await sleep(600);
@@ -309,7 +309,7 @@ module.exports = async (page, shot, L) => {
     return { st: dp.st, why: dp.d && dp.d.why, nk: dp.d && dp.d.nk, gb: dp.d && dp.d.gb, at: dp.d && dp.d.at, heirN: np && np.n, heirWas: !s.mercs.some(function (m) { return m.id === mid; }), vac: !!h.vac, w: h.w, a: h.a, bw: s.gear[o.w] || 0, ba: s.gear[o.a] || 0,
       hl: hls.length - o.hl, mine: mine, lock: mine.length ? !!s.lock[mine[0]] : false, lapse: (s.lapse || 0) - o.lapse, cleared: Object.keys(s.cleared).length - o.cleared, gold: s.gold - o.gold, yr: DS.calNow(s).yr - o.yr, tickets: s.tickets - o.tickets,
       log: lg.map(function (e) { return e.t + (e.x && e.x.why ? '(' + e.x.why + ')' : ''); }), text: lg.filter(function (e) { return e.t === 'death'; }).map(function (e) { return DS.linEvText(s, e); }), deaths: s.lin.log.filter(function (e) { return e.t === 'death' && e.a === o.pid; }).length,
-      prev: DS.storyPrev(s), coffin: s.coffins.list.some(function (r) { return r.pid === o.pid; }), name: DS.charName(h), L: h.L, can: DS.nkCan(s), mood: h.gr && h.gr.k, spouse: (function () { var sp = s.mercs.filter(function (m) { return m.n === '고운'; })[0]; return sp ? { gr: sp.gr && sp.gr.k, sp: (P[sp.pid] || {}).sp } : null; })() };
+      prev: DS.storyPrev(s), coffin: s.coffins.list.some(function (r) { return r.pid === o.pid; }), name: DS.charName(h), L: h.L, can: DS.nkCan(s), mood: h.gr && h.gr.k, spouse: (function () { var sp = s.mercs.filter(function (m) { return m.id === window.__spid; })[0]; return sp ? { gr: sp.gr && sp.gr.k, sp: (P[sp.pid] || {}).sp } : null; })() };
   }, pickMid);
   A(c.st === 'coffin' && c.why === '맹주 자리를 넘김' && c.nk === 1 && c.gb === 2 && c.deaths === 1 && /한울이 살아서 맹주 자리를 넘기고 눈을 감았다/.test(c.text[0]), 'the old 맹주 is dead by the normal path, once, with the reason 「' + c.why + '」 — chronicle: ' + c.text[0] + ' [' + c.log.join(', ') + ']');
   A(c.heirN === '다온' && c.heirWas && !c.vac && c.prev === '한울' && c.mood === 'will', 'the picked successor (' + c.heirN + ' → ' + c.name + ', Lv ' + c.L + ') is 맹주 by the normal path; 「선대 ' + c.prev + '」 works; 유지 on the heir');

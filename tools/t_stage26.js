@@ -155,7 +155,7 @@ module.exports = async function (page, shot, L, X) {
   await shot('pole_open');
   const pick = await ev(() => { var bs = [].slice.call(document.querySelectorAll('.ov.poleov .pl-n')), s = DS.G.save, i = bs.findIndex(function (b) { var f = (s.fallen || []).filter(function (f) { return f.n === b.textContent && f.lw; })[0]; return !!f; }); if (i < 0) i = 0; bs[i].click(); return bs[i].textContent; });
   await sleep(400);
-  c = await ev(() => { var k = document.querySelector('.ov.poleov .pl-card'); return { on: k && !k.hidden, name: k.querySelector('h3').textContent, face: !!k.querySelector('.pc-f canvas'), grey: getComputedStyle(k.querySelector('.pc-f')).filter, dt: [].map.call(k.querySelectorAll('dt'), function (d) { return d.textContent; }), txt: k.innerText.replace(/\n+/g, ' / '), call: !!k.querySelector('[data-pcall]') }; });
+  c = await ev(() => { var k = document.querySelector('.ov.poleov .pl-card'); return { on: k && !k.hidden, name: k.querySelector('h3').textContent, face: !!k.querySelector('.pc-f canvas'), grey: k.querySelector('.pc-f .gfr.dead') ? 'grayscale (등급 테는 그대로, 초상만 잿빛)' : getComputedStyle(k.querySelector('.pc-f')).filter, dt: [].map.call(k.querySelectorAll('dt'), function (d) { return d.textContent; }), txt: k.innerText.replace(/\n+/g, ' / '), call: !!k.querySelector('[data-pcall]') }; });
   A(c.on && c.name === pick && c.face && /grayscale/.test(c.grey) && c.dt.indexOf('쓰러진 곳') >= 0 && c.call && !/undefined|NaN/.test(c.txt), 'name card for ' + pick + ': greyed portrait, ' + c.dt.join(' · ') + ' — ' + c.txt.slice(0, 120));
   await shot('pole_card');
   await page.click('.ov.poleov [data-pcall]'); await sleep(350);

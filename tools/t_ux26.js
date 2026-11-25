@@ -292,10 +292,10 @@ module.exports = async (page, shot, L, env) => {
     await L.sleep(300);
   }
   A(sawCine && sawMourn, 'the death played as a cinematic and a mourning sheet');
-  await ev(() => { DS.ui.closeAll(); DS.openShop('merc'); }); await L.sleep(500);
-  await ev(() => { var o = document.querySelector('.ov'), b = o.querySelector('[data-pfold="mfl"]'); if (b && b.getAttribute('aria-expanded') !== 'true') b.click(); }); await L.sleep(400);
-  await ev(() => { var r = document.querySelector('.ov .flist .row.fallen'); if (r) r.scrollIntoView(); }); await L.sleep(300);
-  let f = await addP('추모 목록', '.ov .flist .row.fallen .gfr[data-gp="' + gpP + '"]');
+  // 2.6.0: 추모 목록은 마을 한가운데의 깃대로 옮겼다 — 이름을 누르면 그 사람의 패가 뜬다
+  await ev(() => { DS.ui.closeAll(); DS.poleOpen(); }); await L.sleep(500);
+  await ev((nm) => { var b = Array.prototype.filter.call(document.querySelectorAll('.poleov .pl-n'), function (x) { return x.textContent.trim() === nm; })[0]; if (b) b.click(); }, await ev((id) => { var f = (DS.G.save.fallen || []).filter(function (x) { return x.id === id; })[0]; return f ? f.n : ''; }, P)); await L.sleep(500);
+  let f = await addP('추모 목록', '.poleov .pl-card .gfr[data-gp="' + gpP + '"]');
   A(f.dead, 'memorial list: the fallen keeps the grade frame, portrait greyed');
   await snap('memorial');
   await L.closeAll(page);

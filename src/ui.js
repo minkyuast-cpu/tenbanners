@@ -1796,7 +1796,7 @@ function hgCell(s, ch, cls) {
   }
   if (!ch) {      // 아직 없는 가문
     if (DS.fzWoke && DS.fzWoke(s, cls)) return '<button class="hk none fzw" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">깨어난 가문</b><small class="hkv">영웅관에서 다시 연다</small></button>';      // 2.2.9: 세대가 바뀌어 깨어났다
-    return '<button class="hk none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">닫힌 가문</b><small class="hkv">영웅관에서 ' + esc(DS.CLASSES[cls].name) + '이 오면</small></button>';      // 2.2.4: 가문은 영웅관에서만 연다
+    return '<button class="hk none" data-hgnone="' + cls + '" style="--fc:' + (DS.FLAG[cls] || '#c9a96a') + '"><span class="hkh">' + DS.houseCrest(cls, 14) + '<small>' + esc(hgShort(null, cls)) + '</small></span><span class="hkf"><i class="hkq">?</i></span><b class="hkn">닫힌 가문</b><small class="hkv">영웅관에서 ' + esc(josa(DS.CLASSES[cls].name, '이가')) + ' 오면</small></button>';      // 2.2.4: 가문은 영웅관에서만 연다
   }
   var m = hgMeta(s, ch), b = m.b, L = b ? DS.pL(b) : ch.L, rk = DS.hRank(ch), dn = !!ch.down;
   var st = (m.hero ? ' lord' : '') + (dn ? ' down' : '') + (b ? '' : ' vac') + (m.pi >= 0 ? ' in' : b && !dn ? ' rest' : '');

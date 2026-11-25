@@ -5501,3 +5501,6 @@ html.calm .cine .cchat, .cine.calm .cchat { animation: none; }
 @keyframes hvSpark { 0% { opacity: 0; transform: translateY(30px) scale(.4); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-70px) scale(1.1); } }
 @keyframes hvTag { 0% { opacity: 0; transform: translate(calc(-50% - 200px), 6px); } 8% { opacity: 1; transform: translate(calc(-50% - 200px), 0); } 78% { opacity: 1; transform: translate(calc(-50% - 200px), 0); } 93% { transform: translate(-50%, -7px) scale(1.2); } }
 @media (max-height: 640px) { .cine.ck-handover .cst { height: 150px; } .cine .chva, .cine .chvg, .cine .chvm, .cine .chvs { top: 70px; } .cine .chvk { top: 52px; } .cine .chvl { top: 116px; } }
+
+/* 2.6.0 합치기: 깃대의 이름 패 — 초상은 등급 테를 그대로 쓴다 (둥근 틀은 걷는다) */
+.pc-f:has(.gfr) { width: auto; height: auto; border: 0; background: none; border-radius: 0; filter: none; }
