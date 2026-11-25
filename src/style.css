@@ -5104,3 +5104,21 @@ html body #app#app#app #s-game #bot.dock:has(.act.item.shade):has(#bHunt[hidden]
 @media (orientation: landscape) and (max-height: 560px) and (max-width: 740px) {
   html body #app#app#app #s-game #bot.dock:has(.act.item.shade) { grid-template-columns: minmax(0, 1fr) repeat(4, 44px) 4px 66px 46px 46px; }
 }
+
+/* ═════════ 2.6 손맛 (feat-feel) ═════════ */
+/* 빈 기술 줄: 다음에 배울 기술 (흐린 그림 · 한 줄 · 가는 막대) */
+html body #app#app#app #s-game #bot.dock .sknone.f26nx { justify-content: flex-start; gap: 10px; padding: 0 12px; }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxi { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(236, 220, 186, .18); background: rgba(0, 0, 0, .35); opacity: .55; filter: grayscale(1); }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxt b { flex: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12.5px; font-weight: 500; color: var(--a-dim, #c4b89e); opacity: .9; }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxbar { display: block; height: 3px; border-radius: 2px; background: rgba(0, 0, 0, .5); box-shadow: inset 0 0 0 1px rgba(236, 220, 186, .1); overflow: hidden; }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx .nxbar u { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #b38a45, #f0cf82); }
+html body #app#app#app #s-game #bot.dock .sknone.f26nx small { flex: none; font-size: 11px; color: rgba(196, 184, 158, .75); }
+html body #app#app#app #s-game #bot.dock .arow.sk .skg.f26nx { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-style: normal; opacity: .6; }
+html body #app#app#app #s-game #bot.dock .arow.sk .skg.f26nx svg { filter: grayscale(1); opacity: .7; }
+html body #app#app#app #s-game #bot.dock .arow.sk .skg.f26nx small { font: 600 10px/1 var(--f-ui); color: rgba(196, 184, 158, .8); }
+/* 갓 배운 기술: 「NEW」 표 + 3초 맥박 */
+html body #app#app #s-game #bot .act > .newb { position: absolute; top: -5px; left: 50%; transform: translateX(-50%); z-index: 9; padding: 2px 5px; border-radius: 4px; font: 700 9px/1 var(--f-ui); font-style: normal; letter-spacing: .04em; color: #2a1d0e; background: linear-gradient(180deg, #fff0bf, #e0b25a); box-shadow: 0 1px 0 #000, 0 0 6px rgba(246, 207, 87, .6); pointer-events: none; }
+html body #app#app #s-game #bot .act.newp { animation: f26new 1s ease-in-out 3; }
+@keyframes f26new { 0%, 100% { box-shadow: 0 0 0 0 rgba(246, 207, 87, 0); filter: none; } 50% { box-shadow: 0 0 0 3px rgba(246, 207, 87, .55), 0 0 14px rgba(246, 207, 87, .5); filter: brightness(1.25); } }
+html.calm body #app#app #s-game #bot .act.newp { animation: none; box-shadow: 0 0 0 2px rgba(246, 207, 87, .5); }
