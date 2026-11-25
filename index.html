@@ -5696,6 +5696,11 @@ html body #app#app .pplv .pph .pph1 button[aria-pressed="true"] { border-color: 
   .pplv .pphd { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; }
   .pplv .pptop { margin: 0; grid-auto-columns: auto; } .pplv .ppa { min-height: 40px; padding: 4px 10px; } .pplv .ppa small { display: none; }
 }
+
+/* 2.6.3: 출전 자리가 비었을 때의 알림 · 장비 고르기 창의 「지금→입은 뒤」 */
+html body #app#app .sobar .soh small .sogap { font-style: normal; font-weight: 700; color: #f0b64a; }
+.gpk-now { display: block; font-size: var(--fs-s); color: var(--mute, #c4b89e); margin-bottom: 2px; }
+.schips .sch.pw { border-color: rgba(210, 176, 114, .6); } .schips .sch.pw i { color: var(--a-gold, #d2b072); }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -6709,10 +6714,21 @@ for (var ux in DS.ULT_BASE) DS.SK_ALIAS[ux] = DS.ULT_BASE[ux];
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.6.2';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.4.2';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.6.3';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.4.3';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.6.3', date: '2026-11-25', tag: '변경', title: '출전은 고른 대로 · 장비 수치를 알기 쉽게',
+    lead: '출전을 저절로 바꾸지 않습니다. 장비는 입기 전에 무엇이 얼마나 바뀌는지 보입니다.',
+    items: [
+      ['변경', '나간 가주를 누르면 쉬고, 그 자리는 빈 채로 남습니다. 다른 가주가 저절로 들어오지 않습니다.'],
+      ['변경', '쉬는 가주는 빈 자리가 있을 때 누르면 나갑니다. 자리가 찼으면 먼저 한 사람을 쉬게 합니다.'],
+      ['변경', '셋을 다 채우지 않고 나가도 됩니다. 자리가 비어 있으면 출전 줄에 알림이 뜹니다.'],
+      ['변경', '장비의 「위력」이라는 말을 없앴습니다. 무기 수치는 입은 사람의 공격에 더해지므로 「공격」으로 적습니다. 마법 병과의 무기는 「마공」입니다.'],
+      ['변경', '장비 고르기 창과 가방에서 줄마다 「지금→입은 뒤」 수치가 보입니다. 맨 앞은 전투력입니다.'],
+      ['변경', '이 수치는 등급과 공훈까지 얹은 실제 값이라 인물 정보의 수치와 같습니다.'],
+      ['변경', '옵션의 「위력 +n%」는 「무기 수치 +n%」로 적습니다. 효과는 그대로입니다.']
+    ] },
   { ver: '2.6.2', date: '2026-11-25', tag: '변경', title: '인물 탭과 가계도 맨 위 줄이기',
     lead: '목록이 화면 위쪽에서 바로 시작하도록 맨 위를 줄였습니다. 규칙은 그대로입니다.',
     items: [
@@ -7216,10 +7232,19 @@ DS.gearAt = function (g, L, cls, te) {
     crit: f(g.crit || 0), spd: f(g.spd || 0), mp: f(g.mp || 0), amp: f(g.amp || 0), ad: f(g.ad || 0), off: off };
 };
 // 능력치 글 (gearAt 의 결과로). 단이 없으니 「위력 +23」 같은 수는 그 레벨의 것이다
-DS.gearStatTxt = function (g, x) {
+// 2.6.3: 「위력」이라는 말을 없앴다 — 무기의 수치는 입은 사람의 주 능력치에 그대로 더해지므로 그 이름으로 적는다: 물리 병과 「공격」 · 마법 병과 「마공」 · 무투가 「공격, 마공」.
+//   입을 사람을 모르면(가방 · 전리품) 그 무기를 쓰는 병과로 정한다 (지팡이 → 마공, 검 → 공격, 권갑 → 공격, 마공). 능력치 셈(DS.charStats)은 그대로다
+function powKindCls(cls) { var c = DS.CLASSES[cls]; return !c ? 'atk' : c.martial ? 'both' : (c.dtype === 'magic' || c.kind === 'holy') ? 'mag' : 'atk'; }
+DS.gearPowKind = function (g, cls) {
+  if (cls && DS.CLASSES[cls]) return powKindCls(cls);
+  var ks = {}; for (var c in DS.CLS_GEAR) { var G0 = DS.CLS_GEAR[c]; if (g && G0 && G0.w && G0.w.indexOf(g.cat) >= 0) ks[powKindCls(c)] = 1; }
+  return ks.both && !ks.atk && !ks.mag ? 'both' : ks.mag && !ks.atk ? 'mag' : 'atk';
+};
+DS.gearPowName = function (g, cls) { return { atk: '공격', mag: '마공', both: '공격, 마공' }[DS.gearPowKind(g, cls)]; };
+DS.gearStatTxt = function (g, x, cls) {
   x = x || DS.gearAt(g, DS.gearRefL());
   var st = [], sg = function (v) { return (v > 0 ? '+' : '−') + Math.abs(v); }, pc = function (v) { return Math.round(v * 100); };
-  if (x.pow) st.push('위력 +' + x.pow);
+  if (x.pow) st.push(DS.gearPowName(g, cls) + ' +' + x.pow);
   if (x.def) st.push('방어 ' + sg(x.def));
   if (x.res) st.push('마방 ' + sg(x.res));
   if (x.hp) st.push('HP ' + sg(x.hp));
@@ -7603,7 +7628,10 @@ DS.sortieFix = function (save) {
     if (e && save.chars[e.h] && e.h !== +save.hero) gone.push(e);      // 맹주가 된 가문은 소식 없이 빠진다
   });
   var news = heirs.filter(function (n) { return n.out && n.out !== n.in; }), left = DS.sortieRank(save, cands.filter(function (ch) { return keep.every(function (k) { return k.h !== ch.id; }); }));
-  while (keep.length < N && left.length) {
+  // 2.6.3: 일부러 비워 둔 자리(save.sortieGap)는 채우지 않는다 — 「쉼」을 누르면 다른 가주가 저절로 들어와, 원하는 사람을 내보내기 어려웠다. 가주가 쓰러져 빈 자리는 예전처럼 채운다
+  var gap = fresh ? 0 : Math.max(0, Math.min(N - keep.length, Math.round(+save.sortieGap || 0))), want = N - gap;
+  if (gap > 0) save.sortieGap = gap; else delete save.sortieGap;
+  while (keep.length < want && left.length) {
     var ch = left.shift(), b = DS.bearer(save, ch, 1); keep.push({ h: ch.id, m: b.id });
     if (fresh) continue;
     var g = gone.shift(), gch = g && save.chars[g.h], vac = gch && !(DS.bearer && DS.bearer(save, gch, 1));
@@ -7631,21 +7659,21 @@ DS.sortieSet = function (save, ids) {
   if (DS.partySync) DS.partySync(save);
   return save.sortie.map(function (e) { return e.h; });
 };
-// 가문 창의 출전 · 쉬기: 출전 → 둘 가운데 약한 이와 바꾼다 (자리가 비었으면 그냥) · 쉬기 → 쉬는 가주 가운데 가장 센 이가 대신. 돌려주는 것: { ok, in, out } (이름)
+// 가문 창의 출전 · 쉬기. 2.6.3: 저절로 바꾸지 않는다 — 쉬기 → 그 자리는 빈다 (save.sortieGap +1) · 출전 → 빈 자리가 있을 때만 (없으면 먼저 한 사람을 쉬게 한다). 돌려주는 것: { ok, in, out, n 출전한 가주 수, N 자리 수 } (이름)
+//   예전(2.2.8 ~ 2.6.2): 쉬기 → 쉬는 가주 가운데 가장 센 이가 대신 · 출전 → 둘 가운데 약한 이와 바꾼다. 누른 것과 다른 사람이 함께 움직여 원하는 조합을 만들기 어려웠다
 DS.sortieToggle = function (save, id) {
-  id = +id; var on = DS.sortieOn(save, id), cur = (save.sortie || []).map(function (e) { return e.h; }), ch = save.chars[id];
+  id = +id; var on = DS.sortieOn(save, id), cur = (save.sortie || []).map(function (e) { return e.h; }), ch = save.chars[id], N = DS.SORTIE_N();
   if (!ch || id === +save.hero) return { ok: false, why: '맹주는 늘 출전한다' };
   if (on) {
-    var rest = DS.sortieRank(save, DS.sortieCands(save).filter(function (c) { return cur.indexOf(c.id) < 0; }))[0];
-    if (!rest) return { ok: false, why: '대신 나갈 가주가 없다' };
-    DS.sortieSet(save, cur.filter(function (h) { return h !== id; }).concat([rest.id]));
-    return { ok: true, out: sortieWho(save, ch), in: sortieWho(save, rest) };
+    save.sortieGap = Math.min(N, Math.max(0, Math.round(+save.sortieGap || 0)) + 1);
+    DS.sortieSet(save, cur.filter(function (h) { return h !== id; }));
+    return { ok: true, out: sortieWho(save, ch), in: '', n: save.sortie.length, N: N };
   }
   if (DS.sortieCands(save).indexOf(ch) < 0) return { ok: false, why: '가주가 없는 가문은 나가지 못한다' };
-  var N = DS.SORTIE_N(), drop = null;
-  if (cur.length >= N) { drop = DS.sortieRank(save, cur.map(function (h) { return save.chars[h]; }).filter(Boolean)).pop(); cur = cur.filter(function (h) { return !drop || h !== drop.id; }); }
+  if (cur.length >= N) return { ok: false, why: '출전 자리가 찼다. 나간 가주를 먼저 쉬게 한다' };
+  save.sortieGap = Math.max(0, Math.round(+save.sortieGap || 0) - 1);
   DS.sortieSet(save, cur.concat([id]));
-  return { ok: true, in: sortieWho(save, ch), out: drop ? sortieWho(save, drop) : '' };
+  return { ok: true, in: sortieWho(save, ch), out: '', n: save.sortie.length, N: N };
 };
 // 싸우는 가문: 맹주 가문(맹주가 살아 서 있을 때) + 출전한 가주의 가문. s.party 는 이 목록을 비춘다 (DS.partySync)
 //   2.2.3: 차례 = 맹주 → 다른 가문(부대 탭 격자와 같은 차례 — DS.houseOrd: 공훈 계급 → 합류. 계급이 오를 때만 바뀐다). 가주가 바뀌어도 가문은 제자리, 맹주가 바뀌면 새 맹주가 맨 앞
@@ -8414,16 +8442,16 @@ function pm(v) { return (Math.round(v * 1000) / 10).toFixed(1).replace(/\.0$/, '
 // 설명 글: {p} 굴림값 % · {n} 지금 부대 레벨 기준 실제 수치 · {g} 굴림값 그대로 · {m} 소수 한 자리 % · {q} (1 − 굴림값) %
 // 2.2.6: 권갑(fist) · 도복(gi)에도 맞는 옵션 — 별 스민 · 바람 탄 · 불꽃 튀는 · 쌍두 · 축성 · 메아리 · 자비 / 아지랑이
 var AFFIX = {
-  keen:   [1, '날 선', 'w', [0.10, 0.30], { powp: 1 }, '위력 +{p}%'],
+  keen:   [1, '날 선', 'w', [0.10, 0.30], { powp: 1 }, '무기 수치 +{p}%'],
   honed:  [1, '벼린', 'w', [0.02, 0.08], { amp: 1 }, '공격, 마공 +{p}%'],
   sharp:  [1, '매서운', 'w', [0.04, 0.16], { crit: 1 }, '치명타 +{p}%'],
-  heavy:  [1, '묵직한', 'w', [0.20, 0.40], { powp: 1, spd: -0.04 }, '위력 +{p}%, 행동 회복 −4%'],
-  fierce: [1, '사나운', 'w', [0.25, 0.45], { powp: 1, defp: -0.4 }, '위력 +{p}%, 방어가 깎인다'],
+  heavy:  [1, '묵직한', 'w', [0.20, 0.40], { powp: 1, spd: -0.04 }, '무기 수치 +{p}%, 행동 회복 −4%'],
+  fierce: [1, '사나운', 'w', [0.25, 0.45], { powp: 1, defp: -0.4 }, '무기 수치 +{p}%, 방어가 깎인다'],
   dusk:   [1, '빛바랜', 'w', [0.06, 0.12], { amp: 1, hpp: -1.5 }, '공격, 마공 +{p}%, 최대 HP가 깎인다'],
-  even:   [1, '고른', 'w', [0.05, 0.15], { powp: 1, crit: 0.4 }, '위력 +{p}%, 치명타 조금'],
+  even:   [1, '고른', 'w', [0.05, 0.15], { powp: 1, crit: 0.4 }, '무기 수치 +{p}%, 치명타 조금'],
   oiled:  [1, '기름 먹인', 'w', [0.02, 0.06], { spd: 1, crit: 1 }, '행동 회복, 치명타 +{p}%'],
   guard:  [1, '막아서는', 'w', [0.15, 0.45], { defp: 1 }, '방어 +{n}'],
-  star:   [1, '별 스민', ['wand', 'staff', 'fist'], [0.06, 0.20], { mp: 1, powp: 0.5 }, '마나 +{p}%, 위력 조금'],
+  star:   [1, '별 스민', ['wand', 'staff', 'fist'], [0.06, 0.20], { mp: 1, powp: 0.5 }, '마나 +{p}%, 무기 수치 조금'],
   wind:   [1, '바람 탄', ['bow', 'lance', 'fist'], [0.02, 0.07], { spd: 1 }, '행동 회복 +{p}%'],
   light:  [1, '가벼운', 'a', [0.02, 0.08], { spd: 1 }, '행동 회복 +{p}%'],
   hard:   [1, '단단한', 'a', [0.12, 0.40], { defp: 1 }, '방어 +{n}'],
@@ -8442,7 +8470,7 @@ var AFFIX = {
   angry:  [1, '성난', 'w', [0.15, 0.35], { eng: 'rage' }, '잃은 HP만큼 주는 피해가 는다 (빈사일 때 +{p}%)'],
   deadly: [1, '치명적인', 'w', [0.15, 0.40], { eng: 'critX' }, '치명타 피해 +{p}% (기본 150%)'],
   greedy: [1, '탐욕스러운', 'w', [0.10, 0.25], { eng: 'goldUp' }, '쓰러뜨린 적의 골드 +{p}%'],
-  spear:  [1, '꿰뚫는', ['bow', 'lance'], [0.20, 0.45], { eng: 'pierce' }, '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 {p}% 위력으로 꿰뚫는다'],
+  spear:  [1, '꿰뚫는', ['bow', 'lance'], [0.20, 0.45], { eng: 'pierce' }, '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 {p}% 피해로 꿰뚫는다'],
   quick:  [1, '재빠른', 'w', [0.05, 0.15], { eng: 'atkTick' }, '기본 공격에 드는 틱 −{p}%'],
   spark:  [1, '불꽃 튀는', ['staff', 'wand', 'fist'], [0.20, 0.40], { eng: 'splash' }, '기본 공격이 맞힌 적 둘레의 적에게도 {p}% 피해'],
 
@@ -8583,7 +8611,7 @@ var PAIR_NAME = { sun: ['해의 칼', '달의 창'], bro: ['맏이의 갑옷', '
 // 엔진 fx 칸 → 설명 글 (전설의 대표 효과 줄)
 var ENG_TXT = {
   killDrain: function (v) { return '적을 쓰러뜨릴 때마다 흡혈 +' + pm(v) + '% (그 싸움 동안, 6번까지)'; },
-  pierce: function (v) { return '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 꿰뚫는다 (' + pct(v) + '% 위력)'; },
+  pierce: function (v) { return '기본 공격이 맞힌 적 뒤(두 칸 안)의 적도 꿰뚫는다 (' + pct(v) + '% 피해)'; },
   echo: function (v) { return '기술이 ' + pct(v) + '% 확률로 한 번 더 나간다 (필살기 제외)'; },
   lone: function (v) { return '2칸 안에 다른 가주가 없거나 홀로 남으면 받는 피해 −' + pct(v) + '%, 주는 피해 +' + pct(v) + '%'; },
   curse: function (v) { return '저주: 싸우는 동안 초마다 최대 HP의 ' + pm(v) + '%를 잃는다 (30% 아래로는 깎이지 않는다)'; },
@@ -9417,7 +9445,7 @@ DS.gearOffChip = offChip;
 // full: 내력의 거쳐 간 손까지 (지휘관 창의 장비 줄) · ch: 그 사람 기준 수치 (없으면 지금 부대 레벨)
 DS.gearHtml = function (g, full, ch) {
   if (!g) return '';
-  var st = ch ? DS.gearStatTxt(g, DS.gearAt(g, ch.L, ch.cls, ch.gt)) : g.stat;      // 2.1.0: 그 사람 기준 수치 · r45: 칩 줄로, 맞지 않는 병과는 붉은 칩 하나 더
+  var st = ch ? DS.gearStatTxt(g, DS.gearAt(g, ch.L, ch.cls, ch.gt), ch.cls) : g.stat;      // 2.1.0: 그 사람 기준 수치 · r45: 칩 줄로, 맞지 않는 병과는 붉은 칩 하나 더
   var off = !!ch && !DS.gearFits(ch.cls, g);
   var h = '<b>' + gname(g) + ' <i class="own">' + gtag(g) + g.kind + '</i></b>' + DS.statChips(st, '', off ? offChip() : '') + (off ? '<small class="goffn">' + esc(DS.gearOffNote()) + '</small>' : '') + (g.grade >= 4 ? ghLine(g.id, full) : '') + (DS.hlHtml ? DS.hlHtml(curSave(), g.id, ch) : '');      // 2.6.0: 깎인 수치(칩) + 규칙 한 줄
   (g.affix || []).forEach(function (a) { h += '<small class="lax"><i>' + (a.pre ? esc(a.name) : '〈' + esc(a.name) + '〉') + '</i> ' + esc(a.desc) + '</small>'; });
@@ -9436,19 +9464,28 @@ function better(save, g) {
   return best;
 }
 var SHOW = [['hp', 'HP'], ['atk', '공격'], ['mag', '마공'], ['def', '방어'], ['res', '마방'], ['mp', '마나']];
-// 입혔을 때 능력치가 어떻게 바뀌는지 (바뀌는 것만)
+// 입혔을 때 능력치가 어떻게 바뀌는지 (바뀌는 것만). 2.6.3: 맨 앞에 전투력, 수치는 싸움터에 서는 그대로(등급 · 공훈 얹힘까지 — 인물 정보의 수와 같다)
+function wearStats(ch) {
+  var sv = curSave(), st = null;
+  try { if (sv && sv.chars && sv.chars[ch.id] && DS.cmdSpec) { var hero = ch.id === +sv.hero, who = hero ? ch.ps : DS.bearer(sv, ch), u = who || hero ? DS.cmdSpec(ch, hero, who || null) : null;
+    if (u) st = { hp: u.mhp || u.hp, mp: u.mmp != null ? u.mmp : u.mp, atk: u.atk, mag: u.mag, def: u.def, res: u.res, crit: u.crit, spd: u.spd, rng: u.rng, drain: u.drain, pow: DS.power ? DS.power(u) : 0 }; } } catch (e) { st = null; }
+  if (!st) { st = DS.charStats(ch); st.pow = 0; }
+  return st;
+}
 function diffHtml(ch, g) {
-  var a = DS.charStats(ch), c2 = {}, k; for (k in ch) c2[k] = ch[k]; c2[g.slot] = g.id;
-  var b = DS.charStats(c2), out = [];
-  function add(label, x, y, fmt) { if (x === y) return; out.push(DS.chip(label, fmt(x) + '→' + fmt(y), y < x ? -1 : 1)); }
-  var num = function (v) { return String(v); }, pc = function (v) { return pct(v) + '%'; }, one = function (v) { return String(Math.round(v * 10) / 10); };
-  SHOW.forEach(function (s) { add(s[1], a[s[0]], b[s[0]], num); });
+  var a = wearStats(ch), c2 = {}, k; for (k in ch) c2[k] = ch[k]; c2[g.slot] = g.id;
+  var b = wearStats(c2), out = [];
+  function add(label, x, y, fmt, cls) { if (x === y) return; out.push(DS.chip(label, fmt(x) + '→' + fmt(y), y < x ? -1 : 1).replace('class="sch', 'class="sch' + (cls || ''))); }
+  var num = function (v) { return String(v); }, big = function (v) { return Math.round(v).toLocaleString(); };
+  if (a.pow && b.pow) add('전투력', Math.round(a.pow), Math.round(b.pow), big, ' pw');
+  SHOW.forEach(function (s) { add(s[1], Math.round(a[s[0]]), Math.round(b[s[0]]), num); });
   add('치명', pct(a.crit), pct(b.crit), function (v) { return v + '%'; });
   add('행동 회복', Math.round(a.spd * 10), Math.round(b.spd * 10), function (v) { return String(v / 10); });
   add('사거리', a.rng[1], b.rng[1], num);
   add('흡혈', pct(a.drain || 0), pct(b.drain || 0), function (v) { return v + '%'; });
   return out.length ? '<span class="schips">' + out.join('') + '</span>' : '능력치 변화 없음';
 }
+DS.gearDiffHtml = diffHtml;
 var sortBy = 'grade';
 var lowOpen = false, LOW_FOLD = 5, TOP_MAX = 12;      // r8 menus: 가방의 「지금 것보다 좋지 않은」 장비가 이보다 많으면 한 줄로 접는다 (이 판 동안 기억)
 function bagIds(save) {
@@ -9569,7 +9606,7 @@ function detail(id, redraw) {
   function body() {
     var g = DS.gear(id); if (!g || !(s.gear[id] > 0)) return '';
     var lk = !!s.lock[id], h = '<div class="result ldet lr' + g.grade + '"><h2>' + (DS.iconHtml ? DS.iconHtml('gear', id, { cls: 'ldico' }) : '') + gname(g) + '</h2><p class="lsub">' + tagsH([DS.gearTag(g) ? esc(DS.gearTag(g)) : '', esc(g.kind), '×' + s.gear[id], lk ? '잠김' : '']) + '</p><p class="lstat">' + DS.statChips(g.stat) + '</p>' +
-      '<p class="lscale">수치는 입은 사람의 레벨을 따른다 (지금 부대 Lv ' + DS.gearRefL() + ' 기준)</p>';
+      '<p class="lscale">' + (g.slot === 'w' ? '무기의 수치는 입은 사람의 공격(마법 병과는 마공)에 그대로 더해진다. ' : '') + '수치는 입은 사람의 레벨을 따른다 (지금 부대 Lv ' + DS.gearRefL() + ' 기준). 아래는 입었을 때 바뀌는 능력치</p>';
     var gs = DS.ghParts(s, id), gc = DS.ghChain(s, id);
     if (gs.length || gc) h += '<p class="lher">' + tagsH(gs.map(esc), 'gh') + (gs.length && gc ? '<br>' : '') + esc(gc) + '</p>';
     if (DS.hlHtml && DS.hlOf(s, id)) h += '<p class="lhlp">' + DS.hlHtml(s, id, null) + '</p>';      // 2.5.0 유품: 누구의 것 · 마지막 한마디 · 대를 넘긴 수 · 같은 가문의 덤
@@ -15033,6 +15070,7 @@ DS.fixSave = function (s) {
   if (s.sortie != null) {      // 2.2.8 출전 (맹주 밖 가주 둘): [{ h: 가문 번호, m: 가주 번호, n: 이름 }] — 깨진 칸은 걷고, 없으면 DS.sortieFix 가 가장 센 둘로 (옛 저장)
     s.sortie = Array.isArray(s.sortie) ? s.sortie.filter(function (e) { return e && typeof e === 'object' && int(e.h) && own(s.chars, e.h); }).slice(0, 2).map(function (e) { var o = { h: +e.h, m: int(e.m) ? +e.m : 0 }; if (typeof e.n === 'string') o.n = e.n.slice(0, 24); return o; }) : [];
   }
+  if (s.sortieGap != null) { var sg = Math.round(+s.sortieGap); if (sg > 0 && sg <= 2) s.sortieGap = sg; else delete s.sortieGap; }      // 2.6.3: 일부러 비워 둔 출전 자리 수
   if (s.sortieNews != null) { if (!Array.isArray(s.sortieNews)) delete s.sortieNews; else s.sortieNews = s.sortieNews.filter(function (n) { return n && typeof n === 'object' && typeof n.in === 'string'; }).slice(-6).map(function (n) { return { out: typeof n.out === 'string' ? n.out.slice(0, 24) : '', in: n.in.slice(0, 24), why: String(n.why || '').slice(0, 6) }; }); }
   if (DS.mercTidy) DS.mercTidy(s);      // 2.2.0: 자리 불변식 (가주 하나 · 가문원은 맹주 가문 · 그 밖은 막사)
   if (!Array.isArray(s.fallen)) s.fallen = [];
@@ -28900,7 +28938,7 @@ function pickWearer(id, parent) {
     var html = '<div class="row"><div class="tx">' + gearLine(g) + '</div></div>';
     partyFirst().filter(function (c) { return DS.canEquip(c, id); }).forEach(function (ch) {
       var cur = DS.gear(ch[g.slot]);
-      html += '<div class="row">' + gfC(ch, 2) + '<div class="tx"><b>' + esc(DS.charName(ch)) + benchTag(ch) + offTag(ch, g) + '</b><small>지금: ' + (cur ? esc(cur.name) : '없음') + '</small><small class="df">' + diffHtml(gearDiff(ch, id), 4) + '</small></div>' +
+      html += '<div class="row">' + gfC(ch, 2) + '<div class="tx"><b>' + esc(DS.charName(ch)) + benchTag(ch) + offTag(ch, g) + '</b><small>지금: ' + (cur ? esc(cur.name) : '없음') + '</small><small class="df">' + (DS.gearDiffHtml ? DS.gearDiffHtml(ch, g) : diffHtml(gearDiff(ch, id), 4)) + '</small></div>' +
         '<button class="btn small gold" data-wear="' + ch.id + '">장착</button></div>';
     });
     return html;
@@ -29191,7 +29229,7 @@ function pickGear(chId, slot, parent) {
   var W = slot === 'w' ? '무기' : '방어구';
   var o = sheet(W, function () {
     var s = G.save, ch = s.chars[chId], cur = DS.gear(ch[slot]), html = '', bb = bestInBag(ch, slot);
-    html += '<div class="gpk-cur">' + (cur ? (DS.iconHtml ? DS.iconHtml('gear', cur.id, { size: 40 }) : '') + '<div class="tx">' + gearLine(cur, ch) + '</div><div class="gpk-b">' + (DS.enhRate(cur) ? enhBtn(cur, 'data-enh-' + slot + '="' + ch.id + '"') : '<span class="why">최고 단계</span>') + '<button class="btn small" data-off="1">해제</button></div>'
+    html += '<div class="gpk-cur">' + (cur ? (DS.iconHtml ? DS.iconHtml('gear', cur.id, { size: 40 }) : '') + '<div class="tx"><small class="gpk-now">지금 입은 것, 이 장비가 주는 수치</small>' + gearLine(cur, ch) + '</div><div class="gpk-b">' + (DS.enhRate(cur) ? enhBtn(cur, 'data-enh-' + slot + '="' + ch.id + '"') : '<span class="why">최고 단계</span>') + '<button class="btn small" data-off="1">해제</button></div>'
       : '<span class="gph" aria-hidden="true">' + W + '</span><div class="tx"><b>' + (slot === 'a' ? '맨몸' : '맨손') + '</b><small>' + esc(DS.flagName(ch.cls)) + '</small></div>') + '</div>';
     html += '<button class="btn wide' + (bb ? ' gold' : '') + '" data-gbest="1"' + (bb ? '' : ' disabled') + '>' + (bb ? '가장 좋은 것 <small>' + esc(DS.gear(bb).name) + '</small>' : '지금 것이 가장 좋다') + '</button>';
     var list = Object.keys(s.gear).filter(function (id) { var g = DS.gear(id); return g && g.slot === slot && s.gear[id] > 0; }).sort(function (a, b) { return DS.gearScore(DS.gear(b), ch) - DS.gearScore(DS.gear(a), ch); });      // 2.1.0: 누구나 입는다 (맞지 않는 병과는 수치가 깎인다 — 2.6.0 −50%, 점수에 들어 있다)
@@ -29200,9 +29238,9 @@ function pickGear(chId, slot, parent) {
     list.forEach(function (id) {
       var g = DS.gear(id), ok = DS.canEquip(ch, id), gr = Math.max(1, Math.min(5, +g.grade || 1));
       html += '<button class="gpk-r' + (ok ? '' : ' dim') + (id === bb ? ' best' : '') + '"' + (ok ? ' data-on="' + esc(id) + '"' : ' disabled') + ' style="--gc:' + gcolOf(gr) + '">' + (DS.iconHtml ? DS.iconHtml('gear', id) : '') +
-        '<span class="tx">' + gearRowName(g) + '<small class="gpk-m"><i class="lcnt">×' + s.gear[id] + '</i>' + offTag(ch, g) + (id === bb ? '<i class="gbest">가장 좋음</i>' : '') + '</small>' + (ok ? '<span class="df">' + diffHtml(gearDiff(ch, id), 4) + '</span>' : '<small class="why">입을 수 없다</small>') + '</span></button>';
+        '<span class="tx">' + gearRowName(g) + '<small class="gpk-m"><i class="lcnt">×' + s.gear[id] + '</i>' + offTag(ch, g) + (id === bb ? '<i class="gbest">가장 좋음</i>' : '') + '</small>' + (ok ? '<span class="df">' + (DS.gearDiffHtml ? DS.gearDiffHtml(ch, g) : diffHtml(gearDiff(ch, id), 4)) + '</span>' : '<small class="why">입을 수 없다</small>') + '</span></button>';
     });
-    html += '<p class="hint sm">줄을 누르면 바로 입는다. 벗은 것은 가방으로 간다.</p>';
+    html += '<p class="hint sm">줄의 수는 입었을 때 바뀌는 능력치다 (지금→입은 뒤). 줄을 누르면 바로 입는다. 벗은 것은 가방으로 간다.</p>';
     return html;
   }, 'sub');
   o.addEventListener('click', function (e) {
@@ -29812,9 +29850,9 @@ function partyHp() {
   return n ? sum / n : 1;
 }
 // ───────── 2.2.8 출전 셋 · 2.6.0 고르기 창 없이 ─────────
-// 2.6.0: 「바꾸기 → 고르기 창 → 확인」을 없앴다. 모두가 한 줄에 보이고, 누르면 그 자리에서 출전 ↔ 쉼 (규칙은 DS.sortieToggle 그대로 — 출전을 누르면 둘 가운데 약한 이가 쉬고, 쉼을 누르면 쉬던 이 가운데 가장 센 이가 나온다).
+// 2.6.0: 「바꾸기 → 고르기 창 → 확인」을 없앴다. 모두가 한 줄에 보이고, 누르면 그 자리에서 출전 ↔ 쉼 (2.6.3: 저절로 바꾸지 않는다 — 나간 가주를 누르면 쉬고 그 자리는 빈다, 쉬는 가주는 빈 자리가 있을 때 나간다. DS.sortieToggle).
 //   where 'gate' (입구 창 · 갱도 창): 맹주 + 모든 가주의 얼굴 줄 (등급 테 · 이름 · 단 · 출전/쉼). where 'party' (부대 탭): 한 줄 요약만 — 고르는 단추는 아래 가주 카드에 있다 (같은 얼굴을 두 번 그리지 않는다).
-function sortieMsg(r) { return r.out ? r.in + ' 출전, ' + r.out + ' 쉼' : r.in + ' 출전'; }
+function sortieMsg(r) { var t = r.in && r.out ? r.in + ' 출전, ' + r.out + ' 쉼' : r.in ? r.in + ' 출전' : r.out + ' 쉼'; return r.N != null && !(r.in && r.out) ? t + ' (가주 ' + r.n + ' / ' + r.N + ')' : t; }
 function sortieTap(id) {      // 출전 ↔ 쉼 한 번. 돌려주는 것: 바뀌었으면 true
   if (busy()) { no('전투 중', '싸우는 중에는 바꿀 수 없다'); return false; }
   var s = G.save, rt = DS.sortieToggle(s, +id); if (!rt.ok) { A('cancel'); toast(rt.why); return false; }
@@ -29823,7 +29861,7 @@ function sortieTap(id) {      // 출전 ↔ 쉼 한 번. 돌려주는 것: 바�
 function sortieBar(s, where) {
   DS.partySync(s);
   var N = DS.PARTY_MAX || 3, n = s.party.filter(function (id) { return s.chars[id]; }).length, kin = DS.mercsOf ? DS.mercsOf(s, s.hero).length : 0, cands = DS.sortieRank(s), rest = cands.length - Math.max(0, n - 1);
-  var head = '<div class="soh"><b>출전 <i class="num">' + n + ' / ' + N + '</i></b><small>' + (where === 'party' ? (cands.length > N - 1 ? '카드의 「출전」 「쉼」을 눌러 바꾼다' : cands.length ? '가주가 모두 나간다' : '가주가 없다. 영웅관에서 모집한다') : (rest > 0 ? '얼굴을 눌러 바꾼다' : '')) + (kin ? (where === 'party' || rest > 0 ? ', ' : '') + '가문원 ' + kin + '명도 함께' : '') + '</small></div>';
+  var head = '<div class="soh"><b>출전 <i class="num">' + n + ' / ' + N + '</i></b><small>' + (n < N && rest > 0 ? '<em class="sogap">자리 ' + (N - n) + '개가 비었다</em>, ' + (where === 'party' ? '카드의 「출전」으로 채운다' : '쉬는 얼굴을 눌러 채운다') : where === 'party' ? (cands.length > N - 1 ? '「쉬기」로 자리를 비우고 「출전」으로 채운다' : cands.length ? '가주가 모두 나간다' : '가주가 없다. 영웅관에서 모집한다') : (rest > 0 ? '나간 얼굴을 누르면 쉰다. 빈 자리에 다른 얼굴을 넣는다' : '')) + (kin ? (where === 'party' || rest > 0 ? ', ' : '') + '가문원 ' + kin + '명도 함께' : '') + '</small></div>';
   if (where === 'party') return '<div class="sobar party">' + head + '</div>';
   var h = s.chars[s.hero], faces = '', one = function (ch, hero) {
     var b = hero ? ch.ps : DS.bearer(s, ch), on = hero || s.party.indexOf(ch.id) >= 0, nm = hero ? DS.charName(ch) : b ? (b.ttl || b.n || '') : '', L = b ? DS.pL(b) : ch.L;
@@ -29831,7 +29869,7 @@ function sortieBar(s, where) {
   };
   if (h && h.ps && !h.vac && !h.down) faces += one(h, true);
   cands.forEach(function (ch) { faces += one(ch, false); });
-  for (var i = n; i < N; i++) faces += '<span class="sof none"><span class="gfr g0 m"></span><b>빈 자리</b><small>영웅관에서</small></span>';
+  if (rest <= 0) for (var i = n; i < N; i++) faces += '<span class="sof none"><span class="gfr g0 m"></span><b>빈 자리</b><small>영웅관에서</small></span>';      // 2.6.3: 쉬는 가주가 있으면 빈 칸을 따로 그리지 않는다 (쉬는 얼굴을 누르면 찬다)
   return '<div class="sobar ' + where + '">' + head + '<div class="sol">' + faces + '</div></div>';
 }
 DS.sortiePick = function () { return DS.openMenu('party'); };      // 옛 이름: 고르기 창은 없어졌다 — 부대 탭의 가주 카드에서 고른다
@@ -30874,7 +30912,7 @@ function tabHelp() {
     ['사람과 가문', '가문', [
       '연맹에는 <b>맹주</b> 한 명과 가문들이 있다. 가문들이 모여 <b>' + esc(DS.allyFull ? DS.allyFull(G.save) : '연맹') + '</b>을 이룬다. 맹주는 자기가 선 가문의 가주다. 연맹의 이름은 대가 바뀌어도 그대로다.',
       '<b>싸움에는 셋이 나간다.</b> 맹주와 고른 가주 둘이다. 맹주의 어른 가문원은 늘 함께 싸운다. 나머지 가주는 쉰다. 쉬는 가주는 싸우지 않아 쓰러지지 않고, 나이는 그대로 먹는다.',
-      '출전은 부대 탭 가주 카드의 <b>출전, 쉼</b> 단추를 눌러 그 자리에서 바꾼다. 시나리오와 갱도 입구에서는 얼굴을 눌러 바꾼다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러져도 뒤를 이은 사람이 있으면 그 가문이 그대로 나간다. 뒤를 이은 사람이 쉬는 가주보다 5레벨 넘게 낮거나 가문이 비면, 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
+      '출전은 부대 탭 가주 카드의 <b>출전, 쉼</b> 단추를 눌러 그 자리에서 바꾼다. 시나리오와 갱도 입구에서는 얼굴을 눌러 바꾼다. 나간 가주를 누르면 쉬고 그 자리는 <b>빈 채로</b> 남는다. 쉬는 가주를 누르면 빈 자리에 들어간다. 자리가 찼으면 먼저 한 사람을 쉬게 한다. 셋을 다 채우지 않고 나가도 된다. 처음에는 가장 센 둘이 나간다. 나간 가주가 쓰러져도 뒤를 이은 사람이 있으면 그 가문이 그대로 나간다. 뒤를 이은 사람이 쉬는 가주보다 5레벨 넘게 낮거나 가문이 비면, 쉬는 가주 가운데 가장 센 이가 저절로 나선다.',
       '가문은 가주의 레벨로 싸우고, 가문 공훈과 가주의 등급만큼 강해진다.',
       '사람의 자리는 셋이다. <b>가주</b>는 가문을 이끌고 싸운다. <b>막사</b>는 모집한 영웅이 기다리는 곳 하나로, 가문에 매이지 않고 싸우지 않는다. <b>가문원</b>은 맹주 집 사람(아이, 배우자)으로, 어른이면 모두 맹주를 따라 싸운다.',
       '가주가 쓰러지거나 천수를 누리거나 맹주가 되어 떠나면 그 가문은 <b>레벨과 단을 잃는다</b>. 싸움 밖에서 막사의 <b>같은 병과</b> 가운데 등급, 레벨이 가장 나은 이가 저절로 가주가 된다. 새 가주는 제 레벨 그대로 싸운다. 같은 병과가 없으면 그 가문은 <b>빈 가문</b>으로 남아 싸우지 않는다. 공훈은 가문에 남는다. <b>떠난 가주나 맹주가 입던 장비는 모두 가방으로 돌아온다.</b> 뒤를 이은 사람은 장비 없이 시작하니 가문 창에서 다시 입힌다.',
@@ -30921,7 +30959,8 @@ function tabHelp() {
     ['장비', 0, [
       '장비는 적에게서만 얻는다. 마을에는 장비 가게가 없다. 누구나 어떤 장비든 장착한다. <b>병과에 맞지 않는 장비는 그 장비의 수치와 옵션 수치가 ' + Math.round((1 - DS.GEAR_OFF) * 100) + '% 깎인다.</b> 붉은 「' + esc(DS.gearOffTxt ? DS.gearOffTxt() : '병과 안 맞음') + '」 표시가 붙고, 비교 화살표와 자동 장착은 깎인 값으로 잰다. 기술, 특성, 사거리 같은 효과와 깎는 값은 그대로다.',
       '가문 창과 인물 창 맨 위의 <b>장비 칸</b>을 누르면 가방의 장비가 뜬다. 줄을 한 번 누르면 입고, 「가장 좋은 것」은 가장 나은 것을 입힌다. 강화도 거기서 한다. 위쪽 초상을 한 번 더 누르면 가문 창이 열린다.',
-      '장비에는 단이 없다. 위력, 방어 같은 수치는 <b>입은 사람의 레벨</b>을 따라 오르니, 마음에 드는 장비는 끝까지 쓸 수 있다.',
+      '장비에는 단이 없다. 공격, 방어 같은 수치는 <b>입은 사람의 레벨</b>을 따라 오르니, 마음에 드는 장비는 끝까지 쓸 수 있다.',
+      '무기에 적힌 수치는 입은 사람의 <b>공격</b>에 그대로 더해진다. 마법 병과는 <b>마공</b>에, 무투가는 둘 다에 더해진다. 장비 칸을 누르면 뜨는 창에서 줄마다 <b>지금→입은 뒤</b> 수치와 전투력을 미리 볼 수 있다.',
       '등급은 셋이다. <b class="lg lg1">보통</b>, <b class="lg lg4">유니크</b>(옵션 하나나 둘), <b class="lg lg5">전설</b>(이름과 대표 효과가 정해진 물건). 이름과 그림 테두리의 색으로 등급을 표시한다. 사람의 등급도 색 이름표로 보인다. 전설은 지역마다 다르니 여러 곳을 사냥해 본다.',
       '<b>강화</b>는 대장간(「마을 일」에서는 어디서나)에서 골드를 내고 한 단계씩, +' + DS.ENH.max + '까지. +1 성공 ' + DS.ENH.rate[1] + '%, 단계마다 낮아져 +5부터는 ' + DS.ENH.rate[DS.ENH.max] + '%. 실패하면 부서진다. 값은 단계가 오를수록 비싸다. 터져도 대장장이는 「이븐하게 안 익었네요」 할 뿐이다.',
       '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다.',
