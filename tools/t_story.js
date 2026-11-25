@@ -38,8 +38,9 @@ module.exports = async function (page, shot, L) {
     return seen;
   };
   let pro = await readStory('prologue', [0, 1, 6]);
-  A(pro.length >= 6 && /두 번 죽는다/.test(pro[0].t) && pro.some(l => l.w === '선대 단톡방' && l.anc) && pro.some(l => l.w === '새벽') && /마을 위쪽 출구/.test(pro[pro.length - 1].t),
-    'prologue plays in the real UI: ' + pro.length + ' lines, 선대 단톡방 heckles, the hero answers, last line is the controls memo');
+  pro = pro.filter((l, i) => !i || l.t !== pro[i - 1].t);      // 2.6.0 도입의 무대: 첫 탭은 떠오르는 줄을 마저 띄우고 둘째 탭이 넘긴다 — 같은 줄이 두 번 읽힌다
+  A(pro.length >= 6 && /두 번 죽는다/.test(pro[0].t) && pro.some(l => l.w === '선대 단톡방' && l.anc) && pro.some(l => l.w === '새벽') && !pro.some(l => l.w === '전장 메모' || /마을 위쪽 출구/.test(l.t)) && (await ev(() => DS.storyResolve(DS.LORE.prologue).some(l => l.w === '전장 메모'))),
+    'prologue plays in the real UI: ' + pro.length + ' lines, 선대 단톡방 heckles, the hero answers; the controls memo is not a story line any more (2.6.0: coach mark)');
   await ev(() => { DS.G.quiet = true; DS.ui.closeAll(); });
   await sleep(300);
 

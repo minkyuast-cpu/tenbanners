@@ -16,6 +16,8 @@
 //   2.4.0: 가문의 목소리는 물려받는다 — 화자가 열 가문 배역(c)인데 그 가문이 아직 닫혀 있거나, 맹주 자신의 가문이거나, 가주 자리가 비었으면
 //          그 줄은 「선대 ○○」(삼백 년 전 그 집 가주)의 훈수로 뜬다. 글은 줄의 a (없으면 t 그대로, 빈 글이면 뺀다). 가문이 열려 있으면 지금 가주가 t 를 말한다. (DS.castAnc)
 //          글 속의 {prev} 는 바로 앞 맹주의 이름 — 대를 이은 적이 없으면 그 줄은 뺀다.
+//   2.6.0: 줄의 roll — 이름 낭독 (game.js story(): 이름이 한 사람씩 가운데에 뜨고 상자에 모인다). roll: 1 = 글이 「. 」로 이은 이름들(「…」 안이면 그 안), roll: [이름…] = 글 안의 그 이름들.
+//          줄의 chat: 1 — 엔딩의 무대에서 글 끝의 「…」를 답장 말풍선으로 (stage.js). 도입(prologue)의 전장 메모 줄은 이야기에 뜨지 않고 코치 표시로 간다.
 // 늦게 오는 패치가 앞의 것을 덮는다 (build.js 순서: story2 → story).
 var DS = globalThis.DS = globalThis.DS || {};
 // r51 (2.1.0) 대체 함수: 연맹의 이름(「펜드래곤 연맹」의 「펜드래곤」). 게임 쪽에 DS.allyName 이 아직 없을 때만 쓴다.
@@ -124,7 +126,7 @@ Object.keys(DS.BOSSES || {}).forEach(function (k) { if (DS.BOSSES[k].name) REV[D
 var LINE = Object.getPrototypeOf(DS.say('memo', ''));
 function isKey(k) { if (typeof k !== 'string' || !k) return false; var l = DS.say(k, ''); return l.w !== k || !!l.c; }
 // r8: 화자의 사망·후계에 따라 갈리는 글 — heir(자리를 이은 이가 있을 때) · gone(방금 쓰러져 빈자리일 때) · of(그 줄이 기대는 사람 키). 읽는 쪽은 game.js 의 story()
-function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er', 'a', 'y', 'dz', 'ch'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
+function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er', 'a', 'y', 'dz', 'ch', 'roll', 'chat'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
 function toLine(x) {
   if (x == null || typeof x !== 'object' || typeof x.t !== 'string' || 'lines' in x) return x;
   if (x.s && isKey(x.s)) return keep(DS.say(x.s, x.t), x);

@@ -1037,6 +1037,7 @@ V.drawDecor = function (g, d) {
     if (f < 1) { x = from + (at - from) * f; hop = Math.abs(Math.sin(f * Math.PI * 2)) * 1.5; flip = at < from; } else x = at;
     if (d.poi) d.poi.dx = x - d.x;
   }
+  if (d.sprite === 'pole' && this.drawPole) return this.drawPole(g, d);      // 2.6.0: 마을 한가운데의 깃대 (stage.js)
   var cv = DS.spriteCanvas(d.sprite, null, { flip: flip, hd: 1 });
   g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x * 16 + 4.5, d.y * 16 + 12.5, 7, 0.5); g.fillRect(x * 16 + 3, d.y * 16 + 13, 10, 2); g.fillRect(x * 16 + 4.5, d.y * 16 + 15, 7, 0.5);
   g.drawImage(cv, x * 16, d.y * 16 - 2 - hop + (hop ? 0 : (Math.floor(t * 1.4 + d.x * 0.37) & 1) ? -1 : 0), lwOf(cv), lwOf(cv));
@@ -2469,4 +2470,5 @@ DS.sceneArt = function (kind, fo) {
     return '<img class="gfx-art gfx-' + kind + '" src="' + artCache[key] + '" alt="">';
   } catch (x) { return ''; }
 };
+DS.sceneKit = { sky: sky, ridge: ridge, disc: disc, castle: castle, fadeEdges: fadeEdges, titleBg: titleBg, flagOn: flagOn, sr: sr, TEN: TEN, TEN_T: TEN_T, K: K };      // 2.6.0: 무대 그림(stage.js — 도입의 밤 언덕 · 엔딩의 해돋이)이 같은 붓을 쓴다
 })();
