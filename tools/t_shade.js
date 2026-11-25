@@ -72,7 +72,7 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var sim = DS.G.sim, n0 = sim.units.filter(function (u) { return u.role === 'shade'; }).length, r = sim.shadeCall(1); return { again: !!r, n: sim.units.filter(function (u) { return u.role === 'shade'; }).length === n0, why: DS.shadeUI.why() }; });
   A(!c.again && c.n && (c.why === '이름은 한 싸움에 한 번 부른다' || c.why === '그림자가 다녀갔다'), 'once per battle: second call refused 「' + c.why + '」');
   // 걷힌다: 남은 시간을 줄여 끝까지
-  await ev(() => { var sim = DS.G.sim, u = sim.byId[sim.shd.id]; if (u && !u.dead) u.life = 0.4; });
+  await ev(() => { var sim = DS.G.sim, u = sim.byId[sim.shd.id]; if (u && !u.dead) { u.hp = u.mhp; u.life = 0.4; } });      // 걷히기 전에 맞아 죽으면 「시간」이 아니라 「죽음」이 된다 — 체력을 채워 두고 잰다
   for (let i = 0; i < 20; i++) { const g = await ev(() => { var u = DS.G.sim.units.filter(function (x) { return x.role === 'shade'; })[0]; return !u || u.dead; }); if (g) break; await sleep(150); }
   await sleep(250);
   c = await ev(() => { var sim = DS.G.sim, u = sim.units.filter(function (x) { return x.role === 'shade'; })[0], V = DS.G.view; return { gone: !u || u.dead, why: u && u.shadeGone, fled: u && u.fled, float: (V.floats || []).map(function (f) { return f.text; }).filter(function (t) { return /불러라|잊지/.test(t); }), why2: DS.shadeUI.why(), btnOff: !!document.querySelector('#acts .act.item.shade.off') }; });
