@@ -353,10 +353,11 @@ DS.gearRepair = function (id) {
 DS.gearGrade = function (id) { var g = DS.gear(id); return g ? g.grade : 0; };
 
 // 효과 환산 점수: "기본형(A) ≈ 그 레벨 눈금 × 10" 을 지키면서 옵션·강화·특수 효과를 실제 효과만큼 얹는다 (autoEquip·비교용)
-//   ch 를 주면 그 사람의 레벨·병과로 잰다 (맞지 않는 계열의 −10% 가 든다). 없으면 지금 부대 레벨·깎임 없음
+//   ch 를 주면 그 사람의 레벨·병과로 잰다 (맞지 않는 계열의 깎임 — 2.6.0 −50%, 옵션 수치도 — 이 든다). 없으면 지금 부대 레벨·깎임 없음
 DS.gearScore = function (g, ch) {
   if (!g) return -1;
   var x = DS.gearAt(g, ch ? ch.L : DS.gearRefL(), ch && ch.cls, ch && ch.gt), s, f = g.fx, e;
+  if (f && x.off) f = fxOff(f, DS.GEAR_OFF);      // 2.6.0: 맞지 않는 병과면 옵션 수치도 절반으로 잰다
   if (g.slot === 'w') s = (x.pow / 3.2) * 10 * (1 + (x.amp || 0) * 3) * (1 + (x.crit || 0) * 1.5) * (1 + (x.spd || 0) * 3) + (x.mp || 0) * 12 + (x.def || 0) * 0.5;
   else s = ((x.def || 0) + (x.res || 0) * 0.6 + (x.hp || 0) * 0.2) / 3.6 * 10 * (1 + (x.ad || 0) * 3) * (1 + (x.spd || 0) * 3) + (x.mp || 0) * 12;      // ad: 방어구 강화 (몸 전체의 방어·마방에 곱해지므로 무기 amp 처럼 무겁게)
   if (f) {
@@ -369,12 +370,35 @@ DS.gearScore = function (g, ch) {
 };
 
 // ───────── 능력치·전투 사양 감싸기 ─────────
+// 2.6.0 병과에 맞지 않는 장비의 특수 효과: 수치는 m 배(DS.GEAR_OFF — 절반), 켜고 끄는 것(기술 · 특성 · 속성 · 사거리 +1 · 걸음 · 면역 · 짝 장비)은 그대로.
+//   깎는 값(대가: 저주 · 최대 HP −10%)은 줄이지 않는다. 원본(g.fx)은 건드리지 않고 사본을 돌려준다
+function fxOff(x, m) {
+  var o = {}, k, j, v, e;
+  for (k in x) o[k] = x[k];
+  if (x.drain > 0) o.drain = x.drain * m;
+  if (x.hpm > 1) o.hpm = 1 + (x.hpm - 1) * m;
+  if (x.mvm < 1) o.mvm = 1 - (1 - x.mvm) * m;
+  if (x.lead) { o.lead = {}; for (k in x.lead) o.lead[k] = x.lead[k] > 1 ? 1 + (x.lead[k] - 1) * m : x.lead[k]; }
+  if (x.eng) {
+    e = o.eng = {};
+    for (k in x.eng) {
+      v = x.eng[k];
+      if (k === 'curse' || k === 'immune' || k === 'seal' || k === 'pair' || typeof v === 'string' || typeof v === 'boolean') e[k] = v;
+      else if (k === 'atkTick') e[k] = 1 - (1 - v) * m;
+      else if (v && typeof v === 'object') { e[k] = {}; for (j in v) e[k][j] = typeof v[j] === 'number' ? v[j] * m : v[j]; }
+      else e[k] = typeof v === 'number' ? v * m : v;
+    }
+  }
+  return o;
+}
+DS.gearFxOff = fxOff;
 // 지휘관이 입은 두 장비의 특수 효과를 하나로 합친다 (없으면 null)
 function gearFx(ch) {
   if (!ch) return null;
   var gs = [DS.gear(ch.w), DS.gear(ch.a)], f = null, i, k, x, e;
   for (i = 0; i < 2; i++) {
     x = gs[i] && gs[i].fx; if (!x) continue;
+    if (ch.cls && !DS.gearFits(ch.cls, gs[i])) x = fxOff(x, DS.GEAR_OFF);      // 2.6.0: 맞지 않는 병과 — 옵션 수치도 절반
     f = f || { drain: 0, rng: 0, hpm: 1, mvm: 1 };
     f.drain += x.drain || 0; f.rng += x.rng || 0; f.hpm *= x.hpm || 1; f.mvm *= x.mvm || 1;
     if (x.trait && f.trait !== 'survivor') f.trait = x.trait;
@@ -973,18 +997,22 @@ function pips(g) {      // 옛 등급 눈금 — 2.1.0 부터 장비 화면에�
 DS.gearPips = pips;
 // 가방·가게·대장간이 함께 쓰는 줄 머리: 등급색 이름 · 계열 (2.1.0: 단 없음 · 눈금 없음)
 DS.gearTitle = function (g) { return '<b>' + gname(g) + ' <i class="own">' + gtag(g) + g.kind + '</i></b>'; };
-// 입은 사람 기준 글: 「맞지 않는 병과: 능력치 −10%」
-function offTxt() { return '맞지 않는 병과: 능력치 −' + pct(1 - DS.GEAR_OFF) + '%'; }
+// 입은 사람 기준 글: 「병과 안 맞음 −50%」 (2.6.0 — 붉은 꼬리표. 옛 글 「맞지 않는 병과: 능력치 −10%」)
+function offTxt() { return '병과 안 맞음 −' + pct(1 - DS.GEAR_OFF) + '%'; }
 DS.gearOffTxt = offTxt;
+DS.gearOffNote = function () { return '병과가 맞지 않아 이 장비의 수치와 옵션 수치가 ' + pct(DS.GEAR_OFF) + '%만 든다. 기술, 특성, 사거리 같은 효과와 깎는 값은 그대로다.'; };      // 규칙을 그대로 적은 한 줄 (장비 줄 · 도움말)
+// 줄 머리 · 꼬리표 줄에 붙는 작은 붉은 꼬리표 (ui.js 의 offTag 가 쓴다). 맞으면 ''
+DS.gearOffTag = function (ch, g) { return ch && g && !DS.gearFits(ch.cls, g) ? ' <i class="goff g50">' + esc(offTxt()) + '</i>' : ''; };
 function gtag(g) { var t = DS.gearTag(g); return t ? '<span class="gtg">' + esc(t) + '</span>' : ''; }      // r45: 등급 이름은 쉼표 글이 아니라 작은 꼬리표 (색은 이름이 보인다)
-function offChip() { return '<span class="sch tag goff">' + esc(offTxt()) + '</span>'; }      // r45 칩 줄에 붙는 붉은 칩 하나
+function offChip() { return '<span class="sch tag goff g50">' + esc(offTxt()) + '</span>'; }      // r45 칩 줄에 붙는 붉은 칩 하나
 DS.gearOffChip = offChip;
 // 등급색 이름 + 능력치 + 옵션 설명 + 사연. ui.js 의 gearLine 자리에 그대로 들어간다 (.tx 안의 b·small 들)
 // full: 내력의 거쳐 간 손까지 (지휘관 창의 장비 줄) · ch: 그 사람 기준 수치 (없으면 지금 부대 레벨)
 DS.gearHtml = function (g, full, ch) {
   if (!g) return '';
   var st = ch ? DS.gearStatTxt(g, DS.gearAt(g, ch.L, ch.cls, ch.gt)) : g.stat;      // 2.1.0: 그 사람 기준 수치 · r45: 칩 줄로, 맞지 않는 병과는 붉은 칩 하나 더
-  var h = '<b>' + gname(g) + ' <i class="own">' + gtag(g) + g.kind + '</i></b>' + DS.statChips(st, '', ch && !DS.gearFits(ch.cls, g) ? offChip() : '') + (g.grade >= 4 ? ghLine(g.id, full) : '') + (DS.hlHtml ? DS.hlHtml(curSave(), g.id, ch) : '');
+  var off = !!ch && !DS.gearFits(ch.cls, g);
+  var h = '<b>' + gname(g) + ' <i class="own">' + gtag(g) + g.kind + '</i></b>' + DS.statChips(st, '', off ? offChip() : '') + (off ? '<small class="goffn">' + esc(DS.gearOffNote()) + '</small>' : '') + (g.grade >= 4 ? ghLine(g.id, full) : '') + (DS.hlHtml ? DS.hlHtml(curSave(), g.id, ch) : '');      // 2.6.0: 깎인 수치(칩) + 규칙 한 줄
   (g.affix || []).forEach(function (a) { h += '<small class="lax"><i>' + (a.pre ? esc(a.name) : '〈' + esc(a.name) + '〉') + '</i> ' + esc(a.desc) + '</small>'; });
   (g.special || []).forEach(function (t) { h += '<small class="lax"><i>고유</i> ' + esc(t) + '</small>'; });
   if (g.lore) h += '<small class="llore">' + esc(g.lore) + '</small>';
@@ -1108,7 +1136,7 @@ DS.lootUI = {
     var U = DS.ui, m = save.mercs.filter(function (x) { return x.id === mercId; })[0]; if (!m) return null;
     function body() {
       var cur = m.it && own(MGEAR, m.it) ? MGEAR[m.it] : null, h = '<div class="result ldet"><h2>' + esc(DS.mercCall(m)) + '의 물건</h2>' +
-        '<p class="rn">' + (cur ? '지금 ' + esc(cur.name) + '. ' + esc(cur.desc.replace('사람에게 장착한다. ', '')) : '장착한 물건이 없다.') + '</p><p class="lock">쓰러지면 장착한 물건도 함께 잃는다.</p><div class="lcmp">', any = false;
+        '<p class="rn">' + (cur ? '지금 ' + esc(cur.name) + '. ' + esc(cur.desc.replace('사람에게 장착한다. ', '')) : '장착한 물건이 없다.') + '</p><p class="lock">' + (m.h ? '가주가 떠나면 장착한 물건은 가방으로 돌아온다.' : '쓰러지면 장착한 물건도 함께 잃는다.') + '</p><div class="lcmp">', any = false;
       Object.keys(MGEAR).forEach(function (k) {
         var n = save.items[k] || 0; if (!n) return; any = true;
         h += '<div class="row">' + (DS.iconHtml ? DS.iconHtml('item', k) : '') + '<div class="tx"><b>' + esc(MGEAR[k].name) + ' <i class="own">× ' + n + '</i></b><small>' + esc(MGEAR[k].desc.replace('사람에게 장착한다. ', '')) + '</small></div><button class="btn small gold" data-mg="' + k + '">' + (cur ? '교체' : '장착') + '</button></div>';
@@ -1141,6 +1169,7 @@ function detail(id, redraw) {
     var list = DS.charList(s).filter(function (c) { return DS.canEquip(c, id); });
     list.sort(function (a, b) { var ia = s.party.indexOf(a.id), ib = s.party.indexOf(b.id); return (ia < 0 ? 9 : ia) - (ib < 0 ? 9 : ib) || a.id - b.id; });
     h += '<div class="lcmp">';
+    if (list.some(function (ch) { return !DS.gearFits(ch.cls, g); })) h += '<p class="goffn">' + esc(offTxt()) + ': ' + esc(DS.gearOffNote()) + ' 아래 화살표와 수치는 깎인 뒤의 값이다.</p>';      // 2.6.0
     list.forEach(function (ch) {
       var cur = DS.gear(ch[g.slot]), gain = DS.gearScore(g, ch) - DS.gearScore(cur, ch), dtx = diffHtml(ch, g), off = !DS.gearFits(ch.cls, g);
       if (dtx === '능력치 변화 없음') { gain = 0; if (cur && cur.id !== g.id && ((g.affix && g.affix.length) || (cur.affix && cur.affix.length))) dtx = '능력치 같음, 옵션만 다름'; }      // r4 forge: 숫자가 그대로인데 ▲ 가 뜨던 것 (audit F7)

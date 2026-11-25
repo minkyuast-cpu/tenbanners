@@ -37,11 +37,15 @@ module.exports = async (page, shot, L) => {
     var gold0 = 0, tk0 = 0; DS.SCENARIOS.slice(0, 12).forEach(function (sc) { tk0 += DS.scnTickets(sc); gold0 += Math.round(DS.scnGold(sc) * DS.BAL.gold); });      // 처음 깬 몫 (1~12)
     s.mercs.slice().forEach(function (m) { if ((m.o === s.hero && !m.h) || (DS.isSb(m) && DS.sbFits(h, m))) DS.loseMerc(s, m.id); });
     DS.linTidy(s); DS.mercTidy(s); DS.pSync(s);
-    var snap = function () { return { houses: DS.charList(s).map(function (c) { return c.id + ':' + c.cls + ':' + (c.id === s.hero ? 'hero' : c.L) + ':' + c.w + ':' + c.a; }).join('|'), bears: DS.charList(s).filter(function (c) { return c.id !== s.hero; }).map(function (c) { var b = DS.bearer(s, c); return b ? b.id + ':' + DS.pL(b) + ':' + b.g : '-'; }).join('|'), bag: JSON.stringify(s.gear), items: JSON.stringify(s.items), crest: s.crest, cof: JSON.stringify(s.coffins), pit: s.pitBest + '/' + s.pitCur, lin: Object.keys(s.lin.P).length, seen: JSON.stringify(s.seen), visited: JSON.stringify(s.visited) }; };
+    // 2.6.0: 맹주 줄의 장비(hw · ha)는 따로 본다 — 떠난 맹주의 장비는 가방으로 간다
+    var snap = function () { var hh = s.chars[s.hero]; return { hw: hh.w, ha: hh.a, houses: DS.charList(s).map(function (c) { return c.id + ':' + c.cls + ':' + (c.id === s.hero ? 'hero' : c.L + ':' + c.w + ':' + c.a); }).join('|'), bears: DS.charList(s).filter(function (c) { return c.id !== s.hero; }).map(function (c) { var b = DS.bearer(s, c); return b ? b.id + ':' + DS.pL(b) + ':' + b.g : '-'; }).join('|'), bag: JSON.stringify(s.gear), items: JSON.stringify(s.items), crest: s.crest, cof: JSON.stringify(s.coffins), pit: s.pitBest + '/' + s.pitCur, lin: Object.keys(s.lin.P).length, seen: JSON.stringify(s.seen), visited: JSON.stringify(s.visited) }; };
     var a = snap(), ended = (h.down = true, DS.linSettle(s, '시험'), DS.linEnded(s, s.hero)), evs = DS.linAutoAll(s); DS.mercTidy(s); DS.pSync(s);
     var b = snap(), lp = evs.filter(function (e) { return e.t === 'lapse'; })[0], h2 = s.chars[s.hero];
     var o = { ended: ended, lapse: !!lp, lost: lp ? lp.scn : -1, cleared: Object.keys(s.cleared).length, next: DS.nextScn(s).id, runs: JSON.stringify(s.runs), zone: !!DS.ZONES[s.zone] && s.zone, town: s.town, hero: !!(h2 && !h2.vac && h2.ps), same: {} };
-    ['houses', 'bears', 'bag', 'items', 'crest', 'cof', 'pit', 'seen', 'visited'].forEach(function (k) { o.same[k] = a[k] === b[k] ? 1 : a[k] + ' → ' + b[k]; });
+    ['houses', 'bears', 'items', 'crest', 'cof', 'pit', 'seen', 'visited'].forEach(function (k) { o.same[k] = a[k] === b[k] ? 1 : a[k] + ' → ' + b[k]; });
+    var eb = JSON.parse(a.bag); [a.hw, a.ha].forEach(function (g) { if (g) eb[g] = (eb[g] || 0) + 1; });      // 2.6.0: 가방 = 그대로 + 떠난 맹주가 입던 두 점
+    o.same.bag = JSON.stringify(eb) === b.bag ? 1 : a.bag + ' + ' + a.hw + ', ' + a.ha + ' → ' + b.bag;
+    o.bare = !!a.hw && !!a.ha && b.hw == null && b.ha == null;
     o.linGrew = b.lin >= a.lin;
     o.lock2 = !!(DS.scn(2) && s.cleared[1] === undefined);
     // 1~12 다시: 처음 깬 몫이 똑같이
@@ -57,7 +61,7 @@ module.exports = async (page, shot, L) => {
   A(c.cleared === 0 && c.next === 1, 'cleared is empty, next scenario is 1');
   A(c.runs === JSON.stringify({ n: 1, best: 12, hist: [JSON.parse(c.runs).hist[0]] }) && JSON.parse(c.runs).hist[0].c === 12, 'lifetime record ' + c.runs);
   A(c.zone && c.town && c.hero, 'location still valid (' + c.zone + ', town ' + c.town + ') and the seat is filled');
-  A(Object.keys(c.same).every(k => c.same[k] === 1) && c.linGrew, 'houses (the new 맹주 brings own level), bearers (level, grade), flag gear, bag, items, crest, coffins, pit record, seen, visited kept: ' + JSON.stringify(c.same));
+  A(Object.keys(c.same).every(k => c.same[k] === 1) && c.linGrew && c.bare, 'houses (the new 맹주 brings own level), bearers (level, grade), the other houses\' gear, items, crest, coffins, pit record, seen, visited kept; the fallen 맹주\'s two pieces went to the bag and the new 맹주 starts bare (2.6.0): ' + JSON.stringify(c.same));
   A(c.regain.firsts === 12 && c.regain.gold === c.regain.gold0 && c.regain.tk === c.regain.tk0 && c.regain.tk0 >= 3, 'replaying 1~12 gives first-clear rewards in full again: gold ' + c.regain.gold + ' = ' + c.regain.gold0 + ', tickets ' + c.regain.tk + ' = ' + c.regain.tk0 + (c.regain.gear ? ', gear ' + c.regain.gear : ''));
   A(!c.replay2.first && c.replay2.tk === 0, 'a third clear of 2 is a normal replay again (35% gold ' + c.replay2.gold + ', no ticket)');
   A(c.fix.cleared === 12 && c.fix.runs === JSON.stringify(JSON.parse(c.runs)), 'save round-trip keeps cleared and runs');
