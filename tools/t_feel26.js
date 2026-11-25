@@ -123,10 +123,10 @@ module.exports = async function (page, shot, L, env) {
   A(c === '새벽 3단 승급. 공격 +3%', 'level-up toast: ' + c);
   // 줄 선 승급 창의 주인이 바뀌면 버린다
   c = await ev(() => { var G = DS.G, s = G.save, h = s.chars[s.hero]; G.promos.length = 0; DS.ui.closeAll();
-    G.promos.push({ id: h.id, from: 1, to: 2, cls: h.cls, pid: (h.pid || 0) + 777 }); G.promos.push({ id: 99999, from: 1, to: 2, cls: 'inf' }); G.promos.push({ id: h.id, from: 4, to: 5, cls: h.cls, pid: h.pid || 0 });
+    G.promos.push({ id: h.id, from: 1, to: 2, cls: h.cls, pid: (h.pid || 0) + 777 }); G.promos.push({ id: 99999, from: 1, to: 2, cls: 'inf' }); G.promos.push({ id: h.id, from: 1, to: 2, cls: h.cls === 'inf' ? 'mag' : 'inf', pid: h.pid || 0 });
     DS.flushPromos(); var a = { left: G.promos.length, ov: !!document.querySelector('.ov .result.promo') };
     G.promos.push({ id: h.id, from: 1, to: 2, cls: h.cls, pid: h.pid || 0 }); DS.flushPromos(); a.ok = !!document.querySelector('.ov .result.promo'); return a; });
-  A(c.left === 0 && !c.ov && c.ok, 'queued promotions whose person changed (other person · gone · not that tier) are dropped; a valid one still shows');
+  A(c.left === 0 && !c.ov && c.ok, 'queued promotions whose person changed (other person · gone · other class) are dropped; a valid one still shows');
   await L.closeAll(page);
 
   // ── ⑥ 가게 · 잠긴 줄 · 값 풀이 ──

@@ -1578,12 +1578,12 @@ function flushPromos() {
   }
   var p = G.promos.shift(); DS.showPromo(p, flushPromos);
 }
-// 2.6: 줄 서 있던 승급 창의 주인이 바뀌었으면(쓰러졌다 · 자리가 비었다 · 다른 사람이 이었다 · 그 단이 아니다) 그 창은 버린다 — 엉뚱한 사람의 승급으로 뜨지 않게
+// 2.6: 줄 서 있던 승급 창의 주인이 바뀌었으면(쓰러졌다 · 자리가 비었다 · 다른 사람이 이었다 · 병과가 다르다) 그 창은 버린다 — 엉뚱한 사람의 승급으로 뜨지 않게
 function promoOk(q) {
   var c = q && G.save && G.save.chars[q.id]; if (!c || c.down || c.vac) return false;
   if (q.pid != null && (c.pid || 0) !== q.pid) return false;
   if (q.cls && c.cls !== q.cls) return false;
-  return q.fused || DS.tierOfL(c.L) >= q.to;
+  return true;
 }
 DS.flushPromos = flushPromos;
 function onEvents(evs) {
