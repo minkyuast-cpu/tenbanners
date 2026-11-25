@@ -5191,7 +5191,7 @@ html body #app#app .ov.poleov .sheet { height: 100%; max-height: 100%; border-ra
   html body #app .ov.story.stg-pro[data-beat="a"] .story-box .line { font-size: 21px; }
   html body #app .ov.story.stg-end .story-box.pic .sp { width: 44px; height: 44px; margin-bottom: 2px; }
   .stg-end .roll-c { top: 6%; } .roll-c b { font-size: 28px; }
-  .ov.poleov.carded .pl-b { padding-bottom: 0; } .pl-card { left: auto; width: min(54%, 420px); top: 64px; bottom: 10px; overflow-y: auto; }
+  .ov.poleov.carded .pl-b { padding-bottom: 0; padding-right: min(56%, 436px); } .pl-card { left: auto; width: min(54%, 420px); top: 64px; bottom: 10px; overflow-y: auto; }
 }
 html.calm .story-box .sp.pop, html.calm .roll-c.on b, html.calm .roll-c.on i, html.calm .sbub, html.calm .sbub .unread, html.calm .cdl u, html.calm .emb, html.calm .pl-n.call, html.calm .pc-in h3.call, html.calm .names.rise i, html.calm .ov.story.stg .story-box { animation: none !important; }
 html.calm .ov.story.stg, html.calm .stgkeep, html.calm .stg-cv, html.calm .stg-cut { transition: none !important; }

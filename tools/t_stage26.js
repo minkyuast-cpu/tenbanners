@@ -33,6 +33,7 @@ module.exports = async function (page, shot, L, X) {
     l.down = await ev(() => { var cv = document.querySelector('.stg-pro .stg-cv'); return cv && cv._art ? cv._art.down() : -1; });
     l.cv = await ev(() => +getComputedStyle(document.querySelector('.stg-pro .stg-cv')).opacity);
     l.log = await ev(() => document.querySelectorAll('.ov.story .stg-log .sbub').length);
+    l.logHero = await ev(() => [].map.call(document.querySelectorAll('.ov.story .stg-log .sbub.k-hero .mh'), function (x) { return x.textContent; }).join('|'));
     pro.push(l);
     if (i === 0) await shot('pro_black_1');
     if (i === 1) await shot('pro_black_2');
@@ -46,13 +47,17 @@ module.exports = async function (page, shot, L, X) {
   A(pro.length === c.exp - c.memo && c.memo >= 1 && !pro.some(l => l.w === '전장 메모' || /마을 위쪽 출구/.test(l.t)), 'prologue: ' + pro.length + ' lines play, the ' + c.memo + ' controls memo line is not in the story');
   A(bA.length === 2 && /두 번 죽는다/.test(bA[0].t) && bA.every(l => l.k === 'nar' && l.cv < 0.05), 'beat 1: the first two lines on black, centred (art hidden)');
   A(bB.length >= 1 && bB.every(l => l.k === 'nar') && bB[bB.length - 1].down === 9 && bB.every((l, i) => !i || l.down >= bB[i - 1].down) && bB[0].down < 9, 'beat 2: night hill, banners lower step by step over ' + bB.length + ' lines (' + bB.map(l => l.down).join(' → ') + '), one stays');
-  A(bC.length >= 3 && bC.some(l => l.k === 'chat' && l.w === '선대 단톡방') && bC.some(l => l.k === 'hero' && l.w === '새벽') && bC.some(l => l.log >= 2), 'beat 3: 단톡방 and the 맹주 speak in chat bubbles, earlier bubbles stay above');
+  A(bC.length >= 3 && bC.some(l => l.k === 'chat' && l.w === '선대 단톡방') && bC.some(l => l.k === 'hero' && l.w === '새벽') && bC.some(l => l.log >= 2) && bC.some(l => /새벽/.test(l.logHero)) && bC.every(l => !/선대/.test(l.logHero)), 'beat 3: 단톡방 and the 맹주 speak in chat bubbles, earlier bubbles stay above');
   await until(() => !document.querySelector('.ov.story'), 4000);
   c = await until(() => { var k = document.querySelector('.coach p'); return k && /출구/.test(k.textContent) ? k.textContent : ''; }, 20000);
   A(/출구/.test(c || ''), 'after the cross-fade the controls line comes as a coach mark on the exit: 「' + c + '」');
   await shot('pro_coach');
   c = await ev(() => { var p = DS.G.zone.pois.filter(function (p) { return p.kind === 'pole'; })[0]; return p ? { label: p.label, x: p.x, y: p.y, info: DS.poleInfo(DS.G.save).name } : null; });
   A(c && c.label === '낡은 깃발' && c.info === '낡은 깃발', 'town centre has the pole point of interest; before stage 20 it is 「' + (c && c.label) + '」');
+  await ev(() => { document.querySelectorAll('.coach').forEach(function (x) { x.remove(); }); DS.poleOpen(); }); await sleep(400);
+  c = await ev(() => { var o = document.querySelector('.ov.poleov'); return { h2: o.querySelector('h2').textContent, none: !!o.querySelector('.pl-none'), names: o.querySelectorAll('.pl-n').length, old: !!o.querySelector('.polew.k-old') }; });
+  await shot('pole_old_empty');
+  A(c.h2 === '낡은 깃발' && c.none && c.names === 0 && c.old, 'the old flag staff opens the same window with no names yet');
 
   // ── ② 이야기 창의 결 ──
   await ev(() => { DS.ui.closeAll(); document.querySelectorAll('.coach').forEach(function (x) { x.remove(); }); DS.G.quiet = false; });
@@ -85,6 +90,12 @@ module.exports = async function (page, shot, L, X) {
   c = await ev(() => { var l = document.querySelector('.ov.story .line'); return { tw: !!l.querySelector('.tw'), t: l.textContent }; });
   A(!c.tw && c.t === LONG, 'quiet mode: the line is there at once');
   await L.skipStory(page); await ev(() => DS.ui.closeAll());
+  await ev((t) => { DS.G.quiet = false; DS.G.save.opt.calm = true; DS.applyCalm(); DS.ui.story([t, { t: '가. 나. 다.', roll: 1 }, '셋째 줄.'], null, '시험'); }, LONG); await sleep(150);
+  c = await ev(() => { var l = document.querySelector('.ov.story .line'); return { tw: !!l.querySelector('.tw'), t: l.textContent }; });
+  await sleep(200); await tapLine(); await sleep(150);
+  const cr = await ev(() => { var o = document.querySelector('.ov.story'); return { c: !!o.querySelector('.roll-c'), on: o.querySelectorAll('.line .rn.on').length }; });
+  A(!c.tw && c.t === LONG && !cr.c && cr.on === 4, 'reduced motion (설정): lines and the roll come at once, one tap per line');
+  await ev(() => { DS.ui.closeAll(); DS.G.save.opt.calm = null; DS.applyCalm(); DS.G.quiet = true; });
 
   // ── ③ 이름 낭독 ──
   c = await ev(() => { var o30 = DS.scn(30).outro, R = DS.storyRoll; var tagged = o30.filter(function (l) { return l && typeof l === 'object' && l.roll; }), res = DS.storyResolve(o30);
@@ -218,20 +229,40 @@ module.exports = async function (page, shot, L, X) {
   A(e0.step === '추도' && e0.ep.length > 4 && seenEp.every(e => e.ep === e0.ep && e.mourn === e0.mourn), 'B3: going back and forth between 추도 and 후계 keeps the epitaph and the family lines (「' + e0.ep + '」' + (e0.mourn ? ' · ' + e0.mourn : '') + ')');
   c = await ev(() => ({ rites: document.querySelectorAll('.ov.rite').length, bg: getComputedStyle(document.querySelector('.ov.rite')).backgroundColor }));
   A(c.rites === 1, 'only one rite window (the town-entry news does not open a second one); backdrop ' + c.bg);
-  await page.click('.ov.rite [data-lgstep="pick"]'); await sleep(300);
-  await page.click('.ov.rite [data-lgheir]'); await sleep(1100);
-  await page.click('.ov.rite #yesHeir'); await sleep(500);
-  for (let i = 0; i < 40; i++) {
-    const st = await ev(() => ({ keep: !!document.querySelector('#stgkeep'), ov: !!document.querySelector('#app .ov:not(.ghost)'), story: !!document.querySelector('.ov.story'), cine: DS.cineBusy() }));
-    if (!st.keep && !st.ov && !st.cine) break;
-    if (st.cine) { await sleep(750); await ev(() => DS.cineSkip()); } else if (st.story) { await tapLine(); } else if (st.ov) { await ev(() => { var b = document.querySelector('#app .ov:not(.ghost) [data-close]'); if (b) b.click(); }); }
-    await sleep(350);
-  }
+  const finishRite = async () => {      // 후계를 고르고 의식을 끝까지
+    await page.click('.ov.rite [data-lgstep="pick"]'); await sleep(300);
+    await page.click('.ov.rite [data-lgheir]'); await sleep(1100);
+    await page.click('.ov.rite #yesHeir'); await sleep(500);
+    for (let i = 0; i < 40; i++) {
+      const st = await ev(() => ({ keep: !!document.querySelector('#stgkeep'), ov: !!document.querySelector('#app .ov:not(.ghost)'), story: !!document.querySelector('.ov.story'), cine: DS.cineBusy() }));
+      if (!st.keep && !st.ov && !st.cine) break;
+      if (st.cine) { await sleep(750); await ev(() => DS.cineSkip()); } else if (st.story) { await tapLine(); } else if (st.ov) { await ev(() => { var b = document.querySelector('#app .ov:not(.ghost) [data-close]'); if (b) b.click(); }); }
+      await sleep(350);
+    }
+  };
+  await finishRite();
   await sleep(900);
   c = await ev(() => { var s = DS.G.save, h = s.chars[s.hero], u = DS.G.sim.byId['c' + s.hero], z = DS.G.zone, ch = z.pois.filter(function (p) { return p.kind === 'church'; })[0]; return { vac: !!h.vac, keep: !!document.querySelector('#stgkeep'), top: getComputedStyle(document.querySelector('#top')).visibility, town: !!z.town, near: u && ch ? Math.abs(u.x - ch.x) + Math.abs(u.y - (ch.y + 1)) : -1, busy: !!DS.G.riteBusy, hold: DS.G.hold, ovs: document.querySelectorAll('#app .ov:not(.ghost)').length + (DS.cineBusy() ? 1 : 0), name: DS.charName(h) }; });
   A(!c.vac && !c.keep && c.top === 'visible' && c.town && c.near >= 0 && c.near <= 3 && !c.busy && c.hold === c.ovs, 'after the rite: new 맹주 ' + c.name + ' stands at the church door, veil gone, HUD back ' + JSON.stringify(c));
   await shot('church_after');
   await ev(() => DS.ui.closeAll());
+  // 맹주를 잃고 물러났을 때: 의식은 싸움터를 가린 장막 위에서, 끝나면 들판으로
+  await ev(() => { DS.G.quiet = true; DS.ui.closeAll(); DS.enterZone('haemil'); DS.startScenario(DS.scn(27)); DS.G.pause = true; }); await sleep(900);
+  await L.skipStory(page); await ev(() => DS.ui.closeAll());
+  await ev(() => { var G = DS.G, sim = G.sim; G.quiet = false; G.pause = false; sim.kill(sim.byId['c' + G.save.hero]); });
+  await until(() => !!document.querySelector('.ov .result.fell2 #yesRet'), 8000);
+  c = await ev(() => { var o = document.querySelector('.ov .result.fell2'); return [].filter.call(o.querySelectorAll('p'), function (p) { return !p.hidden; }).map(function (p) { return p.textContent; }); });
+  A(c.length === 2 && /돌아오지 못한다\.$/.test(c[0]), 'the 맹주 falls: the same two-line modal (' + c.join(' / ') + ')');
+  await sleep(900); await page.click('.ov .result.fell2 #yesRet');
+  await until(() => !!document.querySelector('#stgkeep.rite.solid'), 3000);
+  for (let i = 0; i < 20 && !(await ev(() => !!document.querySelector('.ov.rite .lgrite h2'))); i++) { await ev(() => { if (DS.cineBusy()) DS.cineSkip(); }); await sleep(400); }
+  c = await ev(() => ({ veil: !!document.querySelector('#stgkeep.rite.solid'), top: getComputedStyle(document.querySelector('#top')).visibility, scn: !!DS.G.scn, rite: document.querySelectorAll('.ov.rite').length }));
+  await sleep(500); await shot('retreat_rite');
+  A(c.veil && c.top === 'hidden' && c.scn && c.rite === 1, 'retreat after the 맹주 fell: the rite opens over a solid veil (battlefield and HUD hidden)');
+  await finishRite(); await sleep(900);
+  c = await ev(() => ({ keep: !!document.querySelector('#stgkeep'), top: getComputedStyle(document.querySelector('#top')).visibility, scn: !!DS.G.scn, vac: !!DS.G.save.chars[DS.G.save.hero].vac }));
+  A(!c.keep && c.top === 'visible' && !c.scn && !c.vac, 'after it the veil lifts in the field with a new 맹주');
+  await ev(() => { DS.G.quiet = true; }); await L.closeAll(page);
 
   // ── ⑦ 엔딩 ──
   const playEnding = async (tag, withDead) => {

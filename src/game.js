@@ -269,6 +269,7 @@ function rollOf(l, text) {
   return { lead: text.slice(0, cur), parts: parts, tail: text.slice(end) };
 }
 DS.storyRoll = rollOf;
+DS.storyText = function (l) { var o = !!l && typeof l === 'object'; return { w: o && l.w ? fill(l.w) : '', t: lineText(l) }; };      // 이미 맞춘 줄(story() 안의 줄)의 화면 글 — 다시 풀지 않는다 (DS.storyResolve 는 날 줄에만)
 function story(lines, cb, who, opt) {
   if (lines && !(lines instanceof Array)) lines = [lines];
   if (lines) { try { lines = storyLines(lines); } catch (x) {} }

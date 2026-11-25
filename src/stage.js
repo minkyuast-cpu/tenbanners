@@ -105,7 +105,7 @@ function logOf(o) { var lg = $('.stg-log', o); if (!lg) { lg = el('<div class="s
 function bubble(k, who, text) { return '<div class="sbub k-' + k + '">' + (who ? '<b class="mh">' + esc(who) + '</b>' : '') + '<span class="mt">' + esc(text) + '</span></div>'; }
 function chatty(k) { return k === 'chat' || k === 'hero' || k === 'talk'; }
 function fillLog(o, lines, i, max) {
-  var out = [], j = i - 1; while (j >= 0 && chatty(kindOf(lines[j])) && out.length < (max || 3)) { var rl = DS.storyResolve([lines[j]])[0]; out.unshift(bubble(kindOf(lines[j]), rl ? rl.w : '', rl ? rl.t : '')); j--; }
+  var out = [], j = i - 1; while (j >= 0 && chatty(kindOf(lines[j])) && out.length < (max || 3)) { var rl = DS.storyText(lines[j]); out.unshift(bubble(kindOf(lines[j]), rl ? rl.w : '', rl ? rl.t : '')); j--; }
   logOf(o).innerHTML = chatty(kindOf(lines[i])) ? out.join('') : '';
 }
 
@@ -187,11 +187,11 @@ DS.stageEnding = function (lines, cb) {
     var n = 0, ST = {
       cls: 'stg-end',
       init: function (l2) { n = l2.length; },
-      kind: function (l) { var k = kindOf(l), t = DS.storyResolve([l])[0]; return k === 'nar' && t && oneOf(l, t.t) ? 'one' : k; },
+      kind: function (l) { var k = kindOf(l), t = DS.storyText(l); return k === 'nar' && t && oneOf(l, t.t) ? 'one' : k; },
       fade: function (i, l, k) { return k === 'nar' || k === 'one' ? 700 : 450; },
       hold: function (i) { return i === n - 1 ? 2000 : 0; },      // 마지막 줄은 잠깐 머문다
       onLine: function (i, l, k, o, re) {
-        var lg = logOf(o), line = $('.line', o), t = DS.storyResolve([l])[0], one = k === 'one' && t ? oneOf(l, t.t) : null;
+        var lg = logOf(o), line = $('.line', o), t = DS.storyText(l), one = k === 'one' && t ? oneOf(l, t.t) : null;
         lg.innerHTML = '';
         if (one) {      // 단톡방의 「1」이 사라지고 답장이 온다 (훈수 말풍선과 같은 결)
           if (one.cut != null) line.innerHTML = '<span>' + esc(t.t.slice(0, one.cut)) + '</span><span class="re-src">' + esc(t.t.slice(one.cut)) + '</span>';
