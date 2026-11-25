@@ -152,8 +152,8 @@ var SFX = {
 // 50ms 창의 최대 RMS 를 재어 갈래마다 같은 크기가 되게 곱한다: 조작 −32 · 전투 −27 · 치명타·폭발 −23 · 연출 −22 (dBFS, 압축기 앞). 배경음은 16초 RMS −38 로 곡끼리 맞춘다.
 var LVL = {"tap":3.63,"ok":1.95,"cancel":2.26,"step":1.3,"slash":2.26,"punch":2.04,"arrow":3.67,"magic":1.88,"skill":2.95,"hit":1.74,"crit":1.68,"miss":2.88,"die":2.14,"heal":2.95,"buff":1.95,"fire":3.2,"boom":1.3,"thunder":0.96,"water":2.29,"wind":3.35,"dark":2.42,"poison":3.31,"holy":2.6,"warn":2.63,"blink":2.37,"leap":2.69,"spawn":2.4,"sword":1.45,"phase":1.66,"level":3.71,"star":2.11,"win":2.37,"lose":1.97,"coin":2.26,"promo":2.09,"fuse":1.19,"pullHi":2.48,"rare":1.8,"mourn":1.62,"bossIn":2.02,"taunt":2.85,
   "press":5.13,"open":2.45,"close":3.2,"tab":4.9,"deny":1.38,"ready":2.66,"coinTick":3.2,"coinLand":4.03,"flip":3.94,"swell":2.6,"slam":1.9,"heart":1.43,"swoosh":4.27,"ult":1.5,"ultReady":2.4,
-  "wed":1.0,"birth":1.0};      // r26: 새 화면 소리 — 같은 probe 로 조작 −32 · 동전 똑딱 −40 · 기대 −27 · 띠 −22 · 심장 −27
-var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89,"erase":2.0,"mourn":2.0};
+  "wed":1.78,"birth":2.6};      // 2.6: 같은 probe 로 혼인 −22 · 출생 −23.5 (오르골은 조금 작게)      // r26: 새 화면 소리 — 같은 probe 로 조작 −32 · 동전 똑딱 −40 · 기대 −27 · 띠 −22 · 심장 −27
+var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89,"erase":2.0,"mourn":1.93};
 
 // ── 배경음: 16분음표 시퀀서 ──
 // 음 이름 → 주파수
@@ -239,7 +239,7 @@ DS.Audio = {
     seq.step = 0; seq.next = now + (old ? 0.22 : 0.08);
     seq.timer = setInterval(function () { schedule(); }, 90);
   },
-  // 2.6: 사건 연출(DS.cine)이 떠 있는 동안 배경음을 db 만큼 낮춰 둔다 (닫히면 되돌린다). 아래 살핌이 저절로 부른다
+  // 2.6: 사건 연출(DS.cine)이 떠 있는 동안 배경음을 db 만큼 낮춰 둔다 (닫히면 되돌린다). 아래에서 저절로 부른다
   cineDuck: function (on, db) { if (!ctx || !cineG || on === cineOn) return; cineOn = !!on; try { var t = ctx.currentTime; cineG.gain.cancelScheduledValues(t); cineG.gain.setValueAtTime(cineG.gain.value, t); cineG.gain.setTargetAtTime(on ? Math.pow(10, -(db || 8) / 20) : 1, t, on ? 0.08 : 0.2); } catch (e) {} },
   has: function (name) { return !!(SFX[name] || TRACKS[name]); },
   names: function () { return { sfx: Object.keys(SFX), bgm: Object.keys(TRACKS) }; },

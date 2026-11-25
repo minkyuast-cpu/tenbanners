@@ -1088,7 +1088,7 @@ DS.lootUI = {
       if (d.kind === 'item') { if (!items[d.id]) { items[d.id] = 0; order.push(d.id); } items[d.id] += d.n; return; }
       if (d.kind === 'bounty') { h += '<li class="ldrop lr' + (d.grade || 4) + ' lbty"><b>' + esc(d.line || d.name) + '</b></li>'; return; }      // 현상금 달성 · 깃술 조각
       var g = DS.gear(d.id); if (!g) return;
-      h += '<li class="ldrop lr' + g.grade + '">' + (DS.iconHtml ? DS.iconHtml('gear', d.id, { cls: 'li-ico' }) : '') + '<b>' + gname(g) + '</b> ' + tagsH([DS.gearTag(g) || '보통', esc(g.kind), d.boss ? '보스 전리품' : d.zl ? '이 땅의 전설' : '', d.sold ? '가방이 가득해 ' + d.sold + '골드에 팔았다' : ''], 'lgr') + DS.statChips(g.stat) + (d.sold ? '' : ghLine(d.id));
+      h += '<li class="ldrop lr' + g.grade + '">' + (DS.iconHtml ? DS.iconHtml('gear', d.id, { cls: 'li-ico' }) : '') + '<b>' + gname(g) + '</b> ' + tagsH([DS.gearTag(g) || '보통', esc(g.kind), d.boss ? '보스 전리품' : d.zl ? '이 땅의 전설' : '', d.sold ? '가방이 가득해 ' + (+d.sold).toLocaleString() + '골드에 팔았다' : ''], 'lgr') + DS.statChips(g.stat) + (d.sold ? '' : ghLine(d.id));
       (g.affix || []).forEach(function (a) { h += '<small class="lax"><i>' + (a.pre ? esc(a.name) : '〈' + esc(a.name) + '〉') + '</i> ' + esc(a.desc) + '</small>'; });
       (g.special || []).forEach(function (x) { h += '<small class="lax"><i>고유</i> ' + esc(x) + '</small>'; });
       if (g.lore) h += '<small class="llore">' + esc(g.lore) + '</small>';
@@ -1175,7 +1175,7 @@ function detail(id, redraw) {
       if (s.lock[id]) return;
       var doSell = function () { if (!(s.gear[id] > 0)) return; s.gear[id]--; if (!s.gear[id]) delete s.gear[id]; DS.ghTidy(s); s.gold += g.sell; U.A('coin'); U.persist(); again(); };
       var hlw = DS.hlOf && DS.hlOf(s, id);      // 2.5.0: 유품은 잠금을 풀었어도 한 번 더 묻는다
-      if (g.grade >= 4 || g.enh >= 1 || hlw) ask('판매할까?', gname(g) + (hlw ? '<br>' + esc(DS.HL_TXT.of.replace('{n}', hlw.n)) + '이다.' : '') + '<br>판매한 물건은 되돌릴 수 없다.', '판매 +' + g.sell + '골드', doSell); else doSell();
+      if (g.grade >= 4 || g.enh >= 1 || hlw) ask('판매할까?', gname(g) + (hlw ? '<br>' + esc(DS.HL_TXT.of.replace('{n}', hlw.n)) + '이다.' : '') + '<br>판매한 물건은 되돌릴 수 없다.', '판매 +' + (+g.sell).toLocaleString() + '골드', doSell); else doSell();
     }
   });
   o.onclose = function () { if (redraw) redraw(); };
@@ -1191,12 +1191,12 @@ function sellSel(redraw) {      // 고른 것을 판다: 확인 창 하나, 확�
   var fancy = si.ids.filter(function (id) { var g = DS.gear(id); return g.grade >= 5 || (g.enh || 0) >= 1 || (DS.hlOf && DS.hlOf(s, id)); });
   var q = U.overlay('<div class="result ldet"><h2>' + si.n + '점을 팔까?</h2><ul class="mlist">' + si.ids.slice(0, 12).map(function (id) { return '<li>' + DS.gearTitle(DS.gear(id)) + (s.gear[id] > 1 ? ' ×' + s.gear[id] : '') + '</li>'; }).join('') + (si.ids.length > 12 ? '<li>그 외 ' + (si.ids.length - 12) + '종</li>' : '') + '</ul>' +
     (fancy.length ? '<p class="mwarn">전설이나 강화한 장비, 유품 ' + fancy.length + '점이 들어 있다.</p>' : '') + '<p class="dim">판매한 물건은 되돌릴 수 없다.</p>' +
-    '<button class="btn red wide" data-loot-yes="1">판매 +' + si.gold + '골드</button><button class="btn wide" data-close>취소</button></div>', 'modal center');
+    '<button class="btn red wide" data-loot-yes="1">판매 +' + (+si.gold).toLocaleString() + '골드</button><button class="btn wide" data-close>취소</button></div>', 'modal center');
   q.addEventListener('click', function (e) {
     if (!e.target.closest('[data-loot-yes]') || q.dataset.done) return; q.dataset.done = '1';
     var L = bselInfo(s);
     L.ids.forEach(function (id) { delete s.gear[id]; });
-    BSEL = {}; DS.ghTidy(s); s.gold += L.gold; U.A('coin'); U.persist(); q.close(); U.toast(L.n + '점을 팔아 ' + L.gold + '골드를 받았다.'); redraw();
+    BSEL = {}; DS.ghTidy(s); s.gold += L.gold; U.A('coin'); U.persist(); q.close(); U.toast(L.n + '점을 팔아 ' + (+L.gold).toLocaleString() + '골드를 받았다.'); redraw();
   });
 }
 })();

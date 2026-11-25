@@ -216,6 +216,10 @@ function fmt(n) { n = Math.round(n || 0); return String(n).replace(/\B(?=(\d{3})
 DS.tmRankMsg = function (o) {
   var who = o.who, name = o.name || (who && (who.ttl || who.n)) || '', parts = [];
   var rk = o.t1 ? o.t1 + '단' : o.r1 > o.r0 ? DS.VET[o.r1].name + ' 승급' : o.s1 > o.s0 ? DS.STAR_NAME[o.s1] : '';
+  if (o.t1) {      // 2.6: 단이 오른 알림은 짧게 — 「새벽 3단 승급. 공격 +3%」 (배율 풀이는 뺐다)
+    var sm = {}, od = []; (o.gains || []).forEach(function (g) { if (!sm[g.k]) { sm[g.k] = 0; od.push(g.k); } sm[g.k] += g.v; });
+    return (name ? name + ' ' : '') + rk + ' 승급.' + (od.length ? ' ' + od.map(function (k) { return DS.TM_STAT[k] + ' +' + sm[k] + '%'; }).join(', ') : '');
+  }
   parts.push((name ? name + ', ' : '') + rk);
   var sum = {}, ord = []; (o.gains || []).forEach(function (g) { if (!sum[g.k]) { sum[g.k] = 0; ord.push(g.k); } sum[g.k] += g.v; });
   var m1 = who ? DS.tmMul(who, 0) : null;

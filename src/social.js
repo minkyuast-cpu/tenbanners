@@ -169,15 +169,19 @@ DS.rnBtn = function (k, id) {
 function ask(ref, from) {
   var s = G().save, t = DS.rnTarget(s, ref); if (t.why) { U.A('cancel'); U.toast(t.why); return null; }
   var n = DS.rnHave(s);
-  var hint = t.kind === 'hero' ? '대장의 이름이 바뀐다. 이야기와 모험가 현황에도 새 이름이 나온다.' : t.sur ? '성 「' + t.sur + '」' + (DS.josa1 ? DS.josa1(t.sur, '은는') : '은') + ' 그대로 두고 이름만 바꾼다. 「' + DS.snName(t.sur, '새 이름') + '」.' : '이름만 바꾼다.';
+  var hint = t.kind === 'hero' ? '맹주의 이름이 바뀐다. 이야기와 모험가 현황에도 새 이름이 나온다.' : t.sur ? '성 「' + t.sur + '」' + (DS.josa1 ? DS.josa1(t.sur, '은는') : '은') + ' 그대로 두고 이름만 바꾼다. 「' + DS.snName(t.sur, '새 이름') + '」.' : '이름만 바꾼다.';
   var fr = isFree(t);
   var o = U.overlay('<div class="result rnq"><p class="eyebrow">' + (fr ? '✎ 처음 이름 정하기, 무료' : '개명권 ' + n + '장, 1장을 쓴다') + '</p><h2>' + (fr ? '이름 정하기' : '이름 바꾸기') + '</h2><p>' + (fr ? '추천 이름' : '지금 이름') + ' <b>' + esc(t.name) + '</b></p>' +
     '<label class="fld"><span>새 이름 (' + DS.RN.len + '자까지)</span><input id="rnName" maxlength="' + DS.RN.len + '" value="' + (fr ? esc(t.given || '') : '') + '" autocomplete="off" enterkeyhint="done"></label>' +
     '<p class="dim">' + esc(hint) + ' 가계도와 연대기에 한 줄 남고, 예전 이름은 인물 기록에 남는다.</p><p class="warn rnwhy" id="rnWhy" hidden></p>' +
     '<button class="btn gold wide" id="rnYes">바꾼다</button><button class="btn wide" data-close>취소</button></div>', 'modal center');
-  var inp = o.querySelector('#rnName'), why = o.querySelector('#rnWhy'), done = false;
+  var inp = o.querySelector('#rnName'), why = o.querySelector('#rnWhy'), done = false, yes = o.querySelector('#rnYes'), born = performance.now();
+  function arm() { if (yes) yes.disabled = !DS.rnClean(inp.value); }      // 2.6: 아직 아무것도 적지 않았으면 「바꾼다」는 꺼져 있다 — 적기도 전에 붉은 「새 이름을 입력한다」가 뜨던 것 (앞 화면에 누른 손이 단추에 닿아도)
+  arm();
   function go() {
     if (done) return;
+    if (performance.now() - born < 350) return;
+    if (!DS.rnClean(inp.value)) { try { inp.focus(); } catch (e) {} return; }
     if (fr && DS.rnClean(inp.value) === t.given) { done = true; if (t.m) delete t.m.nf; if (t.p) delete t.p.nf; try { U.persist(); } catch (e) {} U.A('ok'); o.close(); U.toast('추천 이름 「' + t.given + '」 그대로'); return; }      // 추천 이름 그대로 써도 된다
     var w = DS.rnWhy(G().save, ref, inp.value);
     if (w) { U.A('cancel'); why.textContent = w; why.hidden = false; return; }
@@ -190,7 +194,7 @@ function ask(ref, from) {
   }
   o.querySelector('#rnYes').addEventListener('click', go);
   inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); go(); } });
-  inp.addEventListener('input', function () { why.hidden = true; });
+  inp.addEventListener('input', function () { why.hidden = true; arm(); });
   setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
   return o;
 }

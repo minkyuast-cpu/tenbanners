@@ -211,7 +211,7 @@ V.resize = function () {
   var kb = Math.min(cw / (Math.min(this.mw || 12, 12.5) * 16), ch / (9.5 * 16));      // 2.2.1 까지의 배율 (폭 12.5칸 · 높이 9.5칸)
   var zo = DS.zoomOf ? DS.zoomOf() : 1, ins = this.inset || {}, kf = this.mw ? Math.min(cw / (this.mw * 16), Math.max(ch * 0.5, ch - (ins.top || 0) - (ins.bottom || 0)) / (this.mh * 16)) : 0;      // 2.2.2: 지도 보기(설정) — 보통은 가로·세로 1.3배 칸 · 단 지도 전체가 화면(위아래 판 사이)에 들어오는 배율보다 더 멀리 빼지는 않는다
   this.k0 = Math.max(kb / zo, Math.min(kb, kf));
-  if (this.sim && this.sim.mode === 'town' && this.mw) {      // 2.6 마을: 지도가 위아래 판 사이를 꽉 채우고(세로 화면) 맹주를 따라 옆으로 민다 — 위아래의 빈 하늘을 없앤다. 가로 화면은 폭을 채우고 위아래로 민다
+  if (this.sim && this.sim.mode === 'town' && this.mw) {      // 2.6 마을: 지도가 위아래 판 사이를 꽉 채우고(세로 화면) 맹주를 따라 옆으로 민다 — 위아래의 빈 하늘을 메운다. 가로 화면은 폭을 채우고 위아래로 민다
     var kt = Math.max((ch - (ins.top || 0) - (ins.bottom || 0)) / (this.mh * 16), cw / (this.mw * 16));
     this.k0 = Math.max(this.k0, Math.min(kt, kb * 1.5));
   }

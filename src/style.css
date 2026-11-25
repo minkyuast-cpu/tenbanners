@@ -5122,3 +5122,22 @@ html body #app#app #s-game #bot .act > .newb { position: absolute; top: -5px; le
 html body #app#app #s-game #bot .act.newp { animation: f26new 1s ease-in-out 3; }
 @keyframes f26new { 0%, 100% { box-shadow: 0 0 0 0 rgba(246, 207, 87, 0); filter: none; } 50% { box-shadow: 0 0 0 3px rgba(246, 207, 87, .55), 0 0 14px rgba(246, 207, 87, .5); filter: brightness(1.25); } }
 html.calm body #app#app #s-game #bot .act.newp { animation: none; box-shadow: 0 0 0 2px rgba(246, 207, 87, .5); }
+/* 승급 창: 오른 만큼 「+78」(초록) · 그 밑에 전 → 후 */
+.stats.grow .f26up b { color: var(--leaf, #86d46a); }
+.stats.grow .f26up small { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.2; color: var(--dim, #ab9f86); white-space: nowrap; }
+.result .kv .rpw .f26tri { font-style: normal; font-size: 10px; margin-right: 4px; color: var(--leaf, #86d46a); }
+/* 「저장됨」 한 박자 (메뉴 단추 아래) */
+#savedTick { position: absolute; z-index: 9000; left: 12px; top: 64px; display: flex; align-items: center; gap: 4px; padding: 3px 8px 3px 6px; border-radius: 10px; font: 600 11px/1.2 var(--f-ui, sans-serif); color: #e9f6dc; background: rgba(18, 26, 16, .88); border: 1px solid rgba(134, 212, 106, .5); box-shadow: 0 2px 6px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(-3px); pointer-events: none; transition: opacity .18s ease, transform .18s ease; white-space: nowrap; }
+#savedTick i { font-style: normal; color: #86d46a; }
+#savedTick.on { opacity: 1; transform: none; }
+/* 가게 주인의 한 줄 */
+.f26keep { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; padding: 6px 10px; border-radius: 10px; background: rgba(0, 0, 0, .28); border: 1px solid rgba(236, 220, 186, .12); }
+.f26keep .kf { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(236, 220, 186, .08); overflow: hidden; }
+.f26keep p { margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.f26keep b { font-size: 11px; font-weight: 600; color: var(--dim, #ab9f86); }
+.f26keep q { quotes: none; font-size: 13px; line-height: 1.35; color: var(--bone, #ece2cc); }
+.f26keep q::before { content: '「'; } .f26keep q::after { content: '」'; }
+/* 잠긴 기능은 한 줄 */
+.row.f26lock { opacity: .8; } .row.f26lock .lk { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(0, 0, 0, .3); color: var(--dim, #ab9f86); }
+.row.f26lock .tx small { color: var(--dim, #ab9f86); }
+.pity.f26why b { color: var(--bone, #ece2cc); font-weight: inherit; }

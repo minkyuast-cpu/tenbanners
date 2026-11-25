@@ -521,7 +521,7 @@ function onEv(sim, e) {
     } else if (e.k === 'warn') { if (DS.vban) DS.vban('wave', e.w + '번째 무리', '또 몰려온다', 1100); A('warn'); shout('wave', 'any', 300); }
     else if (e.k === 'wave') { if (e.w > 1 && v && !calm()) v.shake = Math.max(v.shake || 0, 0.3); }
     else if (e.k === 'end') {
-      setTimeout(function () { fban('win', '기습을 물리쳤다', '처치 ' + e.kills + ' · 보너스 G+' + e.gold.toLocaleString() + ' · EXP+' + e.exp.toLocaleString(), 1900); A('slam'); if (DS.Audio && DS.Audio.duck) DS.Audio.duck(5, 1200); }, 350);
+      setTimeout(function () { fban('win', '기습을 물리쳤다', '처치 ' + e.kills + ' · 보너스 +' + e.gold.toLocaleString() + '골드 · 경험치 +' + e.exp.toLocaleString(), 1900); A('slam'); if (DS.Audio && DS.Audio.duck) DS.Audio.duck(5, 1200); }, 350);
       if (e.merit && DS.ui) setTimeout(function () { if (!UI.card) DS.ui.toast('기습을 버텨 냈다. 싸운 가문 공훈 +' + e.merit, 3000); }, 2300);
       shout('ambWin', 'any', 900);
     } else if (e.k === 'fade') { if (DS.ui) DS.ui.toast('기습한 무리가 흩어졌다', 2400); }

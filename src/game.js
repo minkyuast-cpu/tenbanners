@@ -151,8 +151,18 @@ function persist() {
   if (me && !G.scn) s.pos = { x: me.x, y: me.y };
   var ok = DS.Save.store(s);
   if (ok === false) { var t = Date.now(); if (!G.saveFailAt || t - G.saveFailAt > 60000) { G.saveFailAt = t; toast('저장하지 못했다. 브라우저 저장 공간이 가득 찼거나 막혀 있다.', 4200); } }      // 2.8.0: 말없이 실패하던 것
-  else G.saveFailAt = 0;
+  else { G.saveFailAt = 0; if (G.tickDue) { var due = G.tickDue; G.tickDue = 0; if (performance.now() < due) savedTick(); } }
 }
+// 2.6 「저장됨」: 의식 · 구매 · 결과 뒤에 메뉴 단추 곁에 1초 (저장이 실제로 된 때만). 부르는 쪽은 DS.saveTick() 뒤에 저장한다
+function savedTick() {
+  var host = root(), sg = $('#s-game'); if (!host || !sg || sg.hidden) return;
+  var el = $('#savedTick'); if (!el) { el = h('<div id="savedTick" role="status"><i aria-hidden="true">✓</i>저장됨</div>'); host.appendChild(el); }
+  var m = $('#bMenu'), r = m && m.getBoundingClientRect(), hr = host.getBoundingClientRect();
+  if (r && r.width) { el.style.left = Math.round(r.left - hr.left) + 'px'; el.style.top = Math.round(r.bottom - hr.top + 3) + 'px'; }
+  el.classList.toggle('on', false); void el.offsetWidth; el.classList.add('on');
+  clearTimeout(el._t); el._t = setTimeout(function () { el.classList.toggle('on', false); }, 1100);
+}
+DS.saveTick = function () { G.tickDue = performance.now() + 3000; };
 function wipeSave() { DS.Save.wipe(); }
 function root() { return app || (app = $('#app')); }
 function show(id) { $$('.screen', root()).forEach(function (s) { s.hidden = s.id !== id; }); }
@@ -375,6 +385,26 @@ function recOfL(L) { var v = null; if (DS.recOfL) { try { v = DS.recOfL(L); } ca
 function zoneRec(z) { var r = DS.zoneRec ? DS.zoneRec(z.id) : [recOfL(z.def.L[0]), recOfL(z.def.L[1])]; return '권장 ' + lvText(r[0]) + ' ~ ' + lvText(r[1]); }      // 2.2.3: 잰 표 (DS.REC.zone)
 function lvShort(L) { return DS.tierOfL(L) + '단 Lv' + DS.lvOfL(L); }      // 칩용 짧은 표기 (QA: 「1단1」이 읽히지 않는다 → 「1단·1」)
 DS.lvText = lvText;
+// 2.6 지역 띠의 아랫줄. 마을: 첫 시나리오를 깨기 전의 처음 세 번은 「가게 문을 누르면 들어간다」, 그 뒤로는 「가문력 44년 가을 · 로저스 가문 2대」.
+//   들판: 권장 레벨 그대로. 지난번 지역에 들어선 뒤로 계절이 바뀌었으면 그 한 줄이 먼저 (영웅관 값은 정말 내렸을 때만 말한다 — 모집 열기는 계절마다 식는다, meta.js DS.recruitHeat)
+var SEA_LINE = ['꽃잎이 날린다.', '풀빛이 짙어졌다.', '낙엽이 진다.', '눈이 내린다.'];
+function heatNow(s) { try { var r = s.rh; if (!r || !(r.h > 0)) return 0; var c = DS.calNow(s), q = ((DS.AGE && DS.AGE.year) || 600) / 4; return Math.max(0, r.h - Math.max(0, c.t - r.t) / q * DS.RECRUIT.ease); } catch (x) { return 0; } }
+function zoneSub(z, s) {
+  var c = null, hn = '', gen = 0, sea = '';
+  try { c = DS.calNow ? DS.calNow(s) : null; } catch (x) { c = null; }
+  if (c) {
+    var key = c.yr * 4 + c.season, ht = heatNow(s), was = G.seaSeen && G.seaSeen.save === s ? G.seaSeen : null;
+    if (was && key > was.key && key - was.key <= 4) sea = josa(c.sname, '이가') + ' 왔다. ' + (ht < was.heat - 0.01 ? '영웅관 값이 내렸다.' : DS.seasonLand && DS.seasonLand(z.theme) ? SEA_LINE[c.season] : '');
+    G.seaSeen = { save: s, key: key, heat: ht };
+  }
+  if (sea) return sea.trim();
+  if (!z.town) return '들판, ' + zoneRec(z);
+  G.townN = (G.townSave === s ? G.townN || 0 : 0) + 1; G.townSave = s;
+  if (!c || (!Object.keys(s.cleared || {}).length && G.townN <= 3)) return '마을. 가게 문을 누르면 들어간다';
+  try { hn = DS.houseName ? DS.houseName(s) : ''; var h = s.chars[s.hero], P = s.lin && s.lin.P, p = h && P && P[h.pid]; gen = (p && p.gen) || 1; } catch (x) { hn = ''; }
+  return '가문력 ' + c.text + (hn ? ' · ' + hn + ' ' + gen + '대' : '');
+}
+DS.zoneSub = zoneSub;
 // 2.6: 마을 사람이 오갈 옆 칸 — 맨땅이고, 가게 · 문 · 다른 사람 · 출구 길이 아닌 쪽 (없으면 제자리에만)
 function npcAlt(z, p) {
   var c = p.look % 2 ? [p.x + 1, p.x - 1] : [p.x - 1, p.x + 1], i, x;
@@ -412,7 +442,7 @@ function enterZone(id, from, pos) {
   $('#boss').hidden = true; layoutInsets();
   zoneBgm(z);
   sbS.forEach(function (e) { if (e.text) later(e.text, 4200); });
-  bannerSoon(z.name, z.town ? '마을. 가게 문을 누르면 들어간다' : '들판, ' + zoneRec(z), 2400);      // 이야기 창이 떠 있으면 닫힌 뒤에
+  bannerSoon(z.name, zoneSub(z, s), 2400);      // 이야기 창이 떠 있으면 닫힌 뒤에 · 2.6: 마을의 아랫줄은 처음 몇 번만 안내, 그 뒤로는 달력과 가문 (계절이 바뀌었으면 그 한 줄)
   G.pendCamp = z.town ? campPick(s) : null; G.campAt = performance.now() + 1600;
   if (z.town && DS.egPassOn && DS.egPassOn(s)) { if (DS.egPassOpen) setTimeout(function () { if (G.zone === z && DS.egPassOn(s) && !document.querySelector('.ov.egpass')) DS.egPassOpen(s); }, 400); }      // 3.3.0: 스무 해 창이 열려 있다 — 마을 판정을 건너뛰고 그 창을 그 면에서 다시 연다
   if (z.town && DS.egPassOn && DS.egPassOn(s)) {}
@@ -432,6 +462,7 @@ function startScenario(s) {
   sortieFree(function () { if (DS.mercTidy) DS.mercTidy(sv); });      // 2.2.8: 출전 목록 = 맹주 + 출전한 가주 둘 (+ 가문원) — 들판 싸움이 막 끝나지 않았어도 들어가기 전에 자리를 채운다
   sortieNote();
   if (DS.ui && DS.ui.takeSnap) DS.ui.takeSnap(s);      // 2.2.2: 결과 창의 경험치 막대는 이 순간(싸움 직전)부터 — 관문 창을 거치지 않고 들어와도
+  G.scnPL = null; try { G.scnPL = { id: s.id, pit: s.pit || 0, L: DS.partyL(sv) }; } catch (x) {}      // 2.6: 전멸 화면의 「우리 평균」은 들어설 때의 평균 (싸우다 가주가 쓰러지면 그 가문이 1레벨로 내려가, 뒤에 재면 엉뚱하게 「레벨이 모자랐다」고 했다)
   var b = DS.buildScenario(s, DS.partySpecs ? DS.partySpecs(sv).length : sv.party.length, sv.chars[sv.hero] ? sv.chars[sv.hero].cls : 'inf');
   var sim = new DS.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (Date.now() & 0xffff) + s.id, inv: sv.items, mode: 'scn' });
   G.sim = sim; G.scn = s; G.aim = null; G.bossId = null; G.pendPoi = null; G.ending = false; G.gain = { exp: 0, gold: 0, loot: [] }; G.wasCombat = false; G.lost = [];
@@ -475,6 +506,7 @@ function onWin() {
   if (G.ending) return; G.ending = true;
   var s = G.scn, sv = G.save, before = DS.charList(sv).map(function (c) { return c.id; });
   DS.Audio.bgm('victory'); if (!G.save.opt.bgm) A('win');
+  dangerOff();
   syncVitals();
   G.vetUps = meritAll(10);
   var ulw0 = DS.ultOpen && DS.ultOpen(sv);
@@ -494,7 +526,7 @@ function onWin() {
   if (G.view && !calm()) { G.view.flashA = Math.max(G.view.flashA || 0, 0.08); }
   setTimeout(function () { if (G.scn !== s) return; vban('win', '승리', s.pit ? s.name : '시나리오 ' + s.id + ' · ' + s.name, 1250); A('slam'); if (DS.Audio.duck) DS.Audio.duck(6, 1400); if (G.view && !calm()) G.view.shake = Math.max(G.view.shake || 0, 0.25); }, bh ? 1500 : 380);
   setTimeout(function () {
-    story(out.first && !s.pit ? s.outro : null, function () { DS.showResult(s, out, function () { lineageFlush(function () { if (G.pitGo) pitChain(false); else { backToField(false); flushPromos(); } }); }); }, s.name);
+    story(out.first && !s.pit ? s.outro : null, function () { DS.saveTick(); persist(); DS.showResult(s, out, function () { lineageFlush(function () { if (G.pitGo) pitChain(false); else { backToField(false); flushPromos(); } }); }); }, s.name);
   }, bh ? 3100 : 1900);
 }
 // ───────── 가계도 (2.9) ─────────
@@ -527,7 +559,7 @@ DS.lineageFlush = lineageFlush;
 function loseWhy() {
   var sv = G.save, s = G.scn, out = [], st = G.stats || {}, it = sv.items || {}, top = null, k;
   try {
-    if (s) { var rec = recL(s), pl = DS.partyL(sv); out.push((DS.recText ? DS.recText(s) : '권장 ' + lvText(rec)) + ', 우리 평균 ' + lvText(pl) + (pl < rec ? ', ' + (rec - pl) + '레벨 모자랐다' : '')); }
+    if (s) { var rec = recL(s), pl = G.scnPL && G.scnPL.id === s.id && G.scnPL.pit === (s.pit || 0) && G.scnPL.L > 0 ? G.scnPL.L : DS.partyL(sv); out.push((DS.recText ? DS.recText(s) : '권장 ' + lvText(rec)) + ', 우리 평균 ' + lvText(pl) + (pl < rec ? ', ' + (rec - pl) + '레벨 모자랐다' : '')); }
     for (k in st.hurt || {}) if (!top || st.hurt[k] > st.hurt[top]) top = k;
     if (top && st.hurtAll > 0) out.push('가장 아팠던 상대 ' + top + ', 받은 피해의 ' + Math.round(st.hurt[top] / st.hurtAll * 100) + '%');
     out.push(it.endo > 0 ? '남은 기운초 ' + it.endo + ' (자동 전투는 안 씀)' : '기운초 없음 (잡화점)');
@@ -537,7 +569,7 @@ function loseWhy() {
 function onLose() {
   if (G.ending) return; G.ending = true;
   var sv = G.save, n = sv.party.filter(function (id) { return sv.chars[id] && sv.chars[id].down; }).length + (G.bearLost || []).length, why = loseWhy(), hd = !!(sv.chars[sv.hero] && sv.chars[sv.hero].down), pitF = G.scn && G.scn.pit ? G.scn.pit : 0;      // 4.0: 쓰러진 대장 + 그 자리에서 잠든 든 사람
-  DS.Audio.bgm(null); A('lose'); G.mournOn = true; setTimeout(function () { if (G.mournOn && G.ending) DS.Audio.bgm('mourn'); }, 1300);      // 2.6 애도 곡: 「전멸」 소리가 가라앉으면 시작해 의식 · 교회 앞까지 잇는다
+  dangerOff(); DS.Audio.bgm(null); A('lose'); G.mournOn = true; setTimeout(function () { if (G.mournOn && G.ending) DS.Audio.bgm('mourn'); }, 1300);      // 2.6 애도 곡: 「전멸」 소리가 가라앉으면 시작해 의식 · 교회 앞까지 잇는다
   var cvL = $('#cv'); if (cvL) cvL.classList.add('defeat');      // r26: 화면이 잿빛으로 가라앉고 「전멸」이 떨어진다
   setTimeout(function () { if (G.ending) { vban('lose', '전멸', '', 1000); A('slam'); } }, 420);
   linEnd(false); persist();      // 2.9 가계도: 쓰러진 지휘관은 모두 숨을 거두었다 (부활 골드 없음) — 교회에서 후계를 정한다
@@ -698,7 +730,7 @@ function pressed() {
 function openPoi(p) {
   G.pendPoi = null;
   if (pressed()) { toast('적이 가까이 있어 들어갈 수 없다'); return; }
-  if (p.t === 'npc') { A('tap'); story(npcLine(p.look) || [p.text], null, '마을 사람'); return; }
+  if (p.t === 'npc') { A('tap'); var nsp = p.sprite || 'npc_' + (p.look % 4); story((npcLine(p.look) || [p.text]).map(function (l) { return l && typeof l === 'object' ? (l.c ? l : { w: l.w, c: nsp, t: l.t }) : { w: '', c: nsp, t: l }; }), null, '마을 사람'); return; }      // 2.6: 마을 사람은 제 얼굴로 말한다 (초상 = 지도에 선 그 모습)
   if (p.t === 'arena') { if (DS.arenaOpen) { A('ok'); DS.arenaOpen(); } return; }      // r39 연무장
   if (p.t === 'shop') {
     var hl = p.kind === 'house' ? npcLine('house') : null;
@@ -1191,7 +1223,7 @@ function updateHud(now) {
   if (G.view) G.view.lowHp = me && !me.dead && (sim.combat || G.scn) && !G.ending ? Math.max(0, Math.min(1, (0.35 - me.hp / me.mhp) / 0.25)) : 0;
   if (me) {
     $('#tick u').style.width = me.gauge + '%'; $('#tickN').textContent = Math.floor(me.gauge);
-    var danger = !!(dz && !me.dead && dz[me.y * sim.w + me.x]), fx = fxList(me), sig = '';
+    var danger = !!(dz && !me.dead && !G.ending && dz[me.y * sim.w + me.x]), fx = fxList(me), sig = '';
     if (danger !== G.dangerOn) { G.dangerOn = danger; $('#info').classList.toggle('danger', danger); }
     for (i = 0; i < fx.length; i++) sig += fx[i][0] + fx[i][2] + '|';
     if (sig !== G.fxSig) { G.fxSig = sig; var fe = $('#infoFx'); if (fe) { var bad = fx.filter(function (f) { return f[0] === 'bad' || f[0] === 'poison' || f[0] === 'slow' || (DS.STATUS && DS.STATUS[f[0]]); }), f0 = bad[0] || fx[0]; fe.innerHTML = f0 ? '<i class="fx-' + f0[0] + '" title="' + esc(fx.map(function (f) { return f[1] + ' ' + f[2]; }).join(', ')) + '">' + f0[3] + (fx.length > 1 ? '<sup>+' + (fx.length - 1) + '</sup>' : '') + '</i>' : ''; fe.setAttribute('aria-label', fx.length ? '효과 ' + fx.length + '개, 누르면 목록' : ''); } }      // r27 ux: 효과는 표 하나(나쁜 것이 먼저) + 개수 — 누르면 전부
@@ -1412,9 +1444,17 @@ function cmdLow(u) {
   setInfo(nm + ' 위험. ' + how, 3600);
   if (!sv.seen.cdanger && !G.quiet) {
     sv.seen.cdanger = 1; softPause(9000);
-    var cdl = '대장이 쓰러지면 후계가 잇는다. 잠깐 멈췄다. ' + how + (G.scn ? '. 어려우면 위의 퇴각' : '');
-    if (herb > 0 && sel) coach($('#acts [data-it="herb"]'), '대장이 위험하다. 약초!', { long: cdl, ms: 7000 }); else toast(cdl, 9000);
+    var hr = u.ch === sv.hero, cdl = (hr ? '맹주가 쓰러지면 후계가 잇는다.' : '가주는 쓰러지면 돌아오지 못한다.') + ' 잠깐 멈췄다. ' + how + (G.scn ? '. 어려우면 위의 퇴각' : '');      // 2.6: 「대장」 → 맹주 · 가주
+    if (herb > 0 && sel) coach($('#acts [data-it="herb"]'), (hr ? '맹주가' : '가주가') + ' 위험하다. 약초!', { long: cdl, ms: 7000 }); else toast(cdl, 9000);
   }
+}
+// 2.6: 싸움이 끝났다 — 위험 안내(코치 · 정보 줄 · 약초 단추의 깜빡임 · 붉은 테)는 승리 · 전멸 화면까지 따라오지 않는다
+function dangerOff() {
+  var c = $('.coach'); if (c && c.parentNode) c.parentNode.removeChild(c);
+  G.herbHint = 0; setInfo(''); softResume();
+  $$('#acts .act.hint').forEach(function (b) { b.classList.toggle('hint', false); });
+  if (G.dangerOn) { G.dangerOn = false; var inf = $('#info'); if (inf) inf.classList.toggle('danger', false); }
+  if (G.view) G.view.lowHp = 0;
 }
 // 잠깐 멈춤: 명령을 내리거나 ms 가 지나면 저절로 다시 흐른다 (Ⅱ 단추로도 풀린다)
 function softPause(ms) {
@@ -1688,7 +1728,7 @@ function onEvents(evs) {
     }
     else if (!G.scn && !G.ending) {
       zoneBgm(G.zone); G.view.tgt = null;
-      if (G.gain.exp) setInfo('전투 종료, EXP+' + G.gain.exp + ' G+' + G.gain.gold + (G.gain.loot && G.gain.loot.length ? ' 전리품' + G.gain.loot.length : ''), 2400);      // r8 hud: 토스트 → 아래 정보 줄 (자동 사냥에서 6초마다 글 상자가 뜨던 것)
+      if (G.gain.exp) setInfo('전투 종료, 경험치 +' + fmtN(G.gain.exp) + ' · +' + fmtN(G.gain.gold) + '골드' + (G.gain.loot && G.gain.loot.length ? ' · 전리품 ' + G.gain.loot.length : ''), 2400);      // r8 hud: 토스트 → 아래 정보 줄 (자동 사냥에서 6초마다 글 상자가 뜨던 것)
       if (G.itemsOpen) { G.itemsOpen = null; }
       // 「자동이 둘」 안내는 첫 들판 싸움이 끝난 뒤에 (들판에 들어서자마자 띄우면 길 안내·첫 전투 안내가 1초 만에 덮었다)
       if (!sv.seen.autoTip && !sv.cleared[1] && !sv.opt.hunt) { sv.seen.autoTip = 1; var hb = $('#bHunt'); if (hb) { hb.classList.add('hint'); setTimeout(function () { hb.classList.remove('hint'); }, 5600); } coach(hb, '켜면 모두 알아서 싸운다', { long: '전체 자동을 켜면 모든 가문이 알아서 싸운다. 아래 문장을 누르면 고른 가문만 따로 정한다', ms: 5200 }); }
@@ -1776,7 +1816,7 @@ function zoneBgm(z) {
 // 2.6 애도 곡은 전멸 카드에서 시작해 의식을 지나, 교회 앞을 떠나면(문에서 네 칸 · 마을을 나섬 · 싸움에 들어감) 지역 곡으로 돌아간다. 다른 곳에서 쓰려면 DS.Audio.bgm('mourn') · DS.mournBgm(true|false)
 function mournTick(now) {
   if (!G.mournOn || now - (G.mournT || 0) < 400) return; G.mournT = now;
-  if (G.ending || G.riteBusy || $('.ov', root())) return;
+  if (G.ending || $('.ov', root()) || (DS.cineBusy && DS.cineBusy())) return;
   var z = G.zone, me = G.sim && G.sim.byId[G.sel], cp = z && z.town ? churchPos(z.id) : null;
   if (G.scn || !z || !z.town || !cp || !me || Math.abs(me.x - cp.x) + Math.abs(me.y - cp.y) > 4) { G.mournOn = false; if (z && !G.scn) zoneBgm(z); }
 }
@@ -2191,6 +2231,7 @@ function loop1(now) {
     try { if (G.er) erBandTick(); if (now - G.hudT > 90) { G.hudT = now; updateHud(now); } if (now - (G.barT || 0) > 1500 && DS.barBadge) { G.barT = now; DS.barBadge(); } } catch (x) { loopErr(x, 'hud'); }      // r38: 메뉴 단추의 막사 배지
     checkExit();
     if (G.mournOn) mournTick(now);
+    if (!!G.riteBusy !== !!G.riteWas) { if (G.riteWas && !G.saveFailAt) savedTick(); G.riteWas = !!G.riteBusy; }      // 2.6: 의식이 끝나면 (그 끝에 저장한다 — lineageFlush) 「저장됨」
   }
 }
 // 게임 화면 켜기
@@ -2198,7 +2239,7 @@ DS.startGame = function () {
   setTimeout(function () { if (DS.wakeSync) DS.wakeSync(); }, 0);      // 2.1.2: 화면 켜 두기
   G.ulwArm = !!(DS.ultNeedReveal && G.save && DS.ultNeedReveal(G.save));      // r38: 불러온 저장이 깨어남을 기다린다 (1.3.0 에서 고르지 않은 채 시나리오 3을 넘긴 저장 등)
   var sv = G.save;
-  if (DS.goneGold > 0) { var gg = DS.goneGold; DS.goneGold = 0; setTimeout(function () { toast('쓰지 않게 된 물건을 골드 ' + gg + ' 으로 바꿨다', 4200); }, 1800); }
+  if (DS.goneGold > 0) { var gg = DS.goneGold; DS.goneGold = 0; setTimeout(function () { toast('쓰지 않게 된 물건을 ' + fmtN(gg) + '골드로 바꿨다', 4200); }, 1800); }
   show('s-game');
   if (!G.view) {
     G.view = new DS.View($('#cv'));
