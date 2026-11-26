@@ -7,16 +7,17 @@
 //   새 그림 조각: mon_lamp(등불 · 불씨) · mon_ray(빛의 창) · mon_halo(빛의 고리) · mon_sun(해 — 하늘 · 땅 · 반쯤 뜬 해) · mon_wing(빛의 날개) · mon_cross(십자로 터지는 빛)
 //   새 소리: mon_lance · mon_bell · mon_swift · mon_judge · mon_dawn
 //
-//   고친 것 (옛 → 새 · 허수아비 / 싸움판 피해 비는 tools/skdmg.js):
-//   mon_smite · mon_ward · mon_haste   수치 그대로. 빛이 닿을 때(0.15 · 0.15 · 0.1초) 걸린다
-//   mon_sanct     보호막 120% · 방어 +20% · 회복 50%  →  보호막 · 방어는 그대로, 회복은 걸 때 25% + 성역이 8초 남아 2.5초마다 조금씩 (자리를 지키면 조금 더, 떠나면 덜)
-//   xmon_smite    300% 한 번  →  창 125% + 터짐 185% 의 두 박자 (보호막은 터질 때)
+//   고친 것 (옛 → 새 | 허수아비 / 싸움판 피해 비 — tools/skdmg.js, 새 ÷ 옛):
+//   mon_smite · mon_ward · mon_haste   수치 그대로. 빛이 닿을 때(0.15 · 0.15 · 0.1초) 걸린다 | 1.00 / 1.00
+//   mon_sanct     보호막 120% · 방어 +20% · 회복 50%  →  보호막 · 방어는 그대로, 회복은 걸 때 25% + 성역이 8초 남아 2.5초마다 조금씩 세 번 (자리를 지키면 옛것보다 한 푼쯤 더, 바로 떠나면 절반)
+//   xmon_smite    300% 한 번  →  창 125% + 터짐 185% 의 두 박자 (보호막은 터질 때) | 1.03 / 1.00
 //   xmon_halo     한 번에  →  고리가 내려앉으며 정화 · 회복(0.35초), 곧이어 보호막(0.7초). 수치 그대로
-//   xmon_sun      220% 바로  →  0.8초 뒤 해가 내려앉아 155%, 해가 3초 머물며 1초마다 35% (비켜설 수 있다)
-//   u_lampdance   230% 한 번  →  세 걸음 75% + 80% + 100% (화상은 첫 걸음, 보호막은 끝 걸음)
-//   ux_lampdance  300% 한 번  →  네 걸음 70% + 70% + 80% + 110%
+//   xmon_sun      220% 바로  →  0.8초 뒤 해가 내려앉아 155%, 해가 3초 머물며 1초마다 35% (비켜설 수 있다) | 1.03 / 0.99
+//   u_lampdance   230% 한 번  →  세 걸음 75% + 80% + 100% (화상은 첫 걸음, 보호막은 끝 걸음) | 1.03 / 1.01
+//   ux_lampdance  300% 한 번  →  네 걸음 70% + 70% + 80% + 110% | 1.00 / 0.99
 //   u_lantern     수치 그대로, 등불이 닿을 때(0.5초)        ux_lantern   신속(0.5초) → 보호막(1.1초) 차례로. 수치 그대로
-//   u_sunrise     수치 그대로, 해가 뜰 때(0.55초)           ux_sunrise   250% 한 번  →  먼동 90% + 해돋이 175% (정화 · 보호막은 해가 뜰 때)
+//   u_sunrise     수치 그대로, 해가 뜰 때(0.55초) | 1.00 / 1.00        ux_sunrise   250% 한 번  →  먼동 90% + 해돋이 175% (정화 · 보호막은 해가 뜰 때) | 1.01 / 1.01
+//   틀 밖에서 읽는 것 둘: 등불(ward)이 누구에게 갔는지는 화면의 유닛에서 읽는다 (warded — 'mend' 사건이 제 연출로 오지 않는다). 자리에 딸린 조각(zid)은 그 자리가 걷히면 스스로 스러진다 (zcut — 자리가 거두어질 때 부르는 연출이 없다).
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
@@ -76,9 +77,12 @@ X.sound('mon_dawn', function (tone) { tone(196, 392, 0.45, 'sine', 0.07); tone(2
 
 // ───────── 그림 조각 ─────────
 function pxl() { return DS.VX && DS.VX.pxLine; }
+// 자리에 딸린 조각 (zid): 그 자리가 걷히면(쓰는 이가 쓰러지거나 판이 끝나면) 곧 스러진다
+function zcut(V, p) { if (p.zid && !p.cut && !(V.skZone && V.skZone[p.zid])) { p.cut = 1; p.dur = Math.min(p.dur, p.t + 0.3); } }
 function disc(g, cx, cy, rx, ry, clip) { ry = Math.max(1, Math.round(ry)); cx = Math.round(cx); cy = Math.round(cy); for (var y = -ry; y <= ry; y++) { if (clip != null && cy + y >= clip) break; var w = Math.round(rx * Math.sqrt(Math.max(0, 1 - (y * y) / (ry * ry + 0.5)))); if (w > 0) g.fillRect(cx - w, cy + y, w * 2, 1); } }
 // 등불: 작은 등잔 (s 배율 · hgt 칸 가운데에서 위로 · up 그동안 떠오르는 픽셀 · sway 흔들림). bare 면 틀 없는 불씨만. x1 · y1 이 있으면 그리로 날아간다 (h 포물선)
 X.kind('mon_lamp', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
+  zcut(V, p);
   var s = p.s || 1, a = X.env(f, p.in == null ? 0.12 : p.in, p.out == null ? 0.3 : p.out), x = cx, y = cy, fl = Math.sin(time * 16 + p.sd) > 0 ? 1 : 0;
   if (p.x1 != null) { x = cx + (p.x1 - p.x) * 16 * f; y = cy + (p.y1 - p.y) * 16 * f - (p.h || 0) * 4 * f * (1 - f); a = Math.min(1, f * 8); }
   y -= (p.hgt || 0) + (p.up || 0) * f; x += Math.sin(time * 4 + p.sd) * (p.sway || 0);
@@ -105,17 +109,18 @@ X.kind('mon_ray', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
 } });
 // 빛의 고리: r 반지름의 납작한 고리가 hgt 높이에 뜬다 (h0 → h1 이면 fall 몫 동안 내려앉는다). 뒤쪽 반은 옅게
 X.kind('mon_halo', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
-  var r = p.r || 5, hg = p.h0 != null ? p.h0 + (p.h1 - p.h0) * X.ease(Math.min(1, f / (p.fall || 0.8))) : (p.hgt || 0), y = cy + 5 - hg, a = X.env(f, 0.1, 0.3), n = Math.max(10, Math.round(r * (r >= 12 ? 2.6 : 1.5))), w = r >= 12 ? 2 : 1, j, k, sq = r >= 12 ? 0.45 : 0.4;
+  var r = p.r || 5, hg = p.h0 != null ? p.h0 + (p.h1 - p.h0) * X.ease(Math.min(1, f / (p.fall || 0.8))) : (p.hgt || 0), y = cy + 5 - hg, a = X.env(f, 0.1, 0.3), n = Math.max(16, Math.round(r * (r >= 12 ? 2.6 : 3.6))), w = r >= 12 ? 2 : 1, j, k, sq = r >= 12 ? 0.45 : 0.4;
   for (j = 0; j < n; j++) {
     k = j / n * 6.2832 + time * (p.spin || 0.7);
-    g.globalAlpha = a * 0.4; g.fillStyle = P.dusk; g.fillRect(Math.round(cx + Math.cos(k) * r - w / 2), Math.round(y + 1 + Math.sin(k) * r * sq - w / 2), w, w);
-    g.globalAlpha = a * (Math.sin(k) < 0 ? 0.55 : 1); g.fillStyle = p.c || P.lamp; g.fillRect(Math.round(cx + Math.cos(k) * r - w / 2), Math.round(y + Math.sin(k) * r * sq - w / 2), w, w);
+    g.globalAlpha = a * (r >= 12 ? 0.45 : 0.8); g.fillStyle = r >= 12 ? P.dusk : P.deep; g.fillRect(Math.round(cx + Math.cos(k) * r - w / 2), Math.round(y + 1 + Math.sin(k) * r * sq - w / 2), w, w);
+    g.globalAlpha = a * (Math.sin(k) < 0 ? 0.6 : 1); g.fillStyle = p.c || (r >= 12 ? P.lamp : P.glow); g.fillRect(Math.round(cx + Math.cos(k) * r - w / 2), Math.round(y + Math.sin(k) * r * sq - w / 2), w, w);
   }
   g.globalAlpha = a; g.fillStyle = p.c2 || P.white;
   for (j = 0; j < (r >= 12 ? 4 : 2); j++) { k = time * 2.4 + j * 6.2832 / (r >= 12 ? 4 : 2); g.fillRect(Math.round(cx + Math.cos(k) * r) - (w > 1 ? 1 : 0), Math.round(y + Math.sin(k) * r * sq) - (w > 1 ? 1 : 0), w + (w > 1 ? 1 : 0), w + (w > 1 ? 1 : 0)); }
 } });
 // 해: r 반지름의 둥근 해와 햇살 (rays 갈래 · ray 길이). hgt 높이 (h0 → h1 이면 그동안 움직인다). flat = 땅에 내려앉은 해 (납작하게, 유닛 밑에 그린다 — L: 0 과 함께). half = 땅금(칸 발치) 아래는 가린다 (떠오르는 해)
 X.kind('mon_sun', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
+  zcut(V, p);
   var L = pxl(), r = p.r || 8, hg = p.h0 != null ? p.h0 + (p.h1 - p.h0) * X.ease(Math.min(1, f / (p.fall || 1))) : (p.hgt || 0), sq = p.flat ? 0.5 : 1, y = cy + (p.flat ? 5 : p.half ? 6 : 0) - hg, a = X.env(f, p.in == null ? 0.1 : p.in, p.out == null ? 0.25 : p.out) * (p.a || 1), clip = p.half ? cy + 7 : null, n = p.rays || 8, j, k, r0, r1, ry = p.ray || 6;
   if (L) for (j = 0; j < n; j++) {
     k = j / n * 6.2832 + time * (p.spin == null ? 0.5 : p.spin); if (p.half && Math.sin(k) > 0.05) continue;
@@ -165,6 +170,7 @@ function wardTo(c, fx, fy, big) {
   c.fx('orb', { x: fx, y: fy - 0.3, x1: x, y1: y - 0.4, h: 6, head: 'star', s: 2, c: P.glow, c2: P.amber, dur: 0.2, tr: 3 });
   c.at(0.2, function () { c.fx('mon_lamp', { x: x, y: y, hgt: 15, bare: !big, up: 3, dur: 0.8 }); c.fx('dome', { x: x, y: y, r: big ? 10 : 8, c: P.lamp, dur: 0.7 }); c.burst(x, y - 0.3, LAMP, big ? 5 : 3, { up: 20, grav: -14, spd: 5, life: 0.5 }); });
 }
+function rose(c, t) { c.fx('sigil', { x: c.cx, y: c.cy, r: 31, c: P.lamp, c2: P.white, sides: 8, skip: 3, dur: t + 0.25, spin: 0.25 }); }      // 성역의 땅무늬: 여덟 갈래 빛
 function motes(c, x, y, cols, n) { c.burst(x, y - 0.2, cols, n, { up: 22, grav: -16, spd: 5, life: 0.6 }); }
 
 // T1 ── 축복의 구령 (호령): 등불을 들어 종을 울린다. 아군 머리 위에 작은 불씨가 하나씩 켜진다
@@ -209,15 +215,17 @@ X.reg('mon_sanct', {
   cast: function (c) {
     var x = c.ux, y = c.uy;
     c.pose('sink', 0.5, 3).castPose(P.lamp).sfx('mon_bell');
-    c.fx('sigil', { x: x, y: y, r: 31, c: P.lamp, c2: P.white, sides: 8, skip: 3, dur: 1.4, spin: 0.4 });
+    c.ring(x, y, 30, P.lamp, { w: 2, dur: 0.4 });
     c.at(0.15, function () {
       c.fx('dome', { x: x, y: y, r: 33, c: P.lamp, c2: P.white, dur: 1.0 }); c.fx('shock', { x: x, y: y, r: 34, c: P.lamp, c2: P.white, w: 1, thin: 1, dur: 0.5 });
       c.who(true, function (ax, ay) { c.ring(ax, ay, 9, P.mint, { rise: true, dur: 0.5 }); motes(c, ax, ay, MEND, 3); }, 6);
       c.light(x, y, 22, P.glow, 0.45, 0.8).boom('ward');
     });
   },
-  zone: function (c, e) { c.fx('mon_lamp', { x: c.cx, y: c.cy, hgt: 25, sway: 1, out: 0.06, dur: e.dur }); },
+  zone: function (c, e) { rose(c, c.S.zone.first || c.S.zone.every); c.fx('mon_lamp', { x: c.cx, y: c.cy, hgt: 25, sway: 1, out: 0.06, zid: e.zid, dur: e.dur }); },      // 성역이 서 있는 동안: 땅의 빛무늬(유닛 밑)와 가운데 위의 등불
   zoneTick: function (c) {
+    var Z = c.S.zone, left = Z.dur - c.i * Z.every;
+    if (left > 0.3) rose(c, Math.min(Z.every, left));      // 빛무늬는 맥박마다 다시 그린다 (자리가 걷히면 다음 맥박에 이어지지 않는다)
     c.fx('shock', { x: c.cx, y: c.cy, r: 32, c: P.lamp, w: 1, thin: 1, dur: 0.6 });
     c.hits(function (x, y) { c.ring(x, y, 8, P.mint, { rise: true, dur: 0.45 }); motes(c, x, y, MEND, 2); }, 6);
     c.sfx('mon_bell');
@@ -225,7 +233,7 @@ X.reg('mon_sanct', {
   zoneEnd: function (c) { c.burst(c.cx, c.cy - 1.5, LAMP, 5, { spd: 14, grav: 20, life: 0.4 }); } });
 // T3 ── 성등 치기: 등불을 높이 들면 굵은 빛의 창이 꽂혀 박히고 — 한 박자 뒤 그 빛이 십자로 터진다 (땅에 달아오른 금)
 X.reg('xmon_smite', {
-  cast: function (c) { c.castPose(P.lamp).pose('rise', 0.5, 2.5).ghost(0, 0, P.lamp, 0.4, 0.35).sfx('mon_bell'); c.fx('mon_lamp', { x: c.ux, y: c.uy, hgt: 20, s: 2, sway: 1, dur: 0.75 }); },
+  cast: function (c) { c.castPose(P.lamp).pose('rise', 0.5, 2.5).ghost(0, 0, P.lamp, 0.4, 0.35); c.fx('mon_lamp', { x: c.ux, y: c.uy, hgt: 20, s: 2, sway: 1, dur: 0.75 }); },
   beat: function (c, i) {
     var x = c.cx, y = c.cy;
     if (i === 0) {
@@ -266,8 +274,7 @@ X.reg('xmon_sun', {
     c.fx('mon_sun', { x: x, y: y, r: 8, h0: 118, h1: 4, fall: 1, rays: 8, ray: 6, in: 0.2, out: 0.02, dur: T });
   },
   beat: function (c) {
-    var x = c.cx, y = c.cy, D = c.S.zone.dur;
-    c.fx('mon_sun', { x: x, y: y, L: 0, flat: 1, r: 13, rays: 12, ray: 22, rw: 2, spin: 0.6, in: 0.02, out: 0.12, a: 0.9, dur: D + 0.25 });      // 땅에 내려앉은 해 (유닛 밑)
+    var x = c.cx, y = c.cy;
     c.fx('shock', { x: x, y: y, r: 38, c: P.lamp, c2: P.white, w: 3, dur: 0.45 }); c.fx('shock', { x: x, y: y, r: 47, c: P.white, w: 1, thin: 1, dur: 0.55, d: 0.1 });
     c.fx('column', { x: x, y: y, w: 8, h: 84, c: P.lamp, c2: P.white, a: 0.55, dur: 0.35 });
     c.hits(function (hx, hy) { c.shape({ k: 'impact', x: hx, y: hy, dur: 0.24, c: P.white, r: 8 }); c.burst(hx, hy, HOLY, 3, { spd: 36, life: 0.3 }); }, 6);
@@ -275,10 +282,11 @@ X.reg('xmon_sun', {
     c.light(x, y, 28, P.glow, 0.6, 0.6).flash(P.glow, 0.06).wash(P.lamp, 0.05, 0.7).shake(0.2).stop(0.05).boom('mon_judge');
     wardTo(c, x, y, true);
   },
+  zone: function (c, e) { c.fx('mon_sun', { x: c.cx, y: c.cy, L: 0, flat: 1, r: 13, rays: 12, ray: 22, rw: 2, spin: 0.6, in: 0.02, out: 0.12, a: 0.9, zid: e.zid, dur: e.dur + 0.2 }); },      // 땅에 내려앉은 해 (유닛 밑) — 자리가 서 있는 동안
   zoneTick: function (c) {
     c.fx('shock', { x: c.cx, y: c.cy, r: 34, c: P.lamp, w: 1, thin: 1, dur: 0.5 });
     c.hits(function (x, y) { c.fx('column', { x: x, y: y, w: 2, h: 24, c: P.lamp, c2: P.white, a: 0.5, dur: 0.25 }); c.burst(x, y, WARM, 2, { up: 20, grav: -10, spd: 8, life: 0.35 }); }, 6);
-    c.sfx('mon_lance');
+    c.sfx('holy');
   },
   zoneEnd: function (c) { c.ring(c.cx, c.cy, 30, P.lamp, { inv: true, dur: 0.4 }); c.burst(c.cx, c.cy, WARM, 8, { up: 26, grav: -14, spd: 16, life: 0.5, spread: 20 }); } });
 // T4 ── 등잔불 춤: 등불을 들고 세 걸음 — 걸음마다 등불이 호를 그리고, 불길이 줄을 따라 번진다. 끝 걸음에 제자리에서 돌며 불기둥이 줄지어 선다
@@ -349,7 +357,7 @@ function dawn(c, i, last, grand) {
   if (!last) {      // 먼동
     c.fx('shock', { x: x, y: y, r: 36, c: P.rose, c2: P.pale, w: 2, dur: 0.45 });
     c.hits(function (hx, hy) { c.ring(hx, hy, 8, P.rose, { dur: 0.3 }); c.burst(hx, hy, [P.rose, P.pale], 2, { spd: 26, life: 0.3 }); }, 5);
-    c.light(x, y, 30, P.rose, 0.5, 0.4).shake(0.12).sfx('mon_lance');
+    c.light(x, y, 30, P.rose, 0.5, 0.4).shake(0.12).sfx('holy');
     return;
   }
   for (k = 0; k < 8; k++) { a = k / 8 * 6.2832 + 0.39; c.fx('beam', { x0: x + Math.cos(a) * 0.5, y0: y + Math.sin(a) * 0.3, x1: x + Math.cos(a) * len, y1: y + Math.sin(a) * len * 0.62, w: 3, c: P.lamp, c2: P.white, d: k * 0.012, dur: 0.42 }); }      // 햇살

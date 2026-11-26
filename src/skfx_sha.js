@@ -7,16 +7,17 @@
 //   새 그림 조각: sha_thread(생기의 실) · sha_brand(낙인) · sha_grave(무덤과 뼈 손) · sha_skull(해골 얼굴) · sha_moon(그믐달 · 가려진 달) · sha_veil(드리운 장막) · sha_count(세는 숫자) · sha_fog(역병 안개와 날벌레)
 //   새 소리: sha_sip · sha_pact · sha_grave · sha_brand · sha_fog · sha_toll · sha_soul · sha_doom
 //
-//   고친 것 (옛 → 새 · 허수아비 / 싸움판 피해 비는 tools/skdmg.js):
-//   sha_drain · sha_raise · sha_hex   수치 그대로. 실이 닿을 때(0.15초) · 무덤이 열릴 때(0.2초) · 낙인이 찍힐 때(0.2초)
-//   sha_plague    140% + 중독 12초  →  터질 때 85% + 중독, 안개가 4초 남아 2초마다 38%. 걷힐 때 안에 있는 적은 다시 중독 (뒤늦게 들어선 적도 걸린다)
-//   xsha_drain    200% 한 번  →  세 번에 걸쳐 70% + 70% + 80% (뽑을 때마다 나눈다)
+//   고친 것 (옛 → 새 | 허수아비 / 싸움판 피해 비 — tools/skdmg.js, 새 ÷ 옛):
+//   sha_drain · sha_raise · sha_hex   수치 그대로. 실이 닿을 때(0.15초) · 무덤이 열릴 때(0.2초) · 낙인이 찍힐 때(0.2초) | 1.00 / 1.00
+//   sha_plague    140% + 중독 12초  →  터질 때 85% + 중독, 안개가 4초 남아 2초마다 38%. 걷힐 때 안에 있는 적은 다시 중독 (뒤늦게 들어선 적도 걸린다) | 1.02 / 1.00
+//   xsha_drain    200% 한 번  →  세 번에 걸쳐 70% + 70% + 80% (뽑을 때마다 나눈다) | 1.03 / 1.01
 //   xsha_legion   수치 그대로, 땅이 갈라질 때(0.45초)
-//   xsha_doom     180% + 중독 + 방어 −25%  →  드리울 때 70% + 중독 + 방어 −25%, 장막이 셋을 세고(3초) 떨어져 안에 남은 적에게 120%
-//   u_newmoon · ux_newmoon   수치 그대로, 달이 뜬 뒤(0.7 · 0.75초)
-//   u_violet      120% + 중독 + 방어 −20%  →  칠 때 85% + 중독 + 방어 −20%, 장막이 4초 뒤 닫히며 안에 남은 적에게 42%
-//   ux_violet     170% + 중독 + 방어 −30%  →  칠 때 120% + 중독 + 방어 −30%, 장막이 5초 뒤 닫히며 58%
-//   u_supper      160% 한 번  →  두 번 80% + 90%          ux_supper   210% 한 번  →  세 번 70% + 70% + 90%
+//   xsha_doom     180% + 중독 + 방어 −25%  →  드리울 때 70% + 중독 + 방어 −25%, 장막이 셋을 세고(3초) 떨어져 안에 남은 적에게 120% | 1.01 / 1.03
+//   u_newmoon · ux_newmoon   수와 세기 그대로, 달이 뜬 뒤(0.7 · 0.75초)
+//   u_violet      120% + 중독 + 방어 −20%  →  칠 때 85% + 중독 + 방어 −20%, 장막이 4초 뒤 닫히며 안에 남은 적에게 42% | 0.99 / 1.00
+//   ux_violet     170% + 중독 + 방어 −30%  →  칠 때 120% + 중독 + 방어 −30%, 장막이 5초 뒤 닫히며 58% | 1.01 / 1.03
+//   u_supper      160% 한 번  →  두 번 80% + 90% | 0.99 / 1.00          ux_supper   210% 한 번  →  세 번 70% + 70% + 90% | 1.01 / 1.01
+//   틀 밖에서 읽는 것 둘: 새로 일어선 망자의 자리는 화면의 유닛에서 읽는다 (owned · risen — 'spawn' 사건이 제 연출로 오지 않는다). 자리에 딸린 조각(zid)은 그 자리가 걷히면 스스로 스러진다 (zcut — 자리가 거두어질 때 부르는 연출이 없다).
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
@@ -78,6 +79,8 @@ X.sound('sha_doom', function (tone, noise) { tone(98, 49, 0.45, 'sine', 0.14); n
 
 // ───────── 그림 조각 ─────────
 function pxl() { return DS.VX && DS.VX.pxLine; }
+// 자리에 딸린 조각 (zid): 그 자리가 걷히면(쓰는 이가 쓰러지거나 판이 끝나면) 곧 스러진다
+function zcut(V, p) { if (p.zid && !p.cut && !(V.skZone && V.skZone[p.zid])) { p.cut = 1; p.dur = Math.min(p.dur, p.t + 0.3); } }
 function disc(g, cx, cy, rx, ry) { ry = Math.max(1, Math.round(ry)); cx = Math.round(cx); cy = Math.round(cy); for (var y = -ry; y <= ry; y++) { var w = Math.round(rx * Math.sqrt(Math.max(0, 1 - (y * y) / (ry * ry + 0.5)))); if (w > 0) g.fillRect(cx - w, cy + y, w * 2, 1); } }
 function glyph(g, R, x, y, s, pad) { var i, j, row; for (i = 0; i < R.length; i++) { row = R[i]; for (j = 0; j < row.length; j++) if (row.charAt(j) === '#') g.fillRect(x + j * s - pad, y + i * s - pad, s + pad * 2, s + pad * 2); } }
 // 생기의 실: (x0,y0) 대상에서 (x1,y1) 쓰는 이 손까지 늘어진 실. 구슬(beads)이 대상 → 손으로 흐른다. grow = 처음 그 몫 동안 손에서 대상으로 뻗는다 · sag 늘어짐 · h0 · h1 양 끝의 높이
@@ -110,7 +113,7 @@ X.kind('sha_brand', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
 X.kind('sha_grave', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
   var L = pxl(), a = X.env(f, 0.08, 0.3), r = p.r || 7, up = Math.min(1, f / 0.3), h = Math.round((p.h || 9) * X.ease(up) * (f > 0.75 ? (1 - f) / 0.25 : 1)), x = Math.round(cx), y = Math.round(cy) + 7, j, k, wg;
   g.globalAlpha = a * 0.85; g.fillStyle = P.ink; disc(g, x, y, r, r * 0.4);
-  g.globalAlpha = a; g.fillStyle = p.c || P.violet; for (j = 0; j < 10; j++) { k = j / 10 * 6.2832 + 0.3; g.fillRect(Math.round(x + Math.cos(k) * r), Math.round(y + Math.sin(k) * r * 0.4), 1, 1); }      // 무덤 둘레의 밝은 점 (어두운 땅에서도 읽힌다)
+  g.globalAlpha = a; for (j = 0; j < 12; j++) { k = j / 12 * 6.2832 + 0.3; g.fillStyle = j % 3 ? (p.c || P.violet) : P.lilac; g.fillRect(Math.round(x + Math.cos(k) * r), Math.round(y + Math.sin(k) * r * 0.4), j % 3 ? 1 : 2, 1); }      // 무덤 둘레의 밝은 점 (어두운 땅에서도 읽힌다)
   if (L) { g.fillStyle = P.pit; L(g, x - r + 2, y, x - 1, y - 1, 1); L(g, x - 1, y - 1, x + 2, y + 1, 1); L(g, x + 2, y + 1, x + r - 2, y, 1); }
   if (h <= 0 || p.noarm) return;
   x += p.lean || 0; wg = Math.sin(time * 12 + p.sd) > 0 ? 1 : 0;
@@ -146,8 +149,9 @@ X.kind('sha_moon', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
 } });
 // 드리운 장막: 그 칸 위에서 천 한 폭이 떨어진다 (h 길이 · w 너비 · drop 떨어지는 데 드는 몫). hold 가 있으면 그 몫 뒤에는 val 길이의 자락만 위에 걸려 남는다 (유닛을 가리지 않게)
 X.kind('sha_veil', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
+  zcut(V, p);
   var h = p.h || 34, w = p.w || 12, q = Math.min(1, f / (p.drop || 0.12)), a = (p.a || 0.5) * (f > 0.88 ? (1 - f) / 0.12 : 1), top = Math.round(cy + 6 - h), len = h * X.ease(q), j, x, sw, x0 = Math.round(cx - w / 2), k;
-  if (p.hold != null && f > p.hold) { k = Math.min(1, (f - p.hold) / (p.back || 0.05)); len = h + ((p.val || 11) - h) * k; a *= 1 - 0.25 * k; }
+  if (p.hold != null && f > p.hold) { k = Math.min(1, (f - p.hold) / (p.back || 0.05)); len = h + ((p.val || 11) - h) * k; a = Math.min(0.9, a * (1 + 0.6 * k)); }
   for (j = 0; j < w; j += 2) {
     sw = Math.round(Math.sin(time * 2.2 + j * 0.9 + p.sd) * 1.5); x = x0 + j;
     g.globalAlpha = a; g.fillStyle = (j >> 1) % 2 ? (p.c || P.violet) : (p.c2 || P.deep); g.fillRect(x, top, 2, Math.max(1, Math.round(len + sw)));
@@ -165,6 +169,7 @@ X.kind('sha_count', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
 } });
 // 역병 안개: 땅에 깔려 퍼지는 풀빛 안개 덩이(n)와 그 위를 맴도는 날벌레(flies). r 퍼지는 너비
 X.kind('sha_fog', { L: 1, draw: function (g, p, f, time, V, cx, cy) {
+  zcut(V, p);
   var a = X.env(f, 0.06, 0.2) * (p.a || 0.4), r = p.r || 16, n = p.n || 7, sp = Math.min(1, f * 8 + 0.25), j, k, rr, x, y, w, h, sd = p.sd;
   for (j = 0; j < n; j++) {
     k = X.hs(j, sd) * 6.2832 + time * 0.25 * (j % 2 ? 1 : -1); rr = (0.25 + X.hs(j + 3, sd) * 0.75) * r * sp;
@@ -201,11 +206,11 @@ function rim(c, fn) { var cxr = Math.round(c.cx), cyr = Math.round(c.cy), k = 0;
 X.reg('cmd_sha', { cast: function (c) {
   var n = 0;
   c.castPose(P.blood).pose('sink', 0.4, 2).sfx('sha_pact');
-  c.fx('sigil', { x: c.ux, y: c.uy, r: 11, c: P.blood, c2: P.rose, sides: 5, skip: 2, dur: 0.65 });
+  c.fx('sigil', { x: c.ux, y: c.uy, r: 13, c: P.blood, c2: P.white, sides: 5, skip: 2, dur: 0.7 });
   c.each(function (x, y) {
     if (n >= 6) return; var d = 0.05 + n * 0.03; n++;
-    c.fx('drop', { x: x, y: y - 0.55, h: 16, s: 2, c: P.blood, c2: P.deep, tr: 2, d: d, dur: 0.18 });
-    c.at(d + 0.18, function () { c.burst(x, y - 0.5, BLOOD, 2, { spd: 18, up: 6, grav: 60, life: 0.3 }); });
+    c.fx('drop', { x: x, y: y - 0.55, h: 22, s: 3, c: P.blood, c2: P.rose, tr: 3, d: d, dur: 0.22 });
+    c.at(d + 0.22, function () { c.burst(x, y - 0.5, BLOOD, 2, { spd: 22, up: 8, grav: 60, life: 0.35, size: 2 }); });
   }, 9);
 } });
 // T1 ── 생기 나눔: 손에서 실이 뻗어 대상에 닿고 — 생기의 구슬이 실을 타고 손으로 흘러든다
@@ -247,13 +252,14 @@ X.reg('sha_hex', {
 X.reg('sha_plague', {
   cast: function (c) { var h = hand(c); c.castPose(P.green).sfx('swoosh'); c.fx('orb', { x: h[0], y: h[1], x1: c.cx, y1: c.cy, h: 8, s: 3, c: P.green, c2: P.sick, dur: 0.25, tr: 3 }); },
   beat: function (c) {
-    var x = c.cx, y = c.cy, D = c.S.zone.dur;
-    c.fx('sha_fog', { x: x, y: y, r: 19, n: 8, flies: 7, a: 0.4, dur: D + 0.4 });
-    c.fx('stain', { x: x, y: y, r: 16, c: P.moss, a: 0.3, c2: P.green, grow: 1, dur: D + 0.5 });
+    var x = c.cx, y = c.cy;
+    c.fx('sha_fog', { x: x, y: y, r: 19, n: 8, flies: 0, a: 0.4, dur: 0.7 });      // 터지며 퍼지는 첫 안개 (남는 안개는 자리가 깔릴 때)
+    c.fx('stain', { x: x, y: y, r: 16, c: P.moss, a: 0.3, c2: P.green, grow: 1, dur: c.S.zone.dur + 0.5 });
     c.ring(x, y, 17, P.green, { dur: 0.4 }); c.burst(x, y, PLAGUE, 10, { spd: 26, up: 8, grav: -6, life: 0.6, spread: 14 });
     c.hits(function (hx, hy) { c.burst(hx, hy, PLAGUE, 2, { up: 14, grav: -8, spd: 8, life: 0.5 }); }, 5);
     c.light(x, y, 18, P.green, 0.35, 0.4).boom('sha_fog');
   },
+  zone: function (c, e) { c.fx('sha_fog', { x: c.cx, y: c.cy, r: 19, n: 8, flies: 7, a: 0.4, zid: e.zid, dur: e.dur + 0.3 }); },      // 남는 안개와 날벌레 — 자리가 서 있는 동안
   zoneTick: function (c) { c.hits(function (x, y, k) { c.burst(x, y - 0.2, PLAGUE, 2, { up: 12, grav: -8, spd: 8, life: 0.5 }); if (k < 3) c.ring(x, y, 7, P.green, { inv: true, dur: 0.3 }); }, 5); c.sfx('poison'); },
   zoneEnd: function (c) { c.burst(c.cx, c.cy, PLAGUE, 8, { spd: 30, grav: -10, life: 0.5, spread: 20 }); c.hits(function (x, y) { c.ring(x, y, 8, P.green, { rise: true, dur: 0.4 }); }, 5); } });
 // T3 ── 영혼 흡수: 두 가닥 실이 대상에 감기고, 세 번 당긴다 — 당길 때마다 넋 한 덩이가 실을 타고 건너온다. 마지막에 넋의 얼굴이 떠오르고 생기의 기둥이 선다
@@ -298,6 +304,7 @@ X.reg('xsha_legion', {
     });
   } });
 // T3 ── 죽음의 장막: 먹구름이 끼고 검은 줄기가 내려 적을 적신다 — 땅에 시계 무늬가 돌고 머리 위에서 3 · 2 · 1 을 센다. 다 세면 장막이 떨어지고 큰 해골이 스친다
+function clock(c) { c.fx('sigil', { x: c.cx, y: c.cy, r: 35, c: P.violet, c2: P.bone, sides: 0, runes: 12, dur: 1.25, spin: -0.6 }); }      // 땅의 시계 무늬: 맥박마다 다시 그린다 (자리가 걷히면 이어지지 않는다)
 function count(c, n) { c.fx('sha_count', { x: c.cx, y: c.cy, n: n, s: 3, hgt: 36, dur: 0.95 }); c.sfx('sha_toll'); }
 X.reg('xsha_doom', {
   cast: function (c) {
@@ -308,10 +315,10 @@ X.reg('xsha_doom', {
     var x = c.cx, y = c.cy;
     c.hits(function (hx, hy, k) { c.fx('column', { x: hx, y: hy, w: 2, h: 42, c: P.deep, c2: P.violet, a: 0.6, d: k * 0.02, dur: 0.28 }); c.burst(hx, hy, DARK, 3, { spd: 22, grav: 50, life: 0.35 }); }, 6);
     c.fx('shock', { x: x, y: y, r: 36, c: P.violet, c2: P.lilac, w: 1, thin: 1, dur: 0.45 });
-    c.light(x, y, 26, P.violet, 0.5, 0.35).shake(0.1).sfx('sha_brand');
+    c.light(x, y, 26, P.violet, 0.5, 0.35).shake(0.1).sfx('dark');
   },
-  zone: function (c, e) { c.fx('sigil', { x: c.cx, y: c.cy, r: 35, c: P.violet, c2: P.bone, sides: 0, runes: 12, dur: e.dur + 0.1, spin: -0.6 }); count(c, 3); },
-  zoneTick: function (c) { if (c.i < 3) count(c, 3 - c.i); c.hits(function (x, y, k) { if (k < 4) c.ring(x, y, 8, P.violet, { inv: true, dur: 0.35 }); }, 6); },
+  zone: function (c, e) { clock(c); count(c, 3); },
+  zoneTick: function (c) { if (c.i < 3) { clock(c); count(c, 3 - c.i); } c.hits(function (x, y, k) { if (k < 4) c.ring(x, y, 8, P.violet, { inv: true, dur: 0.35 }); }, 6); },
   zoneEnd: function (c) {
     var x = c.cx, y = c.cy;
     rim(c, function (tx, ty, k) { c.fx('sha_veil', { x: tx, y: ty, h: 36, w: 13, drop: 0.3, a: 0.6, d: k * 0.015, dur: 0.6 }); });
@@ -352,10 +359,10 @@ X.reg('ux_newmoon', { cast: function (c) { moonUp(c, true); }, beat: function (c
 // T4 ── 자줏빛 장막: 둘레에 천이 떨어져 닫히고(첫 타격) — 자락만 위에 걸린 채 4초, 안의 숨이 무겁게 가라앉는다. 다 되면 장막이 다시 떨어지며 닫힌다
 // T5 ── 명계의 장막: 장막이 더 길고, 맥박마다 땅에서 뼈 손이 뻗는다. 닫힐 때 큰 해골이 스친다
 function veilUp(c, grand) {
-  var T = c.S.beats[0], D = c.S.zone.dur, all = T + D + 0.15, h = grand ? 42 : 36;
+  var T = c.S.beats[0], h = grand ? 42 : 36;
   c.dim(grand ? 1.3 : 1.0).wash(P.deep, grand ? 0.1 : 0.07, 1.2).castPose(P.violet).pose('rise', 0.6, 2.5).ghost(0, 0, P.violet, 0.4, 0.4).sfx('sha_toll');
   c.fx('sigil', { x: c.cx, y: c.cy, r: 36, c: P.violet, c2: P.lilac, sides: grand ? 8 : 0, skip: 3, runes: 8, dur: T + 0.7, spin: 0.7 });
-  rim(c, function (tx, ty, k) { c.fx('sha_veil', { x: tx, y: ty, h: h, w: 13, drop: T / all, hold: (T + 0.4) / all, back: 0.25 / all, val: 11, a: 0.55, dur: all }); });      // 떨어져 닫혔다가, 자락만 걸려 남는다
+  rim(c, function (tx, ty, k) { c.fx('sha_veil', { x: tx, y: ty, h: h, w: 13, drop: T / (T + 0.6), a: 0.55, dur: T + 0.6 }); });      // 둘레에 천이 떨어져 닫힌다 (자락은 자리가 깔릴 때 걸린다)
 }
 function veilHit(c, grand) {
   var x = c.cx, y = c.cy;
@@ -366,6 +373,7 @@ function veilHit(c, grand) {
   c.light(x, y, 36, P.violet, 0.65, 0.5).shake(grand ? 0.36 : 0.26).stop(grand ? 0.07 : 0.06).flash(P.violet, grand ? 0.09 : 0.07).boom('sha_doom');
   if (grand) { c.fx('shock', { x: x, y: y, r: 54, c: P.lilac, w: 1, thin: 1, dur: 0.7, d: 0.12 }); c.streak(8, 1.5708, P.violet, 0.5, 0.2); }
 }
+function veilHang(c, e, grand) { rim(c, function (tx, ty) { c.fx('sha_veil', { x: tx, y: ty, h: grand ? 42 : 36, w: 13, drop: 0.001, hold: 0.3 / e.dur, back: 0.3 / e.dur, val: 9, a: 0.55, zid: e.zid, dur: e.dur }); }); }      // 자락만 위에 걸려 남는다 — 자리가 서 있는 동안
 function veilTick(c, grand) {
   c.hits(function (x, y, k) {
     c.burst(x, y - 0.6, DARK, 2, { up: -10, grav: 26, spd: 5, life: 0.5 });      // 가라앉는 숨
@@ -382,13 +390,13 @@ function veilEnd(c, grand) {
   c.light(x, y, 28, P.violet, 0.55, 0.4).shake(0.2).flash(P.violet, 0.05).boom('sha_doom');
   if (grand) { c.fx('sha_skull', { x: x, y: y, hgt: 22, s: 3, a: 0.85, jaw: 1, c2: P.green, dur: 0.6 }); c.fx('shock', { x: x, y: y, r: 44, c: P.lilac, w: 2, dur: 0.5 }); c.wash(P.deep, 0.05, 0.6); }
 }
-X.reg('u_violet', { cast: function (c) { veilUp(c, false); }, beat: function (c) { veilHit(c, false); }, zoneTick: function (c) { veilTick(c, false); }, zoneEnd: function (c) { veilEnd(c, false); } });
-X.reg('ux_violet', { cast: function (c) { veilUp(c, true); }, beat: function (c) { veilHit(c, true); }, zoneTick: function (c) { veilTick(c, true); }, zoneEnd: function (c) { veilEnd(c, true); } });
+X.reg('u_violet', { cast: function (c) { veilUp(c, false); }, beat: function (c) { veilHit(c, false); }, zone: function (c, e) { veilHang(c, e, false); }, zoneTick: function (c) { veilTick(c, false); }, zoneEnd: function (c) { veilEnd(c, false); } });
+X.reg('ux_violet', { cast: function (c) { veilUp(c, true); }, beat: function (c) { veilHit(c, true); }, zone: function (c, e) { veilHang(c, e, true); }, zoneTick: function (c) { veilTick(c, true); }, zoneEnd: function (c) { veilEnd(c, true); } });
 // T4 ── 망자의 저녁: 발밑에 둥근 식탁이 그려지고, 둘레의 적마다 실이 이어진다 — 두 번 들이켠다. 마지막에 넋이 실을 타고 모여들어 생기의 기둥이 선다
 // T5 ── 망자의 만찬: 식탁이 두 겹, 세 번 들이켠다. 머리 위에 큰 해골이 주인처럼 뜨고, 생기가 오래 피어오른다
 function supperUp(c, grand) {
   var B = c.S.beats, T = B[B.length - 1], x = c.ux, y = c.uy;
-  c.dim(T + 0.5).wash(P.ink, grand ? 0.08 : 0.06, T + 0.3).castPose(P.violet).pose('rise', T, 3).ghost(0, 0, P.violet, 0.5, 0.4).sfx('sha_toll');
+  c.dim(T + 0.5).wash(P.ink, grand ? 0.08 : 0.06, T + 0.3).castPose(P.violet).pose('rise', T, 3).ghost(0, 0, P.violet, 0.5, 0.4).sfx('dark');
   c.fx('sigil', { x: x, y: y, r: 36, c: P.bone, c2: P.rose, sides: 0, runes: 8, dur: T + 0.6, spin: 0.5 });
   if (grand) c.fx('sigil', { x: x, y: y, r: 45, c: P.violet, c2: P.lilac, sides: 8, skip: 3, dur: T + 0.6, spin: -0.4 });
   c.who(false, function (ex, ey, k) { c.fx('sha_thread', { x0: ex, y0: ey, x1: x, y1: y - 0.5, grow: 0.2, beads: 2, sag: 4, speed: T * 2.2, c: P.violet, bead: P.life, sd: k * 13, dur: T + 0.3 }); }, 6);
