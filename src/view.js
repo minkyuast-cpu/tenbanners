@@ -190,6 +190,7 @@ V.setScene = function (sim, map) {
   this.pois = map.pois || []; this.aim = null; this.mark = null; this.tgt = null; this.guide = null; this.pan = { x: 0, y: 0 }; this.snap = true;
   this.decor = map.decor || []; this.fallen = []; this.cer = {}; this.graves = []; this.dsUsed = {}; this.dq = []; this.dz = null; this.zk = 1; this.slowF = 1; this.lastSk = {};      // r16 fx: 오름 연출은 장면이 바뀌면 끝
   this.vig = vignette(this.theme);
+  if (this.skReset) this.skReset();      // 2.7 기술 연출: 장면이 바뀌면 걸린 안무 · 그림 조각을 비운다
   // r7: 물(1)·용암(2) 칸 표 — 매 프레임 화면 안 칸만 훑는다. 광원 목록 비우기, 장면 전환(디더 페이드인) 시작
   this.lights = []; this.wet = null; this.wetN = 0; this.lavaN = 0;
   this.rain = []; for (ai = 0; RAIN[this.theme] && ai < RAIN[this.theme]; ai++) this.rain.push({ x: Math.random(), y: Math.random(), s: Math.random() });
@@ -684,13 +685,19 @@ V.handle1 = function (e, sim) {
       case 'heal': if (on) { self.float(ux, uy, '+' + Math.round(e.v), '#7fe07a', { num: true, s: 1.5, pk: 2, slow: true, life: 1 }); } break;
       case 'mana': if (on) { self.float(ux, uy, '+' + Math.round(e.v), '#62b0ee', { num: true, s: 1.25, pk: 1.6, slow: true, life: 1 }); self.sfx('heal'); } break;
       case 'item': if (on) { self.burst(ux, uy, FXC.heal, 6, { up: 20, grav: -20, spd: 6 }); self.sfx(e.key === 'endo' ? 'buff' : 'heal'); if (e.key === 'endo') self.float(ux, uy, '기운초!', '#f6cf57', { life: 1 }); } break;
-      case 'skill': if (self.lastSk) self.lastSk[e.id] = { fx: e.fx, t: self.time }; self.fx(e.fx, e.tiles, e.from); if (DS.SKILLS && DS.SKILLS[e.sk] && DS.SKILLS[e.sk].grand) self.grandFx(e.tiles, e.from, DS.SKILLS[e.sk]); if (v && on) { var cc = (FXC[e.fx] || FXC.slash)[0]; v.cast = { t: 0, c: cc }; self.light(v.x * 16 + 8, v.y * 16 + 6, 14, cc, 0.5, 0.45); }      // 2.2.9: 윗길 기술 · 필살기의 금빛 덧빛 (grandFx)
-        var SU = DS.SKILLS && DS.SKILLS[e.sk]; if (SU && SU.ult && u && u.side === 'ally' && (on || u.role === 'cmd')) { try { self.ultBlast(e, SU, u); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'ultBlast'); } }      // 2.2.5 필살기 연출
+      case 'skill': if (self.lastSk) self.lastSk[e.id] = { fx: e.fx, t: self.time };
+        var sg = false; if (self.skSkill) { try { sg = self.skSkill(e, v, u); } catch (x) { sg = false; if (DS.loopErr) DS.loopErr(x, 'skfx'); } }      // 2.7: 그 기술만의 연출이 있으면 그것으로 (skfx.js DS.SKFX) — 없으면 아래 공용 연출 그대로
+        if (sg) { if (e.from) self.lastSkill = { x: e.from[0], y: e.from[1], t: self.time }; }
+        else if (e.fall) { self.sfx('skill'); if (e.from) self.lastSkill = { x: e.from[0], y: e.from[1], t: self.time }; }      // 예고 낙하(제 연출 없음): 떨어질 때 공용 연출 (skEv 의 beat)
+        else { self.fx(e.fx, e.tiles, e.from); if (DS.SKILLS && DS.SKILLS[e.sk] && DS.SKILLS[e.sk].grand) self.grandFx(e.tiles, e.from, DS.SKILLS[e.sk]); }
+        if (v && on && !sg) { var cc = (FXC[e.fx] || FXC.slash)[0]; v.cast = { t: 0, c: cc }; self.light(v.x * 16 + 8, v.y * 16 + 6, 14, cc, 0.5, 0.45); }      // 2.2.9: 윗길 기술 · 필살기의 금빛 덧빛 (grandFx)
+        var SU = DS.SKILLS && DS.SKILLS[e.sk]; if (!sg && SU && SU.ult && u && u.side === 'ally' && (on || u.role === 'cmd')) { try { self.ultBlast(e, SU, u); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'ultBlast'); } }      // 2.2.5 필살기 연출
+        if (sg && SU && SU.ult && u && u.side === 'ally') self.ultHit = { id: u.id, t: self.time, c: (FXC[e.fx] || FXC.slash)[0] };
         // r26: 내가 고른 가문(또는 수동 가문)의 기술은 더 무겁게 — 멈칫 · 흔들림 · 그 색의 번쩍임 · 머리 위 기술 이름 판
         if (v && on && u.side === 'ally' && u.role === 'cmd' && (e.id === self.sel || !u.auto) && !/^i_/.test(e.sk || '')) {
           var hostile = HOSTILE_FX[e.fx], cm = calmFx();
-          if (!cm) { self.hitStop(hostile ? 0.05 : 0.03); self.shake = Math.max(self.shake, hostile ? 0.14 : 0.06); }
-          self.flashA = Math.max(self.flashA, (hostile ? 0.06 : 0.04) * (cm ? 0.5 : 1)); self.flashC = (FXC[e.fx] || FXC.slash)[0];
+          if (!cm && !sg) { self.hitStop(hostile ? 0.05 : 0.03); self.shake = Math.max(self.shake, hostile ? 0.14 : 0.06); }      // 제 연출이 있는 기술은 멈칫 · 흔들림 · 번쩍임을 제 단계 예산으로 정한다
+          if (!sg) { self.flashA = Math.max(self.flashA, (hostile ? 0.06 : 0.04) * (cm ? 0.5 : 1)); self.flashC = (FXC[e.fx] || FXC.slash)[0]; }
           var SN = DS.SKILLS && DS.SKILLS[e.sk]; if (SN && SN.name) self.float(ux, uy, SN.name, '#fff3c4', { dy: -14, life: 1, call: true });
         }
         break;
@@ -712,6 +719,7 @@ V.handle1 = function (e, sim) {
         v.wkT = self.time; self.float(ux, uy, '약점', '#ffd75e', { dy: -14, life: 0.7 }); break;
       case 'chain':      // 2.2.6 연쇄 번개: 맞은 적에서 다음 적으로 번개 줄기
         var ca = self.vu[e.a], cb = self.vu[e.b]; if (!ca || !cb || !(self.onScreen(cb.u.x, cb.u.y))) break;
+        if (self.skChain && self.skChain(e)) break;      // 2.7: 그 기술만의 연쇄 연출 (skfx.js)
         self.lines.push({ x0: ca.x * 16 + 8, y0: ca.y * 16 + 6, x1: cb.x * 16 + 8, y1: cb.y * 16 + 6, c: '#fff0a0', life: 0.2, t: 0, w: 1, zig: true });
         self.shape({ k: 'bolt', x: cb.x, y: cb.y, dur: 0.2, pts: boltPts(cb.x, cb.y) }); if (!self.lite) self.light(cb.x * 16 + 8, cb.y * 16 + 6, 14, '#cfe6ff', 0.4, 0.2); break;
       case 'ctr':      // 2.2.5 되치기 (부동심)
@@ -775,6 +783,7 @@ V.handle1 = function (e, sim) {
         self.light(v.x * 16 + 8, v.y * 16 + 4, 40, '#ff6a5a', 0.8, 1.2); self.sfx('bossIn');
         break;
       case 'split': if (on) { self.burst(ux, uy, ['#9ccc3c', '#6ab85a', '#d6ffb0'], 12, { spd: 36, up: 14, life: 0.5 }); self.rings.push({ x: ux, y: uy, t: 0, dur: 0.35, c: '#9ccc3c', r: 12 }); self.float(ux, uy, '갈라진다', '#b6f5a0', { dy: -10, life: 0.8 }); } break;
+      case 'beat': case 'mark': case 'seqEnd': case 'zone': case 'zoneTick': case 'zoneEnd': if (self.skEv) self.skEv(e, v, u); break;      // 2.7 여러 박자 · 예고 낙하 · 남는 자리 (skfx.js)
       case 'auraFx': if (on && v && !self.lite && self.time - (v.auT || -9) > 2.5) { v.auT = self.time; self.rings.push({ x: v.x, y: v.y, t: 0, dur: 0.5, c: STC[e.s] || '#9ccc3c', r: 10 + (e.r || 1) * 10 }); } break;
     }
   })();
@@ -789,6 +798,7 @@ V.frame = function (dt, evs) {
   this.ema = (this.ema || 0.016) * 0.97 + dt * 0.03; if (!this.lowFx && this.ema > 0.028 && this.time > 3) this.lowFx = true;
   var Gs = DS.G && DS.G.save; this.spd = DS.spdOf ? DS.spdOf(Gs && Gs.opt && Gs.opt.speed) : 1;      // r36: 1 · 1.5 · 2
   var Gm = DS.G && DS.G.sim; this.spdV = Gm && Gm._er && DS.ERASE ? DS.ERASE.slow : Math.max(1, Math.min(2, this.spd));      // 1.0.4: 화면의 걸음·예고도 배속을 따른다 (전에는 걸음 그림이 늘 1배속이라 필드에서 배속이 안 먹는 것처럼 보였다)
+  if (this.skClock) this.skClock();      // 2.7 기술 연출의 게임 시계 (사건을 받기 전에)
   if (evs && evs.length) this.handle(evs);
   if (this.time - (this.seaT || 0) > 1) { this.seaT = this.time; try { this.seasonTick(); } catch (x) {} }      // 2.6 계절
   if (this.cer) this.cerTick(dt);      // r16 fx: 오름 연출은 실제 시간 (히트스톱·배속과 무관)
@@ -798,6 +808,7 @@ V.frame = function (dt, evs) {
   if (this.stop > 0) { this.stop -= dt; fdt = 0; }
   if (DS.fxFreeze) fdt = 0;      // 2.2.5 시험용: 이펙트 시간을 멈춘다 (한가운데를 찍을 때)
   if (this.slowF && this.slowF < 1) fdt *= this.slowF;      // r16 fx: 죽음 연출 동안 세상이 느려진다 (장면 자체는 실제 시간)
+  if (this.skFrame) this.skFrame(fdt);      // 2.7 기술 연출: 때가 된 안무 · 그림 조각의 시간
   var id, v, i, k = this.k, g = this.g, sim = this.sim;
   if (!sim) return;
   for (id in this.vu) {
@@ -846,6 +857,7 @@ V.frame = function (dt, evs) {
   this.drawAmbient(g, dt);
   this.drawGround(g);
   if (sim.hz && sim.hz.length) this.drawHazard(g);      // 2.3.0 땅의 위험
+  if (this.skDraw) this.skDraw(g, 0);      // 2.7 기술 연출: 땅의 겹 (남는 자리 · 마법진 · 갈라진 금 · 잔상)
   if (this.graves && this.graves.length && this.drawGraves) this.drawGraves(g, dt);
   // 유닛 (아래쪽이 나중에)
   var list = []; for (id in this.vu) list.push(this.vu[id]);
@@ -857,6 +869,7 @@ V.frame = function (dt, evs) {
   g.imageSmoothingEnabled = false;
   if (this.ultDim) { g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); this.drawUltDim(g); g.setTransform(s, 0, 0, s, ox, oy); }      // 2.2.5 필살기의 어둠 — 유닛 위, 이펙트 아래
   this.drawFx(g, fdt);
+  if (this.skDraw) this.skDraw(g, 1);      // 2.7 기술 연출: 공중의 겹
   if (this.cer) for (var cid in this.cer) { this.drawCer(g, true); break; }
   if (this.lights && GO.light !== 0 && rich) this.drawLights(g, fdt); else if (this.lights) this.lights.length = 0;
   // 화면 좌표 글자
@@ -864,6 +877,7 @@ V.frame = function (dt, evs) {
   if (this.vig) { g.imageSmoothingEnabled = true; g.drawImage(this.vig, 0, 0, this.W, this.H); g.imageSmoothingEnabled = false; }      // 지역의 빛 (늘인 작은 그림 한 장)
   if (this.flashA > 0.12) this.flashA = 0.12;      // r8: 번쩍임 상한 — 3배속에서 겹쳐 깜빡이지 않게
   if (this.flashA > 0) { g.fillStyle = this.flashC ? hexA(this.flashC, this.flashA) : 'rgba(255,255,255,' + this.flashA.toFixed(3) + ')'; g.fillRect(0, 0, this.W, this.H); this.flashA -= dt * 1.6; if (this.flashA <= 0) this.flashC = null; }      // 치명타·번개의 번쩍임 (r26: 내 기술은 그 색으로)
+  if (this.skDraw) this.skDraw(g, 2);      // 2.7 기술 연출: 화면의 겹 (줄기 · 빛 물듦)
   var lo = this.lowHp || 0;      // r26: 고른 대장이 위태로우면 가장자리가 붉게 「쿵쿵」 뛴다 (1.25Hz · 움직임 줄이기면 멈춘 붉은 테)
   if (lo > 0) {
     if (!this.redVig) this.redVig = redVignette();
@@ -1456,6 +1470,7 @@ V.drawUnit = function (g, v) {
   var lx = 0, ly = 0, K = '#1b1626';
   if (v.lunge) { var q = Math.sin(v.lunge.t * Math.PI) * 4; lx = v.lunge.dx * q; ly = v.lunge.dy * q; }
   if (v.hit && v.hit.t > 0) { var hq = Math.sin(Math.min(1, v.hit.t) * Math.PI) * v.hit.k; lx += v.hit.dx * hq; ly += v.hit.dy * hq; }      // 맞고 밀린다
+  if (v.skp) { lx += v.skp.ox; ly += v.skp.oy; }      // 2.7 기술 연출의 몸짓 (skfx.js c.pose)
   var bob = fly ? Math.round(Math.sin(t * 4 + v.bob) * 1.5) - 3 : (v.t < 1 ? -Math.abs(Math.sin(v.t * Math.PI)) * 1.5 : 0);
   var dq = v.dying >= 0 && !v.flee ? 1 - v.dying / v.dieDur : -1;      // 쓰러지는 중: 0 → 1
   if (dq >= 0 && boss) lx += Math.random() * 2 - 1;
@@ -1707,6 +1722,7 @@ function pxLine(g, x0, y0, x1, y1, w) {
     if (e2 < dx) { err += dx; y0 += sy; }
   }
 }
+DS.VX = { pxLine: pxLine, hexA: hexA, FXC: FXC, boltPts: boltPts };      // 2.7 기술 연출 틀(skfx.js)이 빌려 쓴다
 function drawShape(g, p, f, time) {
   var cx = p.x * 16 + 8, cy = p.y * 16 + 8, i, j, q, a, r, w, x, y;
   switch (p.k) {

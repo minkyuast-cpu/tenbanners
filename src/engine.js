@@ -79,6 +79,7 @@ function Sim(o) {
   this.mk = o.mk || function (type, opt) { return DS.enemySpec(type, 1, opt); };
   this._d = new Float64Array(n); this._p = new Int32Array(n); this._st = new Int32Array(n); this.stamp = 0;
   this.dz = { ally: new Uint8Array(n), enemy: new Uint8Array(n) };
+  this.sq = []; this.zn = []; this._qid = 0;      // 여러 박자 기술: 기다리는 박자(sq) · 남은 자리(zn) — 아래 「여러 박자」
   this.groups = []; this.chk = 0; this.block = o.block || null; this.hz = []; this._hzC = 0;      // 2.3.0: 땅에 남은 위험 (hazard)
   this.seed0 = o.seed || 7; this.erSeed = o.erSeed; this._ver = 0; this._allyV = -1; this._ally = null; this._us = []; this.swp = 0;      // 명부가 바뀐 횟수, 살아 있는 아군 목록(캐시), 틱마다 쓰는 임시 목록
   var self = this;
@@ -644,6 +645,7 @@ P.cast = function (u, id, tgt, free) {
     this.reDanger();
     return true;
   }
+  if (S.beats || S.fall) return this.seqStart(u, id, tiles, tgt && tgt.id ? tgt : null, [tx, ty]);      // 여러 박자 · 예고 낙하: 지금은 걸어만 두고 박자마다 푼다
   this._at = [tx, ty];
   this.resolve(u, id, tiles, tgt && tgt.id ? tgt : null);
   this._at = null;
@@ -708,11 +710,14 @@ function vsHit(v, key) {
 DS.vsHit = vsHit;
 // 보호막 · 기 전하기 · 생기 나눔의 양: 쓰는 이의 공격 또는 마공 × m (우리 편 보통 기술이면 치유 배율 — 보호막은 그 두 배를 쓴다: 막고 나면 사라진다)
 P.shdAmt = function (u, e, S, pw) { var base = e.stat === 'atk' ? u.atk : u.mag; return Math.round(base * e.m * (pw || 1) + 10); };
-P.resolve = function (u, id, tiles, unitTgt) {
-  var S = SK[id], self = this, vs, pw = S.ult ? (u.ultP || 1) : 1;      // r32: 필살기의 세기 (별·등급)
-  if ((S.tg === 'enemy' || S.tg === 'ally') && unitTgt) vs = unitTgt.dead ? [] : [unitTgt];
+// o (여러 박자): { b: 박자 번호 — 그 박자의 효과(e.b, 없으면 0)만 · last: 마지막 박자 · vs: 미리 고른 대상 · eff: 기술 표 대신 쓸 효과 목록(자리의 맥박) · to: 자리가 겨누는 편 }
+//   o 가 있으면 'skill' 사건은 내지 않는다 (걸 때 seqStart 가 한 번 냈다 · 자리의 맥박은 'zoneTick')
+P.resolve = function (u, id, tiles, unitTgt, o) {
+  var S = SK[id], self = this, vs, pw = S.ult ? (u.ultP || 1) : 1, EF = o && o.eff ? o.eff : S.eff, bi = o && o.b != null ? o.b : -1;      // r32: 필살기의 세기 (별·등급)
+  if (o && o.vs) vs = o.vs;
+  else if ((S.tg === 'enemy' || S.tg === 'ally') && unitTgt) vs = unitTgt.dead ? [] : [unitTgt];
   else vs = this.victims(u, S, tiles);
-  this.emit({ t: 'skill', id: u.id, sk: id, fx: S.fx, tiles: tiles || vs.map(function (v) { return [v.x, v.y]; }), from: [u.x, u.y] });
+  if (!o) this.emit({ t: 'skill', id: u.id, sk: id, fx: S.fx, tiles: tiles || vs.map(function (v) { return [v.x, v.y]; }), from: [u.x, u.y] });
   if (this._er && u.side === 'ally' && S.tg === 'ally' && unitTgt && unitTgt.erM && S.eff.some(function (e) { return e.t === 'heal' || e.t === 'cleanse'; })) this.erSave(unitTgt, 'heal', u);      // r17: 한 사람에게 거는 치유·정화
   var hk0 = u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1, hup = u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1, by = u.side === 'ally' ? u.id : null, ctr0 = vs[0] || null;
   // 2.2.6 to: 그 덧효과만 다른 무리에게 — 'self' 쓰는 이 · 'ally' / 'foe' 쓰는 이(at: 'tgt' 면 첫 대상) 둘레 r 칸
@@ -726,7 +731,8 @@ P.resolve = function (u, id, tiles, unitTgt) {
   function vsk(e, v) { return e.vs && vsHit(v, e.vs) ? (self.emit({ t: 'weak', id: v.id, k: e.vs }), e.vx || 1.5) : 1; }
   var dashD0 = this._dashD;
   if (S.dash && tiles && tiles.length) { var dl = tiles[tiles.length - 1], dn = nearT(u, dl[0], dl[1]), ddx0 = dl[0] - dn.x, ddy0 = dl[1] - dn.y; this._dashD = Math.abs(ddx0) >= Math.abs(ddy0) ? [ddx0 >= 0 ? 1 : -1, 0] : [0, ddy0 > 0 ? 1 : -1]; }
-  S.eff.forEach(function (e) {
+  EF.forEach(function (e) {
+    if (bi >= 0 && (e.b || 0) !== bi) return;      // 여러 박자: 이 박자의 효과만
     var T = grp(e);
     switch (e.t) {
       case 'dmg': T.forEach(function (v) {
@@ -855,17 +861,110 @@ P.resolve = function (u, id, tiles, unitTgt) {
     }
   });
   this._dashD = dashD0;
-  // 2.1.0 메아리(fx.echo): 필살기·아이템·부르기·순간 이동이 아닌 기술이 확률로 한 번 더 (메아리는 다시 메아리치지 않는다)
+  if (o && o.eff) return;      // 자리의 맥박 · 끝 효과는 여기까지
+  if (S.zone && (!o || o.last) && !u._echo && !u.dead && !this.result) this.zoneStart(u, id, tiles);      // 남는 자리: 기술(마지막 박자)이 풀린 뒤에 깔린다
+  if (o && !o.last) return;
+  // 2.1.0 메아리(fx.echo): 필살기·아이템·부르기·순간 이동이 아닌 기술이 확률로 한 번 더 (메아리는 다시 메아리치지 않는다 · 여러 박자 기술은 마지막 박자 뒤에 모든 효과를 한꺼번에)
   if (u.fx && u.fx.echo && !u._echo && !u.dead && !S.ult && !S.item && !this.result && !S.eff.some(function (e) { return e.t === 'summon' || e.t === 'blink'; }) && this.rand() < Math.min(0.4, u.fx.echo)) {
     u._echo = true; this.say(u, '메아리'); this.emit({ t: 'gearfx', id: u.id, k: 'echo', sk: id });
-    try { this.resolve(u, id, tiles, unitTgt && !unitTgt.dead ? unitTgt : null); } finally { u._echo = false; }
+    try { if (o) this.resolve(u, id, tiles, unitTgt && !unitTgt.dead ? unitTgt : null, { b: -1 }); else this.resolve(u, id, tiles, unitTgt && !unitTgt.dead ? unitTgt : null); } finally { u._echo = false; }
   }
+};
+// ───────── 여러 박자 (2.7 기술 연출): 기술이 한순간에 풀리지 않아도 된다 ─────────
+//   모두 sim.update 의 틱으로만 흐른다 (엔진 난수 · 실제 시간은 쓰지 않는다 — 같은 씨앗이면 같은 판). 저장에는 아무것도 남지 않는다.
+//   ① 박자  S.beats = [0.2, 0.5, …]  건 순간부터 각 박자가 풀리는 때(초). 효과마다 e.b = 박자 번호(없으면 0). 쓰는 이는 마지막 박자 + 0.3초까지 묶인다.
+//        박자마다 대상은 다시 잰다: 한 사람을 겨눈 기술은 그 사람을(어디에 있든 · 쓰러졌으면 남은 박자는 거둔다), 칸을 겨눈 기술은 그때 그 칸에 선 이를, 제 둘레 기술은 그때 제 둘레를.
+//        쓰는 이가 쓰러지면 남은 박자는 거둔다. 돌파(dash) · 물러서기(back) · 메아리는 마지막 박자 뒤.
+//   ② 예고 낙하  S.fall = { delay: 0.9, dz: 1, hold: 0.55 }  겨눈 칸에 표시('mark')를 남기고 delay 초 뒤에 떨어진다 (beats 가 있으면 그때부터 박자).
+//        쓰는 이는 hold 초 뒤에 풀린다(떨어지기를 기다리지 않는다). dz 가 0 이 아니면 표시된 칸은 붉은 칸이다 — 맞을 쪽의 자동 전투가 비켜 설 수 있다 (P.dodge).
+//   ③ 남는 자리  S.zone = { dur: 5, every: 1, eff: [...], end: [...], k: 'fire', to: 'foe' | 'ally', dz: 0 }  기술이 풀린 칸이 dur 초 남아 every 초마다 그 위에 선 이에게 eff 를 준다.
+//        end 는 자리가 다할 때 한 번. 같은 사람의 같은 기술은 하나만 남는다(새로 깔면 옛것은 걷힌다). 쓰는 이가 쓰러지면 걷힌다. dz 를 켜면 붉은 칸으로 친다.
+//   사건: skill { qid, beats, fall } (걸 때 한 번) · mark { qid, tiles, dur, side } · beat { qid, i, n, last, tiles, ids } (그 박자의 hit 들 바로 앞) · seqEnd { qid, cancel }
+//         zone { zid, k, tiles, dur, side, to } · zoneTick { zid, n, ids } · zoneEnd { zid, cancel }
+P.ZN = { max: 10 };
+P.seqStart = function (u, id, tiles, tgt, c) {
+  var S = SK[id], B = S.beats || [0], F = S.fall || null, d0 = F ? (F.delay == null ? 0.8 : F.delay) : 0;
+  var Q = { id: ++this._qid, u: u, sk: id, tiles: tiles, tgt: tgt, c: c, t: 0, bi: 0, at: B, n: B.length, d0: d0, dz: !!(F && F.dz !== 0 && tiles), side: u.side, end: false };
+  this.sq.push(Q);
+  this.emit({ t: 'skill', id: u.id, sk: id, fx: S.fx, tiles: tiles || this.victims(u, S, null).map(function (v) { return [v.x, v.y]; }), from: [u.x, u.y], qid: Q.id, beats: Q.n, fall: d0, dur: d0 + B[B.length - 1] });
+  if (F && tiles) { this.emit({ t: 'mark', qid: Q.id, id: u.id, sk: id, tiles: tiles, dur: d0 + B[0], side: u.side }); if (Q.dz) this.reDanger(); }
+  u.busy = F ? Math.max(0.55, F.hold || 0) : Math.max(0.55, B[B.length - 1] + 0.3);
+  this.seqTick(0);      // 0초 박자는 바로
+  return true;
+};
+P.seqBeat = function (Q) {
+  var u = Q.u, S = SK[Q.sk], i = Q.bi++, last = Q.bi >= Q.n, tiles = Q.tiles, vs;
+  if (u.dead || (Q.tgt && Q.tgt.dead)) { Q.end = true; Q.cancel = true; return; }
+  if (S.tg === 'self' && tiles && S.area !== 'all') tiles = Q.tiles = this.areaTiles(u, S, u.x, u.y);      // 제 둘레 기술은 박자마다 제 자리에서
+  if (Q.dz) { Q.dz = false; this.reDanger(); }
+  vs = Q.tgt ? [Q.tgt] : this.victims(u, S, tiles);
+  this.emit({ t: 'beat', qid: Q.id, id: u.id, sk: Q.sk, i: i, n: Q.n, last: last, tiles: tiles || vs.map(function (v) { return [v.x, v.y]; }), ids: vs.map(function (v) { return v.id; }), from: [u.x, u.y] });
+  this._at = Q.c; this.resolve(u, Q.sk, tiles, Q.tgt, { b: i, last: last, vs: vs }); this._at = null;
+  if (!last) return;
+  Q.end = true;
+  if (S.dash && tiles && !u.dead && !this.result) this.dashTo(u, tiles);
+  if (S.back && !u.dead && !this.result) this.hopBack(u, S.back, Q.tgt);
+};
+P.seqTick = function (dt) {
+  var sq = this.sq, i, Q, n = 0, dzD = false;
+  for (i = 0; i < sq.length; i++) {
+    Q = sq[i]; Q.t += dt;
+    if (Q.u.dead) { Q.end = true; Q.cancel = true; }
+    while (!Q.end && Q.bi < Q.n && Q.t + 1e-6 >= Q.d0 + Q.at[Q.bi]) this.seqBeat(Q);
+    if (Q.end) { if (Q.dz) dzD = true; this.emit({ t: 'seqEnd', qid: Q.id, id: Q.u.id, sk: Q.sk, cancel: !!Q.cancel }); continue; }
+    sq[n++] = Q;
+  }
+  sq.length = n;
+  if (dzD) this.reDanger();
+};
+P.seqFlush = function () { for (var k = 0; k < 8 && this.sq.length; k++) { for (var i = 0; i < this.sq.length; i++) this.sq[i].t = 1e6; this.seqTick(0); } };      // 시험 · 도구용: 걸려 있는 박자를 지금 모두 푼다
+P.zoneStart = function (u, id, tiles) {
+  var S = SK[id], Z0 = S.zone, zn = this.zn, i, n = 0;
+  if (!Z0 || !tiles || !tiles.length) return null;
+  for (i = 0; i < zn.length; i++) { if (zn[i].u === u && zn[i].sk === id) { this.emit({ t: 'zoneEnd', zid: zn[i].id, cancel: true }); continue; } zn[n++] = zn[i]; }
+  zn.length = n;
+  while (zn.length >= this.ZN.max) this.emit({ t: 'zoneEnd', zid: zn.shift().id, cancel: true });      // 한 판에 ZN.max 자리까지 (가장 오래된 것부터 걷힌다)
+  var Z = { id: ++this._qid, u: u, sk: id, tiles: tiles.slice(), el: 0, dur: Z0.dur || 4, every: Z0.every || 1, next: Z0.first != null ? Z0.first : (Z0.every || 1), k: Z0.k || 'fire', to: Z0.to === 'ally' ? 'ally' : 'foe', side: u.side, dz: !!Z0.dz, n: 0 };
+  zn.push(Z);
+  this.emit({ t: 'zone', zid: Z.id, id: u.id, sk: id, k: Z.k, tiles: Z.tiles, dur: Z.dur, side: Z.side, to: Z.to });
+  if (Z.dz) this.reDanger();
+  return Z;
+};
+P.zoneVs = function (Z) { return this.victims(Z.u, { side: Z.to === 'ally' ? 'ally' : 'enemy' }, Z.tiles).filter(function (v) { return v.side !== 'neutral'; }); };
+P.zoneTick = function (dt) {
+  var zn = this.zn, i, Z, Z0, n = 0, vs, dzD = false;
+  for (i = 0; i < zn.length; i++) {
+    Z = zn[i]; Z0 = SK[Z.sk].zone; Z.el += dt;
+    if (Z.u.dead) { if (Z.dz) dzD = true; this.emit({ t: 'zoneEnd', zid: Z.id, cancel: true }); continue; }
+    while (Z.el + 1e-6 >= Z.next && Z.next <= Z.dur + 1e-6 && !Z.u.dead && !this.result) {
+      Z.next += Z.every; vs = this.zoneVs(Z);
+      this.emit({ t: 'zoneTick', zid: Z.id, n: ++Z.n, ids: vs.map(function (v) { return v.id; }) });
+      if (vs.length && Z0.eff) this.resolve(Z.u, Z.sk, Z.tiles, null, { eff: Z0.eff, vs: vs });
+    }
+    if (Z.el + 1e-6 >= Z.dur) {
+      if (Z0.end && !Z.u.dead && !this.result) { vs = this.zoneVs(Z); if (vs.length) this.resolve(Z.u, Z.sk, Z.tiles, null, { eff: Z0.end, vs: vs }); }
+      if (Z.dz) dzD = true; this.emit({ t: 'zoneEnd', zid: Z.id }); continue;
+    }
+    zn[n++] = Z;
+  }
+  zn.length = n;
+  if (dzD) this.reDanger();
+};
+// 판이 끝나면 걸려 있던 박자 · 자리를 모두 거둔다 (화면이 표시를 지운다)
+P.seqClear = function () {
+  var i;
+  for (i = 0; i < this.sq.length; i++) this.emit({ t: 'seqEnd', qid: this.sq[i].id, id: this.sq[i].u.id, sk: this.sq[i].sk, cancel: true });
+  for (i = 0; i < this.zn.length; i++) this.emit({ t: 'zoneEnd', zid: this.zn[i].id, cancel: true });
+  this.sq.length = 0; this.zn.length = 0; this.reDanger();
 };
 P.reDanger = function () {
   var a = this.dz.ally, e = this.dz.enemy, w = this.w;
   a.fill(0); e.fill(0);
   this.tele.forEach(function (T) { var z = T.u.side === 'enemy' ? a : e; T.tiles.forEach(function (t) { z[t[1] * w + t[0]] = 1; }); });
   for (var i = 0; i < this.hz.length; i++) { var h = this.hz[i]; (h.side === 'enemy' ? a : e)[h.y * w + h.x] = 1; }      // 2.3.0: 땅의 위험도 비켜 선다
+  var mk = function (tl, z) { for (var k = 0; k < tl.length; k++) z[tl[k][1] * w + tl[k][0]] = 1; };
+  for (i = 0; i < this.sq.length; i++) if (this.sq[i].dz) mk(this.sq[i].tiles, this.sq[i].side === 'enemy' ? a : e);      // 예고 낙하의 표시
+  for (i = 0; i < this.zn.length; i++) if (this.zn[i].dz && this.zn[i].to !== 'ally') mk(this.zn[i].tiles, this.zn[i].side === 'enemy' ? a : e);      // 붉은 칸으로 치는 자리
 };
 // 2.3.0 땅의 위험 하나 (같은 편이 같은 칸에 또 깔면 더 긴 쪽으로)
 P.HZ = { max: 72, boss: 0.25 };
@@ -1201,10 +1300,11 @@ P.bestSkill = function (u, foes, ord, keep) {
     raw = 0; top = 0;
     for (k = 0; k < vs.length; k++) {
       x = vs[k]; w = x.role === 'boss' ? 1.5 : 1; raw += x.role === 'boss' ? 2 : 1;
-      b = Math.min(self.estDmg(u, x, BE), x.hp); one = 0;
+      b = Math.min(self.estDmg(u, x, BE), x.hp); one = 0; var own = null;
       for (q = 0; q < S.eff.length; q++) {
         e = S.eff[q];
-        if (e.t === 'dmg') { d = self.estDmg(u, x, e, S.item); one += Math.min(d, x.hp) + (e.drain ? b * 0.2 : 0); }
+        if (e.t === 'status' && !e.to) { own = own || {}; own[e.s] = 1; }      // 여러 박자: 앞 박자가 붙인 상태를 뒤 박자가 노린다 (불 → 얼음 → 번개) — 그 몫도 값에 친다
+        if (e.t === 'dmg') { d = self.estDmg(u, x, e, S.item); if (own && e.vs && !vsHit(x, e.vs) && e.vs.split('|').some(function (k9) { return own[k9]; })) d *= e.vx || 1.5; one += Math.min(d, x.hp) + (e.drain ? b * 0.2 : 0); }
         else if (e.t === 'status' && (e.s === 'burn' || e.s === 'poison')) one += x.st[e.s] ? 0 : self.dotVal(x, e) * 0.5;      // 2.2.6: 화상 · 중독은 깎을 만큼 (반쯤만 믿는다)
         else if (e.t === 'status' && e.s === 'mark') one += x.st.mark ? 0 : b * (x.role === 'boss' ? 1.2 : 0.6);      // 표식: 모두가 더 아프게 친다
         else if (e.t === 'status') one += x.st[e.s] ? 0 : b * (dm ? 0.2 : self.bestDebuff);
@@ -1213,6 +1313,8 @@ P.bestSkill = function (u, foes, ord, keep) {
         else if (e.t === 'buff' && e.p < 0) one += b * (dm ? 0.1 : self.bestDebuff * 0.5);
         else if (e.t === 'gauge' && e.v < 0) one += b * 0.3;
       }
+      if (S.zone && S.zone.to !== 'ally') { var ZE = (S.zone.eff || []).concat(S.zone.end || []), zq, zn0 = Math.max(1, Math.floor((S.zone.dur || 4) / (S.zone.every || 1)));      // 남는 자리: 그 위에 머물 만큼만 믿는다 (맥박의 절반)
+        for (zq = 0; zq < ZE.length; zq++) { if (ZE[zq].t === 'dmg') one += Math.min(self.estDmg(u, x, ZE[zq], S.item), x.hp) * (zq < (S.zone.eff || []).length ? zn0 * 0.5 : 0.5); else if (ZE[zq].t === 'gauge' && ZE[zq].v < 0) one += b * 0.15; } }
       s += one * w; if (b * w > top) top = b * w;
     }
     return s;
@@ -1899,7 +2001,7 @@ P.update = function (dt) {
   if (n >= 12) this.acc = 0;
 };
 P.tick = function (dt) {
-  if (this.result) return;
+  if (this.result) { if (this.sq.length || this.zn.length) this.seqClear(); return; }
   this.t += dt;
   var us = this._us, all = this.units, i, u, self = this;
   us.length = 0; for (i = 0; i < all.length; i++) us.push(all[i]);      // 이번 틱에 볼 유닛 (도중에 늘어난 유닛은 다음 틱부터)
@@ -1967,6 +2069,8 @@ P.tick = function (dt) {
   }
   if (this._er) this.erTick(dt);      // r17: 이름 지우기 예고
   if (this.hz.length) this.hazTick(dt);      // 2.3.0 땅의 위험
+  if (this.sq.length) this.seqTick(dt);      // 여러 박자 · 예고 낙하
+  if (this.zn.length) this.zoneTick(dt);      // 남는 자리
   // 예고 기술
   if (this.tele.length) {
     var done = [];
@@ -1978,8 +2082,10 @@ P.tick = function (dt) {
         T.u.casting = null;
         self.emit({ t: 'castEnd', tid: T.id });
         if (!T.u.dead) {
+          var TS = SK[T.sk];
+          if (TS && (TS.beats || TS.fall)) { self.seqStart(T.u, T.sk, T.tiles, null, T.c); return; }      // 예고 뒤에 여러 박자로 풀리는 기술
           self._tele = true; self._at = T.c; self.resolve(T.u, T.sk, T.tiles, null); self._tele = false; self._at = null;
-          var TS = SK[T.sk]; if (TS && TS.dash && !T.u.dead && !self.result) self.dashTo(T.u, T.tiles);      // 2.3.0: 예고한 돌진은 친 뒤 길 끝까지 달려 나간다
+          if (TS && TS.dash && !T.u.dead && !self.result) self.dashTo(T.u, T.tiles);      // 2.3.0: 예고한 돌진은 친 뒤 길 끝까지 달려 나간다
         }
       });
     }

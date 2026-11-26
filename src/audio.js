@@ -143,6 +143,30 @@ var SFX = {
   ultReady: function () { tone(1175, 1175, 0.08, 'triangle', 0.05); tone(1568, 1568, 0.08, 'triangle', 0.05, 0.07); tone(2093, 2093, 0.2, 'sine', 0.04, 0.14); },
   // 도발 (2.8, 엔진의 taunt 이벤트): 낮게 으르렁대는 짧은 외침
   taunt:  function () { tone(196, 147, 0.16, 'sawtooth', 0.06); tone(294, 220, 0.12, 'square', 0.03, 0.02); noise(0.08, 0.1, 700, 0.8); },
+  // ── 2.7 기술 연출 (skfx.js): 병과의 소리 조각 — 보병(쇠 · 돌 · 무게) · 법사(불 · 얼음 · 번개 · 주문). 짧게, 찌르지 않게
+  shieldSlam: function () { noise(0.09, 0.26, 600, 0.9); tone(260, 110, 0.14, 'square', 0.08); tone(1400, 1000, 0.09, 'triangle', 0.03, 0.015); },      // 방패가 몸을 친다
+  shieldUp:   function () { tone(523, 784, 0.08, 'triangle', 0.05); noise(0.04, 0.08, 2600, 1.4, 0.03); },      // 방패를 든다 (작게)
+  wallUp:     function () { tone(98, 196, 0.22, 'triangle', 0.08); noise(0.16, 0.1, 500, 0.7, 0, 'lowpass'); tone(880, 880, 0.12, 'sine', 0.03, 0.14); noise(0.04, 0.12, 2400, 1.2, 0.18); },      // 벽이 선다: 낮은 끌림 뒤에 쇠가 물린다
+  quakeHit:   function () { noise(0.4, 0.3, 160, 0.6, 0, 'lowpass'); tone(90, 36, 0.36, 'square', 0.1); noise(0.2, 0.08, 900, 0.8, 0.1); },      // 땅을 내리친다 · 돌이 구른다
+  whirl:      function () { noise(0.3, 0.14, 1800, 1.4); tone(300, 620, 0.26, 'sawtooth', 0.03); noise(0.14, 0.1, 3200, 1.6, 0.12); },      // 쇠가 바람을 가른다
+  shout:      function () { tone(196, 262, 0.14, 'sawtooth', 0.05); tone(294, 392, 0.14, 'square', 0.03, 0.02); noise(0.1, 0.08, 900, 0.8); },      // 호령
+  emberPop:   function () { noise(0.12, 0.14, 900, 0.7, 0, 'lowpass'); tone(700, 260, 0.12, 'sawtooth', 0.03); },      // 불씨가 터진다
+  fireRoar:   function () { noise(0.5, 0.18, 420, 0.5, 0, 'lowpass'); tone(600, 160, 0.45, 'sawtooth', 0.035); },      // 불길이 인다
+  iceShot:    function () { noise(0.07, 0.12, 6000, 2.4); tone(2000, 1400, 0.06, 'triangle', 0.035); },      // 얼음이 난다
+  iceBreak:   function () { noise(0.09, 0.16, 4200, 1.8); noise(0.07, 0.1, 2400, 1.2, 0.05); tone(1568, 1175, 0.09, 'triangle', 0.04); },      // 얼음이 깨진다
+  freeze:     function () { [1319, 1568, 2093].forEach(function (f, i) { tone(f, f, 0.2, 'sine', 0.04, i * 0.03); }); noise(0.25, 0.06, 5000, 2, 0, 'highpass'); },      // 얼어붙는다
+  zap:        function () { noise(0.06, 0.22, 3200, 0.6); tone(1800, 300, 0.07, 'sawtooth', 0.05); noise(0.12, 0.12, 1200, 0.5, 0.04); },      // 짧은 번개
+  thunderBig: function () { noise(0.45, 0.3, 1400, 0.4); tone(80, 40, 0.4, 'square', 0.1); noise(0.3, 0.14, 300, 0.5, 0.1, 'lowpass'); },      // 큰 벼락
+  fallWhistle:function () { tone(1500, 300, 0.5, 'sine', 0.04); noise(0.5, 0.05, 2000, 0.8); },      // 떨어져 내리는 소리
+  meteorHit:  function () { noise(0.5, 0.32, 200, 0.6, 0, 'lowpass'); tone(100, 34, 0.45, 'square', 0.11); noise(0.3, 0.12, 1200, 0.6, 0.06); },      // 운석이 꽂힌다
+  starFall:   function () { tone(2093, 1047, 0.35, 'sine', 0.04); tone(3136, 1568, 0.3, 'triangle', 0.02, 0.03); },      // 별이 진다
+  chant:      function () { [392, 494, 587].forEach(function (f, i) { tone(f, f * 1.02, 0.14, 'sine', 0.045, i * 0.06); }); tone(196, 392, 0.3, 'triangle', 0.04); },      // 주문을 왼다
+  runeTick:   function () { var k = vr(); tone(1175 * k, 1319 * k, 0.05, 'triangle', 0.03); },      // 룬 한 글자
+  // 단계 겹 (DS.Audio.sk 가 얹는다): 2 낮은 한 방 · 3 바람과 밑울림 · 4 번지는 화음 · 5 길게 깔리는 울림
+  skL2:       function () { tone(120, 60, 0.12, 'sine', 0.07); },
+  skL3:       function () { noise(0.22, 0.07, 1200, 0.6); tone(80, 45, 0.2, 'sine', 0.08); },
+  skL4:       function () { [392, 523, 659].forEach(function (f) { tone(f, f, 0.5, 'triangle', 0.03, 0.05); }); },
+  skL5:       function () { noise(0.9, 0.14, 110, 0.5, 0, 'lowpass'); tone(55, 41, 0.9, 'sine', 0.08); tone(1568, 2093, 0.5, 'sine', 0.018, 0.2); },
   // 보스가 싸움을 건다: 묵직한 한 방과 불협화음
   bossIn: function () { noise(0.5, 0.26, 180, 0.6, 0, 'lowpass'); tone(55, 110, 0.6, 'sawtooth', 0.09); tone(233, 220, 0.5, 'square', 0.04, 0.08); tone(247, 233, 0.5, 'square', 0.04, 0.08); }
 };
@@ -152,7 +176,11 @@ var SFX = {
 // 50ms 창의 최대 RMS 를 재어 갈래마다 같은 크기가 되게 곱한다: 조작 −32 · 전투 −27 · 치명타·폭발 −23 · 연출 −22 (dBFS, 압축기 앞). 배경음은 16초 RMS −38 로 곡끼리 맞춘다.
 var LVL = {"tap":3.63,"ok":1.95,"cancel":2.26,"step":1.3,"slash":2.26,"punch":2.04,"arrow":3.67,"magic":1.88,"skill":2.95,"hit":1.74,"crit":1.68,"miss":2.88,"die":2.14,"heal":2.95,"buff":1.95,"fire":3.2,"boom":1.3,"thunder":0.96,"water":2.29,"wind":3.35,"dark":2.42,"poison":3.31,"holy":2.6,"warn":2.63,"blink":2.37,"leap":2.69,"spawn":2.4,"sword":1.45,"phase":1.66,"level":3.71,"star":2.11,"win":2.37,"lose":1.97,"coin":2.26,"promo":2.09,"fuse":1.19,"pullHi":2.48,"rare":1.8,"mourn":1.62,"bossIn":2.02,"taunt":2.85,
   "press":5.13,"open":2.45,"close":3.2,"tab":4.9,"deny":1.38,"ready":2.66,"coinTick":3.2,"coinLand":4.03,"flip":3.94,"swell":2.6,"slam":1.9,"heart":1.43,"swoosh":4.27,"ult":1.5,"ultReady":2.4,
-  "wed":1.78,"birth":2.6};      // 2.6: 같은 probe 로 혼인 −22 · 출생 −23.5 (오르골은 조금 작게)      // r26: 새 화면 소리 — 같은 probe 로 조작 −32 · 동전 똑딱 −40 · 기대 −27 · 띠 −22 · 심장 −27
+  "wed":1.78,"birth":2.6,
+  // 2.7 기술 연출 (tools/sklvl.js 로 잰 값): 병과 소리 −27~−28 · 곁들이는 작은 소리 −30~−36 · 큰 충격 −24 · 단계 겹 −30~−33
+  "shieldSlam":1.5,"shieldUp":2.88,"wallUp":1.81,"quakeHit":1.17,"whirl":2.82,"shout":2.57,"emberPop":3.89,"fireRoar":2.29,"iceShot":3.67,"iceBreak":3.43,"freeze":1.62,"zap":2.83,"thunderBig":0.98,
+  "fallWhistle":1.46,"meteorHit":1.06,"starFall":1.62,"chant":1.66,"runeTick":3.43,"skL2":1.53,"skL3":0.99,"skL4":1.1,"skL5":0.8};      // 2.6: 같은 probe 로 혼인 −22 · 출생 −23.5 (오르골은 조금 작게)      // r26: 새 화면 소리 — 같은 probe 로 조작 −32 · 동전 똑딱 −40 · 기대 −27 · 띠 −22 · 심장 −27
+var skT = {};
 var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89,"erase":2.0,"mourn":1.93};
 
 // ── 배경음: 16분음표 시퀀서 ──
@@ -224,6 +252,14 @@ DS.Audio = {
     if (ctx) { sfxG.gain.value = opt.sfx ? 1 : 0; try { bgmG.gain.cancelScheduledValues(ctx.currentTime); } catch (e) {} bgmG.gain.value = opt.bgm ? 1 : 0; }
   },
   sfx: function (name, arg) { if (ctx && opt.sfx && SFX[name]) { VOL = LVL[name] || 1; try { SFX[name](arg); } catch (e) {} VOL = 1; } },
+  // 2.7 기술 연출: 병과 파일이 제 소리를 더한다 (skfx.js X.sound). fn(tone, noise, 인자) — lvl = 음량 보정 (tools/sklvl.js 가 잰다)
+  def: function (name, fn, lvl) { if (!name || typeof fn !== 'function' || SFX[name]) return false; SFX[name] = function (a) { fn(tone, noise, a); }; if (lvl) LVL[name] = lvl; return true; },
+  // 2.7 기술 연출: 단계(1~5)에 맞춰 겹을 얹은 소리 — 같은 소리라도 윗단계일수록 두껍다. 겹마다 0.25초에 한 번까지 (난전에서 쌓이지 않게)
+  sk: function (name, tier) {
+    if (!ctx || !opt.sfx) return;
+    this.sfx(name);
+    for (var t = 2; t <= Math.min(5, tier || 1); t++) { var k = 'skL' + t, now = ctx.currentTime; if (skT[k] != null && now - skT[k] < 0.25) continue; skT[k] = now; this.sfx(k); }
+  },
   // r26: 배경음을 잠깐 낮춘다 (승리 띠·영웅 모집·승급) — db 만큼, ms 동안
   duck: function (db, ms) { if (!ctx || !bgmG) return; try { var t = ctx.currentTime, to = Math.pow(10, -(db || 6) / 20) * (opt.bgm ? 1 : 0); bgmG.gain.cancelScheduledValues(t); bgmG.gain.setValueAtTime(bgmG.gain.value, t); bgmG.gain.setTargetAtTime(to, t, 0.04); bgmG.gain.setTargetAtTime(opt.bgm ? 1 : 0, t + (ms || 1200) / 1000, 0.25); } catch (e) {} },
   bgm: function (name, force) {

@@ -239,7 +239,7 @@ module.exports = async (page, shot, L) => {
           tgt = { x: t1[0], y: t1[1] };
         }
         sim.ev.length = 0;
-        var ok = false; try { ok = sim.cast(u, id, tgt); } catch (x) { out.push(id + ':THROW ' + x.message); return; }
+        var ok = false; try { ok = sim.cast(u, id, tgt); if (sim.seqFlush) sim.seqFlush(); } catch (x) { out.push(id + ':THROW ' + x.message); return; }      // 2.7: 여러 박자 · 예고 낙하로 풀리는 기술은 걸린 박자를 바로 모두 푼다 (효과가 났는지는 그 뒤에 본다)
         var ev = sim.ev.slice(), has = function (t) { return ev.some(function (e) { return e.t === t; }); }, want = [];
         S.eff.forEach(function (e) { var w = e.t === 'dmg' ? 'hit' : e.t === 'buff' ? 'buff' : e.t === 'status' ? 'status' : e.t === 'taunt' ? 'taunt' : e.t === 'summon' ? 'spawn' : e.t === 'heal' ? null : e.t === 'pull' || e.t === 'knock' ? 'knock' : e.t === 'chain' ? 'chain' : e.t === 'ward' || e.t === 'mend' ? null : null; if (w && want.indexOf(w) < 0) want.push(w); });
         if (S.dash || S.leap || S.back) want.push('leap');
