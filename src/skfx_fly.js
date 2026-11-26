@@ -4,8 +4,8 @@
 //   무늬: 몸이 땅을 떠난다(높이 떴다가 꽂힌다) · 땅에 드리우는 날개 그림자 · 흩날리는 깃 · 펼치는 날개 · 바람 줄기와 돌개바람 · 톱니 진 포효의 고리 · 불의 숨결
 //   고친 것 (옛 → 새 · tools/skdmg.js 허수아비 / 실전):
 //     cmd_fly      그대로 (설명의 긴 줄표만)
-//     fly_dive     140% → 같다, 뛰어올라 꽂히는 뜸 0.2초                                                  1.00 / 1.00
-//     fly_gale     125% + 밀어냄 → 같다, 날개를 접었다 펴는 뜸 0.16초                                      1.00 / 1.00
+//     fly_dive     140% → 같다, 뛰어올라 꽂히는 뜸 0.1초                                                  1.00 / 1.00
+//     fly_gale     125% + 밀어냄 → 같다, 날개를 접었다 펴는 뜸 0.1초                                       1.00 / 1.00
 //     xfly_dive    190% + 표식 → 내리꽂기 130% + 날아오르며 발톱 72% 와 표식 (표식은 둘째에)                1.01 / 1.00
 //     xfly_roar    180% + 밀어냄 + 공격 −20% + 게이지 → 포효 70%(공격 −20% · 게이지) + 날개 바람 125%(밀어냄)   1.00 / 1.01
 //     xfly_breath  220% + 화상 + 표식 → 세 번 쏟아 낸다 70% + 75% + 90% (화상은 처음, 표식은 마지막)         1.00 / 0.99
@@ -25,14 +25,14 @@ var hs = X.hs, env = X.env, ease = X.ease;
 // ───────── 기술 표 ─────────
 X.def('cmd_fly', { desc: '호령. 모든 아군의 행동 소모 −15% (25초), 게이지 +15.' });
 // 급강하 · 날개 바람: 뛰어올라 꽂히는 · 날개를 접었다 펴는 짧은 뜸. 수치는 그대로
-X.def('fly_dive', { beats: [0.2] });
-X.def('fly_gale', { beats: [0.16] });
+X.def('fly_dive', { beats: [0.1] });
+X.def('fly_gale', { beats: [0.1] });
 // 용의 급강하: 한 번(190%) → 내리꽂기 130% + 날아오르며 할퀴기 72%. 표식은 할퀴며 남긴다 (앞의 한 방이 제 표식 덕을 보지 않게 — 받는 피해는 그대로)
-X.def('xfly_dive', { beats: [0.4, 0.66],
+X.def('xfly_dive', { beats: [0.28, 0.46],
   eff: [{ t: 'dmg', m: 1.3, vs: 'mark', vx: 1.5 }, { t: 'dmg', m: 0.72, vs: 'mark', vx: 1.5, b: 1 }, { t: 'status', s: 'mark', dur: 8, p: 20, b: 1 }],
   desc: '2~5칸 밖의 적에게 내리꽂아 130%, 날아오르며 발톱으로 72% (둘 다 표식이 있으면 1.5배). 표식을 남기고 세 칸 날아오른다.' });
-// 용의 포효: 한 번(180%) → 포효 70%(공격 −20% · 게이지) + 날개 바람 120%(밀어냄)
-X.def('xfly_roar', { beats: [0.25, 0.6],
+// 용의 포효: 한 번(180%) → 포효 70%(공격 −20% · 게이지) + 날개 바람 125%(밀어냄)
+X.def('xfly_roar', { beats: [0.2, 0.45],
   eff: [{ t: 'dmg', m: 0.7 }, { t: 'buff', s: 'atk', p: -20, dur: 10 }, { t: 'gauge', v: -30 }, { t: 'dmg', m: 1.25, b: 1 }, { t: 'knock', n: 1, b: 1 }],
   desc: '포효로 둘레 2칸 적에게 70%, 공격 −20% (10초), 게이지를 깎는다. 이어서 날개 바람 125%로 밀어내고 날아오른다.' });
 // 용황의 숨결: 한 번(220%) → 숨결이 이어지는 동안 세 번 70% + 75% + 90%. 화상은 처음부터, 표식은 마지막에
@@ -44,11 +44,11 @@ X.def('u_stoop', { beats: [0.7], desc: '2~6칸 밖의 적 위로 솟구쳤다가
 X.def('ux_stoop', { beats: [0.9],
   eff: [{ t: 'dmg', m: 3.6, vs: 'mark', vx: 1.6 }, { t: 'dmg', m: 0.45, to: 'foe', at: 'tgt', r: 1 }],
   desc: '2~7칸 밖의 적 위로 솟구쳤다가 0.9초 뒤 내리꽂는다. 360%(표식이 있으면 1.6배), 꽂힌 자리의 충격이 그 적과 곁의 적에게 45%. 네 칸 날아오른다.' });
-// 돌개바람: 한 번(180%) → 세 번 휘감는다 55% + 60% + 90%, 밀어냄과 표식은 마지막에
+// 돌개바람: 한 번(180%) → 세 번 휘감는다 55% + 60% + 95%, 밀어냄과 표식은 마지막에
 X.def('u_gale', { beats: [0.3, 0.55, 0.85],
   eff: [{ t: 'dmg', m: 0.55 }, { t: 'dmg', m: 0.6, b: 1 }, { t: 'dmg', m: 0.95, b: 2 }, { t: 'knock', n: 1, b: 2 }, { t: 'status', s: 'mark', dur: 10, p: 20, b: 2 }],
   desc: '겨눈 십자 범위를 돌개바람이 세 번 휘감는다. 55%, 60%, 95%. 마지막에 밀어내고 표식을 남긴다.' });
-// 태풍의 눈: 한 번(230%) → 세 번 60% + 65% + 85% 와 표식, 태풍의 눈이 3초 남아 1초마다 20%, 걷히면서 밀어낸다
+// 태풍의 눈: 한 번(230%) → 세 번 60% + 65% + 85% 와 표식, 태풍의 눈이 3초 남아 1.5초마다 35%, 걷히면서 밀어낸다
 X.def('ux_gale', { beats: [0.3, 0.55, 0.85],
   eff: [{ t: 'dmg', m: 0.6 }, { t: 'dmg', m: 0.65, b: 1 }, { t: 'dmg', m: 0.85, b: 2 }, { t: 'status', s: 'mark', dur: 12, p: 25, b: 2 }],
   zone: { dur: 3, every: 1.5, k: 'wind', eff: [{ t: 'dmg', m: 0.35 }], end: [{ t: 'knock', n: 1 }] },
@@ -175,7 +175,7 @@ X.reg('cmd_fly', { cast: function (c) {
 } });
 // T1 ── 급강하: 가볍게 뛰어올라 — 비스듬한 흰 줄기로 꽂힌다. 깃 몇 장
 X.reg('fly_dive', {
-  cast: function (c) { c.pose('hop', 0.22, 9).sfx('fly_swoop'); },
+  cast: function (c) { c.pose('hop', 0.2, 9).sfx('fly_swoop'); },
   beat: function (c) {
     var t = tp(c), x = t[0], y = t[1];
     c.fx('beam', { x0: x - c.dx * 1.3, y0: y - 2.3, x1: x, y1: y, w: 2, c: P.sky, c2: P.white, dur: 0.16 });
@@ -186,7 +186,7 @@ X.reg('fly_dive', {
   } });
 // T2 ── 날개 바람: 몸을 낮췄다가 날개를 편다 — 두 날개가 펼쳐지고 바람 줄기가 사방으로 밀려 나간다
 X.reg('fly_gale', {
-  cast: function (c) { c.pose('sink', 0.16, 3).sfx('fly_flap'); },
+  cast: function (c) { c.pose('sink', 0.1, 3).sfx('fly_flap'); },
   beat: function (c) {
     var x = c.ux, y = c.uy;
     c.pose('rise', 0.3, 3); wings(c, x, y, 13);
@@ -196,13 +196,14 @@ X.reg('fly_gale', {
     feathers(c, x, y - 0.5, 4, 14, 0.8);
     c.light(x, y, 20, P.sky, 0.4, 0.3).shake(0.1).boom('fly_gale');
   } });
-// T3 ── 용의 급강하: 높이 솟는다(땅에 날개 그림자가 자란다) → 청록 줄기와 잔상을 끌고 꽂힌다(땅이 갈라진다) → 날아오르며 발톱 세 줄
+// T3 ── 용의 급강하: 높이 솟는다(꽂힐 자리에 날개 그림자가 자란다) → 청록 줄기와 잔상을 끌고 꽂힌다(땅이 갈라진다) → 날아오르며 발톱 세 줄
 X.reg('xfly_dive', {
   cast: function (c) {
-    c.pose('rise', 0.42, 34).sfx('fly_cry');
-    c.fx('fly_shadow', { x: c.u.x, y: c.u.y, r: 11, grow: 1, a: 0.34, dur: 0.42 });
+    var T = c.S.beats[0];
+    c.pose('rise', T + 0.03, 34).sfx('fly_cry');
+    c.fx('fly_shadow', { x: c.cx, y: c.cy, r: 11, grow: 1, a: 0.34, dur: T });      // 꽂힐 자리에 날개 그림자가 자란다
     feathers(c, c.ux, c.uy - 0.4, 3, 8, 0.7, P.teal);
-    c.at(0.22, function () { c.sfx('fly_swoop'); });
+    c.at(T * 0.45, function () { c.sfx('fly_swoop'); });
   },
   beat: function (c, i) {
     var t = tp(c), x = t[0], y = t[1];
@@ -224,7 +225,7 @@ X.reg('xfly_dive', {
   } });
 // T3 ── 용의 포효: 몸을 세우고 — 톱니 진 소리의 고리가 세 겹으로 번진다(적이 움츠러든다) → 두 날개를 펴 바람으로 밀어낸다
 X.reg('xfly_roar', {
-  cast: function (c) { c.pose('rise', 0.3, 4).ring(c.ux, c.uy, 22, P.teal, { inv: true, w: 2, dur: 0.24 }); c.at(0.08, function () { c.sfx('fly_roar'); }); },
+  cast: function (c) { c.pose('rise', 0.3, 4).ring(c.ux, c.uy, 22, P.teal, { inv: true, w: 2, dur: 0.2 }); c.at(0.08, function () { c.sfx('fly_roar'); }); },
   beat: function (c, i) {
     var x = c.ux, y = c.uy, h = head(c);
     if (i === 0) {

@@ -41,10 +41,10 @@ X.def('xarc_storm', { fall: { delay: 0.5 }, beats: [0, 0.25, 0.5],
 // 한 대면 된다 · 일격필살: 숨을 고르는 뜸. 한 대는 한 대다 (나누지 않는다)
 X.def('u_oneshot', { beats: [0.7], desc: '최대 7칸. 숨을 고르고 0.7초 뒤 적 하나에 340%, 표식이 있으면 1.4배.' });
 X.def('ux_oneshot', { beats: [0.9], desc: '최대 9칸. 숨을 고르고 0.9초 뒤 적 하나에 460%, 표식이 있으면 1.5배.' });
-// 세 갈래 · 다섯 갈래 화살: 화살이 닿을 때 맞는다. 수치는 그대로
+// 세 갈래 · 다섯 갈래 화살: 화살이 닿을 때 맞는다. 자리를 뜬 적은 빗나가므로 수치를 조금 올린다 (180 → 185% · 220 → 228%)
 X.def('u_three', { beats: [0.26], eff: [{ t: 'dmg', m: 1.85 }, { t: 'status', s: 'mark', dur: 8, p: 20 }, { t: 'status', s: 'slow', dur: 6 }], desc: '적 셋에게 185%, 표식과 둔화.' });
 X.def('ux_three', { beats: [0.3], eff: [{ t: 'dmg', m: 2.28 }, { t: 'status', s: 'mark', dur: 10, p: 20 }, { t: 'status', s: 'slow', dur: 6 }], desc: '적 다섯에게 228%, 표식과 둔화.' });
-// 화살 폭우: 한 번(150%) → 105% + 표식, 화살비가 3초 남아 0.75초마다 22%. 하늘 가르는 비: 210% → 135% + 표식, 4초 동안 1초마다 24%, 그치며 60%
+// 화살 폭우: 한 번(150%) → 85% + 표식, 화살비가 3초 남아 1초마다 35%. 하늘 가르는 비: 210% → 110% + 표식, 3.5초 동안 1초마다 30%, 그치며 50%
 X.def('u_deluge', { beats: [0.4],
   eff: [{ t: 'dmg', m: 0.85 }, { t: 'status', s: 'mark', dur: 10, p: 20 }],
   zone: { dur: 3, every: 1, k: 'wind', eff: [{ t: 'dmg', m: 0.35 }] },
@@ -293,7 +293,7 @@ function snipe(c, grand) {
 X.reg('u_oneshot', { cast: function (c) { aim(c, false); }, beat: function (c) { snipe(c, false); } });
 X.reg('ux_oneshot', { cast: function (c) { aim(c, true); }, beat: function (c) { snipe(c, true); } });
 // T4 ── 세 갈래 화살: 시위 하나에 화살 셋. 겨눔 줄 셋이 부채처럼 갈라지고, 화살마다 다른 길로 휘어 날아가 꽂힌다. 발밑에 풀빛(둔화)
-// T5 ── 다섯 갈래 화살: 다섯 줄. 꽂힌 자리마다 금빛 고리가 한 번 더 번진다
+// T5 ── 다섯 갈래 화살: 다섯 줄. 꽂힌 자리마다 금빛 고리가 번지고, 화살이 차례로 금빛으로 한 번 더 번쩍인다
 var BEND = [0, -7, 7, -12, 12];
 function nock(c, grand) {
   var b = bow(c), T = c.S.beats[0], fl = 0.16;
@@ -310,10 +310,13 @@ function volley(c, grand) {
   c.each(function (x, y) { c.burst(x, y + 0.3, DUST, 2, { up: 10, grav: 50, spd: 14, life: 0.35 }); }, 5);
   c.hits(function (x, y, k) {
     c.shape({ k: 'impact', x: x, y: y, dur: 0.24, c: P.white, r: grand ? 12 : 10 }); brand(c, x, y, 0.05);
-    if (k < (grand ? 4 : 3)) c.fx('stain', { x: x, y: y, r: 9, c: P.green, a: 0.3, c2: P.leaf, n: 5, dur: 2.2 });      // 둔화: 발밑에 감기는 풀빛
+    if (k < 3) c.fx('stain', { x: x, y: y, r: 9, c: P.green, a: 0.3, c2: P.leaf, n: 5, dur: 2.2 });      // 둔화: 발밑에 감기는 풀빛
     c.burst(x, y, SPARK, 6, { spd: 40, life: 0.3 }); c.burst(x, y + 0.3, LEAF, 4, { up: 8, grav: 20, spd: 14, life: 0.6 });
     c.light(x, y, 22, P.cream, 0.5, 0.3);
-    if (grand) c.fx('shock', { x: x, y: y, r: 18, c: P.gold, w: 1, thin: 1, dur: 0.4, d: 0.14 });
+    if (grand) {
+      c.fx('shock', { x: x, y: y, r: 18, c: P.gold, w: 1, thin: 1, dur: 0.4, d: 0.14 });
+      c.fx('star', { x: x, y: y - 0.3, s: 4, c: P.gold, d: 0.2 + k * 0.05, dur: 0.26 });      // 꽂힌 화살이 차례로 금빛으로 한 번 더 번쩍
+    }
   }, 5);
   c.shake(grand ? 0.36 : 0.24).stop(grand ? 0.07 : 0.05).flash(P.cream, grand ? 0.09 : 0.06).boom('arc_thock');
   if (grand) c.wash(P.green, 0.06, 0.7);
