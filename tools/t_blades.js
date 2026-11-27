@@ -75,8 +75,8 @@ module.exports = async (page, shot, L, X) => {
   A(r.pool2 === r.zone && !r.otherIn, 'once all are owned, any field legendary can come again (still no boss or scenario pieces)');
   // 부적: 한도를 넘으면 장당 3,000골드
   r = await ev(() => { var out = []; [0, 19, 20].forEach(function (have) { var sv = JSON.parse(JSON.stringify(DS.G.save)); sv.items.prot = have; sv.gold = 0; var x = DS.bladesRoll(sv, function () { return 0.99; }); out.push([x.k, x.n, x.miss, x.refund, sv.items.prot, sv.gold]); }); out.c = Math.max(DS.BLADES.protRefund, DS.protPrice(DS.G.save)); return { r: out, c: out.c }; });
-  const pc = r.c; r = r.r;      // 2.7.2: 돌려주는 값 = 지금 대장간 값과 바닥값 가운데 큰 쪽
-  A(r[0].join() === 'prot,2,0,0,2,0' && r[1].join() === 'prot,1,1,' + pc + ',20,' + pc && r[2].join() === 'prot,0,2,' + 2 * pc + ',20,' + 2 * pc, 'charms: 2 each, over the cap of 20 the missing ones refund the forge price (' + pc + ') each (' + r.map(x => x.join('/')).join(' · ') + ')');
+  const pcR = r.c; r = r.r;      // 2.7.2: 돌려주는 값 = 지금 대장간 값과 바닥값 가운데 큰 쪽
+  A(r[0].join() === 'prot,2,0,0,2,0' && r[1].join() === 'prot,1,1,' + pcR + ',20,' + pcR && r[2].join() === 'prot,0,2,' + 2 * pcR + ',20,' + 2 * pcR, 'charms: 2 each, over the cap of 20 the missing ones refund the forge price (' + pcR + ') each (' + r.map(x => x.join('/')).join(' · ') + ')');
   // 골드: 정확히 빠진다 (판 값 · 돌려받은 부적 값만 다시 들어온다)
   r = await ev(() => { var sv = JSON.parse(JSON.stringify(DS.G.save)); sv.gold = 250000; var g0 = sv.gold, a = DS.bladesPull(sv, 1, DS.rng(3)), g1 = sv.gold, b = DS.bladesPull(sv, 10, DS.rng(4)), g2 = sv.gold, back = function (res) { return res.list.reduce(function (t, x) { return t + (x.sold || 0) + (x.refund || 0); }, 0); };
     var poor = JSON.parse(JSON.stringify(DS.G.save)); poor.gold = 99999; var n0 = poor.blades ? poor.blades.n : 0, c = DS.bladesPull(poor, 10);
