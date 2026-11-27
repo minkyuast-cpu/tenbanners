@@ -5724,3 +5724,14 @@ html body #app#app .pplv .pph, html body #app#app .row.ppl.pgrid { grid-template
 .result.peace .pz-r { width: 100%; max-width: 320px; margin: 14px auto 6px; }
 .result.peace .pz-sun { opacity: .7; bottom: -70px; }
 @media (orientation: landscape) and (max-height: 560px) { .result.peace .pz-sun { display: none; } .result.peace .pz-r { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 560px; } }
+
+/* 2.7.2 영웅관: 모집권을 크게 */
+.gacha .gtk { display: grid; grid-template-columns: 44px auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; border: 1px dashed rgba(224, 192, 136, .35); background: rgba(0, 0, 0, .18); }
+.gacha .gtk.on { border: 1px solid #e0c088; background: linear-gradient(90deg, rgba(224, 192, 136, .22), rgba(224, 192, 136, .06)); box-shadow: 0 0 0 1px rgba(224, 192, 136, .15), 0 0 14px rgba(224, 192, 136, .18); }
+.gacha .gtk .gtn { display: inline-flex; align-items: baseline; gap: 2px; }
+.gacha .gtk .gtn b { font-size: 30px; line-height: 1; color: #ffe2a0; } .gacha .gtk:not(.on) .gtn b { color: var(--mute, #c4b89e); }
+.gacha .gtk .gtn small { font-size: var(--fs-m); color: var(--bone, #ece2cc); }
+.gacha .gtk .gtx { display: grid; min-width: 0; } .gacha .gtk .gtx b { color: var(--bone, #ece2cc); font-size: var(--fs-m); } .gacha .gtk .gtx small { color: var(--mute, #c4b89e); font-size: var(--fs-s); }
+.gacha .gtk:not(.on) .ico { filter: grayscale(1) opacity(.55); }
+.gacha .btn.bytk { background: linear-gradient(180deg, #ffe7a8, #e0b064); }
+.sh .gold .tkpill { display: inline-flex; align-items: center; gap: 3px; margin-right: 6px; padding: 2px 8px 2px 4px; border-radius: 99px; border: 1px solid #e0c088; background: rgba(224, 192, 136, .16); color: #ffe2a0; font-weight: 700; vertical-align: middle; }

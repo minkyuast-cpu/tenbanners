@@ -48,7 +48,7 @@ function sheet(title, render, cls, after) {
   var o = overlay('<header class="sh"><h3>' + esc(title) + '</h3><span class="gold"></span></header><div class="sb"></div><div class="sfoot"></div>', cls || '');
   var footHtml = null;
   o.draw = function () {
-    $('.gold', o).innerHTML = G.save ? coin(G.save.gold) : '';
+    $('.gold', o).innerHTML = G.save ? (o.headX ? o.headX() : '') + coin(G.save.gold) : '';      // 2.7.2: headX = 골드 옆에 붙는 것 (영웅관: 모집권)
     var body = $('.sb', o), top = body.scrollTop;
     body.innerHTML = render(); U.hydrate(body); if (KEEPER[title] && cls !== 'sub') { try { keeperPut(body, title); } catch (x) {} } body.scrollTop = top;      // 2.6: 가게 주인의 한 줄 (가게 넷)
     var pr = o.foot ? o.foot() || '' : '', f = $('.sfoot', o), fh = '<button class="btn" data-close>닫기</button>' + pr;
@@ -782,17 +782,21 @@ function houseOpenShow(r, cb) {
   if (cb) cb();
 }
 DS.houseOpenShow = houseOpenShow;
+// 2.7.2: 다음 모집권을 주는 시나리오 (처음 깰 때) — 없으면 0
+function tkNext(s) { for (var i = 1; i <= DS.SCENARIOS.length; i++) { var sc = DS.scn(i); if (sc && !(s.cleared && s.cleared[i]) && DS.scnTickets && DS.scnTickets(sc) > 0) return i; } return 0; }
 function mercShop() {
   var o = sheet('영웅관', function () {
     var s = G.save, cost = DS.recruitPrice(s, 0), next = DS.recruitPrice(s, 1), base = DS.recruitBase(s), eN = DS.recruitOpenN(s), html = '', why = DS.recruitWhy(s);
     var pityLeft = Math.max(1, DS.PITY - (s.pity || 0)), ease = DS.recruitEase(s), pg = (DS.GRADES[DS.PITY_G || 5] || {}).name || '', can = !why && (s.tickets > 0 || s.gold >= cost);
-    html += '<div class="gacha"><div class="gh"><b>영웅 모집</b><span>모집권 <b class="num">' + (s.tickets || 0) + '</b>장</span></div>' +
+    var tk = s.tickets || 0, nx = tk ? 0 : tkNext(s);      // 2.7.2: 모집권이 구석의 작은 글씨라 몇 장인지 몰랐다 — 카드 맨 위의 큰 칸으로
+    html += '<div class="gacha"><div class="gh"><b>영웅 모집</b></div>' +
+      '<div class="gtk' + (tk ? ' on' : '') + '">' + DS.iconHtml('misc', 'ticket', { size: 40 }) + '<span class="gtn"><b class="num">' + tk + '</b><small>장</small></span><span class="gtx"><b>영웅 모집권</b><small>' + (tk ? '모집할 때 골드보다 먼저 쓴다. 값이 오르지 않는다' : nx ? '다음 모집권: ' + nx + '번 시나리오를 처음 깨면' : '시나리오 ' + (DS.TICKET_EVERY || 10) + '번째마다, 빈 가문이 생기면 새벽에 온다') + '</small></span></div>' +
       '<p class="hint sm">한 번에 한 사람. 병과는 무작위. <b class="warn">쓰러지면 잃는다</b></p>' +
       '<div class="gprice"><span>지금 ' + coin(cost) + '</span><i aria-hidden="true">→</i><span>다음 ' + coin(next) + '</span></div>' +
       '<p class="pity f26why">빈 가문 <b>' + eN + '곳</b>' + (ease > 0 ? ' · 기본값 ' + coin(base) + '까지 ' + ease + '계절' : '') + ' <button class="lnk" data-pfold="gwhy" aria-expanded="' + !!FOLD.gwhy + '">값은 어떻게 정해지나 ' + (FOLD.gwhy ? '▾' : '▸') + '</button></p>' +      // 2.6: 값 풀이는 접어 둔다
       (FOLD.gwhy ? '<p class="gwhy">빈 가문이 많을수록 싸다. 지금 빈 가문 <b>' + eN + '곳</b>. 부를 때마다 오르고 계절마다 내려간다.' + (ease > 0 ? ' <b>기본값 ' + coin(base) + '까지 ' + ease + '계절</b>' : '') + ' 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다, 그리고 2, 3, 4, 5, 6, 7, 9, 11, 13번을 처음 깰 때 한 장.</p>' : '') +
       heroRoomLine(s) +
-      '<div class="gbtn one"><button class="btn' + (can ? ' gold' : ' poor') + '" data-pull="1"' + (why ? ' disabled aria-disabled="true"' : '') + '><span>영웅 모집</span><small>' + (why ? '막사 가득' : s.tickets > 0 ? '모집권 1장' : coin(cost)) + '</small></button></div>' +
+      '<div class="gbtn one"><button class="btn' + (can ? ' gold' : ' poor') + (tk ? ' bytk' : '') + '" data-pull="1"' + (why ? ' disabled aria-disabled="true"' : '') + '><span>' + (tk ? '모집권으로 모집' : '골드로 모집') + '</span><small>' + (why ? '막사 가득' : tk ? '모집권 ' + tk + '장 → ' + (tk - 1) + '장' : coin(cost)) + '</small></button></div>' +
       '<p class="pity">' + (pityLeft <= 5 || FOLD.rates ? pg + '까지 ' + pityLeft + '회, ' : '') + '<button class="lnk" data-pfold="rates" aria-expanded="' + !!FOLD.rates + '">등급 확률 ' + (FOLD.rates ? '▾' : '▸') + '</button></p>' +
       (FOLD.rates ? '<p class="rates">' + [1, 2, 3, 4, 5].map(function (g) { return '<i>' + gbadge(g) + ' <b class="num">' + DS.GRADES[g].p + '%</b></i>'; }).join('') + '</p>' : '') + '</div>';
     var fl = (s.fallen || []).slice().reverse();
@@ -804,6 +808,7 @@ function mercShop() {
     return html;
   }, 'mercs');
   o.addEventListener('click', function (e) { if (e.target.closest('[data-polego]')) { A('tap'); o.close(); DS.poleOpen(); } });
+  o.headX = function () { var n = (G.save && G.save.tickets) || 0; return n ? '<span class="tkpill" title="영웅 모집권">' + DS.iconHtml('misc', 'ticket', { size: 18 }) + '<b class="num">' + n + '</b></span>' : ''; };      // 2.7.2: 머리의 골드 옆에도
   o.foot = function () { return '<button class="btn" data-goparty="1">부대</button>'; };  o.draw();
   function pull() {
     var s = G.save, cost = DS.recruitPrice(s, 0), byT = false;
@@ -1007,7 +1012,7 @@ DS.openTownWork = function (parent) {
     var row = function (k, ic, nm, sub) { return '<button class="row twrow" data-tw="' + k + '">' + (U.svg ? '<i class="twic" aria-hidden="true">' + U.svg(ic, 22) + '</i>' : '') + '<span class="tx"><b>' + esc(nm) + '</b><small>' + esc(sub) + '</small></span><i class="twgo" aria-hidden="true">›</i></button>'; };
     var html = '<p class="hint sm">' + esc(here ? z.def.name + '에서 본다' : '어디서나 볼 수 있다. 진열은 ' + (z.def.name || '마을') + ' 것') + '</p>';
     html += row('forge', 'sword', '대장간', '강화, 장비 맞추기');
-    html += row('merc', 'party', '영웅관', '영웅 모집. 병과는 무작위, 빈 가문이면 가주로');
+    html += row('merc', 'party', '영웅관', (s.tickets ? '모집권 ' + s.tickets + '장. ' : '') + '영웅 모집. 병과는 무작위, 빈 가문이면 가주로');      // 2.7.2: 모집권 수
     html += row('item', 'bag', '상점', '소모품' + (DS.ITEMS.prot ? ', 강화 보호 부적' : ''));
     html += row('church', 'scroll', '교회', '치료, 관, 합일');
     if (lgOn && lgOn()) html += row('wed', 'heart', '혼인과 이별', '맹주의 혼인');
