@@ -5716,6 +5716,36 @@ html body #app#app .row.ppl.pgrid .pl > * { flex: 0 0 auto; }
 html body #app#app .row.ppl.pgrid .pl > span.phn { flex: 0 1000 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }      /* 가문 이름이 먼저 줄어든다 — 단 이름은 끝까지 */
 html body #app#app .row.ppl.pgrid .pl .ptn { flex: 0 0 auto; white-space: nowrap; font-size: 11px; margin: 0 4px 0 3px; }      /* 단 이름은 줄이지 않는다 — 넘치면 뒤의 문장 · 가문 이름이 잘린다 */
 html body #app#app .pplv .pph, html body #app#app .row.ppl.pgrid { grid-template-columns: 44px minmax(0, 1fr) 42px 30px 66px; column-gap: 7px; }      /* 2.6.4: 단 이름 자리 (이름 칸 +15px) */
+
+/* 2.7.1 스무 해의 평화 */
+.ov.peaceov .sheet { background: none; }
+.result.peace { position: relative; overflow: hidden; text-align: center; padding-top: 22px; background: linear-gradient(180deg, #0d1124 0%, #1a1f3a 45%, #3a2f45 80%, #6b4a3e 100%); animation: pzSky 6s ease-out both; }
+.result.peace > *:not(.pz-sky) { position: relative; z-index: 1; }
+.result.peace .pz-sky { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 120%, rgba(255, 196, 120, .55), transparent 60%); opacity: 0; animation: pzDawn 6s ease-out .4s both; }
+.result.peace .pz-sun { position: absolute; left: 50%; bottom: -46px; width: 92px; height: 92px; margin-left: -46px; border-radius: 50%; background: radial-gradient(circle, #fff1c8 0 40%, #ffc978 41% 70%, transparent 71%); transform: translateY(40px); animation: pzSun 6s ease-out .6s both; }
+.result.peace .eyebrow { color: #cdb98f; letter-spacing: .3em; }
+.result.peace h2 { color: #f4e6c4; }
+.result.peace .pz-l p { margin: 6px 0; color: #e8dcc2; opacity: 0; animation: pzIn .9s ease-out var(--d) both; }
+.result.peace .pz-r { list-style: none; margin: 14px 0 6px; padding: 0; display: grid; gap: 6px; }
+.result.peace .pz-r li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; column-gap: 10px; text-align: left; padding: 6px 10px; border-radius: 6px; background: rgba(10, 8, 20, .45); opacity: 0; animation: pzIn .6s ease-out var(--d) both; }
+.result.peace .pz-f { grid-row: 1 / 3; width: 36px; height: 36px; display: grid; place-items: center; overflow: hidden; }
+.result.peace .pz-r b { color: #f4e6c4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.result.peace .pz-lv { font-variant-numeric: tabular-nums; color: #ffd27a; font-weight: 700; transition: color .4s; }
+.result.peace .pz-lv.one { color: #a9b4c8; }
+.result.peace .pz-fz { grid-column: 2 / 4; color: #c9a8f0; font-size: var(--fs-s); }
+.result.peace .pz-more, .result.peace .pz-keep { opacity: 0; animation: pzIn .8s ease-out var(--d) both; color: #e8dcc2; }
+.result.peace .pz-keep { margin: 12px 0 10px; color: #f4e6c4; }
+.result.peace .pz-go:disabled { opacity: .45; }
+.ov.peaceov.calm .result.peace, .ov.peaceov.calm .result.peace * { animation: none !important; opacity: 1 !important; }
+.ov.peaceov.calm .pz-sky { opacity: 1 !important; } .ov.peaceov.calm .pz-sun { transform: none !important; }
+@keyframes pzIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pzDawn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pzSun { from { transform: translateY(60px); } to { transform: translateY(0); } }
+@keyframes pzSky { from { filter: brightness(.7); } to { filter: none; } }
+@media (prefers-reduced-motion: reduce) { .result.peace, .result.peace * { animation: none !important; opacity: 1 !important; } }
+.result.peace .pz-r { width: 100%; max-width: 320px; margin: 14px auto 6px; }
+.result.peace .pz-sun { opacity: .7; bottom: -70px; }
+@media (orientation: landscape) and (max-height: 560px) { .result.peace .pz-sun { display: none; } .result.peace .pz-r { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 560px; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -6729,10 +6759,20 @@ for (var ux in DS.ULT_BASE) DS.SK_ALIAS[ux] = DS.ULT_BASE[ux];
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.7.0';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.5.0';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.7.1';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.5.1';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.7.1', date: '2026-11-27', tag: '변경', title: '스무 해의 평화',
+    lead: '모두 처음부터 다시 시작합니다. 2대째부터 너무 쉬워지던 것을 바로잡았고, 싸움 없는 스무 해 동안 모두 칼 쥐는 법을 잊습니다.',
+    items: [
+      ['새로', '다음 세대의 장에서 스무 해가 지나면 살아 있는 모두가 1단 Lv1로 돌아갑니다. 단이 하나씩 내려앉는 연출이 나옵니다.'],
+      ['변경', '합일의 힘은 한 세대만 갑니다. 8단 위의 가주도 1단 Lv1이 되고 大도 걷힙니다. 합일로 늘어난 수명은 그대로입니다.'],
+      ['변경', '장비, 공훈, 가호, 관, 가방은 그대로 이어집니다. 영웅관의 영웅도 낮은 레벨로 옵니다.'],
+      ['변경', '2대째의 적은 본편과 같은 레벨에서 시작합니다(예전에는 1번이 L70). 대신 대마다 세기가 35%씩 오릅니다(많아야 2배).'],
+      ['안내', '봇으로 재 보니 2대째가 0.5~1.8시간에서 7~13시간으로 늘었고, 전멸 횟수도 1대째와 비슷해졌습니다.'],
+      ['안내', '이번 판부터 모두 처음부터 시작합니다. 예전 저장은 이 기기에 보관만 하고 이어 하지 않습니다. 클라우드에 올려 둔 예전 저장도 불러오지 않으며, 새로 시작한 저장을 올리면 그 자리를 덮습니다.']
+    ] },
   { ver: '2.7.0', date: '2026-11-26', tag: '새로', title: '기술마다 제 연출',
     lead: '열 병과의 기술 130개가 저마다의 모습을 얻었습니다. 높은 단의 기술일수록 길고 화려합니다.',
     items: [
@@ -14870,8 +14910,13 @@ DS.spdOf = function (v) { v = +v || 1; return v >= 1.75 ? 2 : v >= 1.25 ? 1.5 : 
 //   v9 이하를 v10 으로 옮기는 판 올림은 하지 않는다 (MIGRATE 2~8 은 남아 있지만 read/peek 이 v10 미만을 받지 않는다).
 // r42 (2.0.0 「새 시대」): 사람마다 단·레벨, 가문 공훈 — 다시 모두 새로 시작한다. 새 키 tenbanners_v3 에 v11 만 쓰고 읽는다.
 //   옛 저장(tenbanners_v2 · tenbanners_v1 과 그 _bak, 클라우드 saves2 · saves 문서)은 지우지도 바꾸지도 않는다 — 처음 한 번 「새 시대가 열렸다」 안내만.
-var KEY = 'tenbanners_v4', OLD = 'tenbanners_v3', OLD1 = 'tenbanners_v2', META = 'tenbanners_meta', LEGACY = 'darksaver_muta_v1';
-DS.SAVE_V = 13;      // 2.2.0 「한 사람 한 사람」: v12 → v13 판 올림 (가솔·막사가 없어졌다 — MIGRATE[12]). 키·클라우드 문서(tenbanners_v4 · saves4)는 그대로
+// 2.7.1 (「스무 해의 평화」): 세대를 넘을 때 모두 1레벨로 돌아가는 규칙과 함께 다시 모두 새로 시작한다. 새 키 tenbanners_v5 · 저장 v14.
+//   옛 저장(tenbanners_v4 · tenbanners_v3)은 지우지 않고 보관만 한다. 클라우드 문서(saves4)의 v13 저장은 「옛 판」으로 안내만 하고(DS.SAVE_ERA), 새로 시작한 저장을 올리면 그 문서를 덮는다.
+//   read() 는 v12 · v13 을 여전히 옮길 수 있다 (시험의 옛 저장 · 판 올림 길) — 이어 하지 않게 막는 것은 키(load) · isOld(클라우드 · 이사 코드)다.
+var KEY = 'tenbanners_v5', OLD = 'tenbanners_v4', OLD1 = 'tenbanners_v3', META = 'tenbanners_meta', LEGACY = 'darksaver_muta_v1';
+DS.SAVE_V = 14;      // 2.7.1: v13 → v14 (구조는 같다 — 「새로 시작」의 표). 아래 줄은 옛 설명
+DS.SAVE_ERA = 14;    // 2.7.1: 이어 할 수 있는 가장 옛 「시대」 — 이보다 옛 저장은 클라우드 · 이사 코드에서 옛 판으로 안내만 한다
+//      // 2.2.0 「한 사람 한 사람」: v12 → v13 판 올림 (가솔·막사가 없어졌다 — MIGRATE[12]). 키·클라우드 문서(tenbanners_v4 · saves4)는 그대로
 // 2.2.3 끝없는 갱도: s.pitBest = 깬 가장 깊은 층(0 = 아직) · s.pitCur = 마지막으로 들어간 층 · s.pit = 열린 다음 층(옛 칸, pitBest + 1) · s.pitV = 2 (새 셈).
 //   옛 저장(10층까지, 층마다 적 레벨 +6)은 깬 가장 깊은 층의 적 레벨로 옮긴다: 옛 9층(적 Lv90)을 깼으면 새 24층(적 Lv89)까지 깬 것으로. 처음 돌파 보상(lootPit)도 같은 층까지 받은 것으로 친다
 function pitFix(s) {
@@ -14989,6 +15034,9 @@ var MIGRATE = {
   12: function (s) {   // 2.1.x → 2.2.0 「한 사람 한 사람」: 가솔·막사가 없어졌다
     DS.mig13(s);
     s.v = 13;
+  },
+  13: function (s) {   // 2.7.1: 구조는 같다 — 판 번호만 (이어 하지 않게 막는 것은 키와 DS.SAVE_ERA)
+    s.v = 14;
   }
 };
 // 2.2.0 판 올림: 가주는 그대로 · 맹주 집 사람(핏줄 아이·배우자·물러난 선대)은 맹주 가문의 가문원 · 옛 가솔과 막사의 사람은 모두 막사로 (떠나는 이도 돌려받는 골드도 없다)
@@ -15195,9 +15243,9 @@ DS.Save = {
   },
   oldRaw: function () { return get(OLD) || get(OLD + '_bak') || get(OLD1) || get(OLD1 + '_bak'); },      // 옛 판의 저장 (읽기 전용 — r42: 안내만 한다)
   archived: function () { return !!this.oldRaw(); },      // r42: 이 기기에 보관된 옛 기록이 있는가
-  archNote: function () { var m = this.meta(); if (m.arch4 || !this.archived()) return false; return true; },      // 2.1.0: 새 판 — 2.0.0 의 안내를 본 이도 한 번 더 (arch4)      // 처음 한 번 「새 시대가 열렸다」
-  archSeen: function () { this.setMeta({ arch3: 1, arch4: 1 }); },
-  isOld: function (raw) { var s = typeof raw === 'string' ? parse(raw) : raw; return !!(s && typeof s === 'object' && s.chars && !newerOf(s) && verOf(s) < DS.SAVE_MIN); },
+  archNote: function () { var m = this.meta(); if (m.arch5 || !this.archived()) return false; return true; },      // 2.7.1: 다시 새 판 — 한 번 더 (arch5)      // 2.1.0: 새 판 — 2.0.0 의 안내를 본 이도 한 번 더 (arch4)      // 처음 한 번 「새 시대가 열렸다」
+  archSeen: function () { this.setMeta({ arch3: 1, arch4: 1, arch5: 1 }); },
+  isOld: function (raw) { var s = typeof raw === 'string' ? parse(raw) : raw; return !!(s && typeof s === 'object' && s.chars && !newerOf(s) && verOf(s) < (DS.SAVE_ERA || DS.SAVE_MIN)); },      // 2.7.1: SAVE_ERA
   // 저장 글을 읽어 지금 구조로 만든다. 살릴 수 없으면 null (넘어질 수도 있다 — load 가 받는다).
   read: function (raw) {
     var s = parse(raw);
@@ -33532,6 +33580,7 @@ DS.charSheetOpen = function (id) { return charSheet(id); };      // 2.2.0: 위 �
 // ───────── 사람 한 줄 · 사람 창 · 영웅관(모집) ─────────
 function gcol(g) { return DS.GRADES[g].col; }
 function mercSpr(m, px) { var pl = null; if (DS.personLook) { try { pl = DS.personLook(m, G.save); } catch (x) { pl = null; } } if (pl) return sprTag(pl[0], pl[1], (px || 2) * pl[2]); var M = DS.MERCS[m.type]; return M.big ? sprTag(M.sprite, M.pal, (px || 2) * 0.75) : sprTag(m.type + '_' + m.g + '_' + (m.v || 0), '', px || 2); }      // 2.6.0: 사람의 모습은 병과와 단을 따른다 (DS.personLook — 가주 = 가문 병과 · 막사 = 받은 병과 · 가문원 = 따르는 종류)
+U.mercSpr = mercSpr;      // 2.7.1: 스무 해의 평화 연출 (endgame.js)
 function mercById(id) { return G.save.mercs.filter(function (x) { return x.id === id; })[0] || null; }
 // 특성의 효과 한 마디 (좁은 칸용)
 var TR_SHORT = { brave: '위기에 공격 +20%', medic: '물러나면 회복', survivor: '쓰러질 때 한 번 버팀' };
@@ -35201,7 +35250,7 @@ function tabHelp() {
       '<b>등급</b>은 타고난 그릇이다. 모집하거나 태어날 때 정해지고 바뀌지 않는다. 등급이 높은 사람이 가주가 되면 가문이 더 강해진다. 맹주 자리는 희귀 밑으로 치지 않는다. 등급이 높을수록 경험치도 빨리 쌓인다.' +      // r45 표 · r44 숫자
         '<table class="htab"><thead><tr><th>등급</th><th>가문원</th><th>가주일 때</th><th>성장</th></tr></thead><tbody>' + DS.GRADES.slice(1).map(function (q, i) { var pc = DS.potMul ? Math.round((DS.potMul({ pot: i + 1 }) - 1) * 100) : 0; return '<tr><th style="color:' + q.col + '">' + q.name + '</th><td class="num">×' + q.mul.toFixed(2) + '</td><td class="num">×' + DS.BN.gmul[i + 1].toFixed(2) + '</td><td class="num">' + (pc > 0 ? '+' : pc < 0 ? '−' : '±') + Math.abs(pc) + '%</td></tr>'; }).join('') + '</tbody></table>',
       '<b>단과 레벨</b>은 사람마다 따로다. 싸우면 경험치를 얻어 오르고, 10레벨마다 단이 오른다. 단이 오를 때마다 기질에 맞는 능력치가 하나씩 더 오른다. 합일하지 않은 사람은 7단 Lv10에서 멈춘다.',
-      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 가주(맹주 가문은 가문원도)가 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 가문 목록과 위쪽 초상은 맹주 다음에 공훈 계급, 합류 차례로 선다.' +
+      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 가주(맹주 가문은 가문원도)가 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 사람의 레벨은 스무 해의 평화 동안 모두 1단 Lv1로 돌아간다. 가문 목록과 위쪽 초상은 맹주 다음에 공훈 계급, 합류 차례로 선다.' +
         '<table class="htab"><thead><tr><th>계급</th><th>공훈</th><th>가주</th><th>가문원</th></tr></thead><tbody>' + DS.HVET.map(function (q, i) { return '<tr><th>' + DS.hName(i) + '</th><td class="num">' + q.at + '</td><td class="num">+' + q.pct + '%</td><td class="num">×' + q.mul.toFixed(2) + '</td></tr>'; }).join('') + '</tbody></table>',
       '가문에서 태어난 아이는 등급이 높을수록 경험치가 빨리 쌓인다. 희귀가 보통이고 일반은 30% 느리고 전설은 30% 빠르다.',
       '<b>대물림</b>: 맹주가 바뀌면 다음 맹주는 선대와의 레벨 차이 가운데 일부를 잇는다. 공훈 계급이 높을수록 많이 잇는다.' + '<table class="htab"><thead><tr><th>누가</th><th>신참</th><th>' + esc(DS.hName(DS.HVET.length - 1)) + '</th></tr></thead><tbody>' + [['맹주의 핏줄', 'kid'], ['맹주의 양자', 'adopt']].map(function (r) { var H = DS.HEIR[r[1]]; return '<tr><th>' + r[0] + '</th><td class="num">' + Math.round(H[0] * 100) + '%</td><td class="num">' + Math.round(H[1] * 100) + '%</td></tr>'; }).join('') + '</tbody></table>' + '<small>다른 가문의 가주를 맹주로 세우면 그 사람 가문의 계급으로 양자 몫을 잇는다. 막사에서 저절로 이은 이는 제 레벨 그대로다.</small>',
@@ -35249,6 +35298,7 @@ function tabHelp() {
       '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
       '8단 위의 가주가 쓰러지면 그대로 떠난다. 영웅 모집권 10장을 남긴다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다.',
       '합일의 대표 가문은 그 세대 동안 이름 앞에 <b>大</b>가 붙는다. 大 가문의 가주는 합일하지 않아도 7단 Lv10 뒤에 8단으로 자란다. 8단 가주를 잃어도 다음 가주가 다시 8단에 오를 수 있다.',
+      '<b>합일의 힘은 한 세대만</b> 간다. 다음 세대의 장을 열고 스무 해가 지나면 8단 위의 가주도 1단 Lv1로 돌아가고 大도 걷힌다. 늘어난 수명은 그대로다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
@@ -36699,7 +36749,7 @@ function renderTitle() {
     (!s && !nv && brokenSave() ? '<p class="welcome warnbox"><b>저장을 읽지 못했습니다.</b> 깨진 저장은 지우지 않고 따로 두었습니다. 새로 시작하면 새로 저장합니다.</p>' : '') +
     (r && !s ? '<p class="welcome"><b>회귀자로 맞이합니다.</b> 예전 기록에 따라 특전을 드립니다. 진행은 처음부터입니다.</p>' : '') +
     (s ? '<button class="btn gold wide" id="btnCont">이어하기 <small>' + esc(s.name) + ', ' + DS.ZONES[s.zone].name + '</small></button>' : '') +
-    (!nv && arch ? '<p class="welcome arch"><b>새 판이 열렸다. 이전 기록은 보관되었다.</b> ' + esc(DS.VERSION) + ' 은 처음부터 시작합니다. 옛 저장은 지우지 않고 이 기기에 그대로 두지만, 이어 하거나 사람을 데려오지는 않습니다.</p>' : '') +
+    (!nv && arch ? '<p class="welcome arch"><b>새 판이 열렸다. 이전 기록은 보관되었다.</b> ' + esc(DS.VERSION) + ' 은 처음부터 시작합니다. 세대를 넘을 때의 규칙이 바뀌어 모두 새로 출발합니다. 옛 저장은 지우지 않고 이 기기에 그대로 두지만, 이어 하지는 않습니다.</p>' : '') +
     (nv ? '' : '<button class="btn wide' + (s || oldEra() ? '' : ' gold') + '" id="btnNew">' + (r && !s ? '회귀자로 새로 시작' : oldEra() ? '새 맹주로 시작' : '새로 시작') + '</button>') +
     '<div class="tver"><button id="btnNotes" class="lnk">공지사항<i class="dot"' + (fresh ? '' : ' hidden') + '></i></button><span class="num">v' + DS.VERSION + '</span></div>' +
     '<p class="title-note">저장은 이 브라우저에 남습니다.</p></div>';
@@ -36994,14 +37044,14 @@ function play(ev) {
 
 // 열 개의 깃발 — 맺음 뒤: 「다음 세대의 장」 (설계서 r7/endgame_spec.md · 3.3.0 r9/nextgen/SPEC.md)
 // 30번 맺음 뒤 원할 때 장을 열면 스무 해가 한 해씩 흐르고(스무 해 창), 그 끝 새벽에 관의 한 사람을 열다섯 살로 다시 부른다.
-// 그다음 1번부터 30번까지 같은 길을 다시 걷는다. 적의 세기 하나만 바뀌고, 가문·후계·관·장비는 이미 있는 그대로 이어진다.
+// 그다음 1번부터 30번까지 같은 길을 다시 걷는다. 가문·후계·관·장비·공훈은 이어지고, 사람의 레벨은 스무 해의 평화 동안 모두 1로 돌아간다 (2.7.1 DS.egPeace). 적은 본편의 레벨에 대마다 세기 배율이 붙는다.
 // 저장: save.eg = { gen, on, c, t0, hist, intro, seed, call, pass?, roll } (DS.egFix 가 채움, SAVE_V 그대로)
 //   위쪽은 순수 함수(화면과 봇 tools/campaign.js 가 같은 것을 부른다). 「── 화면」 아래는 브라우저에서만.
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
 
-DS.EG = { years: 20, L0: 70, step: 0.06, cap: 1.3, last: 30, P: [0, 85, 70, 55, 40, 25], fresh: 30, freshCap: 90, salt: 9173, gold: 0.5, scnGold: 0.6 };      // r12 경제: gold — 장이 진행 중일 때 처치 골드 배율(들판·장 시나리오) · scnGold — 장 시나리오 보상 골드 배율(다시 깸 35% 위에)      // years: 스무 해 · P: 돌아올 등급별 가망(일반 85 … 전설 25) · fresh: 지난 새벽 뒤 떠난 이의 덧셈(최대 freshCap)
+DS.EG = { years: 20, L0: 70, step: 0.35, cap: 2.0, last: 30, P: [0, 85, 70, 55, 40, 25], fresh: 30, freshCap: 90, salt: 9173, gold: 0.5, scnGold: 0.6 };      // r12 경제: gold — 장이 진행 중일 때 처치 골드 배율(들판·장 시나리오) · scnGold — 장 시나리오 보상 골드 배율(다시 깸 35% 위에)      // years: 스무 해 · P: 돌아올 등급별 가망(일반 85 … 전설 25) · fresh: 지난 새벽 뒤 떠난 이의 덧셈(최대 freshCap)
 // 장의 글은 lore.js(DS.LORE.gen)에 있다. 여기는 거기 없는 것만: 막의 첫 줄(act) · 쓰러진 곳(fell). {a} 이름  (2.4.1: 늘 가려져 쓰이지 않던 옛 intro · close 기본 글은 걷었다)
 DS.EG_TXT = {
   // r24: 막의 첫 판(1·11·21번)에만, 대수에 따라 돌아가며 — 처음 오는 길인데 낯익다 (같은 줄이 열 판 내내 되풀이되지 않게)
@@ -37167,7 +37217,7 @@ DS.egScn = function (n, g, save) {
   var s = {}, k; for (k in b) s[k] = b[k];
   var C = DS.EG, last = DS.SCENARIOS.length;
   s.gen = g; s.base = b;
-  s.L = Math.min(100, Math.max(b.L, C.L0 + Math.round((100 - 1 - C.L0) * (n - 1) / Math.max(1, last - 1))));
+  s.L = b.L;      // 2.7.1: 스무 해의 평화 뒤에는 모두 1레벨에서 다시 시작한다 (DS.egPeace) — 적도 본편의 레벨 그대로, 세기 배율(diff)만 대마다 오른다. 예전: 1번이 L70 부터
   s.diff = (b.diff || 1) * Math.min(C.cap, 1 + C.step * (g - 1));
   var act = n <= 10 ? 1 : n <= 20 ? 2 : 3, ia = txt('act'), al = ia && ia[act], at = al instanceof Array ? al[Math.max(0, g - 2) % al.length] : al, intro = [n === (act - 1) * 10 + 1 ? fill(at || '', {}) : ''].filter(Boolean), fe = save ? fellAt(save, b.name) : null, who = '';
   if (fe) { try { who = nm(save, fe.a); } catch (x) { who = ''; } }      // 3.3.0: 기억 줄과 같은 이름(제 이름)으로
@@ -37460,6 +37510,32 @@ DS.egCallForce = function (s, pid, ok) {
   return doCall(s, i, !!ok);
 };
 DS.egSkip = function (s) { var e = E(s); if (e.call && e.call.g === e.gen && e.call.used === 0) e.call.used = 2; return true; };
+// 2.7.1 스무 해의 평화: 칼을 놓은 스무 해 동안 모두 싸우는 법을 잊는다 — 창이 닫힐 때 살아 있는 모든 사람이 1레벨(1단 Lv1)로 돌아간다.
+//   합일의 힘은 한 세대만: 8단 위(합일 · 大 가문)도 1레벨로, 합일 표(fz) · 大 표(dx · ch.dae)는 걷힌다 (합일로 늘어난 수명 · 가계도의 합일 기록은 그대로).
+//   단마다 받은 성장(pgn)도 처음부터 — 다시 단이 오르면 같은 성장을 다시 받는다 (기질에서 정해진다). 장비 · 공훈 · 가호 · 관 · 혈통은 그대로 이어진다.
+//   돌려주는 것: 화면이 보여 줄 줄 [{ k: 'c' | 'm', id, name, cls, L0 (잊기 전 레벨), fz (합일했었나) }] — 가주 · 맹주가 먼저, 레벨이 높은 순
+DS.egPeace = function (s) {
+  if (!s || !s.chars) return [];
+  var out = [], seen = [], P = LP(s);
+  function drop(who, row) {
+    if (!who || seen.indexOf(who) >= 0) return; seen.push(who);
+    var L0 = DS.pL(who), fz = !!who.fz;
+    if (row) out.push({ k: row.k, id: row.id, name: row.name, cls: row.cls, L0: L0, fz: fz, head: !!row.head });
+    who.L = 1; who.exp = 0; delete who.fz; delete who.dx; who.pgn = 0; if (DS.pgOf) who.pg = DS.pgOf(who);
+    if (who.pid && P[who.pid] && P[who.pid].L != null) P[who.pid].L = 1;
+  }
+  DS.charList(s).forEach(function (ch) {
+    var hero = ch.id === +s.hero, b = hero ? (ch.vac ? null : ch.ps) : (DS.bearer ? DS.bearer(s, ch, 1) : null);
+    delete ch.dae;
+    var nmx = ''; try { nmx = hero ? DS.charName(ch, s) : (b && (b.ttl || b.n)) || ''; } catch (x) { nmx = ''; }
+    if (b) drop(b, { k: hero ? 'c' : 'm', id: hero ? ch.id : b.id, name: nmx, cls: ch.cls, head: true });
+    ch.L = 1; ch.exp = 0; ch.Ls = 1; if (ch.pid && P[ch.pid] && P[ch.pid].L != null) P[ch.pid].L = 1;
+  });
+  (s.mercs || []).forEach(function (m) { drop(m, DS.pL(m) > 1 ? { k: 'm', id: m.id, name: m.ttl || m.n || '', cls: m.o && s.chars[m.o] ? s.chars[m.o].cls : (DS.pNative ? DS.pNative(s, m) : ''), head: false } : null); });
+  if (DS.pSync) DS.pSync(s);
+  if (DS.mercTidy) DS.mercTidy(s);
+  return out.sort(function (a, b) { return (b.head ? 1 : 0) - (a.head ? 1 : 0) || b.L0 - a.L0; });
+};
 DS.egClose = function (s) {
   var e = E(s), ps = e.pass; if (!ps) return null;
   if (ps.f !== 'call' && ps.f !== 'hand') return null;
@@ -37470,6 +37546,7 @@ DS.egClose = function (s) {
   e.roll.push(r);
   delete e.pass;
   if (DS.linPrune) DS.linPrune(s);
+  r.peace = DS.egPeace(s);      // 2.7.1: 스무 해의 평화 — 모두 1레벨로 (화면은 r.peace 를 연출로)
   return r;
 };
 // 봇·시험용: 창 전체를 정책대로 치른다. pol = { heir:'first', keep:'heavy'|'light'|'none', hand:true, call:'heavy'|'light'|'gold'|'none' }
@@ -37584,6 +37661,38 @@ function sv() { return G.save; }
 function hms(t) { t = Math.floor(t || 0); var h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60); return (h ? h + '시간 ' : '') + m + '분'; }
 DS.egUiTrace = [];
 function trace(k, x) { DS.egUiTrace.push({ k: k, x: x || '', t: Math.round(performance.now()) }); if (DS.egUiTrace.length > 400) DS.egUiTrace.shift(); }
+// 2.7.1 스무 해의 평화 연출: 밤하늘이 새벽으로 밝아 오는 동안 세 줄이 떠오르고, 가주들의 단이 하나씩 1단 Lv1 로 내려앉는다. 합일했던 이는 「합일의 힘이 흩어졌다」. 끝에 이어지는 것 한 줄과 단추 하나
+DS.PEACE_TXT = {
+  eye: '스무 해의 평화', title: '칼을 놓은 스무 해',
+  lines: ['싸움 없는 스무 해가 흘렀다.', '싸움을 모르는 아이들이 자랐고, 어른들은 칼 쥐는 법을 잊었다.', '손이 먼저 잊었다. 몸이 따라 잊었다.'],
+  fz: '합일의 힘이 흩어졌다', more: '그리고 {n}명 더',
+  keep: '모두 1단 Lv1에서 다시 시작한다. 장비와 공훈, 가호, 관은 그대로다.', go: '다시 칼을 든다',
+  cH: '평화', cL: ['싸움 없는 스무 해가 지나면', '모두 1단 Lv1에서 다시 시작한다.', '합일의 힘도 흩어진다. 장비와 공훈, 가호는 남는다.']
+};
+DS.egPeaceShow = function (s, rows, done) {
+  var T = DS.PEACE_TXT, calm = !!(DS.calmFx && DS.calmFx()), show = rows.filter(function (r) { return r.head; }).slice(0, 6), rest = rows.length - show.length;
+  var lv = function (L) { return DS.tierOfL(L) + '단 Lv' + DS.lvOfL(L); };
+  var face = function (r) { var sp = ''; try { if (r.k === 'c' && s.chars[r.id]) sp = U.charSpr(s.chars[r.id], 2); else { var m = (s.mercs || []).filter(function (x) { return x.id === r.id; })[0]; if (m && U.mercSpr) sp = U.mercSpr(m, 2); } } catch (x) { sp = ''; } return sp; };
+  var h = '<div class="result peace"><div class="pz-sky" aria-hidden="true"><i class="pz-sun"></i></div><p class="eyebrow">' + esc(T.eye) + '</p><h2>' + esc(T.title) + '</h2>' +
+    '<div class="pz-l">' + T.lines.map(function (t, i) { return '<p style="--d:' + (0.5 + i * 0.9).toFixed(2) + 's">' + esc(t) + '</p>'; }).join('') + '</div><ul class="pz-r">' +
+    show.map(function (r, i) { return '<li style="--d:' + (3.0 + i * 0.3).toFixed(2) + 's">' + '<span class="pz-f">' + face(r) + '</span><b>' + esc(r.name) + '</b><span class="pz-lv" data-l0="' + r.L0 + '">' + lv(r.L0) + '</span>' + (r.fz ? '<small class="pz-fz">' + esc(T.fz) + '</small>' : '') + '</li>'; }).join('') + '</ul>' +
+    (rest > 0 ? '<p class="pz-more" style="--d:' + (3.2 + show.length * 0.3).toFixed(2) + 's">' + esc(T.more.replace('{n}', rest)) + '</p>' : '') +
+    '<p class="pz-keep" style="--d:' + (3.5 + show.length * 0.3).toFixed(2) + 's">' + esc(T.keep) + '</p><button class="btn gold wide pz-go" data-pzgo="1">' + esc(T.go) + '</button></div>';
+  var o = U.overlay(h, 'peaceov modal' + (calm ? ' calm' : '')), t0 = performance.now(), raf = 0, end = 3.0 + show.length * 0.3 + 1.3;
+  if (U.hydrate) U.hydrate(o);
+  var els = [].slice.call(o.querySelectorAll('.pz-lv'));
+  function tick() {      // 단이 하나씩 내려앉는다: 줄이 떠오른 뒤 0.8초 동안 레벨이 1 까지 센다 (조용한 연출이면 바로 1)
+    var t = (performance.now() - t0) / 1000;
+    els.forEach(function (el, i) { var st = 3.0 + i * 0.3 + 0.3, k = calm ? 1 : Math.max(0, Math.min(1, (t - st) / 0.8)), L0 = +el.dataset.l0, L = Math.max(1, Math.round(L0 - (L0 - 1) * k));
+      if (el.dataset.now !== String(L)) { el.dataset.now = String(L); el.textContent = lv(L); if (L === 1) { el.classList.add('one'); if (!calm && DS.ui.A) DS.ui.A('tap'); } } });
+    if (!calm && t < end && o.isConnected) raf = requestAnimationFrame(tick);
+  }
+  tick();
+  o.querySelector('.pz-go').disabled = !calm; if (!calm) setTimeout(function () { var b = o.isConnected && o.querySelector('.pz-go'); if (b) b.disabled = false; }, end * 1000);
+  o.addEventListener('click', function (e) { if (!e.target.closest('[data-pzgo]') || e.target.closest('[data-pzgo]').disabled) return; cancelAnimationFrame(raf); if (DS.ui.A) DS.ui.A('ok'); o.close(); });
+  o.onclose = function () { cancelAnimationFrame(raf); if (done) done(); };
+  return o;
+};
 // 부대 탭 맨 위 한 줄 (ui.js tabParty)
 DS.egPartyRow = function (s) {
   s = s || sv(); if (!DS.egOn(s)) return '';
@@ -37660,6 +37769,7 @@ function confirmHtml(S) {
   if (F.leave.length > 3) lv += fill(txt('confirm.leave.more'), { k: numN(F.leave.length - 3) });
   h += sec(DS.egT1('confirm.leaveH'), F.leave.length ? [lv] : T('confirm.leave.none', {}));
   if (F.grow.length) h += sec(DS.egT1('confirm.growH'), [F.grow.map(function (x) { return x.name; }).join(', ')]);
+  h += sec(DS.PEACE_TXT.cH, DS.PEACE_TXT.cL);      // 2.7.1: 스무 해의 평화 — 모두 1레벨로
   return '<div class="result egcard egconf"><p class="eyebrow">' + esc(DS.egT1('confirm.eyebrow', { n: g })) + '</p><h2>' + esc(DS.egT1('confirm.title')) + '</h2>' + P_(DS.egT1('confirm.lead')) + h + P_(DS.egT1('confirm.tail'), 'dim') +
     '<button class="btn gold wide" id="egYes">' + esc(DS.egT1('confirm.yes')) + '</button><button class="btn wide" data-close>' + esc(DS.egT1('confirm.no')) + '</button></div>';
 }
@@ -37794,7 +37904,8 @@ DS.egPassOpen = function (S) {
     clearTimeout(tm);
     var r = DS.egClose(S); persist(); trace('close', 'pass');
     o.close();
-    if (DS.enterZone) DS.enterZone(S.town, null, null);
+    var go = function () { if (DS.enterZone) DS.enterZone(S.town, null, null); };
+    if (r && r.peace && r.peace.length && DS.egPeaceShow) DS.egPeaceShow(S, r.peace, go); else go();      // 2.7.1: 스무 해의 평화 연출
     return r;
   }
   o.draw = function () { if (e.pass && e.pass.f === 'call') callFace(); };      // 막사 내보내기 창이 닫힌 뒤 ([data-fire])
