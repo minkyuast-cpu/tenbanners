@@ -1555,8 +1555,25 @@ function showPerk(p, cb) {
   o.onclose = function () { if (cb) cb(); };
 }
 // 이어받은 저장에 쌓인 소식 (업데이트 선물 등)
+// 2.7.3 운영진 선물 우편: 이어하기 뒤 소식보다 먼저. 봉투가 열리고 「받기」를 누르면 모집권이 들어간다
+DS.showGiftMail = function (done) {
+  var s = G.save, m = s && Array.isArray(s.pmail) ? s.pmail[0] : null; if (!m) { if (done) done(); return null; }
+  var o = overlay('<div class="result giftmail"><div class="gm-env" aria-hidden="true"><i class="gm-flap"></i><i class="gm-seal"></i></div><p class="eyebrow">우편 · ' + esc(m.from || '운영진') + '</p><h2>' + esc(m.t) + '</h2><p class="gm-b">' + esc(m.b) + '</p>' +
+    '<div class="gm-gift">' + (DS.iconHtml ? DS.iconHtml('misc', 'ticket', { size: 40 }) : '') + '<b>영웅 모집권</b><span class="num">×' + m.tk + '</span></div>' +
+    '<button class="btn gold wide" data-gmtake="1">받기</button></div>', 'modal center gmov');
+  A('open');
+  o.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-gmtake]'); if (!b || b.disabled) return; b.disabled = true;
+    var n = DS.giftTake(G.save, m.id); U.persist(); A('coin');
+    var bx = o.querySelector('.giftmail'); bx.classList.add('taken'); b.textContent = '모집권 ' + n + '장을 받았다'; toast('영웅 모집권 +' + n + '장 (지금 ' + (G.save.tickets || 0) + '장)', 3000);
+    setTimeout(function () { if (o.isConnected) o.close(); }, 1200);
+  });
+  o.onclose = function () { if (G.save && G.save.pmail && G.save.pmail.length) DS.showGiftMail(done); else if (done) done(); };
+  return o;
+};
 DS.showNews = function () {
-  var s = G.save; if (!s || !s.news || !s.news.length) return;
+  var s = G.save; if (s && Array.isArray(s.pmail) && s.pmail.length && !document.querySelector('.ov.gmov')) { DS.showGiftMail(function () { DS.showNews(); }); return; }      // 2.7.3: 선물 우편 먼저
+  if (!s || !s.news || !s.news.length) return;
   var list = s.news.slice(); s.news = []; U.persist(); A('coin');
   overlay('<div class="result"><p class="eyebrow">v' + DS.VERSION + '</p><h2>소식</h2><ul class="loot">' + list.map(function (l) { return '<li class="hl">' + esc(l) + '</li>'; }).join('') + '</ul>' +
     '<p class="dim">자세한 것은 메뉴 → 설정 → 공지사항에.</p><button class="btn gold wide" data-close>확인</button></div>', 'modal center');

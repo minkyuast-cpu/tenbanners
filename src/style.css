@@ -5868,3 +5868,18 @@ html body .ov.bldov > .sheet { width: 100%; height: 100%; max-width: none; max-h
 @keyframes bcFly { 0% { opacity: 0; transform: translateY(0) scale(.7); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-70vh) scale(1); } }
 @keyframes bcUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 @keyframes bcPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+
+/* 2.7.3 운영진 선물 우편 */
+.result.giftmail { text-align: center; }
+.giftmail .gm-env { position: relative; width: 96px; height: 64px; margin: 4px auto 10px; border-radius: 6px; background: linear-gradient(180deg, #f4e6c4, #dcc596); box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+.giftmail .gm-flap { position: absolute; left: 0; right: 0; top: 0; height: 40px; background: linear-gradient(180deg, #e8d5a8, #cdb37c); clip-path: polygon(0 0, 100% 0, 50% 100%); transform-origin: 50% 0; animation: gmFlap .7s ease-out .4s both; }
+.giftmail .gm-seal { position: absolute; left: 50%; top: 26px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: #a83a32; box-shadow: inset 0 0 0 2px #7a2520; animation: gmSeal .5s ease-out .3s both; }
+.giftmail .gm-b { color: var(--bone, #ece2cc); line-height: 1.6; margin: 6px 4px 12px; }
+.giftmail .gm-gift { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #e0c088; background: rgba(224, 192, 136, .14); }
+.giftmail .gm-gift b { color: var(--bone, #ece2cc); } .giftmail .gm-gift .num { font-size: 26px; font-weight: 700; color: #ffe2a0; }
+.giftmail.taken .gm-gift { animation: gmTake .6s ease-out both; }
+@keyframes gmFlap { from { transform: none; } to { transform: rotateX(180deg); } }
+@keyframes gmSeal { from { transform: scale(1); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes gmTake { 0% { transform: scale(1); } 40% { transform: scale(1.15); box-shadow: 0 0 24px rgba(255, 226, 160, .7); } 100% { transform: scale(1); } }
+html.calm .giftmail *, .ov.gmov.calm .giftmail * { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .giftmail * { animation: none !important; } }

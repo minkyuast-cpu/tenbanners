@@ -289,6 +289,8 @@ DS.fixSave = function (s) {
   s.fallen = DS.fallenTrim(s.fallen.filter(function (f) { return f && typeof f === 'object'; }));
   s.fallen.forEach(function (f) { f.g = Math.max(1, Math.min(5, Math.round(+f.g || 1))); if (typeof f.n !== 'string') f.n = ''; if (f.nk != null && typeof f.nk !== 'string') delete f.nk; if (f.lw != null) { if (typeof f.lw !== 'string') delete f.lw; else f.lw = Array.from(f.lw).slice(0, 24).join(''); } });      // r32: 마지막 한마디 (24자)      // 막사의 추모 목록이 GRADES[f.g] 를 읽는다
   s.mnid = Math.max(+s.mnid || 1, mid + 1);
+  if (s.gotMail != null) { if (Array.isArray(s.gotMail)) s.gotMail = s.gotMail.filter(function (x) { return typeof x === 'string' && x.length <= 40; }).slice(-50); else delete s.gotMail; }      // 2.7.3 운영진 선물 우편
+  if (s.pmail != null) { if (Array.isArray(s.pmail)) { s.pmail = s.pmail.filter(function (m) { return m && typeof m === 'object' && typeof m.id === 'string' && DS.GIFT_MAIL.some(function (g) { return g.id === m.id; }); }).map(function (m) { var g = DS.GIFT_MAIL.filter(function (x) { return x.id === m.id; })[0]; return { id: g.id, t: g.t, b: g.b, tk: g.tk, from: g.from }; }).slice(0, 5); if (!s.pmail.length) delete s.pmail; } else delete s.pmail; }
   s.tickets = Math.max(0, Math.round(+s.tickets || 0)); s.pity = Math.max(0, Math.round(+s.pity || 0)); s.hpity = Math.max(0, Math.round(+s.hpity || 0));      // 2.2.4: hpity = 닫힌 가문을 연달아 못 연 모집 수 (옛 저장은 0)
   if (s.blades !== undefined) {      // 칼무덤 (blades.js): { n 뽑은 수, p 마지막 전설 뒤로 뽑은 수 } — 정수만, p 는 0 ~ 천장 − 1. 모양이 틀리면 버린다
     var bl = s.blades, bn = bl && typeof bl === 'object' && !Array.isArray(bl) ? Math.round(+bl.n) : NaN, bp = bl && typeof bl === 'object' ? Math.round(+bl.p || 0) : 0, bmax = ((DS.BLADES && DS.BLADES.pity) || 10) - 1;
@@ -365,6 +367,7 @@ DS.Save = {
       s.hist = (Array.isArray(s.hist) ? s.hist : []).concat([{ from: from, to: s.v, ver: DS.VERSION }]);
     }
     s = soFresh(DS.fixSave(s)); if (!s) return null;
+    if (DS.giftMail && DS.giftMail(s)) moved = true;      // 2.7.3: 그때 플레이하던 저장에 운영진 선물 우편
     // 회귀자인데 아직 특전을 받지 못한 저장이면 지금 드린다
     var r = this.legacy();
     if (r && !s.perk) { DS.grantReturnee(s, r, true); moved = true; }
@@ -420,6 +423,27 @@ DS.returneePerk = function (r) {
   return p;
 };
 // 저장에 특전을 적용한다. late = 이미 진행 중인 저장에 뒤늦게 드리는 경우
+// 2.7.3 운영진 선물 우편: 이 판이 나올 때 이미 플레이하던 저장(마지막으로 저장한 판이 그보다 옛것)에 한 번 — 새로 시작한 판에는 오지 않는다.
+//   s.pmail = 받기 전의 우편 [{ id, t, b, tk }] · s.gotMail = 받은 우편 id. 화면은 이어하기 뒤 DS.showGiftMail 로 연다 (받기를 눌러야 들어간다)
+DS.GIFT_MAIL = [{ id: 'thanks273', before: '2.7.3', t: '감사의 선물', b: '전민을 플레이해 주셔서 고맙습니다. 열 가문을 지켜 온 맹주님께 영웅 모집권 50장을 보냅니다. 앞으로도 잘 부탁드립니다.', tk: 50, from: '운영진' }];
+DS.giftMail = function (s) {
+  if (!s || !s.chars) return false;
+  var got = Array.isArray(s.gotMail) ? s.gotMail : (s.gotMail = []), pm = Array.isArray(s.pmail) ? s.pmail : [], add = false, v = vnum(s.ver);
+  DS.GIFT_MAIL.forEach(function (g) {
+    if (!v || v >= vnum(g.before) || got.indexOf(g.id) >= 0 || pm.some(function (m) { return m && m.id === g.id; })) return;
+    pm.push({ id: g.id, t: g.t, b: g.b, tk: g.tk, from: g.from }); add = true;
+  });
+  if (pm.length) s.pmail = pm; else delete s.pmail;
+  return add;
+};
+DS.giftTake = function (s, id) {      // 받기: 모집권을 더하고 받은 것으로 적는다. 돌려주는 것: 받은 모집권 수
+  if (!s || !Array.isArray(s.pmail)) return 0;
+  var i = -1; s.pmail.forEach(function (m, k) { if (m && m.id === id) i = k; }); if (i < 0) return 0;
+  var m = s.pmail.splice(i, 1)[0], n = Math.max(0, Math.round(+m.tk || 0));
+  s.tickets = (s.tickets || 0) + n; (s.gotMail = Array.isArray(s.gotMail) ? s.gotMail : []).push(m.id);
+  if (!s.pmail.length) delete s.pmail;
+  return n;
+};
 DS.grantReturnee = function (s, r, late) {
   var p = DS.returneePerk(r), k, h = s.chars[s.hero];
   s.perk = { rank: p.rank, exp: p.exp, from: r.from, cleared: p.cleared };
