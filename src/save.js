@@ -290,6 +290,10 @@ DS.fixSave = function (s) {
   s.fallen.forEach(function (f) { f.g = Math.max(1, Math.min(5, Math.round(+f.g || 1))); if (typeof f.n !== 'string') f.n = ''; if (f.nk != null && typeof f.nk !== 'string') delete f.nk; if (f.lw != null) { if (typeof f.lw !== 'string') delete f.lw; else f.lw = Array.from(f.lw).slice(0, 24).join(''); } });      // r32: 마지막 한마디 (24자)      // 막사의 추모 목록이 GRADES[f.g] 를 읽는다
   s.mnid = Math.max(+s.mnid || 1, mid + 1);
   s.tickets = Math.max(0, Math.round(+s.tickets || 0)); s.pity = Math.max(0, Math.round(+s.pity || 0)); s.hpity = Math.max(0, Math.round(+s.hpity || 0));      // 2.2.4: hpity = 닫힌 가문을 연달아 못 연 모집 수 (옛 저장은 0)
+  if (s.blades !== undefined) {      // 칼무덤 (blades.js): { n 뽑은 수, p 마지막 전설 뒤로 뽑은 수 } — 정수만, p 는 0 ~ 천장 − 1. 모양이 틀리면 버린다
+    var bl = s.blades, bn = bl && typeof bl === 'object' && !Array.isArray(bl) ? Math.round(+bl.n) : NaN, bp = bl && typeof bl === 'object' ? Math.round(+bl.p || 0) : 0, bmax = ((DS.BLADES && DS.BLADES.pity) || 10) - 1;
+    if (!(bn >= 0 && bn < 1e9)) delete s.blades; else s.blades = { n: bn, p: Math.max(0, Math.min(bmax, bn, isFinite(bp) ? bp : 0)) };
+  }
   if (s.rh != null) { if (!s.rh || typeof s.rh !== 'object' || Array.isArray(s.rh)) delete s.rh; else { s.rh = { h: Math.max(0, Math.min((DS.RECRUIT && DS.RECRUIT.max) || 40, +s.rh.h || 0)), t: Math.max(0, +s.rh.t || 0) }; } }      // r35 모집 열기
   s.nid = Math.max(+s.nid || 1, maxId + 1);
   if (!own(s.chars, s.hero)) s.hero = +Object.keys(s.chars)[0];

@@ -390,7 +390,92 @@ var ROOF = { forge: ['#5a5466', '#3a3446'], weapon: ['#c0525e', '#8a3040'], armo
 var WALLS = { grass: ['#eadcbc', '#c4b48e', '#8a7a58'], highland: ['#d2cdc0', '#a9a394', '#6f6a5c'], coast: ['#f6f1e4', '#d3ccb8', '#9a8f78'] };
 // 2.6: 민가 넷이 서로 다르다 (hv = 몇째 민가: 지붕 빛 · 간판 그림 · 굴뚝 연기는 첫 집만) · 겨울(se 3)에는 지붕과 굴뚝에 눈이 얹힌다
 var HROOF = [['#a8754a', '#6f4a2c'], ['#c0525e', '#8a3040'], ['#6a7f9a', '#465a74'], ['#d0b060', '#a08038']];
+// ───────── 칼무덤 (가게 자리 3×2칸): 지붕 없는 낮은 무덤. 흙과 돌 더미에 먼저 간 이들의 칼, 창, 도끼가 자루를 위로 꽂혀 있고, 가운데 한 자루에서 따뜻한 빛이 샌다.
+//   앞에는 봉헌 돌판(동전 몇 닢)과 촛불 둘, 돌탑. 흙빛은 마을 맛(풀밭 · 고원 · 바닷가)을 따르고, 계절(se)마다 풀 · 꽃 · 낙엽 · 눈이 얹힌다.
+//   o.sil: 연출용 — 가운데 칼을 비운다 (뽑히는 칼은 연출이 따로 그린다)
+var MOUND = [['#8a6a44', '#a8855a', '#654a30'], ['#7d746a', '#9a9284', '#5a5248'], ['#b89a68', '#d4b884', '#8e7448']];
+var MOUND_HW = [5, 9, 12, 14, 16, 17, 18, 19, 20, 20, 21, 21, 22, 22, 22, 23, 23, 23, 23, 22];      // 줄마다 반폭 (11 ~ 30줄)
+var MOUND_BL = [      // [바닥 x, 바닥 y, 기울기(한 줄 오를 때 옆으로), 날 길이, 코 폭, 자루 길이, 녹슨 쇠]
+  [13, 18, -0.4, 6, 6, 3, 1], [34, 16, 0.45, 6, 6, 3, 0], [8, 24, -0.25, 4, 5, 2, 1]];
+function moundTop(x) { for (var i = 0; i < MOUND_HW.length; i++) if (Math.abs(x - 24) <= MOUND_HW[i]) return 11 + i; return 31; }
+function bladeMound(g, ox, oy, theme, frame, se, o) {
+  o = o || {};
+  var K = '#1b1626', st = theme === 'highland' ? 1 : theme === 'coast' ? 2 : 0, E = MOUND[st], x, y, i, hw;
+  function R(x, y, w, h, col) { g.fillStyle = col; g.fillRect(ox + x, oy + y, w, h); }
+  function P(x, y, col) { g.fillStyle = col; g.fillRect(ox + x, oy + y, 1, 1); }
+  function hs(a, b) { return ((a * 73856093) ^ (b * 19349663) ^ 2654435) >>> 0; }
+  R(3, 29, 42, 3, 'rgba(0,0,0,.28)');
+  // 흙더미: 테두리 먼저, 왼쪽 위가 밝고 오른쪽이 그늘
+  R(24 - MOUND_HW[0], 10, MOUND_HW[0] * 2 + 1, 1, K);
+  for (i = 0; i < MOUND_HW.length; i++) { hw = MOUND_HW[i]; R(23 - hw, 11 + i, hw * 2 + 3, 1, K); }
+  for (i = 0; i < MOUND_HW.length; i++) {
+    hw = MOUND_HW[i]; y = 11 + i;
+    R(24 - hw, y, hw * 2 + 1, 1, E[0]);
+    R(24 - hw, y, Math.max(1, Math.round(hw * 0.55)), 1, E[1]);
+    R(24 + Math.round(hw * 0.45), y, hw - Math.round(hw * 0.45) + 1, 1, E[2]);
+    if (i < 3) R(24 - hw, y, hw + 2, 1, E[1]);
+  }
+  for (i = 0; i < 34; i++) { x = 4 + hs(i, 3) % 41; y = 12 + hs(i, 7) % 18; if (y >= moundTop(x) + 1 && y < 30) P(x, y, (i & 1) ? E[2] : E[1]); }      // 흙 알갱이
+  // 돌: 고원은 돌무더기처럼 많이
+  var stones = [[5, 26, 4, 3], [12, 28, 5, 2], [36, 27, 4, 3], [16, 21, 3, 2], [27, 18, 3, 2], [40, 22, 3, 2]];
+  if (st === 1) stones = stones.concat([[9, 20, 3, 2], [21, 16, 3, 2], [31, 14, 3, 2], [33, 21, 4, 2], [24, 23, 3, 2], [7, 23, 2, 2]]);
+  stones.forEach(function (q) { R(q[0] - 1, q[1] - 1, q[2] + 2, q[3] + 2, K); R(q[0], q[1], q[2], q[3], '#8d8a9a'); R(q[0], q[1], q[2] - 1, 1, '#b3b0c0'); R(q[0] + q[2] - 1, q[1] + 1, 1, q[3] - 1, '#5f5b6b'); if (se === 3) R(q[0], q[1] - 1, q[2], 1, '#f4f8fb'); });
+  // 계절: 풀 · 꽃 · 낙엽 · 눈 (바닷가는 조개껍데기)
+  var leaf = se === 2 ? ['#c9a04a', '#a8843a'] : se === 1 ? ['#3f8f3a', '#2f6b2f'] : ['#5f9a48', '#7fbf5a'];
+  if (se === 3) {
+    for (i = 0; i < 6; i++) { hw = MOUND_HW[i]; R(24 - hw, 11 + i, hw * 2 + 1, 1, i < 4 ? '#f4f8fb' : '#dfe8f0'); }
+    for (i = 0; i < 9; i++) { x = 6 + hs(i, 11) % 36; y = moundTop(x) + 5 + hs(i, 13) % 3; if (y < 29) P(x, y, '#f4f8fb'); }
+    R(3, 29, 42, 1, '#dfe8f0');
+  } else if (st !== 2) {
+    for (i = 0; i < (st === 1 ? 6 : 12); i++) { x = 3 + hs(i, 17) % 42; y = Math.min(29, moundTop(x)); P(x, y - 1, leaf[i & 1]); P(x + 1, y, leaf[0]); if (i % 3 === 0) P(x - 1, y, leaf[1]); }
+    for (i = 0; i < 5; i++) { x = 2 + i * 10 + hs(i, 19) % 4; P(x, 29, leaf[1]); P(x + 1, 28, leaf[0]); P(x + 2, 29, leaf[1]); }
+    if (se === 0) [[10, 20, '#ff9db5'], [33, 19, '#ffe27a'], [20, 25, '#ffffff'], [39, 24, '#ff9db5'], [27, 27, '#ffe27a']].forEach(function (f) { P(f[0], f[1], f[2]); });
+    if (se === 2) for (i = 0; i < 8; i++) { x = 5 + hs(i, 23) % 38; y = moundTop(x) + 2 + hs(i, 29) % 8; if (y < 29) P(x, y, ['#c2622a', '#eaa23c', '#7a3418'][i % 3]); }
+  } else {
+    [[9, 27, '#f4f0e6'], [14, 24, '#f0b8a8'], [33, 26, '#f4f0e6'], [41, 27, '#f0b8a8'], [26, 20, '#f4f0e6']].forEach(function (f) { P(f[0], f[1], f[2]); P(f[0] + 1, f[1], '#c9c0b0'); });
+  }
+  // 칼 한 자루: 바닥(흙에 박힌 자리)에서 위로 날 · 코 · 자루 · 머리. 둘레 선을 먼저 긋는다
+  function blade(bx, by, sl, len, gw, gl, rust, glow) {
+    var px = [], key = {}, t, cx;
+    function put(x, y, c) { x = Math.round(x); var k = x + ',' + y; if (key[k]) { for (var j = 0; j < px.length; j++) if (px[j][0] === x && px[j][1] === y) px[j][2] = c; return; } key[k] = 1; px.push([x, y, c]); }
+    var stl = glow ? ['#fff4d0', '#e8c46a'] : rust ? ['#a8a094', '#7a6658'] : ['#c9cdd8', '#6f7486'];
+    for (t = 0; t < len; t++) { cx = bx + t * sl; put(cx, by - t, stl[0]); put(cx + 1, by - t, stl[1]); }
+    cx = bx + len * sl; for (t = 0; t < gw; t++) put(cx - Math.floor((gw - 2) / 2) + t, by - len, glow ? '#f6cf57' : rust ? '#6f5a48' : '#5a5466');
+    for (t = 1; t <= gl; t++) { cx = bx + (len + t) * sl; put(cx, by - len - t, t % 2 ? '#6f4a2c' : '#8a5a36'); put(cx + 1, by - len - t, t % 2 ? '#4a301c' : '#6f4a2c'); }
+    cx = bx + (len + gl + 1) * sl; put(cx, by - len - gl - 1, glow ? '#ffe27a' : '#c08f2c'); put(cx + 1, by - len - gl - 1, glow ? '#c08f2c' : '#8a6a3a');
+    px.forEach(function (q) { [[1, 0], [-1, 0], [0, -1], [0, 1]].forEach(function (d) { var nx = q[0] + d[0], ny = q[1] + d[1]; if (ny <= by && !key[nx + ',' + ny]) P(nx, ny, K); }); });
+    px.forEach(function (q) { P(q[0], q[1], q[2]); });
+  }
+  // 창: 자루만 길게 솟고 끝에 바랜 붉은 술
+  (function () { var bx = 19, by = 13, sl = -0.15, n = 17, t, x0; for (t = 0; t < n; t++) { x0 = Math.round(bx + t * sl); P(x0 - 1, by - t, K); P(x0 + 1, by - t, K); P(x0, by - t, t > n - 3 ? '#8d8a9a' : (t & 1) ? '#8a5a36' : '#a8754a'); } x0 = Math.round(bx + n * sl); P(x0, by - n, K); R(x0 - 2, by - n + 3, 1, 5, '#a04848'); R(x0 - 3, by - n + 4, 1, 3, '#8a3040'); P(x0 - 1, by - n + 3, '#a04848'); })();
+  // 도끼: 머리는 흙에 반쯤 묻히고 자루가 비스듬히
+  (function () { var bx = 40, by = 21, sl = 0.3, n = 9, t, x0; R(36, 18, 5, 5, K); R(37, 19, 3, 3, '#8d8a9a'); P(37, 19, '#b3b0c0'); R(37, 21, 3, 1, E[2]); for (t = 0; t < n; t++) { x0 = Math.round(bx + t * sl); P(x0 - 1, by - t, K); P(x0 + 2, by - t, K); P(x0, by - t, '#8a5a36'); P(x0 + 1, by - t, '#6f4a2c'); } x0 = Math.round(bx + n * sl); R(x0 - 1, by - n, 4, 1, K); })();
+  MOUND_BL.forEach(function (b) { blade(b[0], b[1], b[2], b[3], b[4], b[5], b[6], false); });
+  // 금줄: 왼쪽 칼과 창 사이에 늘어진 새끼줄과 흰 종이 술
+  for (x = 10; x <= 17; x++) { y = 9 + Math.round(Math.sin((x - 10) / 7 * Math.PI) * 2); P(x, y, '#c9a56a'); if (x % 2 === 0) { P(x, y + 1, '#f4f0e6'); P(x, y + 2, '#e0d8c8'); } }
+  // 가운데 칼: 빛이 새는 한 자루 (연출은 이 자리를 비우고 따로 그린다)
+  if (!o.sil) {
+    var ga = frame ? 0.15 : 0.1;
+    [11, 8, 5].forEach(function (r) { g.globalAlpha = ga; g.fillStyle = '#ffd06a'; for (var dy = -r; dy <= r; dy++) { var w = Math.round(Math.sqrt(r * r - dy * dy) * 0.8); g.fillRect(ox + 25 - w, oy + 6 + dy, w * 2 + 2, 1); } }); g.globalAlpha = 1;
+    blade(25, 13, 0, 8, 8, 4, false, true);
+    P(23, 14, '#ffd06a'); P(28, 14, '#ffd06a'); P(24, 15, '#ffe8a8'); P(27, 15, '#ffd06a'); P(25, 14, '#fff4d0'); P(26, 14, '#ffe8a8');
+  } else { P(24, 13, E[2]); P(25, 13, K); P(26, 13, K); P(27, 13, E[2]); }
+  // 앞: 봉헌 돌판(동전) · 촛불 둘 · 작은 돌탑
+  R(16, 25, 16, 5, K); R(17, 26, 14, 3, '#9a96a6'); R(17, 26, 14, 1, '#c9c6d6'); R(17, 28, 14, 1, '#77738a');
+  P(22, 25, '#f6cf57'); P(23, 25, '#ffe27a'); P(25, 25, '#f6cf57'); P(26, 25, '#c08f2c');
+  [18, 29].forEach(function (cx, n) {
+    R(cx - 1, 21, 3, 5, K); R(cx, 22, 1, 3, '#efe6d0'); P(cx, 22, '#ffffff');
+    var tall = (frame + n) % 2 === 0;
+    g.globalAlpha = 0.28; R(cx - 2, 17, 5, 5, '#ffd06a'); g.globalAlpha = 1;
+    P(cx, 21, '#ff9a3c'); P(cx, 20, '#ffd24a'); if (tall) P(cx, 19, '#fff1c0');
+  });
+  R(38, 24, 7, 6, K); R(39, 27, 5, 2, '#8d8a9a'); R(39, 27, 4, 1, '#b3b0c0'); R(40, 25, 3, 2, '#9a96a6'); P(40, 25, '#c9c6d6'); P(41, 24, '#8d8a9a'); P(41, 23, K);
+  if (se === 3) { R(40, 24, 2, 1, '#f4f8fb'); R(17, 25, 4, 1, '#f4f8fb'); R(28, 25, 3, 1, '#f4f8fb'); }
+}
+// 연출 · 창에 쓰는 칼무덤 한 장 (48 × 46, 위 14줄은 솟은 자루 몫)
+DS.bladeMoundCanvas = function (theme, se, frame, o) { var cv = document.createElement('canvas'); cv.width = 48; cv.height = 46; bladeMound(cv.getContext('2d'), 0, 14, theme || 'grass', frame || 0, se == null ? 0 : se, o); return cv; };
 function building(g, kind, ox, oy, theme, frame, hv, se) {
+  if (kind === 'blades') return bladeMound(g, ox, oy, theme, frame, se);
   var K = '#1b1626', c = (kind === 'house' && hv >= 0 ? HROOF[hv % 4] : ROOF[kind]) || ROOF.house, W = WALLS[theme] || WALLS.grass, st = theme === 'highland' ? 1 : theme === 'coast' ? 2 : 0, x, y;
   function R(x, y, w, h, col) { g.fillStyle = col; g.fillRect(ox + x, oy + y, w, h); }
   R(2, 30, 44, 2, 'rgba(0,0,0,.3)');

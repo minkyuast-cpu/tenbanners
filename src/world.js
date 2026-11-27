@@ -179,8 +179,8 @@ function buildField(id, Z) {
 }
 // 마을: 19×17, 가운데 십자 길과 가게들
 // r37: 무기점·방어구점이 없어졌다 — 그 자리는 대장간(강화만) 하나와 민가. 장비는 적이 떨어뜨린다
-var SHOPS = [['forge', 2, 3], ['house', 6, 3], ['item', 12, 3], ['house', 15, 3], ['merc', 2, 9], ['church', 12, 9], ['house', 6, 9], ['house', 15, 9]];
-DS.SHOP_NAME = { forge: '대장간', weapon: '대장간', armor: '대장간', item: '잡화점', merc: '영웅관', church: '교회', house: '민가' };      // weapon·armor: 옛 이름으로 부르는 곳(시험 도구 등)도 대장간으로
+var SHOPS = [['forge', 2, 3], ['house', 6, 3], ['item', 12, 3], ['house', 15, 3], ['merc', 2, 9], ['church', 12, 9], ['house', 6, 9], ['blades', 15, 9]];      // 넷째 민가 자리에 칼무덤 (같은 3×2칸 · 같은 문 칸 — 길과 마을 사람 자리, 가운데 깃대는 그대로)
+DS.SHOP_NAME = { forge: '대장간', weapon: '대장간', armor: '대장간', item: '잡화점', merc: '영웅관', church: '교회', house: '민가', blades: '칼무덤' };      // weapon·armor: 옛 이름으로 부르는 곳(시험 도구 등)도 대장간으로
 function buildTown(id, Z) {
   var w = 19, h = 17, g = grid(w, h, Z.theme === 'coast' ? 'd' : '.'), x, y, pois = [], rnd = DS.rng(id.length * 131 + 7);
   for (y = 0; y < h; y++) for (x = 0; x < w; x++) if (x === 0 || y === 0 || x === w - 1 || y === h - 1) g[y][x] = 'F';

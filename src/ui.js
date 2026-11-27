@@ -34,6 +34,7 @@ var KEEPER = {
   '대장간': { n: '대장장이', spr: 'npc_1', say: function (s) { return DS.ENH && !DS.ENH.safe ? '부서지면 제 탓 아닙니다. 확률 탓입니다.' : '두드리는 건 제가, 운은 손님이 맡습니다.'; } },
   '잡화점': { n: '잡화점 주인', spr: 'npc_2', say: function (s) { return !((s.items || {}).herb > 0) ? '약초가 하나도 없으시네요. 용감하십니다.' : '약초는 넉넉히. 관보다 값이 싸요.'; } },
   '교회': { n: '교회지기', spr: 'npc_3', say: function (s) { var hp = 1; try { hp = partyHp(); } catch (x) {} return (s.fallen || []).length || (DS.linCoffins && DS.linCoffins(s).length) ? '이름은 적어 두었습니다. 가끔 읽어 주세요.' : hp < 0.6 ? '많이 다치셨네요. 치료부터 하시지요.' : '체력은 저절로 차지 않습니다. 들렀다 가세요.'; } },
+  '칼무덤': { n: '무덤지기', spr: 'npc_0', say: function (s) { var B = DS.BLADES, left = DS.bladesLeft ? DS.bladesLeft(s) : 10; return !B ? '' : left <= 1 ? '오래 기다리셨네요. 다음 칼은 손이 먼저 압니다.' : s.gold < B.price ? '칼은 외상으로 안 뽑힙니다. 칼 주인들이 깐깐해요.' : '고르지 마세요. 손에 걸리는 놈이 손님 칼입니다.'; } },
   '영웅관': { n: '영웅관 접수원', spr: 'npc_0', say: function (s) { var c = DS.recruitPrice(s, 0), heat = DS.recruitHeat(s); return (s.tickets || 0) > 0 ? '모집권 가져오셨네요. 그건 값이 안 오릅니다.' : s.gold < c ? (heat > 0 ? '이름값이 올랐어요. 계절이 바뀌면 내립니다.' : '외상은 안 됩니다. 골드를 모아 오세요.') : '한 번에 한 분씩 모십니다. 병과는 그날 운이에요.'; } }
 };
 function keeperPut(body, title) {
@@ -1010,6 +1011,7 @@ DS.openTownWork = function (parent) {
     html += row('merc', 'party', '영웅관', '영웅 모집. 병과는 무작위, 빈 가문이면 가주로');
     html += row('item', 'bag', '상점', '소모품' + (DS.ITEMS.prot ? ', 강화 보호 부적' : ''));
     html += row('church', 'scroll', '교회', '치료, 관, 합일');
+    if (DS.openBlades) html += row('blades', 'shop_weapon', '칼무덤', '칼 뽑기. 유니크, 전설, 강화 보호 부적');      // blades.js
     if (lgOn && lgOn()) html += row('wed', 'heart', '혼인과 이별', '맹주의 혼인');
     if (cf) html += lgBuyRow(cf);
     return html;
@@ -1031,6 +1033,7 @@ DS.openShop = function (kind, opt) {
   if (kind === 'merc') return mercShop();
   if (kind === 'item') return itemShop(!!(opt && opt.tw));
   if (kind === 'church') return church();
+  if (kind === 'blades') return DS.openBlades ? DS.openBlades() : null;      // 칼무덤 (blades.js)
   if (kind === 'town') return DS.openTownWork();
 };
 
@@ -2157,7 +2160,8 @@ function tabHelp() {
       '무기에 적힌 수치는 입은 사람의 <b>공격</b>에 그대로 더해진다. 마법 병과는 <b>마공</b>에, 무투가는 둘 다에 더해진다. 장비 칸을 누르면 뜨는 창에서 줄마다 <b>지금→입은 뒤</b> 수치와 전투력을 미리 볼 수 있다.',
       '등급은 셋이다. <b class="lg lg1">보통</b>, <b class="lg lg4">유니크</b>(옵션 하나나 둘), <b class="lg lg5">전설</b>(이름과 대표 효과가 정해진 물건). 이름과 그림 테두리의 색으로 등급을 표시한다. 사람의 등급도 색 이름표로 보인다. 전설은 지역마다 다르니 여러 곳을 사냥해 본다.',
       '<b>강화</b>는 대장간(「마을 일」에서는 어디서나)에서 골드를 내고 한 단계씩, +' + DS.ENH.max + '까지. +1 성공 ' + DS.ENH.rate[1] + '%, 단계마다 낮아져 +5부터는 ' + DS.ENH.rate[DS.ENH.max] + '%. 실패하면 부서진다. 값은 단계가 오를수록 비싸다. 터져도 대장장이는 「이븐하게 안 익었네요」 할 뿐이다.',
-      '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다.',
+      '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다. 칼무덤에서도 나온다.',
+      '<b>칼무덤</b>은 마을마다 교회 오른쪽에 있다. ' + (DS.BLADES ? fmtN(DS.BLADES.price) : '10,000') + '골드를 바치고 칼 한 자루를 뽑는다. ' + (DS.bladesBoard ? esc(DS.bladesBoard()) : '') + ' 장비는 드랍처럼 가방으로 가고, 가방이 가득 차면 그 자리에서 팔린다. 「마을 일」에서는 어디서나 뽑는다.',
       '가방 목록도 다중 선택이 기본이다. 고른 뒤 아래 붉은 버튼으로 한꺼번에 판매한다. 잠근 장비는 선택할 수 없다.']],
     ['성장과 합일', 0, [
       '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 쉬는 가주는 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%를 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
