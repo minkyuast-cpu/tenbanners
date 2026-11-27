@@ -172,9 +172,6 @@ module.exports = async (page, shot, L, X) => {
   await L.closeAll(page);
   r = await ev(() => { var out = []; [5000, 50000].forEach(function (g) { DS.G.save.gold = g; DS.openShop('blades'); var o = document.querySelectorAll('.ov.bldsh'); o = o[o.length - 1]; out.push({ d: [].map.call(o.querySelectorAll('[data-bpull]'), function (b) { return b.disabled; }), why: [].map.call(o.querySelectorAll('.bldwhy'), function (e) { return e.textContent; }) }); DS.ui.closeAll(); }); return out; });
   A(r[0].d.join() === 'true,true' && /골드가 모자라다\. 5,000 \/ 10,000/.test(r[0].why[0]) && r[1].d.join() === 'false,true' && r[1].why.length === 1, 'gold short: buttons are disabled with the reason (' + r[0].why.concat(r[1].why).join(' | ') + ')');
-  // 시나리오 · 싸움 중에는 열리지 않는다
-  r = await ev(() => { var G = DS.G, keep = G.scn; G.scn = { id: 1 }; var o = DS.openBlades(), why = DS.bladesWhy(G.save, 1); G.scn = keep; return { o: !!o, why: why }; });
-  A(!r.o && /시나리오/.test(r.why), 'not during a scenario (' + r.why + ')');
   // 가로 화면
   await ev(() => { DS.G.save.gold = 3000000; DS.openShop('blades'); });
   await page.setViewportSize({ width: 844, height: 390 }); await sleep(400);
@@ -185,4 +182,7 @@ module.exports = async (page, shot, L, X) => {
   A(r.sw <= 844 && r.res[1] <= 844 && r.btn <= r.h + 1, 'landscape: grid and buttons fit (' + JSON.stringify(r) + ')');
   await ev(() => { document.querySelector('[data-bcclose]').click(); DS.gfxOpt.calm = window.__calm0; });
   await page.setViewportSize({ width: 390, height: X.H }); await sleep(300);
+  // 시나리오 · 싸움 중에는 열리지 않는다 (다른 가게와 같은 막음)
+  r = await ev(() => { var G = DS.G, keep = G.scn; DS.ui.closeAll(); G.scn = { id: 1 }; var o = DS.openBlades(), why = DS.bladesWhy(G.save, 1); G.scn = keep; return { o: !!o, why: why }; });
+  A(!r.o && /시나리오/.test(r.why), 'not during a scenario (' + r.why + ')');
 };
