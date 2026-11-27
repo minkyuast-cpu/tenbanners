@@ -5746,6 +5746,150 @@ html body #app#app .pplv .pph, html body #app#app .row.ppl.pgrid { grid-template
 .result.peace .pz-r { width: 100%; max-width: 320px; margin: 14px auto 6px; }
 .result.peace .pz-sun { opacity: .7; bottom: -70px; }
 @media (orientation: landscape) and (max-height: 560px) { .result.peace .pz-sun { display: none; } .result.peace .pz-r { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 560px; } }
+
+/* 2.7.2 영웅관: 모집권을 크게 */
+.gacha .gtk { display: grid; grid-template-columns: 44px auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; border: 1px dashed rgba(224, 192, 136, .35); background: rgba(0, 0, 0, .18); }
+.gacha .gtk.on { border: 1px solid #e0c088; background: linear-gradient(90deg, rgba(224, 192, 136, .22), rgba(224, 192, 136, .06)); box-shadow: 0 0 0 1px rgba(224, 192, 136, .15), 0 0 14px rgba(224, 192, 136, .18); }
+.gacha .gtk .gtn { display: inline-flex; align-items: baseline; gap: 2px; }
+.gacha .gtk .gtn b { font-size: 30px; line-height: 1; color: #ffe2a0; } .gacha .gtk:not(.on) .gtn b { color: var(--mute, #c4b89e); }
+.gacha .gtk .gtn small { font-size: var(--fs-m); color: var(--bone, #ece2cc); }
+.gacha .gtk .gtx { display: grid; min-width: 0; } .gacha .gtk .gtx b { color: var(--bone, #ece2cc); font-size: var(--fs-m); } .gacha .gtk .gtx small { color: var(--mute, #c4b89e); font-size: var(--fs-s); }
+.gacha .gtk:not(.on) .ico { filter: grayscale(1) opacity(.55); }
+.gacha .btn.bytk { background: linear-gradient(180deg, #ffe7a8, #e0b064); }
+.sh .gold .tkpill { display: inline-flex; align-items: center; gap: 3px; margin-right: 6px; padding: 2px 8px 2px 4px; border-radius: 99px; border: 1px solid #e0c088; background: rgba(224, 192, 136, .16); color: #ffe2a0; font-weight: 700; vertical-align: middle; }
+/* 칼무덤 (blades.js): 창 · 한 자루 연출 · 열 자루 연출 · 결과 카드 */
+.ov.bldsh .bldhead { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; align-items: center; padding: 6px 0 10px; }
+.ov.bldsh .bldimg { width: 96px; height: 92px; image-rendering: pixelated; background: radial-gradient(ellipse at 50% 70%, #3a3050 0%, transparent 70%); }
+.ov.bldsh .bldfl { font-size: var(--fs-l); font-family: var(--f-14); line-height: 1.5; color: var(--bone); }
+.ov.bldsh .bldboard { position: relative; margin: 2px 0 12px; padding: 10px 12px 8px; background: #e9dcb8; color: #2b2233; border: 2px solid #6f4a2c; border-radius: 4px; box-shadow: inset 0 0 0 2px #c9b48a, 0 3px 0 #3a2a1c; }
+.ov.bldsh .bldboard::before, .ov.bldsh .bldboard::after { content: ""; position: absolute; top: 5px; width: 6px; height: 6px; border-radius: 50%; background: #8a3040; box-shadow: 0 1px 0 #2b1a14; }
+.ov.bldsh .bldboard::before { left: 6px; } .ov.bldsh .bldboard::after { right: 6px; }
+.ov.bldsh .bldbt { text-align: center; font-size: var(--fs-m); font-family: var(--f-11); color: #6f4a2c; letter-spacing: .3em; margin-bottom: 4px; }
+.ov.bldsh .bldline { font-size: var(--fs-m); font-family: var(--f-11); line-height: 1.6; color: #2b2233; padding-bottom: 6px; border-bottom: 1px dashed #a8906a; }
+.ov.bldsh .bldboard ul { list-style: none; margin: 4px 0 0; padding: 0; }
+.ov.bldsh .bldboard li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; padding: 5px 0; border-bottom: 1px dotted #c0a87e; }
+.ov.bldsh .bldboard li:last-child { border-bottom: 0; }
+.ov.bldsh .bldboard li b { font-size: var(--fs-m); font-family: var(--f-11); color: #2b2233; }
+.ov.bldsh .bldboard li b.lg4 { color: #6a3fb0; } .ov.bldsh .bldboard li b.lg5 { color: #9a6410; }
+.ov.bldsh .bldboard li i { font-style: normal; font-size: var(--fs-m); font-family: var(--f-11); font-weight: 700; color: #2b2233; }
+.ov.bldsh .bldboard li small { grid-column: 1 / 3; font-size: var(--fs-s); font-family: var(--f-9); color: #5a4a3a; }
+.ov.bldsh .bldpity { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0 10px; }
+.ov.bldsh .bldpity p { display: grid; gap: 2px; } .ov.bldsh .bldpity b { font-size: var(--fs-l); font-family: var(--f-14); color: var(--ember); }
+.ov.bldsh .bldpity small { font-size: var(--fs-m); font-family: var(--f-11); color: var(--mute); }
+.ov.bldsh .bldpips { display: flex; gap: 3px; }
+.ov.bldsh .bldpips i { width: 8px; height: 16px; border: 1px solid #4a4466; background: #1b1626; transform: skewX(-12deg); }
+.ov.bldsh .bldpips i.on { background: #8f9ab3; border-color: #c9cdd8; }
+.ov.bldsh .bldpips i.end { background: #5a4214; border-color: #f0b64a; }
+.ov.bldsh .bldbtns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding-bottom: 6px; }
+.ov.bldsh .bldgo { display: grid; justify-items: center; align-content: center; gap: 2px; min-height: 62px; padding: 6px 8px; white-space: normal; line-height: 1.25; text-align: center; }
+.ov.bldsh .bldgo b { font-size: var(--fs-m); font-family: var(--f-11); } .ov.bldsh .bldgo small { font-size: var(--fs-m); font-family: var(--f-11); }
+.ov.bldsh .bldgo .bldwhy { font-style: normal; font-size: var(--fs-s); font-family: var(--f-9); color: var(--blood); }
+.ov.bldsh .bldgo:disabled { opacity: .62; }
+.ov.bldsh .bldlink { width: 100%; text-align: left; grid-template-columns: minmax(0, 1fr) auto; }
+.ov.bldsh .bldlink .go { font-style: normal; color: var(--mute); font-size: var(--fs-l); }
+
+html body .ov.bldov { align-items: stretch; justify-content: stretch; padding: 0; background: #07050d; animation: none; }
+html body .ov.bldov > .sheet { width: 100%; height: 100%; max-width: none; max-height: none; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; overflow: hidden; animation: none; display: block; }
+.bldc { position: relative; height: 100%; display: flex; flex-direction: column; overflow: hidden; color: var(--bone); --bc: #f1ecdf; --k: 6; }
+.bcsky { position: absolute; inset: 0; background: linear-gradient(180deg, #0e0a1e 0%, #241a3a 42%, #4f2f42 72%, #7a4a34 100%); opacity: 0; transition: opacity .35s ease-out; }
+.bcsky::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30%; background: linear-gradient(180deg, transparent, rgba(8, 6, 14, .85)); }
+.bldc.in .bcsky, .bldc.done .bcsky { opacity: 1; }
+.bcview { position: relative; flex: 1 1 auto; min-height: 0; display: grid; place-items: center; }
+.bcstage { position: relative; width: calc(48px * var(--k)); height: calc(46px * var(--k)); }
+.bcstage img { position: absolute; image-rendering: pixelated; pointer-events: none; }
+.bcmound { left: 0; top: 0; width: 100%; height: 100%; filter: brightness(.3) saturate(.45); transition: filter .6s ease-out; }
+.bldc.glow .bcmound { filter: brightness(.42) saturate(.55); }
+.bldc.free .bcmound, .bldc.charm .bcmound, .bldc.done .bcmound { filter: brightness(.66) saturate(.85); }
+.bcslot { position: absolute; left: 0; right: 0; top: -120vh; bottom: calc(19px * var(--k)); overflow: hidden; pointer-events: none; }
+.bcblade { left: calc(20px * var(--k)); bottom: calc(-28px * var(--k)); width: calc(12px * var(--k)); height: calc(42px * var(--k)); filter: brightness(.3); transition: transform .5s cubic-bezier(.5, 0, .2, 1), filter .4s; }
+.bldc.glow .bcblade { filter: brightness(.55) drop-shadow(0 0 calc(1px * var(--k)) var(--bc)); }
+.bldc.tug .bcblade { transform: translateY(calc(-2px * var(--k))); transition-duration: .18s; }
+.bldc.pull .bcblade { transform: translateY(calc(-31px * var(--k))); }
+.bldc.free .bcblade, .bldc.done .bcblade { filter: drop-shadow(0 0 calc(1.5px * var(--k)) var(--bc)) drop-shadow(0 0 calc(4px * var(--k)) var(--bc)); }
+.bldc.done.r-prot .bcblade { transform: none; filter: brightness(.66) saturate(.85); }
+.bchand { left: calc(20px * var(--k)); top: calc(15px * var(--k)); width: calc(16px * var(--k)); height: calc(22px * var(--k)); opacity: 0; transform: translate(calc(26px * var(--k)), calc(30px * var(--k))); filter: brightness(.5); transition: transform .5s cubic-bezier(.2, .8, .3, 1), opacity .3s, filter .4s; }
+.bldc.reach .bchand { opacity: 1; transform: none; }
+.bldc.glow .bchand { filter: brightness(.8); }
+.bldc.pull .bchand { transform: translateY(calc(-31px * var(--k))); transition-timing-function: cubic-bezier(.5, 0, .2, 1); }
+.bldc.free .bchand, .bldc.charm .bchand, .bldc.done .bchand { opacity: 0; transition: opacity .35s .1s; }
+.bccharm { left: calc(21px * var(--k)); top: calc(20px * var(--k)); width: calc(10px * var(--k)); height: calc(16px * var(--k)); opacity: 0; filter: drop-shadow(0 0 calc(2px * var(--k)) #ffe8a8); }
+.bldc.charm .bccharm { animation: bcCharm .95s cubic-bezier(.25, .7, .35, 1) forwards; }
+.bldc.done .bccharm { opacity: 1; transform: translate(calc(-4px * var(--k)), calc(-24px * var(--k))) rotate(-8deg); }
+.bccrack { position: absolute; left: calc(12px * var(--k)); width: calc(28px * var(--k)); top: calc(21px * var(--k)); height: calc(12px * var(--k)); border-radius: 50%; background: radial-gradient(ellipse at 50% 55%, #fff 0%, var(--bc) 22%, transparent 70%); opacity: 0; transform: scale(.4); mix-blend-mode: screen; transition: opacity .3s, transform .35s, background .25s; pointer-events: none; }
+.bccrack::after { content: ""; position: absolute; left: -60%; right: -60%; top: -260%; bottom: -120%; border-radius: 50%; background: radial-gradient(ellipse at 50% 70%, var(--bc) 0%, transparent 62%); opacity: .45; }
+.bldc.glow .bccrack, .bldc.done .bccrack { opacity: .95; transform: none; }
+.bldc.glow:not(.calm) .bccrack { animation: bcPulse .5s ease-in-out infinite alternate; }
+.bcpillar { position: absolute; left: calc(17px * var(--k)); width: calc(18px * var(--k)); bottom: calc(18px * var(--k)); height: 120vh; background: linear-gradient(0deg, var(--bc) 0%, rgba(255, 220, 140, .35) 40%, transparent 85%); opacity: 0; transform: scaleX(.15); transform-origin: 50% 100%; mix-blend-mode: screen; transition: opacity .4s, transform .5s; pointer-events: none; }
+.bldc.pil .bcpillar { opacity: .7; transform: none; }
+.bldc.pil:not(.calm) .bcpillar { animation: bcPil 1.1s ease-in-out infinite alternate; }
+.bldc.shake:not(.calm) .bcstage { animation: bcShake .1s linear infinite; }
+.bldc.jolt:not(.calm) .bcstage { animation: bcShake .1s linear 3; }
+.bcflash { position: absolute; inset: 0; background: var(--bc); opacity: 0; pointer-events: none; mix-blend-mode: screen; }
+.bcflash.on { animation: bcFlash .45s ease-out; } .bcflash.big { animation: bcFlash2 .9s ease-out; }
+.bctap { position: absolute; left: 0; right: 0; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: var(--fs-m); font-family: var(--f-11); color: rgba(240, 230, 210, .72); pointer-events: none; animation: bcBreath 1.6s ease-in-out infinite alternate; }
+.bldc.done .bctap { display: none; }
+.bcfly { position: absolute; inset: 0; pointer-events: none; }
+.bcstage img.bcfb { width: calc(6px * var(--k)); height: calc(21px * var(--k)); filter: drop-shadow(0 0 calc(1px * var(--k)) var(--c)) drop-shadow(0 0 calc(3px * var(--k)) var(--c)); animation: bcFly .85s cubic-bezier(.2, .7, .3, 1) forwards; }
+.bcrow { position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); left: 0; right: 0; display: flex; justify-content: center; gap: 6px; pointer-events: none; }
+.bcrow i { width: 12px; height: 26px; border: 1px solid #4a4466; background: rgba(27, 22, 38, .8); border-radius: 2px; transition: background .2s, box-shadow .2s, transform .2s; }
+.bcrow i.on { background: #8f9ab3; border-color: #c9cdd8; transform: translateY(-2px); }
+.bcrow i.on.k-uq { background: #9a70d8; border-color: #d8c4ff; box-shadow: 0 0 8px #9d86ff; }
+.bcrow i.on.k-leg { background: #f0b64a; border-color: #fff1c0; box-shadow: 0 0 12px #ffc94a; }
+.bcrow i.on.k-prot { background: #f3dc8a; border-color: #c0303a; }
+.bldc.done .bcrow { display: none; }
+.bcres { position: relative; flex: 0 1 auto; max-height: 66%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px var(--gut-r) calc(14px + env(safe-area-inset-bottom, 0px)) var(--gut-l); background: linear-gradient(180deg, rgba(8, 6, 14, 0) 0, rgba(8, 6, 14, .9) 22px); animation: bcUp .35s ease-out both; }
+.bcres[hidden] { display: none; }
+.bctitle { text-align: center; font-size: var(--fs-x); font-family: var(--f-11); font-weight: 700; line-height: 30px; color: var(--bc); text-shadow: 0 0 12px rgba(0, 0, 0, .8); margin-bottom: 8px; }
+.bldc.lw .bctitle { color: #efe6d0; }
+.bcard { --gc: #a9a59b; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px; text-align: left; border: 2px solid var(--gc); border-radius: 10px; background: rgba(22, 18, 34, .94); box-shadow: 0 0 22px -6px var(--gc); }
+.bcard.k-uq { --gc: #b181e6; } .bcard.k-leg { --gc: #f0b64a; box-shadow: 0 0 30px -4px #f0b64a; } .bcard.k-prot { --gc: #e8c46a; }
+.bcard .tx { min-width: 0; display: grid; gap: 3px; }
+.bcard .tx > b { font-size: var(--fs-l); font-family: var(--f-14); }
+.bcard .tx small { font-size: var(--fs-m); font-family: var(--f-11); color: var(--mute); }
+.bcard .bctag { font-size: var(--fs-m); font-family: var(--f-11); color: var(--gc); }
+.bcard .bcnote { font-size: var(--fs-m); font-family: var(--f-11); color: var(--leaf); margin-top: 4px; }
+.bcard .bcnote.warn { color: var(--ember); }
+.bcard .bcico .ico { width: 56px; height: 56px; }
+.bcsum { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 8px; }
+.bcs { font-size: var(--fs-m); font-family: var(--f-11); padding: 2px 8px; border-radius: 10px; border: 1px solid #4a4466; background: rgba(27, 22, 38, .8); }
+.bcs.k-leg { border-color: #f0b64a; color: #ffd27a; } .bcs.k-uq { border-color: #b181e6; color: #d8c4ff; } .bcs.k-prot { border-color: #e8c46a; color: #f3dc8a; }
+.bcgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.bcc { --gc: #6a6680; position: relative; display: grid; justify-items: center; align-content: start; gap: 3px; min-width: 0; min-height: 76px; padding: 6px 2px 4px; border: 2px solid var(--gc); border-radius: 8px; background: rgba(22, 18, 34, .92); color: var(--bone); animation: bcPop .3s ease-out both; animation-delay: calc(var(--i) * 40ms); }
+.bcc.k-uq { --gc: #9a70d8; } .bcc.k-leg { --gc: #f0b64a; } .bcc.k-prot { --gc: #c9a85a; }
+.bcc b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; font-size: var(--fs-s); font-family: var(--f-9); line-height: 12px; text-align: center; word-break: keep-all; overflow-wrap: anywhere; }
+.bcc.k-leg b { color: #ffd27a; } .bcc.k-uq b { color: #d8c4ff; }
+.bcc.on { background: rgba(60, 50, 90, .95); outline: 2px solid var(--bone); outline-offset: 1px; }
+.bcc.best { box-shadow: 0 0 14px -2px var(--gc), inset 0 0 10px -4px var(--gc); }
+.bcc .bcbest { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); font-style: normal; white-space: nowrap; font-size: 9px; line-height: 14px; padding: 0 5px; border-radius: 7px; background: var(--gc); color: #1b1626; font-family: var(--f-9); }
+.bcc .bcsold { position: absolute; right: 2px; top: 2px; font-style: normal; font-size: 9px; line-height: 12px; padding: 0 3px; border-radius: 3px; background: #5a4214; color: #ffd27a; font-family: var(--f-9); }
+.bcc .ico { width: 40px; height: 40px; }
+.bcdet { margin-bottom: 4px; }
+.bcleft { text-align: center; font-size: var(--fs-m); font-family: var(--f-11); color: var(--mute); margin: 10px 0 8px; }
+.bcleft .esep { display: inline-block; width: 4px; height: 4px; margin: 0 8px 2px; border-radius: 50%; background: var(--dim); }
+.bcbtns { position: sticky; bottom: calc(-14px - env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 8px; margin: 0 -4px; padding: 8px 4px calc(14px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(180deg, rgba(8, 6, 14, 0), rgba(8, 6, 14, .96) 10px); z-index: 2; }
+.bcbtns .btn { display: grid; justify-items: center; align-content: center; gap: 1px; min-height: 52px; white-space: normal; line-height: 1.2; }
+.bcbtns .btn b { font-size: var(--fs-m); font-family: var(--f-11); } .bcbtns .btn small { font-size: var(--fs-s); font-family: var(--f-9); }
+.bcbtns .btn:disabled { opacity: .6; }
+@media (orientation: landscape) and (max-height: 560px) {
+  .bldc.done { flex-direction: row; }
+  .bldc.done .bcview { flex: 0 0 40%; }
+  .bldc.done .bcres { flex: 1 1 auto; max-height: 100%; align-self: stretch; background: rgba(8, 6, 14, .82); padding-top: 12px; }
+  .bcgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .ov.bldsh .bldhead { grid-template-columns: 72px minmax(0, 1fr); } .ov.bldsh .bldimg { width: 72px; height: 69px; }
+}
+.bldc.calm *, html.calm .bldc * { animation: none !important; transition: none !important; }
+.bldc.calm .bcflash, html.calm .bcflash { display: none; }
+@media (prefers-reduced-motion: reduce) { .bldc *, .bldc { animation: none !important; transition: none !important; } .bcflash { display: none; } }
+@keyframes bcShake { 0% { transform: translate(1px, 0); } 25% { transform: translate(-1px, 1px); } 50% { transform: translate(1px, -1px); } 75% { transform: translate(-1px, 0); } 100% { transform: translate(0, 1px); } }
+@keyframes bcPulse { from { filter: brightness(.9); } to { filter: brightness(1.25); } }
+@keyframes bcPil { from { opacity: .55; } to { opacity: .85; } }
+@keyframes bcFlash { 0% { opacity: 0; } 20% { opacity: .55; } 100% { opacity: 0; } }
+@keyframes bcFlash2 { 0% { opacity: 0; } 12% { opacity: .95; } 35% { opacity: .6; } 100% { opacity: 0; } }
+@keyframes bcBreath { from { opacity: .35; } to { opacity: .85; } }
+@keyframes bcCharm { 0% { opacity: 0; transform: translateY(0) scale(.3) rotate(0); } 18% { opacity: 1; } 40% { transform: translate(calc(3px * var(--k)), calc(-12px * var(--k))) scale(1) rotate(14deg); } 70% { transform: translate(calc(-5px * var(--k)), calc(-20px * var(--k))) rotate(-12deg); } 100% { opacity: 1; transform: translate(calc(-4px * var(--k)), calc(-24px * var(--k))) rotate(-8deg); } }
+@keyframes bcFly { 0% { opacity: 0; transform: translateY(0) scale(.7); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-70vh) scale(1); } }
+@keyframes bcUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes bcPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -6759,10 +6903,22 @@ for (var ux in DS.ULT_BASE) DS.SK_ALIAS[ux] = DS.ULT_BASE[ux];
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.7.1';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.5.1';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.7.2';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.5.2';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.7.2', date: '2026-11-27', tag: '새로', title: '칼무덤 · 영웅관의 모집권',
+    lead: '마을에 장비를 뽑는 칼무덤이 생겼습니다. 영웅관의 모집권도 한눈에 보입니다.',
+    items: [
+      ['새로', '마을 교회 오른쪽, 민가 자리에 칼무덤이 생겼습니다. 먼저 간 이들의 칼이 꽂힌 언덕입니다. 10,000골드를 바치면 한 자루를 뽑습니다.'],
+      ['새로', '일반 장비 37%, 유니크 30%, 전설 25%, 강화 보호 부적 2장 8%. 전설이 아홉 번 나오지 않으면 열 번째는 전설입니다. 열 자루 뽑기도 있습니다.'],
+      ['안내', '전설은 들판의 전설 가운데 아직 없는 것부터 나옵니다. 보스 전리품과 시나리오 보상 전설은 나오지 않습니다.'],
+      ['안내', '뽑을 때 갈라진 틈의 빛이 결과를 알려 줍니다. 흰빛은 일반, 보랏빛은 유니크, 금빛 기둥은 전설입니다.'],
+      ['변경', '영웅관의 모집 카드 맨 위에 모집권 수를 크게 적었습니다. 없으면 다음 모집권을 주는 시나리오를 알려 줍니다.'],
+      ['변경', '모집권이 있으면 창 머리의 골드 옆에도 모집권 수가 뜹니다.'],
+      ['변경', '모집 단추가 「모집권으로 모집 (3장 → 2장)」, 「골드로 모집」처럼 무엇을 쓰는지 말합니다.'],
+      ['변경', '마을 일 목록의 영웅관 줄에도 모집권 수를 적었습니다.']
+    ] },
   { ver: '2.7.1', date: '2026-11-27', tag: '변경', title: '스무 해의 평화',
     lead: '모두 처음부터 다시 시작합니다. 2대째부터 너무 쉬워지던 것을 바로잡았고, 싸움 없는 스무 해 동안 모두 칼 쥐는 법을 잊습니다.',
     items: [
@@ -12360,8 +12516,8 @@ function buildField(id, Z) {
 }
 // 마을: 19×17, 가운데 십자 길과 가게들
 // r37: 무기점·방어구점이 없어졌다 — 그 자리는 대장간(강화만) 하나와 민가. 장비는 적이 떨어뜨린다
-var SHOPS = [['forge', 2, 3], ['house', 6, 3], ['item', 12, 3], ['house', 15, 3], ['merc', 2, 9], ['church', 12, 9], ['house', 6, 9], ['house', 15, 9]];
-DS.SHOP_NAME = { forge: '대장간', weapon: '대장간', armor: '대장간', item: '잡화점', merc: '영웅관', church: '교회', house: '민가' };      // weapon·armor: 옛 이름으로 부르는 곳(시험 도구 등)도 대장간으로
+var SHOPS = [['forge', 2, 3], ['house', 6, 3], ['item', 12, 3], ['house', 15, 3], ['merc', 2, 9], ['church', 12, 9], ['house', 6, 9], ['blades', 15, 9]];      // 넷째 민가 자리에 칼무덤 (같은 3×2칸 · 같은 문 칸 — 길과 마을 사람 자리, 가운데 깃대는 그대로)
+DS.SHOP_NAME = { forge: '대장간', weapon: '대장간', armor: '대장간', item: '잡화점', merc: '영웅관', church: '교회', house: '민가', blades: '칼무덤' };      // weapon·armor: 옛 이름으로 부르는 곳(시험 도구 등)도 대장간으로
 function buildTown(id, Z) {
   var w = 19, h = 17, g = grid(w, h, Z.theme === 'coast' ? 'd' : '.'), x, y, pois = [], rnd = DS.rng(id.length * 131 + 7);
   for (y = 0; y < h; y++) for (x = 0; x < w; x++) if (x === 0 || y === 0 || x === w - 1 || y === h - 1) g[y][x] = 'F';
@@ -15190,6 +15346,10 @@ DS.fixSave = function (s) {
   s.fallen.forEach(function (f) { f.g = Math.max(1, Math.min(5, Math.round(+f.g || 1))); if (typeof f.n !== 'string') f.n = ''; if (f.nk != null && typeof f.nk !== 'string') delete f.nk; if (f.lw != null) { if (typeof f.lw !== 'string') delete f.lw; else f.lw = Array.from(f.lw).slice(0, 24).join(''); } });      // r32: 마지막 한마디 (24자)      // 막사의 추모 목록이 GRADES[f.g] 를 읽는다
   s.mnid = Math.max(+s.mnid || 1, mid + 1);
   s.tickets = Math.max(0, Math.round(+s.tickets || 0)); s.pity = Math.max(0, Math.round(+s.pity || 0)); s.hpity = Math.max(0, Math.round(+s.hpity || 0));      // 2.2.4: hpity = 닫힌 가문을 연달아 못 연 모집 수 (옛 저장은 0)
+  if (s.blades !== undefined) {      // 칼무덤 (blades.js): { n 뽑은 수, p 마지막 전설 뒤로 뽑은 수 } — 정수만, p 는 0 ~ 천장 − 1. 모양이 틀리면 버린다
+    var bl = s.blades, bn = bl && typeof bl === 'object' && !Array.isArray(bl) ? Math.round(+bl.n) : NaN, bp = bl && typeof bl === 'object' ? Math.round(+bl.p || 0) : 0, bmax = ((DS.BLADES && DS.BLADES.pity) || 10) - 1;
+    if (!(bn >= 0 && bn < 1e9)) delete s.blades; else s.blades = { n: bn, p: Math.max(0, Math.min(bmax, bn, isFinite(bp) ? bp : 0)) };
+  }
   if (s.rh != null) { if (!s.rh || typeof s.rh !== 'object' || Array.isArray(s.rh)) delete s.rh; else { s.rh = { h: Math.max(0, Math.min((DS.RECRUIT && DS.RECRUIT.max) || 40, +s.rh.h || 0)), t: Math.max(0, +s.rh.t || 0) }; } }      // r35 모집 열기
   s.nid = Math.max(+s.nid || 1, maxId + 1);
   if (!own(s.chars, s.hero)) s.hero = +Object.keys(s.chars)[0];
@@ -22749,7 +22909,92 @@ var ROOF = { forge: ['#5a5466', '#3a3446'], weapon: ['#c0525e', '#8a3040'], armo
 var WALLS = { grass: ['#eadcbc', '#c4b48e', '#8a7a58'], highland: ['#d2cdc0', '#a9a394', '#6f6a5c'], coast: ['#f6f1e4', '#d3ccb8', '#9a8f78'] };
 // 2.6: 민가 넷이 서로 다르다 (hv = 몇째 민가: 지붕 빛 · 간판 그림 · 굴뚝 연기는 첫 집만) · 겨울(se 3)에는 지붕과 굴뚝에 눈이 얹힌다
 var HROOF = [['#a8754a', '#6f4a2c'], ['#c0525e', '#8a3040'], ['#6a7f9a', '#465a74'], ['#d0b060', '#a08038']];
+// ───────── 칼무덤 (가게 자리 3×2칸): 지붕 없는 낮은 무덤. 흙과 돌 더미에 먼저 간 이들의 칼, 창, 도끼가 자루를 위로 꽂혀 있고, 가운데 한 자루에서 따뜻한 빛이 샌다.
+//   앞에는 봉헌 돌판(동전 몇 닢)과 촛불 둘, 돌탑. 흙빛은 마을 맛(풀밭 · 고원 · 바닷가)을 따르고, 계절(se)마다 풀 · 꽃 · 낙엽 · 눈이 얹힌다.
+//   o.sil: 연출용 — 가운데 칼을 비운다 (뽑히는 칼은 연출이 따로 그린다)
+var MOUND = [['#8a6a44', '#a8855a', '#654a30'], ['#7d746a', '#9a9284', '#5a5248'], ['#8a6e4c', '#a88a60', '#624c36']];      // 바닷가: 모래빛 마을 바닥에 묻히지 않게 젖은 흙빛
+var MOUND_HW = [5, 9, 12, 14, 16, 17, 18, 19, 20, 20, 21, 21, 22, 22, 22, 23, 23, 23, 23, 22];      // 줄마다 반폭 (11 ~ 30줄)
+var MOUND_BL = [      // [바닥 x, 바닥 y, 기울기(한 줄 오를 때 옆으로), 날 길이, 코 폭, 자루 길이, 녹슨 쇠]
+  [13, 18, -0.4, 6, 6, 3, 1], [34, 16, 0.45, 6, 6, 3, 0], [8, 24, -0.25, 4, 5, 2, 1]];
+function moundTop(x) { for (var i = 0; i < MOUND_HW.length; i++) if (Math.abs(x - 24) <= MOUND_HW[i]) return 11 + i; return 31; }
+function bladeMound(g, ox, oy, theme, frame, se, o) {
+  o = o || {};
+  var K = '#1b1626', st = theme === 'highland' ? 1 : theme === 'coast' ? 2 : 0, E = MOUND[st], x, y, i, hw;
+  function R(x, y, w, h, col) { g.fillStyle = col; g.fillRect(ox + x, oy + y, w, h); }
+  function P(x, y, col) { g.fillStyle = col; g.fillRect(ox + x, oy + y, 1, 1); }
+  function hs(a, b) { return ((a * 73856093) ^ (b * 19349663) ^ 2654435) >>> 0; }
+  R(3, 29, 42, 3, 'rgba(0,0,0,.28)');
+  // 흙더미: 테두리 먼저, 왼쪽 위가 밝고 오른쪽이 그늘
+  R(24 - MOUND_HW[0], 10, MOUND_HW[0] * 2 + 1, 1, K);
+  for (i = 0; i < MOUND_HW.length; i++) { hw = MOUND_HW[i]; R(23 - hw, 11 + i, hw * 2 + 3, 1, K); }
+  for (i = 0; i < MOUND_HW.length; i++) {
+    hw = MOUND_HW[i]; y = 11 + i;
+    R(24 - hw, y, hw * 2 + 1, 1, E[0]);
+    R(24 - hw, y, Math.max(1, Math.round(hw * 0.55)), 1, E[1]);
+    R(24 + Math.round(hw * 0.45), y, hw - Math.round(hw * 0.45) + 1, 1, E[2]);
+    if (i < 3) R(24 - hw, y, hw + 2, 1, E[1]);
+  }
+  for (i = 0; i < 34; i++) { x = 4 + hs(i, 3) % 41; y = 12 + hs(i, 7) % 18; if (y >= moundTop(x) + 1 && y < 30) P(x, y, (i & 1) ? E[2] : E[1]); }      // 흙 알갱이
+  // 돌: 고원은 돌무더기처럼 많이
+  var stones = [[5, 26, 4, 3], [12, 28, 5, 2], [36, 27, 4, 3], [16, 21, 3, 2], [27, 18, 3, 2], [40, 22, 3, 2]];
+  if (st === 1) stones = stones.concat([[9, 20, 3, 2], [21, 16, 3, 2], [31, 14, 3, 2], [33, 21, 4, 2], [24, 23, 3, 2], [7, 23, 2, 2]]);
+  stones.forEach(function (q) { R(q[0] - 1, q[1] - 1, q[2] + 2, q[3] + 2, K); R(q[0], q[1], q[2], q[3], '#8d8a9a'); R(q[0], q[1], q[2] - 1, 1, '#b3b0c0'); R(q[0] + q[2] - 1, q[1] + 1, 1, q[3] - 1, '#5f5b6b'); if (se === 3) R(q[0], q[1] - 1, q[2], 1, '#f4f8fb'); });
+  // 계절: 풀 · 꽃 · 낙엽 · 눈 (바닷가는 조개껍데기)
+  var leaf = se === 2 ? ['#c9a04a', '#a8843a'] : se === 1 ? ['#3f8f3a', '#2f6b2f'] : ['#5f9a48', '#7fbf5a'];
+  if (se === 3) {
+    for (i = 0; i < 6; i++) { hw = MOUND_HW[i]; R(24 - hw, 11 + i, hw * 2 + 1, 1, i < 4 ? '#f4f8fb' : '#dfe8f0'); }
+    for (i = 0; i < 9; i++) { x = 6 + hs(i, 11) % 36; y = moundTop(x) + 5 + hs(i, 13) % 3; if (y < 29) P(x, y, '#f4f8fb'); }
+    R(3, 29, 42, 1, '#dfe8f0');
+  } else if (st !== 2) {
+    for (i = 0; i < (st === 1 ? 6 : 12); i++) { x = 3 + hs(i, 17) % 42; y = Math.min(29, moundTop(x)); P(x, y - 1, leaf[i & 1]); P(x + 1, y, leaf[0]); if (i % 3 === 0) P(x - 1, y, leaf[1]); }
+    for (i = 0; i < 5; i++) { x = 2 + i * 10 + hs(i, 19) % 4; P(x, 29, leaf[1]); P(x + 1, 28, leaf[0]); P(x + 2, 29, leaf[1]); }
+    if (se === 0) [[10, 20, '#ff9db5'], [33, 19, '#ffe27a'], [20, 25, '#ffffff'], [39, 24, '#ff9db5'], [27, 27, '#ffe27a']].forEach(function (f) { P(f[0], f[1], f[2]); });
+    if (se === 2) for (i = 0; i < 8; i++) { x = 5 + hs(i, 23) % 38; y = moundTop(x) + 2 + hs(i, 29) % 8; if (y < 29) P(x, y, ['#c2622a', '#eaa23c', '#7a3418'][i % 3]); }
+  } else {
+    [[9, 27, '#f4f0e6'], [14, 24, '#f0b8a8'], [33, 26, '#f4f0e6'], [41, 27, '#f0b8a8'], [26, 20, '#f4f0e6']].forEach(function (f) { P(f[0], f[1], f[2]); P(f[0] + 1, f[1], '#c9c0b0'); });
+  }
+  // 칼 한 자루: 바닥(흙에 박힌 자리)에서 위로 날 · 코 · 자루 · 머리. 둘레 선을 먼저 긋는다
+  function blade(bx, by, sl, len, gw, gl, rust, glow) {
+    var px = [], key = {}, t, cx;
+    function put(x, y, c) { x = Math.round(x); var k = x + ',' + y; if (key[k]) { for (var j = 0; j < px.length; j++) if (px[j][0] === x && px[j][1] === y) px[j][2] = c; return; } key[k] = 1; px.push([x, y, c]); }
+    var stl = glow ? ['#fff4d0', '#e8c46a'] : rust ? ['#a8a094', '#7a6658'] : ['#c9cdd8', '#6f7486'];
+    for (t = 0; t < len; t++) { cx = bx + t * sl; put(cx, by - t, stl[0]); put(cx + 1, by - t, stl[1]); }
+    cx = bx + len * sl; for (t = 0; t < gw; t++) put(cx - Math.floor((gw - 2) / 2) + t, by - len, glow ? '#f6cf57' : rust ? '#6f5a48' : '#5a5466');
+    for (t = 1; t <= gl; t++) { cx = bx + (len + t) * sl; put(cx, by - len - t, t % 2 ? '#6f4a2c' : '#8a5a36'); put(cx + 1, by - len - t, t % 2 ? '#4a301c' : '#6f4a2c'); }
+    cx = bx + (len + gl + 1) * sl; put(cx, by - len - gl - 1, glow ? '#ffe27a' : '#c08f2c'); put(cx + 1, by - len - gl - 1, glow ? '#c08f2c' : '#8a6a3a');
+    px.forEach(function (q) { [[1, 0], [-1, 0], [0, -1], [0, 1]].forEach(function (d) { var nx = q[0] + d[0], ny = q[1] + d[1]; if (ny <= by && !key[nx + ',' + ny]) P(nx, ny, K); }); });
+    px.forEach(function (q) { P(q[0], q[1], q[2]); });
+  }
+  // 창: 자루만 길게 솟고 끝에 바랜 붉은 술
+  (function () { var bx = 19, by = 13, sl = -0.15, n = 17, t, x0; for (t = 0; t < n; t++) { x0 = Math.round(bx + t * sl); P(x0 - 1, by - t, K); P(x0 + 1, by - t, K); P(x0, by - t, t > n - 3 ? '#8d8a9a' : (t & 1) ? '#8a5a36' : '#a8754a'); } x0 = Math.round(bx + n * sl); P(x0, by - n, K); R(x0 - 2, by - n + 3, 1, 5, '#a04848'); R(x0 - 3, by - n + 4, 1, 3, '#8a3040'); P(x0 - 1, by - n + 3, '#a04848'); })();
+  // 도끼: 머리는 흙에 반쯤 묻히고 자루가 비스듬히
+  (function () { var bx = 40, by = 21, sl = 0.3, n = 9, t, x0; R(36, 18, 5, 5, K); R(37, 19, 3, 3, '#8d8a9a'); P(37, 19, '#b3b0c0'); R(37, 21, 3, 1, E[2]); for (t = 0; t < n; t++) { x0 = Math.round(bx + t * sl); P(x0 - 1, by - t, K); P(x0 + 2, by - t, K); P(x0, by - t, '#8a5a36'); P(x0 + 1, by - t, '#6f4a2c'); } x0 = Math.round(bx + n * sl); R(x0 - 1, by - n, 4, 1, K); })();
+  MOUND_BL.forEach(function (b) { blade(b[0], b[1], b[2], b[3], b[4], b[5], b[6], false); });
+  // 금줄: 왼쪽 칼과 창 사이에 늘어진 새끼줄과 흰 종이 술
+  for (x = 10; x <= 17; x++) { y = 9 + Math.round(Math.sin((x - 10) / 7 * Math.PI) * 2); P(x, y, '#c9a56a'); if (x % 2 === 0) { P(x, y + 1, '#f4f0e6'); P(x, y + 2, '#e0d8c8'); } }
+  // 가운데 칼: 빛이 새는 한 자루 (연출은 이 자리를 비우고 따로 그린다)
+  if (!o.sil) {
+    var ga = frame ? 0.15 : 0.1;
+    [11, 8, 5].forEach(function (r) { g.globalAlpha = ga; g.fillStyle = '#ffd06a'; for (var dy = -r; dy <= r; dy++) { var w = Math.round(Math.sqrt(r * r - dy * dy) * 0.8); g.fillRect(ox + 25 - w, oy + 6 + dy, w * 2 + 2, 1); } }); g.globalAlpha = 1;
+    blade(25, 13, 0, 8, 8, 4, false, true);
+    P(23, 14, '#ffd06a'); P(28, 14, '#ffd06a'); P(24, 15, '#ffe8a8'); P(27, 15, '#ffd06a'); P(25, 14, '#fff4d0'); P(26, 14, '#ffe8a8');
+  } else { P(24, 13, E[2]); P(25, 13, K); P(26, 13, K); P(27, 13, E[2]); }
+  // 앞: 봉헌 돌판(동전) · 촛불 둘 · 작은 돌탑
+  R(16, 25, 16, 5, K); R(17, 26, 14, 3, '#9a96a6'); R(17, 26, 14, 1, '#c9c6d6'); R(17, 28, 14, 1, '#77738a');
+  P(22, 25, '#f6cf57'); P(23, 25, '#ffe27a'); P(25, 25, '#f6cf57'); P(26, 25, '#c08f2c');
+  [18, 29].forEach(function (cx, n) {
+    R(cx - 1, 21, 3, 5, K); R(cx, 22, 1, 3, '#efe6d0'); P(cx, 22, '#ffffff');
+    var tall = (frame + n) % 2 === 0;
+    g.globalAlpha = 0.28; R(cx - 2, 17, 5, 5, '#ffd06a'); g.globalAlpha = 1;
+    P(cx, 21, '#ff9a3c'); P(cx, 20, '#ffd24a'); if (tall) P(cx, 19, '#fff1c0');
+  });
+  R(38, 24, 7, 6, K); R(39, 27, 5, 2, '#8d8a9a'); R(39, 27, 4, 1, '#b3b0c0'); R(40, 25, 3, 2, '#9a96a6'); P(40, 25, '#c9c6d6'); P(41, 24, '#8d8a9a'); P(41, 23, K);
+  if (se === 3) { R(40, 24, 2, 1, '#f4f8fb'); R(17, 25, 4, 1, '#f4f8fb'); R(28, 25, 3, 1, '#f4f8fb'); }
+}
+// 연출 · 창에 쓰는 칼무덤 한 장 (48 × 46, 위 14줄은 솟은 자루 몫)
+DS.bladeMoundCanvas = function (theme, se, frame, o) { var cv = document.createElement('canvas'); cv.width = 48; cv.height = 46; bladeMound(cv.getContext('2d'), 0, 14, theme || 'grass', frame || 0, se == null ? 0 : se, o); return cv; };
 function building(g, kind, ox, oy, theme, frame, hv, se) {
+  if (kind === 'blades') return bladeMound(g, ox, oy, theme, frame, se);
   var K = '#1b1626', c = (kind === 'house' && hv >= 0 ? HROOF[hv % 4] : ROOF[kind]) || ROOF.house, W = WALLS[theme] || WALLS.grass, st = theme === 'highland' ? 1 : theme === 'coast' ? 2 : 0, x, y;
   function R(x, y, w, h, col) { g.fillStyle = col; g.fillRect(ox + x, oy + y, w, h); }
   R(2, 30, 44, 2, 'rgba(0,0,0,.3)');
@@ -33162,6 +33407,7 @@ var KEEPER = {
   '대장간': { n: '대장장이', spr: 'npc_1', say: function (s) { return DS.ENH && !DS.ENH.safe ? '부서지면 제 탓 아닙니다. 확률 탓입니다.' : '두드리는 건 제가, 운은 손님이 맡습니다.'; } },
   '잡화점': { n: '잡화점 주인', spr: 'npc_2', say: function (s) { return !((s.items || {}).herb > 0) ? '약초가 하나도 없으시네요. 용감하십니다.' : '약초는 넉넉히. 관보다 값이 싸요.'; } },
   '교회': { n: '교회지기', spr: 'npc_3', say: function (s) { var hp = 1; try { hp = partyHp(); } catch (x) {} return (s.fallen || []).length || (DS.linCoffins && DS.linCoffins(s).length) ? '이름은 적어 두었습니다. 가끔 읽어 주세요.' : hp < 0.6 ? '많이 다치셨네요. 치료부터 하시지요.' : '체력은 저절로 차지 않습니다. 들렀다 가세요.'; } },
+  '칼무덤': { n: '무덤지기', spr: 'npc_0', say: function (s) { var B = DS.BLADES, left = DS.bladesLeft ? DS.bladesLeft(s) : 10; return !B ? '' : left <= 1 ? '오래 기다리셨네요. 다음 칼은 손이 먼저 압니다.' : s.gold < B.price ? '칼은 외상으로 안 뽑힙니다. 칼 주인들이 깐깐해요.' : '고르지 마세요. 손에 걸리는 놈이 손님 칼입니다.'; } },
   '영웅관': { n: '영웅관 접수원', spr: 'npc_0', say: function (s) { var c = DS.recruitPrice(s, 0), heat = DS.recruitHeat(s); return (s.tickets || 0) > 0 ? '모집권 가져오셨네요. 그건 값이 안 오릅니다.' : s.gold < c ? (heat > 0 ? '이름값이 올랐어요. 계절이 바뀌면 내립니다.' : '외상은 안 됩니다. 골드를 모아 오세요.') : '한 번에 한 분씩 모십니다. 병과는 그날 운이에요.'; } }
 };
 function keeperPut(body, title) {
@@ -33176,7 +33422,7 @@ function sheet(title, render, cls, after) {
   var o = overlay('<header class="sh"><h3>' + esc(title) + '</h3><span class="gold"></span></header><div class="sb"></div><div class="sfoot"></div>', cls || '');
   var footHtml = null;
   o.draw = function () {
-    $('.gold', o).innerHTML = G.save ? coin(G.save.gold) : '';
+    $('.gold', o).innerHTML = G.save ? (o.headX ? o.headX() : '') + coin(G.save.gold) : '';      // 2.7.2: headX = 골드 옆에 붙는 것 (영웅관: 모집권)
     var body = $('.sb', o), top = body.scrollTop;
     body.innerHTML = render(); U.hydrate(body); if (KEEPER[title] && cls !== 'sub') { try { keeperPut(body, title); } catch (x) {} } body.scrollTop = top;      // 2.6: 가게 주인의 한 줄 (가게 넷)
     var pr = o.foot ? o.foot() || '' : '', f = $('.sfoot', o), fh = '<button class="btn" data-close>닫기</button>' + pr;
@@ -33910,17 +34156,21 @@ function houseOpenShow(r, cb) {
   if (cb) cb();
 }
 DS.houseOpenShow = houseOpenShow;
+// 2.7.2: 다음 모집권을 주는 시나리오 (처음 깰 때) — 없으면 0
+function tkNext(s) { for (var i = 1; i <= DS.SCENARIOS.length; i++) { var sc = DS.scn(i); if (sc && !(s.cleared && s.cleared[i]) && DS.scnTickets && DS.scnTickets(sc) > 0) return i; } return 0; }
 function mercShop() {
   var o = sheet('영웅관', function () {
     var s = G.save, cost = DS.recruitPrice(s, 0), next = DS.recruitPrice(s, 1), base = DS.recruitBase(s), eN = DS.recruitOpenN(s), html = '', why = DS.recruitWhy(s);
     var pityLeft = Math.max(1, DS.PITY - (s.pity || 0)), ease = DS.recruitEase(s), pg = (DS.GRADES[DS.PITY_G || 5] || {}).name || '', can = !why && (s.tickets > 0 || s.gold >= cost);
-    html += '<div class="gacha"><div class="gh"><b>영웅 모집</b><span>모집권 <b class="num">' + (s.tickets || 0) + '</b>장</span></div>' +
+    var tk = s.tickets || 0, nx = tk ? 0 : tkNext(s);      // 2.7.2: 모집권이 구석의 작은 글씨라 몇 장인지 몰랐다 — 카드 맨 위의 큰 칸으로
+    html += '<div class="gacha"><div class="gh"><b>영웅 모집</b></div>' +
+      '<div class="gtk' + (tk ? ' on' : '') + '">' + DS.iconHtml('misc', 'ticket', { size: 40 }) + '<span class="gtn"><b class="num">' + tk + '</b><small>장</small></span><span class="gtx"><b>영웅 모집권</b><small>' + (tk ? '모집할 때 골드보다 먼저 쓴다. 값이 오르지 않는다' : nx ? '다음 모집권: ' + nx + '번 시나리오를 처음 깨면' : '시나리오 ' + (DS.TICKET_EVERY || 10) + '번째마다, 빈 가문이 생기면 새벽에 온다') + '</small></span></div>' +
       '<p class="hint sm">한 번에 한 사람. 병과는 무작위. <b class="warn">쓰러지면 잃는다</b></p>' +
       '<div class="gprice"><span>지금 ' + coin(cost) + '</span><i aria-hidden="true">→</i><span>다음 ' + coin(next) + '</span></div>' +
       '<p class="pity f26why">빈 가문 <b>' + eN + '곳</b>' + (ease > 0 ? ' · 기본값 ' + coin(base) + '까지 ' + ease + '계절' : '') + ' <button class="lnk" data-pfold="gwhy" aria-expanded="' + !!FOLD.gwhy + '">값은 어떻게 정해지나 ' + (FOLD.gwhy ? '▾' : '▸') + '</button></p>' +      // 2.6: 값 풀이는 접어 둔다
       (FOLD.gwhy ? '<p class="gwhy">빈 가문이 많을수록 싸다. 지금 빈 가문 <b>' + eN + '곳</b>. 부를 때마다 오르고 계절마다 내려간다.' + (ease > 0 ? ' <b>기본값 ' + coin(base) + '까지 ' + ease + '계절</b>' : '') + ' 모집권은 시나리오 ' + (DS.TICKET_EVERY || 10) + '개마다, 그리고 2, 3, 4, 5, 6, 7, 9, 11, 13번을 처음 깰 때 한 장.</p>' : '') +
       heroRoomLine(s) +
-      '<div class="gbtn one"><button class="btn' + (can ? ' gold' : ' poor') + '" data-pull="1"' + (why ? ' disabled aria-disabled="true"' : '') + '><span>영웅 모집</span><small>' + (why ? '막사 가득' : s.tickets > 0 ? '모집권 1장' : coin(cost)) + '</small></button></div>' +
+      '<div class="gbtn one"><button class="btn' + (can ? ' gold' : ' poor') + (tk ? ' bytk' : '') + '" data-pull="1"' + (why ? ' disabled aria-disabled="true"' : '') + '><span>' + (tk ? '모집권으로 모집' : '골드로 모집') + '</span><small>' + (why ? '막사 가득' : tk ? '모집권 ' + tk + '장 → ' + (tk - 1) + '장' : coin(cost)) + '</small></button></div>' +
       '<p class="pity">' + (pityLeft <= 5 || FOLD.rates ? pg + '까지 ' + pityLeft + '회, ' : '') + '<button class="lnk" data-pfold="rates" aria-expanded="' + !!FOLD.rates + '">등급 확률 ' + (FOLD.rates ? '▾' : '▸') + '</button></p>' +
       (FOLD.rates ? '<p class="rates">' + [1, 2, 3, 4, 5].map(function (g) { return '<i>' + gbadge(g) + ' <b class="num">' + DS.GRADES[g].p + '%</b></i>'; }).join('') + '</p>' : '') + '</div>';
     var fl = (s.fallen || []).slice().reverse();
@@ -33932,6 +34182,7 @@ function mercShop() {
     return html;
   }, 'mercs');
   o.addEventListener('click', function (e) { if (e.target.closest('[data-polego]')) { A('tap'); o.close(); DS.poleOpen(); } });
+  o.headX = function () { var n = (G.save && G.save.tickets) || 0; return n ? '<span class="tkpill" title="영웅 모집권">' + DS.iconHtml('misc', 'ticket', { size: 18 }) + '<b class="num">' + n + '</b></span>' : ''; };      // 2.7.2: 머리의 골드 옆에도
   o.foot = function () { return '<button class="btn" data-goparty="1">부대</button>'; };  o.draw();
   function pull() {
     var s = G.save, cost = DS.recruitPrice(s, 0), byT = false;
@@ -34135,9 +34386,10 @@ DS.openTownWork = function (parent) {
     var row = function (k, ic, nm, sub) { return '<button class="row twrow" data-tw="' + k + '">' + (U.svg ? '<i class="twic" aria-hidden="true">' + U.svg(ic, 22) + '</i>' : '') + '<span class="tx"><b>' + esc(nm) + '</b><small>' + esc(sub) + '</small></span><i class="twgo" aria-hidden="true">›</i></button>'; };
     var html = '<p class="hint sm">' + esc(here ? z.def.name + '에서 본다' : '어디서나 볼 수 있다. 진열은 ' + (z.def.name || '마을') + ' 것') + '</p>';
     html += row('forge', 'sword', '대장간', '강화, 장비 맞추기');
-    html += row('merc', 'party', '영웅관', '영웅 모집. 병과는 무작위, 빈 가문이면 가주로');
+    html += row('merc', 'party', '영웅관', (s.tickets ? '모집권 ' + s.tickets + '장. ' : '') + '영웅 모집. 병과는 무작위, 빈 가문이면 가주로');      // 2.7.2: 모집권 수
     html += row('item', 'bag', '상점', '소모품' + (DS.ITEMS.prot ? ', 강화 보호 부적' : ''));
     html += row('church', 'scroll', '교회', '치료, 관, 합일');
+    if (DS.openBlades) html += row('blades', 'shop_weapon', '칼무덤', '칼 뽑기. 유니크, 전설, 강화 보호 부적');      // blades.js
     if (lgOn && lgOn()) html += row('wed', 'heart', '혼인과 이별', '맹주의 혼인');
     if (cf) html += lgBuyRow(cf);
     return html;
@@ -34159,6 +34411,7 @@ DS.openShop = function (kind, opt) {
   if (kind === 'merc') return mercShop();
   if (kind === 'item') return itemShop(!!(opt && opt.tw));
   if (kind === 'church') return church();
+  if (kind === 'blades') return DS.openBlades ? DS.openBlades() : null;      // 칼무덤 (blades.js)
   if (kind === 'town') return DS.openTownWork();
 };
 
@@ -35285,7 +35538,8 @@ function tabHelp() {
       '무기에 적힌 수치는 입은 사람의 <b>공격</b>에 그대로 더해진다. 마법 병과는 <b>마공</b>에, 무투가는 둘 다에 더해진다. 장비 칸을 누르면 뜨는 창에서 줄마다 <b>지금→입은 뒤</b> 수치와 전투력을 미리 볼 수 있다.',
       '등급은 셋이다. <b class="lg lg1">보통</b>, <b class="lg lg4">유니크</b>(옵션 하나나 둘), <b class="lg lg5">전설</b>(이름과 대표 효과가 정해진 물건). 이름과 그림 테두리의 색으로 등급을 표시한다. 사람의 등급도 색 이름표로 보인다. 전설은 지역마다 다르니 여러 곳을 사냥해 본다.',
       '<b>강화</b>는 대장간(「마을 일」에서는 어디서나)에서 골드를 내고 한 단계씩, +' + DS.ENH.max + '까지. +1 성공 ' + DS.ENH.rate[1] + '%, 단계마다 낮아져 +5부터는 ' + DS.ENH.rate[DS.ENH.max] + '%. 실패하면 부서진다. 값은 단계가 오를수록 비싸다. 터져도 대장장이는 「이븐하게 안 익었네요」 할 뿐이다.',
-      '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다.',
+      '<b>강화 보호 부적</b>을 쓰면 강화에 실패해도 장비가 부서지지 않는다. 가온 대장간에서 사거나, 깃술 조각을 모으면 받는다. 칼무덤에서도 나온다.',
+      '<b>칼무덤</b>은 마을마다 교회 오른쪽에 있다. ' + (DS.BLADES ? fmtN(DS.BLADES.price) : '10,000') + '골드를 바치고 칼 한 자루를 뽑는다. ' + (DS.bladesBoard ? esc(DS.bladesBoard()) : '') + ' 장비는 드랍처럼 가방으로 가고, 가방이 가득 차면 그 자리에서 팔린다. 「마을 일」에서는 어디서나 뽑는다.',
       '가방 목록도 다중 선택이 기본이다. 고른 뒤 아래 붉은 버튼으로 한꺼번에 판매한다. 잠근 장비는 선택할 수 없다.']],
     ['성장과 합일', 0, [
       '경험치는 <b>사람마다</b> 받는다. 싸우는 맹주, 가주, 가문원은 모두 받는다. 쉬는 가주는 ' + Math.round((DS.BAL.sortieExp || 0) * 100) + '%를 받는다. 막사의 사람은 같은 병과 가주가 얻는 경험치의 ' + Math.round(DS.BAL.sbShare * 100) + '%를 함께 얻는다. 뒤처진 사람은 더 빨리 따라잡는다.',
@@ -41135,6 +41389,311 @@ if (V) V.drawPole = function (g, d) {
     g.fillStyle = RC[i % RC.length]; g.fillRect(sd > 0 ? x + 9 : x + 4 - fw, ry, 3 + fw, 1); g.fillRect(sd > 0 ? x + 11 + fw : x + 4 - fw, ry + 1, 1, 1);
   }
 };
+})();
+
+// 전민 — 칼무덤: 마을마다 넷째 민가 자리(15, 9)에 선 낮은 무덤. 먼저 간 이들의 칼이 자루를 위로 꽂혀 있다.
+//   골드를 바치고 손을 뻗으면 한 자루가 뽑힌다: 일반 장비 · 유니크 · 전설 · 강화 보호 부적. 전설이 아홉 번 나오지 않으면 열 번째는 전설.
+//   숫자는 모두 DS.BLADES 한 곳에. 굴림은 rnd 를 받는다 (없으면 Math.random — 시험은 씨앗 굴림을 넘긴다).
+//   장비는 다른 드랍과 같은 길(DS.lootPut)로 가방에 들어간다 — 가방 한도 · 잠금 · 내력(얻은 곳 「칼무덤」)이 그대로.
+//   저장: save.blades = { n: 뽑은 수, p: 마지막 전설 뒤로 뽑은 수 } (뽑은 적이 있을 때만 · save.js fixSave 가 바로잡는다)
+var DS = globalThis.DS = globalThis.DS || {};
+(function () {
+'use strict';
+DS.BLADES = {
+  price: 10000,                                   // 한 자루 값 (골드)
+  many: 10,                                       // 「열 자루 뽑기」 수 (값은 그대로 열 배 · 덜어 주지 않는다)
+  rate: { plain: 37, uq: 30, leg: 25, prot: 8 },  // 나올 몫 (%)
+  pity: 10,                                       // 전설이 이만큼째에는 반드시 (아홉 번 없으면 열 번째)
+  uq: [[2, 50], [3, 35], [4, 15]],                // 유니크의 굴림: 옵션 하나 · 옵션 둘 · 높은 굴림 (DS.rollGear 의 grade)
+  protN: 2,                                       // 부적이 나오면 몇 장
+  protRefund: 3000,      // 바닥값 — 실제로는 지금 대장간 값(DS.protPrice)과 견줘 큰 쪽 (2.7.2)                               // 부적이 가득 차 못 든 한 장마다 돌려주는 골드
+  at: '칼무덤'                                    // 장비 내력에 남는 얻은 곳
+};
+function refundOf(save) { return Math.max(T().protRefund, DS.protPrice ? DS.protPrice(save) : 0); }      // 2.7.2: 늦게 가면 대장간 값이 더 비싸다
+
+var KINDS = ['plain', 'uq', 'leg', 'prot'];
+DS.BLADES_NAME = { plain: '일반 장비', uq: '유니크', leg: '전설', prot: '강화 보호 부적' };
+DS.BLADES_UQ = { 2: '옵션 하나', 3: '옵션 둘', 4: '높은 굴림' };
+function T() { return DS.BLADES; }
+function rec(save) { var b = save.blades; if (!b || typeof b !== 'object' || Array.isArray(b)) b = save.blades = { n: 0, p: 0 }; b.n = Math.max(0, Math.round(+b.n || 0)); b.p = Math.max(0, Math.min(T().pity - 1, Math.round(+b.p || 0))); return b; }
+// 전설까지 몇 번 남았나 (1 = 다음 한 자루는 반드시 전설)
+DS.bladesLeft = function (save) { var b = save && save.blades, p = b && b.p > 0 ? Math.min(T().pity - 1, b.p | 0) : 0; return Math.max(1, T().pity - p); };
+// 무엇이 나오나: p = 마지막 전설 뒤로 뽑은 수 (천장에 닿았으면 전설)
+DS.bladesKind = function (rnd, p) {
+  if (p >= T().pity - 1) return 'leg';
+  var R = T().rate, tot = 0, i, r;
+  for (i = 0; i < KINDS.length; i++) tot += Math.max(0, +R[KINDS[i]] || 0);
+  r = rnd() * tot;
+  for (i = 0; i < KINDS.length; i++) { r -= Math.max(0, +R[KINDS[i]] || 0); if (r < 0) return KINDS[i]; }
+  return KINDS[KINDS.length - 1];
+};
+function pickW(rnd, list) { var t = 0, i, r; for (i = 0; i < list.length; i++) t += list[i][1]; r = rnd() * t; for (i = 0; i < list.length; i++) { r -= list[i][1]; if (r < 0) return list[i][0]; } return list[list.length - 1][0]; }
+function rosterCats(save) { var o = []; DS.charList(save).forEach(function (c) { var G = DS.CLS_GEAR[c.cls]; if (G) G.w.concat(G.a).forEach(function (k) { if (o.indexOf(k) < 0) o.push(k); }); }); return o; }
+// 전설의 후보: 들판의 전설(얻는 곳 'zone:') 가운데 아직 없는 것. 다 가졌으면 들판 전설 모두. 시나리오 보상 · 보스 고유 장비는 넣지 않는다 (보스 사냥은 보스 사냥대로)
+DS.bladesLegPool = function (save) {
+  var dex = DS.legDex ? DS.legDex(save).filter(function (x) { return x.kind === 'zone'; }) : [], free = dex.filter(function (x) { return x.found !== 2; });
+  return (free.length ? free : dex).map(function (x) { return x.id; });
+};
+// 한 자루. 돌려주는 것: { k: 'plain'|'uq'|'leg'|'prot', id, g(장비), d(가방에 넣은 결과), sold(팔린 값), gr(유니크 굴림), fresh(처음 가진 전설), n(받은 부적), miss(못 든 부적), refund }
+//   o.flat: 천장을 보지 않는다 (확률 시험용)
+DS.bladesRoll = function (save, rnd, o) {
+  rnd = rnd || Math.random; o = o || {};
+  var b = rec(save), k = DS.bladesKind(rnd, o.flat ? 0 : b.p), r = { k: k }, id = null, L = DS.partyL ? DS.partyL(save) : 1;
+  if (k === 'leg') {
+    var pool = DS.bladesLegPool(save);
+    id = pool.length ? pool[Math.floor(rnd() * pool.length)] : null;
+    if (id) r.fresh = !(DS.legFound && DS.legFound(save, id) === 2);
+    else { k = r.k = 'uq'; r.gr = 4; }      // 전설이 하나도 없는 판(그럴 일은 없다) — 높은 굴림 유니크로
+  }
+  if (k === 'plain') id = DS.rollPlain({ L: L, save: save, need: true, boss: true }, rnd);
+  else if (k === 'uq') { r.gr = r.gr || pickW(rnd, T().uq); id = DS.rollGear({ L: L, cats: rosterCats(save), grade: r.gr, boss: true, save: save }, rnd); }
+  if (k === 'prot') {
+    var n = DS.giveItem(save, 'prot', T().protN);
+    r.n = n; r.miss = T().protN - n; r.refund = r.miss * refundOf(save); if (r.refund) save.gold += r.refund;
+  } else {
+    var d = DS.lootPut(save, id, { at: T().at });
+    r.id = id; r.d = d; r.g = DS.gear(id); r.sold = d && d.sold ? d.sold : 0;
+  }
+  b.n++; b.p = r.k === 'leg' ? 0 : Math.min(T().pity - 1, b.p + 1);
+  return r;
+};
+// 못 뽑는 까닭 ('' = 뽑을 수 있다)
+DS.bladesWhy = function (save, count) {
+  if (DS.townBusy && DS.townBusy()) return DS.townWorkWhy ? DS.townWorkWhy() : '지금은 뽑을 수 없다';
+  if (!save || !(save.gold >= T().price * (count || 1))) return '골드가 모자라다';
+  return '';
+};
+// 값을 치르고 count(1 또는 열) 자루를 차례로. 골드가 모자라면 null (아무것도 바뀌지 않는다)
+DS.bladesPull = function (save, count, rnd) {
+  count = count === T().many ? T().many : 1;
+  var cost = T().price * count, list = [], i;
+  if (!save || !(save.gold >= cost)) return null;
+  save.gold -= cost;
+  for (i = 0; i < count; i++) list.push(DS.bladesRoll(save, rnd));
+  return { cost: cost, list: list };
+};
+// 알림판의 한 줄 (표에서 읽는다)
+DS.bladesBoard = function () {
+  var R = T().rate, P = T().pity;
+  return '일반 장비 ' + R.plain + '%, 유니크 ' + R.uq + '%, 전설 ' + R.leg + '%, 강화 보호 부적 ' + R.prot + '%. ' +
+    '전설이 ' + (P === 10 ? '아홉 번' : (P - 1) + '번') + ' 나오지 않으면 ' + (P === 10 ? '열 번째는' : P + '번째는') + ' 전설.';
+};
+
+// ───────── 화면 ─────────
+var U = DS.ui; if (!U || typeof document === 'undefined') return;
+var G = DS.G, esc = U.esc, A = U.A, toast = U.toast;
+function fmtN(n) { return U.fmtN ? U.fmtN(n) : String(n); }
+function calm() { return !!(U.calm && U.calm()); }
+function coin(n) { return '<span class="cur">' + (U.svg ? U.svg('coin', 16, 'coin') : '') + '<b class="num">' + fmtN(n) + '</b></span>'; }
+function snd(n) { try { A(n); } catch (x) {} }
+function duck(a, ms) { try { if (DS.Audio && DS.Audio.duck) DS.Audio.duck(a, ms); } catch (x) {} }
+var LIT = { w: '#f1ecdf', v: '#9d86ff', g: '#ffc94a' };      // 새는 빛: 흰빛(일반) · 푸른 보랏빛(유니크) · 금빛(전설)
+function litOf(k) { return k === 'leg' ? 'g' : k === 'uq' ? 'v' : 'w'; }
+// ── 그림: 무덤(실루엣 판은 가운데 칼을 비운다) · 뽑히는 칼 · 손 · 부적 ──
+var imgC = {};
+function moundSrc(sil) {
+  var z = G.zone && G.zone.town ? G.zone : null, th = (z && (z.def || DS.ZONES[z.id] || {}).theme) || ((DS.ZONES[(G.save && G.save.town) || 'haemil'] || {}).theme) || 'grass', se = DS.seasonNow ? DS.seasonNow() : 0;
+  var key = th + ':' + se + ':' + (sil ? 1 : 0);
+  if (!imgC[key] && DS.bladeMoundCanvas) { try { imgC[key] = DS.bladeMoundCanvas(th, se || 0, 1, { sil: sil }).toDataURL(); } catch (x) { imgC[key] = ''; } }
+  return imgC[key] || '';
+}
+var KC = '#1b1626';
+var BPAL = { plain: ['#c9cdd8', '#6f7486', '#5a5466', '#8a6a3a'], uq: ['#ddd4fa', '#7a64c0', '#7a5ac8', '#b181e6'], leg: ['#fff4d0', '#e0b85a', '#f6cf57', '#ffe27a'], prot: ['#c9cdd8', '#6f7486', '#5a5466', '#8a6a3a'] };
+function sprite(w, h, draw) { var cv = document.createElement('canvas'); cv.width = w; cv.height = h; var g = cv.getContext('2d'); draw(function (x, y, ww, hh, c) { g.fillStyle = c; g.fillRect(x, y, ww, hh); }); return cv.toDataURL(); }
+function bladeSrc(k) {      // 12 × 42: 0 둘레 · 1 머리 · 2~5 자루 · 6 코 · 7~39 날 · 40 끝
+  var key = 'b:' + k; if (imgC[key]) return imgC[key];
+  var P = BPAL[k] || BPAL.plain;
+  return (imgC[key] = sprite(12, 42, function (R) {
+    R(4, 0, 4, 1, KC); R(3, 1, 6, 5, KC); R(0, 5, 12, 3, KC); R(3, 8, 6, 32, KC); R(4, 40, 4, 1, KC); R(5, 41, 2, 1, KC);
+    R(4, 1, 4, 1, P[3]); R(5, 1, 1, 1, '#ffffff');
+    for (var y = 2; y <= 5; y++) { R(4, y, 2, 1, y % 2 ? '#8a5a36' : '#6f4a2c'); R(6, y, 2, 1, y % 2 ? '#6f4a2c' : '#4a301c'); }
+    R(1, 6, 10, 1, P[2]); R(1, 6, 4, 1, P[3]);
+    R(4, 7, 2, 33, P[0]); R(6, 7, 2, 33, P[1]); R(5, 8, 1, 30, '#ffffff'); R(5, 40, 2, 1, P[0]);
+  }));
+}
+function handSrc() {      // 16 × 22: 주먹(위) · 손목 · 소매가 오른쪽 아래로
+  if (imgC.hand) return imgC.hand;
+  return (imgC.hand = sprite(16, 22, function (R) {
+    var y, x0;
+    for (y = 6; y < 22; y++) { x0 = 4 + Math.round((y - 6) * 0.55); R(x0 - 1, y, 8, 1, KC); R(x0, y, 6, 1, y < 9 ? '#c9a56a' : '#4a3a6a'); R(x0 + 4, y, 2, 1, y < 9 ? '#a8843a' : '#352a50'); }
+    R(1, 0, 10, 7, KC); R(2, 1, 8, 5, '#e8b890'); R(2, 1, 8, 1, '#f4cca8'); R(4, 2, 1, 3, '#c08a64'); R(6, 2, 1, 3, '#c08a64'); R(8, 2, 1, 3, '#c08a64'); R(2, 5, 8, 1, '#c08a64'); R(1, 3, 2, 3, '#e8b890'); R(0, 3, 1, 3, KC);
+  }));
+}
+function charmSrc() {      // 10 × 16: 누런 종이에 붉은 글씨
+  if (imgC.charm) return imgC.charm;
+  return (imgC.charm = sprite(10, 16, function (R) {
+    R(0, 0, 10, 16, KC); R(1, 1, 8, 14, '#f3dc8a'); R(1, 1, 8, 1, '#fff1c0'); R(8, 2, 1, 13, '#d8bc68');
+    R(4, 2, 2, 1, '#c0303a'); R(3, 4, 4, 1, '#c0303a'); R(4, 5, 2, 3, '#c0303a'); R(2, 9, 6, 1, '#c0303a'); R(3, 11, 1, 3, '#c0303a'); R(6, 11, 1, 3, '#c0303a'); R(4, 12, 2, 1, '#c0303a');
+  }));
+}
+// ── 창 ──
+function poolInfo(s) { var dex = DS.legDex ? DS.legDex(s) : [], zn = dex.filter(function (x) { return x.kind === 'zone'; }); return { have: zn.filter(function (x) { return x.found === 2; }).length, all: zn.length, found: dex.filter(function (x) { return x.found; }).length, dex: dex.length }; }
+function pullBtn(s, n) {
+  var cost = T().price * n, poor = s.gold < cost, busy = DS.townBusy && DS.townBusy();
+  return '<button class="btn bldgo' + (poor || busy ? ' poor' : ' gold') + '" data-bpull="' + n + '"' + (poor || busy ? ' disabled aria-disabled="true"' : '') + '><b>' + (n === 1 ? '한 자루 뽑기' : '열 자루 뽑기') + '</b><small>' + fmtN(cost) + '골드</small>' +
+    (poor ? '<i class="bldwhy">골드가 모자라다. ' + fmtN(s.gold) + ' / ' + fmtN(cost) + '</i>' : busy ? '<i class="bldwhy">' + esc(DS.townWorkWhy ? DS.townWorkWhy() : '') + '</i>' : '') + '</button>';
+}
+function render() {
+  var s = G.save, R = T().rate, left = DS.bladesLeft(s), b = s.blades || { n: 0, p: 0 }, pi = poolInfo(s), p = Math.min(T().pity - 1, b.p | 0), pips = '', i;
+  for (i = 0; i < T().pity; i++) pips += '<i class="' + (i < p ? 'on' : i === T().pity - 1 ? 'end' : '') + '"></i>';
+  var h = '<div class="bldhead"><img class="bldimg" alt="" aria-hidden="true" src="' + moundSrc(false) + '"><p class="bldfl">먼저 간 이들의 칼이 꽂힌 언덕. 값을 치르고 손을 뻗으면 한 자루가 뽑힌다.</p></div>';
+  h += '<div class="bldboard" role="note"><p class="bldbt">알림판</p><p class="bldline">' + esc(DS.bladesBoard()) + '</p><ul>' +
+    '<li><b>일반 장비</b><i class="num">' + R.plain + '%</i><small>부대의 누군가에게 쓸모 있는 것</small></li>' +
+    '<li><b class="lg lg4">유니크</b><i class="num">' + R.uq + '%</i><small>' + T().uq.map(function (u) { return DS.BLADES_UQ[u[0]] + ' ' + u[1] + '%'; }).join(', ') + '</small></li>' +
+    '<li><b class="lg lg5">전설</b><i class="num">' + R.leg + '%</i><small>들판의 전설 가운데 아직 없는 것부터 (' + pi.have + ' / ' + pi.all + ' 가짐)</small></li>' +
+    '<li><b>강화 보호 부적</b><i class="num">' + R.prot + '%</i><small>' + T().protN + '장. 못 들면 한 장에 ' + fmtN(refundOf(DS.G && DS.G.save)) + '골드로 돌려준다</small></li></ul></div>';
+  h += '<div class="bldpity"><p><b>전설까지 ' + left + '번</b>' + (left === 1 ? '<small>다음 한 자루는 반드시 전설</small>' : '<small>지금까지 ' + fmtN(b.n || 0) + '자루</small>') + '</p><span class="bldpips" aria-hidden="true">' + pips + '</span></div>';
+  h += '<div class="bldbtns">' + pullBtn(s, 1) + pullBtn(s, T().many) + '</div>';
+  h += '<button class="row bldlink" data-bdex="1"><span class="tx"><b>전설 도감</b><small>' + pi.found + ' / ' + pi.dex + ' 찾음</small></span><i class="go" aria-hidden="true">›</i></button>';
+  return h;
+}
+DS.openBlades = function () {
+  if (DS.townBusy && DS.townBusy()) { snd('cancel'); toast(DS.townWorkWhy(), 2600); return null; }
+  var o = U.sheet('칼무덤', render, 'bldsh');
+  o.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-bpull]');
+    if (b) { if (b.disabled) return; snd('tap'); pull(+b.dataset.bpull, o); return; }
+    if (e.target.closest('[data-bdex]') && DS.openDex) { snd('tap'); DS.openDex(); }
+  });
+  return o;
+};
+function bagDot(res) {
+  if (!res.list.some(function (r) { return r.d && !r.sold; })) return;
+  G.bagNew = true; var bm = document.getElementById('bMenu'); if (bm) bm.classList.add('newdot');
+}
+function pull(n, o, ov) {
+  var s = G.save, why = DS.bladesWhy(s, n);
+  if (why) { snd('deny'); toast(why === '골드가 모자라다' ? why + '. ' + fmtN(s.gold) + ' / ' + fmtN(T().price * n) : why, 2600); return; }
+  var res = DS.bladesPull(s, n); if (!res) return;
+  snd('coin'); bagDot(res); U.persist();
+  if (o && o.isConnected && o.draw) o.draw();
+  show(res, o, ov);
+}
+// ── 결과 카드 ──
+function score(r) { return r.k === 'leg' ? 100 + (r.fresh ? 5 : 0) : r.k === 'uq' ? 50 + (r.gr || 2) * 5 : r.k === 'prot' ? 30 : 10 + ((r.g && r.g.enh) || 0); }
+function bestOf(list) { var bi = 0; list.forEach(function (r, i) { if (score(r) > score(list[bi])) bi = i; }); return bi; }
+function tagOf(r) { return r.k === 'uq' ? '유니크, ' + (DS.BLADES_UQ[r.gr] || '') : r.k === 'leg' ? (r.fresh ? '전설, 처음 찾았다' : '전설, 이미 가진 것') : r.k === 'prot' ? '강화 보호 부적' : '일반 장비'; }
+function icoOf(r, sz) { try { return r.k === 'prot' ? DS.iconHtml('item', 'prot', { size: sz }) : DS.iconHtml('gear', r.id, { size: sz }); } catch (x) { return ''; } }
+function nameOf(r) { return r.k === 'prot' ? DS.ITEMS.prot.name : r.g ? (r.g.short || r.g.name) : ''; }
+function noteOf(r) {
+  if (r.k === 'prot') return r.n ? (r.miss ? '부적 ' + r.n + '장을 받고, 가득 차 못 든 ' + r.miss + '장은 ' + fmtN(r.refund) + '골드로 돌려받았다' : '부적 ' + r.n + '장을 받았다') : '부적이 가득 차 ' + r.miss + '장 모두 ' + fmtN(r.refund) + '골드로 돌려받았다';
+  if (r.sold) return '가방이 가득 차 그 자리에서 팔았다 (+' + fmtN(r.sold) + '골드)';
+  return r.k === 'leg' || (r.g && r.g.hi) ? '잠근 채로 가방에 넣었다' : '가방에 넣었다';
+}
+function detail(r) {
+  var body = r.k === 'prot' ? '<b>' + esc(DS.ITEMS.prot.name) + ' <i class="own">×' + T().protN + '</i></b><small>' + esc(DS.ITEMS.prot.desc) + '</small>' : (DS.gearHtml ? DS.gearHtml(r.g) : esc(nameOf(r)));
+  return '<div class="bcard k-' + r.k + '"><span class="bcico">' + icoOf(r, 56) + '</span><div class="tx"><p class="bctag">' + esc(tagOf(r)) + '</p>' + body + '<p class="bcnote' + (r.sold || r.refund ? ' warn' : '') + '">' + esc(noteOf(r)) + '</p></div></div>';
+}
+function titleOf(res) {
+  if (res.list.length > 1) return '열 자루를 뽑았다';
+  var k = res.list[0].k; return k === 'leg' ? '전설이 뽑혔다' : k === 'uq' ? '이름 있는 칼이다' : k === 'prot' ? '칼 대신 부적이 나왔다' : '한 자루를 뽑았다';
+}
+function sumLine(res) { var c = { leg: 0, uq: 0, plain: 0, prot: 0 }; res.list.forEach(function (r) { c[r.k]++; }); return KINDS.slice().reverse().filter(function (k) { return c[k]; }).map(function (k) { return '<span class="bcs k-' + k + '">' + DS.BLADES_NAME[k] + ' <b class="num">' + c[k] + '</b></span>'; }).join(''); }
+function resHtml(res, sel) {
+  var s = G.save, n = res.list.length, cost = T().price * n, poor = s.gold < cost, h = '<p class="bctitle">' + esc(titleOf(res)) + '</p>';
+  if (n > 1) {
+    var bi = bestOf(res.list);
+    h += '<p class="bcsum">' + sumLine(res) + '</p><div class="bcgrid">' + res.list.map(function (r, i) {
+      return '<button class="bcc k-' + r.k + (i === bi ? ' best' : '') + (i === sel ? ' on' : '') + (r.sold || r.refund ? ' sold' : '') + '" data-bci="' + i + '" style="--i:' + i + '" aria-label="' + esc(nameOf(r) + ', ' + tagOf(r)) + '">' + icoOf(r, 40) + '<b>' + esc(nameOf(r)) + '</b>' + (i === bi ? '<i class="bcbest">가장 좋은 것</i>' : '') + (r.sold || r.refund ? '<i class="bcsold">' + (r.sold ? '팔림' : '골드') + '</i>' : '') + '</button>';
+    }).join('') + '</div><div class="bcdet" aria-live="polite">' + detail(res.list[sel]) + '</div>';
+  } else h += detail(res.list[0]);
+  h += '<p class="bcleft">전설까지 ' + DS.bladesLeft(s) + '번<i class="esep"></i>남은 골드 ' + fmtN(s.gold) + '</p>';
+  h += '<div class="bcbtns"><button class="btn" data-bcclose>닫기</button><button class="btn gold' + (poor ? ' poor' : '') + '" data-bcagain="' + n + '"' + (poor ? ' disabled aria-disabled="true"' : '') + '><b>다시 뽑기</b><small>' + (poor ? '골드가 모자라다, ' : '') + fmtN(cost) + '골드</small></button></div>';
+  return h;
+}
+// ── 연출 ──
+// 한 자루: 저녁 빛으로 어두워지고 → 손이 자루를 쥐고 땅이 떨리고 → 틈에서 빛이 샌다 (빛깔이 결과. 흰빛에서 보랏빛 · 금빛으로 오를 수 있다 — 결과가 정말 그만큼일 때만)
+//   → 칼이 빠져나와 카드가 된다. 부적은 칼 대신 종이 한 장이 팔랑이며 나온다. 누르면 바로 카드. 움직임 줄이기면 바로 카드 (흔들림 · 번쩍임 없음)
+// 열 자루: 칼이 0.25초마다 한 자루씩 빛을 끌며 솟고 → 열 장의 카드 (가장 좋은 것에 테). 누르면 바로 카드
+function plan(k) {      // 빛이 오르는 길 (결과보다 높은 빛은 절대 보이지 않는다)
+  var r = Math.random();
+  if (k === 'leg') return r < 0.4 ? ['w', 'v', 'g'] : r < 0.8 ? ['v', 'g'] : ['g'];
+  if (k === 'uq') return r < 0.5 ? ['w', 'v'] : ['v'];
+  return ['w'];
+}
+DS.bladesPlan = plan;      // 시험용
+function kOf() { var app = document.getElementById('app') || document.body, r = app.getBoundingClientRect(), land = r.width > r.height; return Math.max(3, Math.min(8, Math.floor(Math.min(r.width - 32, r.height * (land ? 0.62 : 0.44)) / 48))); }
+function show(res, parent, ov) {
+  var many = res.list.length > 1, cm = calm(), k1 = res.list[0].k, timers = [], done = false, born = performance.now(), sel = many ? bestOf(res.list) : 0;
+  var stg = many ? null : plan(k1), kk = kOf();
+  var html = '<div class="bldc ' + (many ? 'n10' : 'n1 r-' + k1) + (cm ? ' calm' : '') + '" style="--k:' + kk + '"><div class="bcsky" aria-hidden="true"></div><div class="bcview"><div class="bcstage" aria-hidden="true">' +
+    '<img class="bcmound" alt="" src="' + moundSrc(true) + '"><i class="bccrack"></i><i class="bcpillar"></i>' +
+    (many ? '<div class="bcfly"></div>' : '<div class="bcslot"><img class="bcblade" alt="" src="' + bladeSrc(k1) + '"></div><img class="bchand" alt="" src="' + handSrc() + '">' + (k1 === 'prot' ? '<img class="bccharm" alt="" src="' + charmSrc() + '">' : '')) +
+    '</div>' + (many ? '<div class="bcrow" aria-hidden="true">' + res.list.map(function (r, i) { return '<i class="k-' + r.k + '" data-bri="' + i + '"></i>'; }).join('') + '</div>' : '') + '</div>' +
+    '<i class="bcflash" aria-hidden="true"></i><p class="bctap">누르면 넘긴다</p><div class="bcres" hidden></div></div>';
+  if (!ov || !ov.isConnected) { ov = U.overlay(html, 'bldov modal'); }
+  else { ov.querySelector('.sheet').innerHTML = html; }
+  var root = ov.querySelector('.bldc'), stage = ov.querySelector('.bcstage'), resEl = ov.querySelector('.bcres');
+  ov._bld = { res: res };
+  function later(f, ms) { timers.push(setTimeout(function () { if (ov.isConnected && !done) f(); }, ms)); }
+  function ph(c) { root.classList.add(c); }
+  function lit(c) { root.style.setProperty('--bc', LIT[c]); root.classList.remove('lw', 'lv', 'lg'); root.classList.add('l' + c); }
+  function flash(strong) { if (cm) return; var f = ov.querySelector('.bcflash'); f.classList.remove('on', 'big'); void f.offsetWidth; f.classList.add('on'); if (strong) f.classList.add('big'); }
+  function reveal() {
+    if (done) return; done = true; timers.forEach(clearTimeout); timers = [];
+    root.classList.add('done', 'reach', 'grip', 'glow', 'pull', 'free'); root.classList.remove('shake');
+    var best = many ? res.list[bestOf(res.list)].k : k1;
+    lit(litOf(best)); if (best === 'leg') root.classList.add('pil');
+    ov.querySelectorAll('.bcrow i').forEach(function (e) { e.classList.add('on'); });
+    resEl.innerHTML = resHtml(res, sel); resEl.hidden = false; if (U.hydrate) U.hydrate(resEl);
+    var rr = root.getBoundingClientRect(); root.style.setProperty('--k', Math.max(2, Math.floor(kOf() * (rr.width > rr.height ? 1 : many ? 0.42 : 0.62))));
+    snd(best === 'leg' ? 'legend' : best === 'uq' ? 'rare' : best === 'prot' ? 'ward' : 'star');
+    if (best === 'leg') { duck(8, 2200); if (!cm && U.haptic) try { U.haptic([40, 60, 90]); } catch (x) {} }
+    var ag = ov.querySelector('[data-bcagain]'); if (ag && !ag.disabled) { ag.disabled = true; setTimeout(function () { if (ag.isConnected && G.save.gold >= T().price * res.list.length) ag.disabled = false; }, cm ? 0 : 450); }
+  }
+  ov._bld.reveal = reveal;
+  if (cm) { reveal(); }
+  else if (!many) {
+    ph('in'); snd('swoosh');
+    later(function () { ph('reach'); }, 250);
+    later(function () { ph('grip'); ph('shake'); snd('heart'); }, 760);
+    var t = 900;
+    stg.forEach(function (c, i) {
+      later(function () { ph('glow'); lit(c); snd(i === 0 ? (c === 'g' ? 'swell' : 'ready') : c === 'g' ? 'swell' : 'magic'); if (i) flash(false); if (c === 'g') ph('pil'); }, t + i * 450);
+    });
+    t += stg.length * 450 + 150;
+    if (k1 === 'prot') {
+      later(function () { ph('tug'); snd('quakeHit'); }, t);
+      later(function () { root.classList.remove('shake'); ph('charm'); snd('flip'); setTimeout(function () { snd('wind'); }, 120); }, t + 350);
+      later(reveal, t + 1250);
+    } else {
+      later(function () { ph('pull'); snd(k1 === 'leg' ? 'sword' : 'slash'); }, t);
+      later(function () { root.classList.remove('shake'); ph('free'); flash(k1 === 'leg'); if (k1 === 'leg') duck(6, 1400); }, t + 380);
+      later(reveal, t + 900);
+    }
+  } else {
+    ph('in'); ph('many'); snd('swoosh');
+    var fly = ov.querySelector('.bcfly'), spots = [[13, 22], [19, 10], [34, 20], [42, 26], [9, 33], [25, 24], [30, 30], [16, 28], [38, 24], [22, 30]];
+    res.list.forEach(function (r, i) {
+      later(function () {
+        var sp = spots[i % spots.length], e = document.createElement('img'); e.className = 'bcfb k-' + r.k; e.alt = ''; e.src = bladeSrc(r.k);
+        e.style.left = 'calc(' + (sp[0] - 3) + 'px * var(--k))'; e.style.top = 'calc(' + sp[1] + 'px * var(--k))'; e.style.setProperty('--c', LIT[litOf(r.k)]);
+        fly.appendChild(e); setTimeout(function () { if (e.parentNode) e.parentNode.removeChild(e); }, 900);
+        var ch = ov.querySelector('.bcrow [data-bri="' + i + '"]'); if (ch) ch.classList.add('on');
+        lit(litOf(r.k)); ph('glow');
+        snd(r.k === 'leg' ? 'pullHi' : r.k === 'uq' ? 'star' : r.k === 'prot' ? 'flip' : 'slash');
+        if (r.k === 'leg') { flash(true); root.classList.remove('jolt'); void root.offsetWidth; root.classList.add('jolt'); }
+      }, 600 + i * 250);
+    });
+    later(reveal, 600 + res.list.length * 250 + 450);
+  }
+  ov.onclose = function () { done = true; timers.forEach(clearTimeout); if (parent && parent.isConnected && parent.draw) parent.draw(); };
+  if (!ov._bldWired) {
+    ov._bldWired = true;
+    ov.addEventListener('click', function (e) {
+      var B0 = ov._bld; if (!B0) return;
+      if (e.target.closest('[data-bcclose]')) { snd('close'); ov.close(); return; }
+      var ag = e.target.closest('[data-bcagain]'); if (ag) { if (ag.disabled) return; snd('tap'); pull(+ag.dataset.bcagain, parent, ov); return; }
+      var c = e.target.closest('[data-bci]');
+      if (c) { var i = +c.dataset.bci, det = ov.querySelector('.bcdet'); snd('tap'); ov.querySelectorAll('.bcc.on').forEach(function (x) { x.classList.remove('on'); }); c.classList.add('on'); if (det) { det.innerHTML = detail(B0.res.list[i]); if (U.hydrate) U.hydrate(det); } return; }
+      if (!ov.querySelector('.bldc.done') && performance.now() - (ov._bldBorn || 0) > 300 && B0.reveal) { snd('tap'); B0.reveal(); }
+    });
+  }
+  ov._bldBorn = born;
+  return ov;
+}
+DS.bladesShow = show;      // 시험용: DS.bladesShow({ list: [...] })
+DS.bladesSkip = function () { var ov = document.querySelector('.ov.bldov'); if (ov && ov._bld && ov._bld.reveal) ov._bld.reveal(); };      // 시험용 · 누른 것과 같다
 })();
 
 // 열 개의 깃발 — web 판(Firebase Hosting) 전용 온라인 백엔드: Google·카카오·네이버 로그인(Firebase Auth) + Firestore.
