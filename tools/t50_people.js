@@ -538,6 +538,7 @@ module.exports = async (page, shot, L) => {
   }
   // ⑫ v12 저장 판 올림 (2.1.2 규칙으로 만든 저장 — tools/mkv12.js)
   const raw = fs.readFileSync(path.join(__dirname, 'fixtures', 'v12.json'), 'utf8');
+  const DS_SAVE_V = await ev(() => DS.SAVE_V);      // 2.7.1: v12 → v13 → v14 (판 번호만)
   c = await ev((raw) => {
     var old = JSON.parse(raw), fol = old.mercs.filter(function (m) { return m.o && !m.h; }).length, bar = old.mercs.filter(function (m) { return !m.o; }).length, g0 = old.gold;
     var s = DS.Save.read(raw), R = DS.lastMig13 || {};
@@ -545,7 +546,7 @@ module.exports = async (page, shot, L) => {
     return { v: s.v, fol: fol, bar: bar, R: R, gold: s.gold - g0, news: (s.news || []).join(' / '), noFree: noFree, n0: old.mercs.length, n1: s.mercs.length, barr: DS.barracks(s).length, kin: DS.mercsOf(s, s.hero).length, fight: DS.partySpecs(s).length,
       one: DS.barracks(s).filter(function (m) { return !(m.nc || m.cast) || Object.keys(DS.CLASSES).filter(function (k) { return !DS.CLASSES[k].master && DS.sbFits({ cls: k }, m); }).length !== 1; }).map(function (m) { return m.type + '>' + m.nc; }) };
   }, raw);
-  A(c.v === 13 && c.R.sb > 0 && c.R.left === 0 && c.gold === 0, 'v12 → v13: 가솔 ' + c.fol + ' + 막사 ' + c.bar + ' → 막사 ' + c.R.sb + ' (지금 ' + c.barr + '), 가문원 ' + c.R.kin + ', 떠남 0, 골드 0');
+  A(c.v === DS_SAVE_V && c.R.sb > 0 && c.R.left === 0 && c.gold === 0, 'v12 → v' + DS_SAVE_V + ': 가솔 ' + c.fol + ' + 막사 ' + c.bar + ' → 막사 ' + c.R.sb + ' (지금 ' + c.barr + '), 가문원 ' + c.R.kin + ', 떠남 0, 골드 0');
   A(c.n1 >= c.n0 && c.noFree, 'nobody leaves (' + c.n0 + ' → ' + c.n1 + ' rows), every non-가주 non-kin row is in the 막사');
   A(!c.one.length, 'every 막사 person has exactly one class (nc) after migration' + (c.one.length ? ': ' + c.one.join(' ') : ''));
   A(/한 사람 한 사람/.test(c.news) && /모두 막사에서 기다린다/.test(c.news), 'migration news line');
@@ -554,7 +555,7 @@ module.exports = async (page, shot, L) => {
   await page.reload(); await page.waitForSelector('#btnCont', { timeout: 30000 });
   await page.click('#btnCont'); await L.sleep(1500); await L.skipStory(page); await L.closeAll(page);
   c = await ev(() => { var s = DS.G.save; return { v: s.v, units: DS.G.sim.units.filter(u => u.side === 'ally' && !u.dead).length, fight: DS.partySpecs(s).length }; });
-  A(c.v === 13 && c.units === c.fight && c.units > 3, 'migrated save boots and everyone fights (' + c.units + ')');
+  A(c.v === DS_SAVE_V && c.units === c.fight && c.units > 3, 'migrated save boots and everyone fights (' + c.units + ')');
   await shot('migrated_town');
   await ev(() => DS.openMenu('party')); await L.sleep(500); await shot('migrated_party');
   A((await L.badText(page, '.ov')).length === 0, 'migrated 부대 tab has no NaN/undefined');

@@ -452,6 +452,7 @@ DS.charSheetOpen = function (id) { return charSheet(id); };      // 2.2.0: 위 �
 // ───────── 사람 한 줄 · 사람 창 · 영웅관(모집) ─────────
 function gcol(g) { return DS.GRADES[g].col; }
 function mercSpr(m, px) { var pl = null; if (DS.personLook) { try { pl = DS.personLook(m, G.save); } catch (x) { pl = null; } } if (pl) return sprTag(pl[0], pl[1], (px || 2) * pl[2]); var M = DS.MERCS[m.type]; return M.big ? sprTag(M.sprite, M.pal, (px || 2) * 0.75) : sprTag(m.type + '_' + m.g + '_' + (m.v || 0), '', px || 2); }      // 2.6.0: 사람의 모습은 병과와 단을 따른다 (DS.personLook — 가주 = 가문 병과 · 막사 = 받은 병과 · 가문원 = 따르는 종류)
+U.mercSpr = mercSpr;      // 2.7.1: 스무 해의 평화 연출 (endgame.js)
 function mercById(id) { return G.save.mercs.filter(function (x) { return x.id === id; })[0] || null; }
 // 특성의 효과 한 마디 (좁은 칸용)
 var TR_SHORT = { brave: '위기에 공격 +20%', medic: '물러나면 회복', survivor: '쓰러질 때 한 번 버팀' };
@@ -2121,7 +2122,7 @@ function tabHelp() {
       '<b>등급</b>은 타고난 그릇이다. 모집하거나 태어날 때 정해지고 바뀌지 않는다. 등급이 높은 사람이 가주가 되면 가문이 더 강해진다. 맹주 자리는 희귀 밑으로 치지 않는다. 등급이 높을수록 경험치도 빨리 쌓인다.' +      // r45 표 · r44 숫자
         '<table class="htab"><thead><tr><th>등급</th><th>가문원</th><th>가주일 때</th><th>성장</th></tr></thead><tbody>' + DS.GRADES.slice(1).map(function (q, i) { var pc = DS.potMul ? Math.round((DS.potMul({ pot: i + 1 }) - 1) * 100) : 0; return '<tr><th style="color:' + q.col + '">' + q.name + '</th><td class="num">×' + q.mul.toFixed(2) + '</td><td class="num">×' + DS.BN.gmul[i + 1].toFixed(2) + '</td><td class="num">' + (pc > 0 ? '+' : pc < 0 ? '−' : '±') + Math.abs(pc) + '%</td></tr>'; }).join('') + '</tbody></table>',
       '<b>단과 레벨</b>은 사람마다 따로다. 싸우면 경험치를 얻어 오르고, 10레벨마다 단이 오른다. 단이 오를 때마다 기질에 맞는 능력치가 하나씩 더 오른다. 합일하지 않은 사람은 7단 Lv10에서 멈춘다.',
-      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 가주(맹주 가문은 가문원도)가 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 가문 목록과 위쪽 초상은 맹주 다음에 공훈 계급, 합류 차례로 선다.' +
+      '<b>가문 공훈</b>은 가문의 레벨이다. 그 가문의 가주가 싸우고 이길수록 가문에 쌓이고, 계급이 오르면 가주(맹주 가문은 가문원도)가 강해진다. 공훈은 대를 넘어 쌓이고 스무 해가 흘러도 그대로다. 사람의 레벨은 스무 해의 평화 동안 모두 1단 Lv1로 돌아간다. 가문 목록과 위쪽 초상은 맹주 다음에 공훈 계급, 합류 차례로 선다.' +
         '<table class="htab"><thead><tr><th>계급</th><th>공훈</th><th>가주</th><th>가문원</th></tr></thead><tbody>' + DS.HVET.map(function (q, i) { return '<tr><th>' + DS.hName(i) + '</th><td class="num">' + q.at + '</td><td class="num">+' + q.pct + '%</td><td class="num">×' + q.mul.toFixed(2) + '</td></tr>'; }).join('') + '</tbody></table>',
       '가문에서 태어난 아이는 등급이 높을수록 경험치가 빨리 쌓인다. 희귀가 보통이고 일반은 30% 느리고 전설은 30% 빠르다.',
       '<b>대물림</b>: 맹주가 바뀌면 다음 맹주는 선대와의 레벨 차이 가운데 일부를 잇는다. 공훈 계급이 높을수록 많이 잇는다.' + '<table class="htab"><thead><tr><th>누가</th><th>신참</th><th>' + esc(DS.hName(DS.HVET.length - 1)) + '</th></tr></thead><tbody>' + [['맹주의 핏줄', 'kid'], ['맹주의 양자', 'adopt']].map(function (r) { var H = DS.HEIR[r[1]]; return '<tr><th>' + r[0] + '</th><td class="num">' + Math.round(H[0] * 100) + '%</td><td class="num">' + Math.round(H[1] * 100) + '%</td></tr>'; }).join('') + '</tbody></table>' + '<small>다른 가문의 가주를 맹주로 세우면 그 사람 가문의 계급으로 양자 몫을 잇는다. 막사에서 저절로 이은 이는 제 레벨 그대로다.</small>',
@@ -2169,6 +2170,7 @@ function tabHelp() {
       '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
       '8단 위의 가주가 쓰러지면 그대로 떠난다. 영웅 모집권 10장을 남긴다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다.',
       '합일의 대표 가문은 그 세대 동안 이름 앞에 <b>大</b>가 붙는다. 大 가문의 가주는 합일하지 않아도 7단 Lv10 뒤에 8단으로 자란다. 8단 가주를 잃어도 다음 가주가 다시 8단에 오를 수 있다.',
+      '<b>합일의 힘은 한 세대만</b> 간다. 다음 세대의 장을 열고 스무 해가 지나면 8단 위의 가주도 1단 Lv1로 돌아가고 大도 걷힌다. 늘어난 수명은 그대로다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
@@ -3619,7 +3621,7 @@ function renderTitle() {
     (!s && !nv && brokenSave() ? '<p class="welcome warnbox"><b>저장을 읽지 못했습니다.</b> 깨진 저장은 지우지 않고 따로 두었습니다. 새로 시작하면 새로 저장합니다.</p>' : '') +
     (r && !s ? '<p class="welcome"><b>회귀자로 맞이합니다.</b> 예전 기록에 따라 특전을 드립니다. 진행은 처음부터입니다.</p>' : '') +
     (s ? '<button class="btn gold wide" id="btnCont">이어하기 <small>' + esc(s.name) + ', ' + DS.ZONES[s.zone].name + '</small></button>' : '') +
-    (!nv && arch ? '<p class="welcome arch"><b>새 판이 열렸다. 이전 기록은 보관되었다.</b> ' + esc(DS.VERSION) + ' 은 처음부터 시작합니다. 옛 저장은 지우지 않고 이 기기에 그대로 두지만, 이어 하거나 사람을 데려오지는 않습니다.</p>' : '') +
+    (!nv && arch ? '<p class="welcome arch"><b>새 판이 열렸다. 이전 기록은 보관되었다.</b> ' + esc(DS.VERSION) + ' 은 처음부터 시작합니다. 세대를 넘을 때의 규칙이 바뀌어 모두 새로 출발합니다. 옛 저장은 지우지 않고 이 기기에 그대로 두지만, 이어 하지는 않습니다.</p>' : '') +
     (nv ? '' : '<button class="btn wide' + (s || oldEra() ? '' : ' gold') + '" id="btnNew">' + (r && !s ? '회귀자로 새로 시작' : oldEra() ? '새 맹주로 시작' : '새로 시작') + '</button>') +
     '<div class="tver"><button id="btnNotes" class="lnk">공지사항<i class="dot"' + (fresh ? '' : ' hidden') + '></i></button><span class="num">v' + DS.VERSION + '</span></div>' +
     '<p class="title-note">저장은 이 브라우저에 남습니다.</p></div>';

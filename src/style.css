@@ -5694,3 +5694,33 @@ html body #app#app .row.ppl.pgrid .pl > * { flex: 0 0 auto; }
 html body #app#app .row.ppl.pgrid .pl > span.phn { flex: 0 1000 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }      /* 가문 이름이 먼저 줄어든다 — 단 이름은 끝까지 */
 html body #app#app .row.ppl.pgrid .pl .ptn { flex: 0 0 auto; white-space: nowrap; font-size: 11px; margin: 0 4px 0 3px; }      /* 단 이름은 줄이지 않는다 — 넘치면 뒤의 문장 · 가문 이름이 잘린다 */
 html body #app#app .pplv .pph, html body #app#app .row.ppl.pgrid { grid-template-columns: 44px minmax(0, 1fr) 42px 30px 66px; column-gap: 7px; }      /* 2.6.4: 단 이름 자리 (이름 칸 +15px) */
+
+/* 2.7.1 스무 해의 평화 */
+.ov.peaceov .sheet { background: none; }
+.result.peace { position: relative; overflow: hidden; text-align: center; padding-top: 22px; background: linear-gradient(180deg, #0d1124 0%, #1a1f3a 45%, #3a2f45 80%, #6b4a3e 100%); animation: pzSky 6s ease-out both; }
+.result.peace > *:not(.pz-sky) { position: relative; z-index: 1; }
+.result.peace .pz-sky { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 120%, rgba(255, 196, 120, .55), transparent 60%); opacity: 0; animation: pzDawn 6s ease-out .4s both; }
+.result.peace .pz-sun { position: absolute; left: 50%; bottom: -46px; width: 92px; height: 92px; margin-left: -46px; border-radius: 50%; background: radial-gradient(circle, #fff1c8 0 40%, #ffc978 41% 70%, transparent 71%); transform: translateY(40px); animation: pzSun 6s ease-out .6s both; }
+.result.peace .eyebrow { color: #cdb98f; letter-spacing: .3em; }
+.result.peace h2 { color: #f4e6c4; }
+.result.peace .pz-l p { margin: 6px 0; color: #e8dcc2; opacity: 0; animation: pzIn .9s ease-out var(--d) both; }
+.result.peace .pz-r { list-style: none; margin: 14px 0 6px; padding: 0; display: grid; gap: 6px; }
+.result.peace .pz-r li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; column-gap: 10px; text-align: left; padding: 6px 10px; border-radius: 6px; background: rgba(10, 8, 20, .45); opacity: 0; animation: pzIn .6s ease-out var(--d) both; }
+.result.peace .pz-f { grid-row: 1 / 3; width: 36px; height: 36px; display: grid; place-items: center; overflow: hidden; }
+.result.peace .pz-r b { color: #f4e6c4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.result.peace .pz-lv { font-variant-numeric: tabular-nums; color: #ffd27a; font-weight: 700; transition: color .4s; }
+.result.peace .pz-lv.one { color: #a9b4c8; }
+.result.peace .pz-fz { grid-column: 2 / 4; color: #c9a8f0; font-size: var(--fs-s); }
+.result.peace .pz-more, .result.peace .pz-keep { opacity: 0; animation: pzIn .8s ease-out var(--d) both; color: #e8dcc2; }
+.result.peace .pz-keep { margin: 12px 0 10px; color: #f4e6c4; }
+.result.peace .pz-go:disabled { opacity: .45; }
+.ov.peaceov.calm .result.peace, .ov.peaceov.calm .result.peace * { animation: none !important; opacity: 1 !important; }
+.ov.peaceov.calm .pz-sky { opacity: 1 !important; } .ov.peaceov.calm .pz-sun { transform: none !important; }
+@keyframes pzIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pzDawn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pzSun { from { transform: translateY(60px); } to { transform: translateY(0); } }
+@keyframes pzSky { from { filter: brightness(.7); } to { filter: none; } }
+@media (prefers-reduced-motion: reduce) { .result.peace, .result.peace * { animation: none !important; opacity: 1 !important; } }
+.result.peace .pz-r { width: 100%; max-width: 320px; margin: 14px auto 6px; }
+.result.peace .pz-sun { opacity: .7; bottom: -70px; }
+@media (orientation: landscape) and (max-height: 560px) { .result.peace .pz-sun { display: none; } .result.peace .pz-r { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 560px; } }

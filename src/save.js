@@ -10,8 +10,13 @@ DS.spdOf = function (v) { v = +v || 1; return v >= 1.75 ? 2 : v >= 1.25 ? 1.5 : 
 //   v9 이하를 v10 으로 옮기는 판 올림은 하지 않는다 (MIGRATE 2~8 은 남아 있지만 read/peek 이 v10 미만을 받지 않는다).
 // r42 (2.0.0 「새 시대」): 사람마다 단·레벨, 가문 공훈 — 다시 모두 새로 시작한다. 새 키 tenbanners_v3 에 v11 만 쓰고 읽는다.
 //   옛 저장(tenbanners_v2 · tenbanners_v1 과 그 _bak, 클라우드 saves2 · saves 문서)은 지우지도 바꾸지도 않는다 — 처음 한 번 「새 시대가 열렸다」 안내만.
-var KEY = 'tenbanners_v4', OLD = 'tenbanners_v3', OLD1 = 'tenbanners_v2', META = 'tenbanners_meta', LEGACY = 'darksaver_muta_v1';
-DS.SAVE_V = 13;      // 2.2.0 「한 사람 한 사람」: v12 → v13 판 올림 (가솔·막사가 없어졌다 — MIGRATE[12]). 키·클라우드 문서(tenbanners_v4 · saves4)는 그대로
+// 2.7.1 (「스무 해의 평화」): 세대를 넘을 때 모두 1레벨로 돌아가는 규칙과 함께 다시 모두 새로 시작한다. 새 키 tenbanners_v5 · 저장 v14.
+//   옛 저장(tenbanners_v4 · tenbanners_v3)은 지우지 않고 보관만 한다. 클라우드 문서(saves4)의 v13 저장은 「옛 판」으로 안내만 하고(DS.SAVE_ERA), 새로 시작한 저장을 올리면 그 문서를 덮는다.
+//   read() 는 v12 · v13 을 여전히 옮길 수 있다 (시험의 옛 저장 · 판 올림 길) — 이어 하지 않게 막는 것은 키(load) · isOld(클라우드 · 이사 코드)다.
+var KEY = 'tenbanners_v5', OLD = 'tenbanners_v4', OLD1 = 'tenbanners_v3', META = 'tenbanners_meta', LEGACY = 'darksaver_muta_v1';
+DS.SAVE_V = 14;      // 2.7.1: v13 → v14 (구조는 같다 — 「새로 시작」의 표). 아래 줄은 옛 설명
+DS.SAVE_ERA = 14;    // 2.7.1: 이어 할 수 있는 가장 옛 「시대」 — 이보다 옛 저장은 클라우드 · 이사 코드에서 옛 판으로 안내만 한다
+//      // 2.2.0 「한 사람 한 사람」: v12 → v13 판 올림 (가솔·막사가 없어졌다 — MIGRATE[12]). 키·클라우드 문서(tenbanners_v4 · saves4)는 그대로
 // 2.2.3 끝없는 갱도: s.pitBest = 깬 가장 깊은 층(0 = 아직) · s.pitCur = 마지막으로 들어간 층 · s.pit = 열린 다음 층(옛 칸, pitBest + 1) · s.pitV = 2 (새 셈).
 //   옛 저장(10층까지, 층마다 적 레벨 +6)은 깬 가장 깊은 층의 적 레벨로 옮긴다: 옛 9층(적 Lv90)을 깼으면 새 24층(적 Lv89)까지 깬 것으로. 처음 돌파 보상(lootPit)도 같은 층까지 받은 것으로 친다
 function pitFix(s) {
@@ -129,6 +134,9 @@ var MIGRATE = {
   12: function (s) {   // 2.1.x → 2.2.0 「한 사람 한 사람」: 가솔·막사가 없어졌다
     DS.mig13(s);
     s.v = 13;
+  },
+  13: function (s) {   // 2.7.1: 구조는 같다 — 판 번호만 (이어 하지 않게 막는 것은 키와 DS.SAVE_ERA)
+    s.v = 14;
   }
 };
 // 2.2.0 판 올림: 가주는 그대로 · 맹주 집 사람(핏줄 아이·배우자·물러난 선대)은 맹주 가문의 가문원 · 옛 가솔과 막사의 사람은 모두 막사로 (떠나는 이도 돌려받는 골드도 없다)
@@ -335,9 +343,9 @@ DS.Save = {
   },
   oldRaw: function () { return get(OLD) || get(OLD + '_bak') || get(OLD1) || get(OLD1 + '_bak'); },      // 옛 판의 저장 (읽기 전용 — r42: 안내만 한다)
   archived: function () { return !!this.oldRaw(); },      // r42: 이 기기에 보관된 옛 기록이 있는가
-  archNote: function () { var m = this.meta(); if (m.arch4 || !this.archived()) return false; return true; },      // 2.1.0: 새 판 — 2.0.0 의 안내를 본 이도 한 번 더 (arch4)      // 처음 한 번 「새 시대가 열렸다」
-  archSeen: function () { this.setMeta({ arch3: 1, arch4: 1 }); },
-  isOld: function (raw) { var s = typeof raw === 'string' ? parse(raw) : raw; return !!(s && typeof s === 'object' && s.chars && !newerOf(s) && verOf(s) < DS.SAVE_MIN); },
+  archNote: function () { var m = this.meta(); if (m.arch5 || !this.archived()) return false; return true; },      // 2.7.1: 다시 새 판 — 한 번 더 (arch5)      // 2.1.0: 새 판 — 2.0.0 의 안내를 본 이도 한 번 더 (arch4)      // 처음 한 번 「새 시대가 열렸다」
+  archSeen: function () { this.setMeta({ arch3: 1, arch4: 1, arch5: 1 }); },
+  isOld: function (raw) { var s = typeof raw === 'string' ? parse(raw) : raw; return !!(s && typeof s === 'object' && s.chars && !newerOf(s) && verOf(s) < (DS.SAVE_ERA || DS.SAVE_MIN)); },      // 2.7.1: SAVE_ERA
   // 저장 글을 읽어 지금 구조로 만든다. 살릴 수 없으면 null (넘어질 수도 있다 — load 가 받는다).
   read: function (raw) {
     var s = parse(raw);

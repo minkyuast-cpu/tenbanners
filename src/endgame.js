@@ -1,13 +1,13 @@
 // 열 개의 깃발 — 맺음 뒤: 「다음 세대의 장」 (설계서 r7/endgame_spec.md · 3.3.0 r9/nextgen/SPEC.md)
 // 30번 맺음 뒤 원할 때 장을 열면 스무 해가 한 해씩 흐르고(스무 해 창), 그 끝 새벽에 관의 한 사람을 열다섯 살로 다시 부른다.
-// 그다음 1번부터 30번까지 같은 길을 다시 걷는다. 적의 세기 하나만 바뀌고, 가문·후계·관·장비는 이미 있는 그대로 이어진다.
+// 그다음 1번부터 30번까지 같은 길을 다시 걷는다. 가문·후계·관·장비·공훈은 이어지고, 사람의 레벨은 스무 해의 평화 동안 모두 1로 돌아간다 (2.7.1 DS.egPeace). 적은 본편의 레벨에 대마다 세기 배율이 붙는다.
 // 저장: save.eg = { gen, on, c, t0, hist, intro, seed, call, pass?, roll } (DS.egFix 가 채움, SAVE_V 그대로)
 //   위쪽은 순수 함수(화면과 봇 tools/campaign.js 가 같은 것을 부른다). 「── 화면」 아래는 브라우저에서만.
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
 
-DS.EG = { years: 20, L0: 70, step: 0.06, cap: 1.3, last: 30, P: [0, 85, 70, 55, 40, 25], fresh: 30, freshCap: 90, salt: 9173, gold: 0.5, scnGold: 0.6 };      // r12 경제: gold — 장이 진행 중일 때 처치 골드 배율(들판·장 시나리오) · scnGold — 장 시나리오 보상 골드 배율(다시 깸 35% 위에)      // years: 스무 해 · P: 돌아올 등급별 가망(일반 85 … 전설 25) · fresh: 지난 새벽 뒤 떠난 이의 덧셈(최대 freshCap)
+DS.EG = { years: 20, L0: 70, step: 0.35, cap: 2.0, last: 30, P: [0, 85, 70, 55, 40, 25], fresh: 30, freshCap: 90, salt: 9173, gold: 0.5, scnGold: 0.6 };      // r12 경제: gold — 장이 진행 중일 때 처치 골드 배율(들판·장 시나리오) · scnGold — 장 시나리오 보상 골드 배율(다시 깸 35% 위에)      // years: 스무 해 · P: 돌아올 등급별 가망(일반 85 … 전설 25) · fresh: 지난 새벽 뒤 떠난 이의 덧셈(최대 freshCap)
 // 장의 글은 lore.js(DS.LORE.gen)에 있다. 여기는 거기 없는 것만: 막의 첫 줄(act) · 쓰러진 곳(fell). {a} 이름  (2.4.1: 늘 가려져 쓰이지 않던 옛 intro · close 기본 글은 걷었다)
 DS.EG_TXT = {
   // r24: 막의 첫 판(1·11·21번)에만, 대수에 따라 돌아가며 — 처음 오는 길인데 낯익다 (같은 줄이 열 판 내내 되풀이되지 않게)
@@ -173,7 +173,7 @@ DS.egScn = function (n, g, save) {
   var s = {}, k; for (k in b) s[k] = b[k];
   var C = DS.EG, last = DS.SCENARIOS.length;
   s.gen = g; s.base = b;
-  s.L = Math.min(100, Math.max(b.L, C.L0 + Math.round((100 - 1 - C.L0) * (n - 1) / Math.max(1, last - 1))));
+  s.L = b.L;      // 2.7.1: 스무 해의 평화 뒤에는 모두 1레벨에서 다시 시작한다 (DS.egPeace) — 적도 본편의 레벨 그대로, 세기 배율(diff)만 대마다 오른다. 예전: 1번이 L70 부터
   s.diff = (b.diff || 1) * Math.min(C.cap, 1 + C.step * (g - 1));
   var act = n <= 10 ? 1 : n <= 20 ? 2 : 3, ia = txt('act'), al = ia && ia[act], at = al instanceof Array ? al[Math.max(0, g - 2) % al.length] : al, intro = [n === (act - 1) * 10 + 1 ? fill(at || '', {}) : ''].filter(Boolean), fe = save ? fellAt(save, b.name) : null, who = '';
   if (fe) { try { who = nm(save, fe.a); } catch (x) { who = ''; } }      // 3.3.0: 기억 줄과 같은 이름(제 이름)으로
@@ -466,6 +466,32 @@ DS.egCallForce = function (s, pid, ok) {
   return doCall(s, i, !!ok);
 };
 DS.egSkip = function (s) { var e = E(s); if (e.call && e.call.g === e.gen && e.call.used === 0) e.call.used = 2; return true; };
+// 2.7.1 스무 해의 평화: 칼을 놓은 스무 해 동안 모두 싸우는 법을 잊는다 — 창이 닫힐 때 살아 있는 모든 사람이 1레벨(1단 Lv1)로 돌아간다.
+//   합일의 힘은 한 세대만: 8단 위(합일 · 大 가문)도 1레벨로, 합일 표(fz) · 大 표(dx · ch.dae)는 걷힌다 (합일로 늘어난 수명 · 가계도의 합일 기록은 그대로).
+//   단마다 받은 성장(pgn)도 처음부터 — 다시 단이 오르면 같은 성장을 다시 받는다 (기질에서 정해진다). 장비 · 공훈 · 가호 · 관 · 혈통은 그대로 이어진다.
+//   돌려주는 것: 화면이 보여 줄 줄 [{ k: 'c' | 'm', id, name, cls, L0 (잊기 전 레벨), fz (합일했었나) }] — 가주 · 맹주가 먼저, 레벨이 높은 순
+DS.egPeace = function (s) {
+  if (!s || !s.chars) return [];
+  var out = [], seen = [], P = LP(s);
+  function drop(who, row) {
+    if (!who || seen.indexOf(who) >= 0) return; seen.push(who);
+    var L0 = DS.pL(who), fz = !!who.fz;
+    if (row) out.push({ k: row.k, id: row.id, name: row.name, cls: row.cls, L0: L0, fz: fz, head: !!row.head });
+    who.L = 1; who.exp = 0; delete who.fz; delete who.dx; who.pgn = 0; if (DS.pgOf) who.pg = DS.pgOf(who);
+    if (who.pid && P[who.pid] && P[who.pid].L != null) P[who.pid].L = 1;
+  }
+  DS.charList(s).forEach(function (ch) {
+    var hero = ch.id === +s.hero, b = hero ? (ch.vac ? null : ch.ps) : (DS.bearer ? DS.bearer(s, ch, 1) : null);
+    delete ch.dae;
+    var nmx = ''; try { nmx = hero ? DS.charName(ch, s) : (b && (b.ttl || b.n)) || ''; } catch (x) { nmx = ''; }
+    if (b) drop(b, { k: hero ? 'c' : 'm', id: hero ? ch.id : b.id, name: nmx, cls: ch.cls, head: true });
+    ch.L = 1; ch.exp = 0; ch.Ls = 1; if (ch.pid && P[ch.pid] && P[ch.pid].L != null) P[ch.pid].L = 1;
+  });
+  (s.mercs || []).forEach(function (m) { drop(m, DS.pL(m) > 1 ? { k: 'm', id: m.id, name: m.ttl || m.n || '', cls: m.o && s.chars[m.o] ? s.chars[m.o].cls : (DS.pNative ? DS.pNative(s, m) : ''), head: false } : null); });
+  if (DS.pSync) DS.pSync(s);
+  if (DS.mercTidy) DS.mercTidy(s);
+  return out.sort(function (a, b) { return (b.head ? 1 : 0) - (a.head ? 1 : 0) || b.L0 - a.L0; });
+};
 DS.egClose = function (s) {
   var e = E(s), ps = e.pass; if (!ps) return null;
   if (ps.f !== 'call' && ps.f !== 'hand') return null;
@@ -476,6 +502,7 @@ DS.egClose = function (s) {
   e.roll.push(r);
   delete e.pass;
   if (DS.linPrune) DS.linPrune(s);
+  r.peace = DS.egPeace(s);      // 2.7.1: 스무 해의 평화 — 모두 1레벨로 (화면은 r.peace 를 연출로)
   return r;
 };
 // 봇·시험용: 창 전체를 정책대로 치른다. pol = { heir:'first', keep:'heavy'|'light'|'none', hand:true, call:'heavy'|'light'|'gold'|'none' }
@@ -590,6 +617,38 @@ function sv() { return G.save; }
 function hms(t) { t = Math.floor(t || 0); var h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60); return (h ? h + '시간 ' : '') + m + '분'; }
 DS.egUiTrace = [];
 function trace(k, x) { DS.egUiTrace.push({ k: k, x: x || '', t: Math.round(performance.now()) }); if (DS.egUiTrace.length > 400) DS.egUiTrace.shift(); }
+// 2.7.1 스무 해의 평화 연출: 밤하늘이 새벽으로 밝아 오는 동안 세 줄이 떠오르고, 가주들의 단이 하나씩 1단 Lv1 로 내려앉는다. 합일했던 이는 「합일의 힘이 흩어졌다」. 끝에 이어지는 것 한 줄과 단추 하나
+DS.PEACE_TXT = {
+  eye: '스무 해의 평화', title: '칼을 놓은 스무 해',
+  lines: ['싸움 없는 스무 해가 흘렀다.', '싸움을 모르는 아이들이 자랐고, 어른들은 칼 쥐는 법을 잊었다.', '손이 먼저 잊었다. 몸이 따라 잊었다.'],
+  fz: '합일의 힘이 흩어졌다', more: '그리고 {n}명 더',
+  keep: '모두 1단 Lv1에서 다시 시작한다. 장비와 공훈, 가호, 관은 그대로다.', go: '다시 칼을 든다',
+  cH: '평화', cL: ['싸움 없는 스무 해가 지나면', '모두 1단 Lv1에서 다시 시작한다.', '합일의 힘도 흩어진다. 장비와 공훈, 가호는 남는다.']
+};
+DS.egPeaceShow = function (s, rows, done) {
+  var T = DS.PEACE_TXT, calm = !!(DS.calmFx && DS.calmFx()), show = rows.filter(function (r) { return r.head; }).slice(0, 6), rest = rows.length - show.length;
+  var lv = function (L) { return DS.tierOfL(L) + '단 Lv' + DS.lvOfL(L); };
+  var face = function (r) { var sp = ''; try { if (r.k === 'c' && s.chars[r.id]) sp = U.charSpr(s.chars[r.id], 2); else { var m = (s.mercs || []).filter(function (x) { return x.id === r.id; })[0]; if (m && U.mercSpr) sp = U.mercSpr(m, 2); } } catch (x) { sp = ''; } return sp; };
+  var h = '<div class="result peace"><div class="pz-sky" aria-hidden="true"><i class="pz-sun"></i></div><p class="eyebrow">' + esc(T.eye) + '</p><h2>' + esc(T.title) + '</h2>' +
+    '<div class="pz-l">' + T.lines.map(function (t, i) { return '<p style="--d:' + (0.5 + i * 0.9).toFixed(2) + 's">' + esc(t) + '</p>'; }).join('') + '</div><ul class="pz-r">' +
+    show.map(function (r, i) { return '<li style="--d:' + (3.0 + i * 0.3).toFixed(2) + 's">' + '<span class="pz-f">' + face(r) + '</span><b>' + esc(r.name) + '</b><span class="pz-lv" data-l0="' + r.L0 + '">' + lv(r.L0) + '</span>' + (r.fz ? '<small class="pz-fz">' + esc(T.fz) + '</small>' : '') + '</li>'; }).join('') + '</ul>' +
+    (rest > 0 ? '<p class="pz-more" style="--d:' + (3.2 + show.length * 0.3).toFixed(2) + 's">' + esc(T.more.replace('{n}', rest)) + '</p>' : '') +
+    '<p class="pz-keep" style="--d:' + (3.5 + show.length * 0.3).toFixed(2) + 's">' + esc(T.keep) + '</p><button class="btn gold wide pz-go" data-pzgo="1">' + esc(T.go) + '</button></div>';
+  var o = U.overlay(h, 'peaceov modal' + (calm ? ' calm' : '')), t0 = performance.now(), raf = 0, end = 3.0 + show.length * 0.3 + 1.3;
+  if (U.hydrate) U.hydrate(o);
+  var els = [].slice.call(o.querySelectorAll('.pz-lv'));
+  function tick() {      // 단이 하나씩 내려앉는다: 줄이 떠오른 뒤 0.8초 동안 레벨이 1 까지 센다 (조용한 연출이면 바로 1)
+    var t = (performance.now() - t0) / 1000;
+    els.forEach(function (el, i) { var st = 3.0 + i * 0.3 + 0.3, k = calm ? 1 : Math.max(0, Math.min(1, (t - st) / 0.8)), L0 = +el.dataset.l0, L = Math.max(1, Math.round(L0 - (L0 - 1) * k));
+      if (el.dataset.now !== String(L)) { el.dataset.now = String(L); el.textContent = lv(L); if (L === 1) { el.classList.add('one'); if (!calm && DS.ui.A) DS.ui.A('tap'); } } });
+    if (!calm && t < end && o.isConnected) raf = requestAnimationFrame(tick);
+  }
+  tick();
+  o.querySelector('.pz-go').disabled = !calm; if (!calm) setTimeout(function () { var b = o.isConnected && o.querySelector('.pz-go'); if (b) b.disabled = false; }, end * 1000);
+  o.addEventListener('click', function (e) { if (!e.target.closest('[data-pzgo]') || e.target.closest('[data-pzgo]').disabled) return; cancelAnimationFrame(raf); if (DS.ui.A) DS.ui.A('ok'); o.close(); });
+  o.onclose = function () { cancelAnimationFrame(raf); if (done) done(); };
+  return o;
+};
 // 부대 탭 맨 위 한 줄 (ui.js tabParty)
 DS.egPartyRow = function (s) {
   s = s || sv(); if (!DS.egOn(s)) return '';
@@ -666,6 +725,7 @@ function confirmHtml(S) {
   if (F.leave.length > 3) lv += fill(txt('confirm.leave.more'), { k: numN(F.leave.length - 3) });
   h += sec(DS.egT1('confirm.leaveH'), F.leave.length ? [lv] : T('confirm.leave.none', {}));
   if (F.grow.length) h += sec(DS.egT1('confirm.growH'), [F.grow.map(function (x) { return x.name; }).join(', ')]);
+  h += sec(DS.PEACE_TXT.cH, DS.PEACE_TXT.cL);      // 2.7.1: 스무 해의 평화 — 모두 1레벨로
   return '<div class="result egcard egconf"><p class="eyebrow">' + esc(DS.egT1('confirm.eyebrow', { n: g })) + '</p><h2>' + esc(DS.egT1('confirm.title')) + '</h2>' + P_(DS.egT1('confirm.lead')) + h + P_(DS.egT1('confirm.tail'), 'dim') +
     '<button class="btn gold wide" id="egYes">' + esc(DS.egT1('confirm.yes')) + '</button><button class="btn wide" data-close>' + esc(DS.egT1('confirm.no')) + '</button></div>';
 }
@@ -800,7 +860,8 @@ DS.egPassOpen = function (S) {
     clearTimeout(tm);
     var r = DS.egClose(S); persist(); trace('close', 'pass');
     o.close();
-    if (DS.enterZone) DS.enterZone(S.town, null, null);
+    var go = function () { if (DS.enterZone) DS.enterZone(S.town, null, null); };
+    if (r && r.peace && r.peace.length && DS.egPeaceShow) DS.egPeaceShow(S, r.peace, go); else go();      // 2.7.1: 스무 해의 평화 연출
     return r;
   }
   o.draw = function () { if (e.pass && e.pass.f === 'call') callFace(); };      // 막사 내보내기 창이 닫힌 뒤 ([data-fire])

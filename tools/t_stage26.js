@@ -131,7 +131,7 @@ module.exports = async function (page, shot, L, X) {
   // ── 저장: 먼저 간 이가 있는 26번 저장(tools/fixtures/v225.json)을 29번까지 올린다 ──
   const raw = fs.readFileSync(path.join(__dirname, 'fixtures', 'v225.json'), 'utf8');
   const loadLate = async () => {
-    await ev((raw) => { DS.ui.closeAll(); DS.G.running = false; DS.G.save = null; try { localStorage.clear(); } catch (e) {} localStorage.setItem('tenbanners_v4', raw); }, raw);      // 떠날 때의 저장이 덮어쓰지 않게 판을 먼저 내려놓는다
+    await ev((raw) => { DS.ui.closeAll(); DS.G.running = false; DS.G.save = null; try { localStorage.clear(); } catch (e) {} localStorage.setItem(DS.Save.KEY, raw); }, raw);      // 떠날 때의 저장이 덮어쓰지 않게 판을 먼저 내려놓는다
     await page.reload(); await page.waitForSelector('#btnCont', { timeout: 30000 }); await sleep(600);
     await ev(() => document.querySelector('#btnCont').click()); await sleep(1500);
     await ev(() => { DS.G.quiet = true; }); await L.skipStory(page); await ev(() => DS.ui.closeAll()); await sleep(300);
