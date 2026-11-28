@@ -7,6 +7,7 @@
 //     요약의 lapses: [{ lost 잃은 시나리오 수, top, h 끊긴 때(시간), back 그 번호까지 되찾는 데 든 시간, forced }] · 저절로 끊긴 대도 같은 칸에 (forced 0)
 //   BOTSAVE=파일 BOTSAVEAT=15: 그 시나리오를 깬 판을 저장 글(JSON)로 쓰고 끝낸다 (화면 시험용 중반 저장)
 //   BOTNOKEEP=1 (2.6.0): 뒤를 이은 이에게 선대가 입던 것을 먼저 입히지 않는다 — 출전 셋이 가방에서 먼저 고르던 첫 판 (비교용: 대를 이은 가문이 남은 것만 입어 다시 합일하는 긴 판이 잦았다)
+//   2.8: gen2=1 이면 다음 세대의 장 앞에서 마지막 물결을 치른다 (DS.standRun · 요약의 g2.stand = { w 막은 물결, r 닿은 물결, b 보스, p 평화의 해, t 엔진 초, allies }). BOTNOSTAND=1 이면 예전처럼 스무 해
 //   끝에 한 줄 요약과 「BOT {json}」 (hours · cleared · wipes · deaths · vacancies · recruits …).
 //
 // 정책 (사람이 하듯이, 단순하게):
@@ -408,6 +409,11 @@ const main = { hours: +((st.simT + st.over) / 3600).toFixed(2), cleared: Object.
 let g2 = null;
 if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 창을 정책대로 치르고(DS.egRunAuto) 2대째 1~30번
   tidy();
+  let sr = null;      // 2.8 마지막 물결: 다음 세대의 장을 열기 전에, 모두 함께 끝없는 물결을 막는다 (같은 엔진 · 모두 자동). 막은 물결 = 평화의 해 = 스무 해 창의 길이
+  if (D.standRun && !process.env.BOTNOSTAND) {
+    sr = D.standRun(s, { seed: (rnd() * 1e6 | 0) + 1 });
+    D.standClose(s, sr); st.simT += sr.t; s.time = (s.time || 0) + sr.t; D.ageAdvance(s, sr.t); check('stand');
+  }
   const e0 = D.egStart(s);
   if (e0) {
     st.wake = (s.fzWake || []).slice();      // 2.2.9: 세대가 바뀌어 깨어난 가문
@@ -415,7 +421,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
     const w0 = st.wipes, d0 = st.deaths, h0 = (st.simT + st.over) / 3600;
     const g2r = campaign(n => D.egScn(n, s.eg.gen, s), n => !!(s.eg && s.eg.c && s.eg.c[n]), 'g2.');
     if (g2r === 'lapse') { st.g2lapse = 1; st.restart = 0; campaign(n => D.scn(n), n => !!s.cleared[n], ''); st.restart = 0; }      // 2.3.2: 장 안에서 대가 끊기면 장이 닫힌다 — 본편 1~30 을 다시
-    g2 = { gen: s.eg.gen, pass: r, cleared: Object.keys((s.eg && s.eg.c) || {}).length, hours: +((st.simT + st.over) / 3600 - h0).toFixed(2), wipes: st.wipes - w0, deaths: st.deaths - d0, units: D.partySpecs(s).length };
+    g2 = { gen: s.eg.gen, stand: sr ? { w: sr.w, r: sr.r, b: sr.b, k: sr.k, p: sr.p, t: sr.t, allies: sr.allies, last: sr.last } : null, peace: (s.eg.hist.filter(h => h.g === 1)[0] || {}).p || null, pass: r, cleared: Object.keys((s.eg && s.eg.c) || {}).length, hours: +((st.simT + st.over) / 3600 - h0).toFixed(2), wipes: st.wipes - w0, deaths: st.deaths - d0, units: D.partySpecs(s).length };
   }
 }
 const H = (st.simT + st.over) / 3600;
@@ -425,5 +431,6 @@ const out = { cls, seed, main, g2, hours: +H.toFixed(2), choices: st.choices || 
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
 console.log(`${cls} seed${seed}: ${out.cleared}/30 in ${out.hours}h, wipes ${out.wipes}, deaths ${out.deaths} (hero ${out.heroDeaths}, bearer ${out.bearDeaths}, kin ${out.kinDeaths}), recruits ${out.recruits}, kin sent ${out.kinSent}, vacancies max ${out.vacMax}/avg ${out.vacAvg}`);
+if (g2) console.log(`gen2: last stand ${g2.stand ? g2.stand.w + ' waves (reached ' + g2.stand.r + ', bosses ' + g2.stand.b + ', ' + g2.stand.allies + ' fought, ' + g2.stand.t + 's)' : 'skipped'}, peace ${g2.pass.years} years, ${g2.cleared}/30 in ${g2.hours}h, wipes ${g2.wipes}, deaths ${g2.deaths}`);
 console.log('BOT ' + JSON.stringify(out));
 module.exports = { s, st, out };

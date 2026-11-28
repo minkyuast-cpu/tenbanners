@@ -366,7 +366,7 @@ function upload(manual) {
   if (O.upBusy || !canWrite()) return Promise.resolve(false);
   if (O.cloud && !O.cloud.old && +O.cloud.v > (+DS.SAVE_V || 0)) { if (manual) toast(DS.NEWER_MSG, 4200); return Promise.resolve(false); }      // 클라우드에 더 새 판의 저장이 있으면 옛 판이 덮어쓰지 않는다
   var raw = localRaw(), s = G().save;
-  if (s && DS.onlineCanUpload && !DS.onlineCanUpload(s)) { if (manual) toast((DS.LORE && DS.LORE.gen && DS.LORE.gen.up) || '스무 해 창을 닫은 뒤에 올릴 수 있다.', 3600); return Promise.resolve(false); }      // 3.3.0: 스무 해 창 동안은 올리지 않는다
+  if (s && DS.onlineCanUpload && !DS.onlineCanUpload(s)) { if (manual) toast((DS.LORE && DS.LORE.gen && DS.LORE.gen.up) || '평화의 창을 닫은 뒤에 올릴 수 있다.', 3600); return Promise.resolve(false); }      // 3.3.0: 스무 해 창 동안은 올리지 않는다
   if (!raw) { if (manual) toast('올릴 저장이 없습니다'); return Promise.resolve(false); }
   if (bytes(raw) > (BE.maxDoc || MAXDOC)) { O.cloudErr = 'big'; redraw(); if (manual) toast('저장이 너무 커서 올리지 못했습니다'); return Promise.resolve(false); }
   var sm = null; try { sm = summary(s || JSON.parse(raw)); } catch (e) {}

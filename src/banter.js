@@ -12,7 +12,7 @@ DS.BANTER = { gap: 1.7, life: 2.6, hold: 5 };      // 보스의 말 뒤 맹주�
 function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
 // 이 싸움에 한마디가 있는가 (순수): sim 은 시나리오 싸움, sc 는 그 시나리오
 DS.banterOk = function (sim, sc) {
-  var T = DS.BANTER_TXT; if (!T || !sim || !sc || sim.mode !== 'scn' || sc.pit || sc.gen) return false;
+  var T = DS.BANTER_TXT; if (!T || !sim || !sc || sim.mode !== 'scn' || sc.pit || sc.gen || sc.stand) return false;
   return !!((sc.boss && T.boss) || (T.wave && own(T.wave, sc.id)));
 };
 DS.banterArm = function (sim, sc) { return { id: sc.id, said: {}, q: [], log: [] }; };

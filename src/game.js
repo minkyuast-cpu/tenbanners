@@ -551,6 +551,7 @@ function enterZone(id, from, pos) {
   else if (z.town && DS.ageCheck && DS.linSettle) {      // 나이: 마을에 들어서면 쉬는 때 — 성년·노년·천수
     var aq = []; try { aq = DS.ageCheck(s, z.name).concat(DS.ageSettle ? DS.ageSettle(s, z.name) : []); } catch (x) { if (DS.DEBUG) throw x; }      // 자연사만 확정 (싸움 밖에서 down 인 지휘관은 정상 플레이에선 생기지 않는다 — 시험의 유령을 건드리지 않게)
     if (aq.length) { G.lineageQ = (G.lineageQ || []).concat(aq); setTimeout(function () { if (G.zone === z && !G.scn && G.sim && !G.sim.combat) lineageFlush(function () { rebuildParty(); persist(); }); }, 900); }
+    if (DS.standLateGo && DS.standLate && DS.standLate(s)) setTimeout(function go() { if (G.zone !== z || G.scn) return; if (G.hold > 0 || document.querySelector('.ov')) { setTimeout(go, 800); return; } DS.standLateGo(s); }, 1400);      // 2.8: 마지막 물결을 치르다 꺼진 판 — 그때까지 막은 물결로 끝났다. 결과를 보이고 창을 연다
     if (DS.egLateNote && DS.egCallOpen && DS.egCallOpen(s) && s.eg.call.late && !s.eg.call.seen) setTimeout(function go() { if (G.zone !== z || G.scn) return; if (G.hold > 0) { setTimeout(go, 800); return; } DS.egLateNote(s); }, 1600);      // 3.3.0: 3.2.x 의 진행 중 장 — 밀린 새벽 알림 (한 번)
   }
   persist();
@@ -587,6 +588,103 @@ function startScenario(s) {
 }
 var BEAT_MS = 1200;
 DS.startScenario = startScenario;
+// ───────── 2.8 마지막 물결 (stand.js): 다음 세대로 넘기기 전 어스름의 문 앞에서 끝없는 물결을 막는다 ─────────
+//   G.scn 은 이 싸움의 표(시나리오가 아니다 · stand: 1) — 시나리오 중에 막히는 마을 일 · 지도 · 편성이 그대로 막힌다. G.stand = { std, ids, t0, fin, ... }
+//   쓰러진 이는 그 싸움에서만 빠진다: 쓰러짐 · 보상 · 공훈 · 가계의 죽음 처리를 모두 건너뛴다 (standEv 가 사건을 먼저 받는다). 끝나면 DS.standFinale (stand.js) 가 결과 · 맺음 · 창을 잇는다
+var STD_SCN = { id: 0, stand: 1, name: '마지막 물결', boss: null, mobs: [], L: 1, theme: 'nether', tier: 0, reward: {} };
+function startStand(seed, cb) {
+  var sv = G.save;
+  syncVitals(); closeAll();
+  if (DS.stageClear) DS.stageClear(true);
+  G.ret = { zone: sv.town, pos: null }; G.keepRet = null;
+  var B = DS.standBuild(sv, { seed: seed }), sim = B.sim;
+  G.sim = sim; G.scn = STD_SCN; G.aim = null; G.bossId = null; G.pendPoi = null; G.ending = false; G.gain = { exp: 0, gold: 0, loot: [] }; G.wasCombat = false; G.lost = [];
+  G.goal = null; G.bcast = null; G.pendCamp = null; G.scnSaid = false; G.stats = { kills: {}, dmg: {} }; G.dangerOn = false; G.bearLost = []; G.er = null; erBandOff();
+  G.stand = { std: B.std, ids: [], t0: performance.now(), fin: 0, cb: cb || null, n0: B.specs.length, falls: 0 };
+  var cvS = $('#cv'); if (cvS) cvS.classList.remove('defeat');
+  sim.units.forEach(function (u) {
+    if (u.side !== 'ally') return;
+    if (u.role === 'cmd') { var ch = sv.chars[u.ch]; u.auto = !(ch && ch.manual); if (ch) setStance(u, ch.st); if (u.ch !== sv.hero) u.mn = B.std.names[u.id] || u.name || ''; G.stand.ids.push(u.ch); }
+    else if (u.role === 'merc') u.mn = B.std.names[u.id] || u.name || '';
+  });
+  sim.hunt = !!sv.opt.hunt; if (sim.hunt) sim.cmds().forEach(function (c) { c.auto = true; });
+  G.sel = 'c' + sv.hero; if (!sim.byId[G.sel]) G.sel = sim.leader; sim.leader = G.sel;
+  G.view.setScene(sim, { rows: DS.STAND_MAP, theme: 'nether', seed: 30 });
+  if (DS.standView) DS.standView(G.view, B.std);
+  select(G.sel); renderChips(); renderActs(); updateQuest(); renderSys();
+  $('#zName').textContent = '어스름의 문'; $('#zSub').textContent = DS.STAND_TXT ? DS.STAND_TXT.sub : '마지막 물결'; if (DS.hudCal) try { DS.hudCal(); } catch (x) {}
+  $('#boss').hidden = true; layoutInsets();
+  G.mournOn = false; DS.Audio.bgm('battle');
+  bannerSoon(DS.STAND_TXT ? DS.STAND_TXT.title : '마지막 물결', DS.STAND_TXT ? DS.STAND_TXT.ban : '', 2600);
+  persist();
+}
+DS.standScene = startStand;
+function standEv(e) {      // 돌려주는 것: 이 사건을 여기서 다 다뤘는가 (그러면 원래 손은 건너뛴다)
+  var S = G.stand, sim = G.sim, sv = G.save, T = DS.STAND_TXT || {}, u;
+  switch (e.t) {
+    case 'die':
+      u = G.view.vu[e.id] && G.view.vu[e.id].u; if (!u) u = sim.byId[e.id];
+      if (!u) return true;
+      if (u.side === 'enemy') {
+        if (u.role === 'boss' && e.id === G.bossId && !e.flee) { var lw = bossQuote(u, 'last'); if (lw) { bossSay(lw); G.bossHold = performance.now() + 2200; } }
+        if (e.by && !e.flee && Math.random() < 0.25) bark(sim.byId[e.by], 'kill');
+        return true;
+      }
+      if (u.side === 'ally' && (u.role === 'cmd' || u.role === 'merc') && !e.flee) {
+        S.falls++;
+        var nm = S.std.names[u.id] || u.mn || u.name || '', word = DS.standFallWord ? DS.standFallWord(sv, u, nm, S.falls) : '';
+        if (word && G.view) G.view.float(u.x, u.y, '「' + word + '」', '#e8e0d0', { dy: -22, life: 2.6, delay: 0.2 });
+        if (G.view && G.view.standFall) G.view.standFall(u);
+        A('mourn'); barkDown(u);
+        var left = S.std.allies(sim).length;
+        if (left > 0) toast(josa(nm, '이가') + ' 쓰러졌다. ' + (T.fallT || '이 싸움에서만 빠진다') + (left <= 3 ? '. 남은 이 ' + left + '명' : ''), 2600);
+        if (u.id === G.sel) { var nx = sim.cmds()[0]; if (nx) select(nx.id); }
+        updateQuest(); return true;
+      }
+      return true;
+    case 'reward': return true;
+    case 'lose': case 'win': return true;
+    case 'stdWave':
+      if (DS.standOnWave) DS.standOnWave(sv, S.std, e);
+      vban('wave', DS.standWaveTitle ? DS.standWaveTitle(e.n) : '물결 ' + e.n, DS.standWaveLine ? DS.standWaveLine(e.n, e) : '', calm() ? 1300 : 1700); A('warn');
+      if (e.n >= 6 && !calm()) setTimeout(function () { A('heart'); }, 500);
+      if (e.n === 4) DS.Audio.bgm('boss');
+      updateQuest(); return true;
+    case 'stdBoss':
+      u = sim.byId[e.id]; if (!u) return true;
+      if (e.k === 0 || !G.bossId) { showBoss(u); if (e.big) bigCine(u, sim); }
+      if (G.view) G.view.float(u.x + ((u.fw || 1) - 1) / 2, u.y, u.name, '#ff8a9a', { dy: -26, life: 2.2, delay: 0.3 + e.k * 0.35 });
+      return true;
+    case 'stdClear':
+      DS.standNote(sv, S.std); if (DS.standMetaSet) DS.standMetaSet(sv, S.std, 1); persist();
+      if (G.view) { var me = sim.byId[G.sel]; if (me) G.view.float(me.x, me.y, (T.clearF || '물결을 막았다') + ' ' + e.w, '#f6cf57', { dy: -30, life: 1.8 }); }
+      A('ok'); updateQuest(); return true;
+    case 'stdRest':
+      setInfo(T.rest || '숨을 고른다', Math.round(e.dur * 1000)); if (DS.Audio.duck) DS.Audio.duck(6, Math.round(e.dur * 900));
+      return true;
+    case 'stdPress': toast(T.press || '다음 물결이 밀려온다', 2400); return true;
+    case 'stdFall': return true;
+    case 'stdEnd':
+      DS.standNote(sv, S.std); if (!S.fin) { S.fin = performance.now(); dangerOff(); if (DS.standFinale) DS.standFinale(sv, S.std, standLeave); updateQuest(); }
+      return true;
+  }
+  return false;
+}
+// 마지막 물결을 떠난다: 체력은 가득 (싸움에서만 빠졌다) · 장면을 걷고 마을로 (창은 enterZone 이 연다)
+function standLeave() {
+  var sv = G.save; if (!sv) return;
+  DS.charList(sv).forEach(function (c) { if (c.hp != null) c.hp = 1; c.mp = 1; }); (sv.mercs || []).forEach(function (m) { m.hp = 1; }); if (sv.chars[sv.hero] && sv.chars[sv.hero].ps) sv.chars[sv.hero].ps.hp = 1;
+  G.stand = null; G.scn = null; G.ending = false; G.sim = null; G.bossId = null;
+  if (G.view && DS.standView) DS.standView(G.view, null);
+  var cvD = $('#cv'); if (cvD) cvD.classList.remove('defeat');
+  enterZone(sv.town, null, churchPos(sv.town));
+}
+DS.standLeave = standLeave;
+function standQuit() {      // 목표 줄을 누르면: 칼을 내려놓을까 (지금까지 막은 물결로 끝난다)
+  var S = G.stand, T = DS.STAND_TXT || {}; if (!S || S.fin) return;
+  var o = overlay('<div class="result"><h2>' + esc(T.quitH || '칼을 내려놓을까?') + '</h2><p>' + esc((T.quitP || '지금까지 막은 물결 {w}번이 이 대의 기록이 된다. 다시 싸울 수 없다.').replace('{w}', S.std.w)) + '</p><button class="btn red wide" id="stdQuit">' + esc(T.quitY || '내려놓는다') + '</button><button class="btn wide" data-close>' + esc(T.quitN || '더 싸운다') + '</button></div>', 'modal center');
+  $('#stdQuit', o).addEventListener('click', function () { o.close(); if (!G.stand || G.stand.fin) return; G.stand.std.end(G.sim, null); onEvents(G.sim.drain()); });
+}
 // 2.2.3 갱도 결과 창의 「다음 층 · 같은 층 다시 · 다시 도전」: 들판으로 나가지 않고 곧장 그 층으로 (돌아갈 자리 G.ret 는 처음 들어온 그대로).
 //   진 뒤에는 남은 사람이 있어야 한다 (가문들은 막사에서 잇는다 · 맹주는 의식에서 정한다). 싸울 이가 없거나 층이 잠겼으면 예전처럼 교회 · 들판으로
 function pitChain(lost) {
@@ -929,9 +1027,9 @@ function chipNameW(t) { var w = 0; Array.from(String(t || '')).forEach(function 
 function renderChips() {
   var box = $('#chips'), sv = G.save, sim = G.sim; box.innerHTML = ''; G.chipEls = {};
   if (DS.partyOrder) sv.party = DS.partyOrder(sv, sv.party);      // 2.2.3: 맹주 → 다른 가문(부대 탭 격자 차례). 덧붙여진 낡은 차례를 바로잡는다
-  var n = sv.party.filter(function (id) { return sv.chars[id]; }).length;
+  var n = (G.stand ? G.stand.ids : sv.party).filter(function (id) { return sv.chars[id]; }).length;
   box.classList.toggle('swipe', n > 3); chipSwipe(box);      // 2.2.2: 넷부터는 2.1.2 의 큰 칩 그대로 한 줄 — 390 폭에 셋, 옆으로 밀어 본다 (작은 칩은 뺐다)
-  sv.party.forEach(function (id) {
+  (G.stand ? G.stand.ids : sv.party).forEach(function (id) {      // 2.8 마지막 물결: 싸우는 모든 가문
     var ch = sv.chars[id]; if (!ch) return;
     var uid = 'c' + id, u = sim && sim.byId[uid];
     var nm = DS.charName(ch);      // 클래스명은 길다 — 이름은 한 줄을 통째로 쓰고, 단·레벨은 얼굴 아래에 둔다
@@ -1406,7 +1504,9 @@ function updateQuest() {
   var sv = G.save, el = $('#quest'), z = G.zone, n = DS.nextScn(sv), text = '', guide = null, hero = sv.chars[sv.hero];
   var huntN = 0, retreat = false, menu = null, slots = 0, dest = null, mc = DS.charList(sv).filter(function (c) { return DS.CLASSES[c.cls].master; }).length;
   var hb = huntCur(sv); huntN = hb ? 0 : bountyOpen(sv);
-  if (G.scn) { text = G.scn.boss ? '목표: ' + DS.BOSSES[G.scn.boss].name + ' 격파' : '목표: 습격을 모두 막아라'; retreat = true; }
+  var quit = false;
+  if (G.stand) { text = DS.standQuest ? DS.standQuest(G.stand.std) : '마지막 물결'; quit = !G.stand.fin; }      // 2.8: 물러날 수 없다 (누르면 칼을 내려놓을지 묻는다)
+  else if (G.scn) { text = G.scn.boss ? '목표: ' + DS.BOSSES[G.scn.boss].name + ' 격파' : '목표: 습격을 모두 막아라'; retreat = true; }
   else if (hb) {      // 부대 탭 「현상 수배」에서 고른 것: 그 지역까지 길 안내, 닿으면 진행도
     if (z.id !== hb.zone) { text = '수배: ' + hb.title + ', ' + (hb.zoneName || DS.ZONES[hb.zone].name) + ' 쪽'; guide = wayTo(z, hb.zone, function () { return false; }); dest = { zone: hb.zone }; }
     else {
@@ -1447,10 +1547,11 @@ function updateQuest() {
   }
   if (menu === 'party' && huntN) text += ', 수배 ' + huntN;      // 합일 준비 구간: 걸려 있는 현상 수배가 있으면 덧붙인다 (누르면 부대 탭 맨 위가 게시판)
   var wp = guide && dest ? warpPlan(dest) : null;      // r4 map: 목적지 쪽에 가 본 지역이 있으면 걷지 않고 바로 (단추 글도 「바로 가기」)
-  var qh = '<i class="qm" aria-hidden="true">' + (retreat ? icon('skull', 13) : '<i>!</i>') + '</i><span>' + esc(text) + '</span>' + (retreat ? '<b>퇴각' + icon('chev', 12) + '</b>' : wp ? '<b>바로 가기' + icon('chev', 12) + '</b>' : guide ? '<b>길 안내' + icon('chev', 12) + '</b>' : menu ? '<b>부대' + icon('chev', 12) + '</b>' : '');      // r26 art: 금빛 마름모 표식 + 리본 + 오른쪽 알약 단추
+  var qh = '<i class="qm" aria-hidden="true">' + (retreat ? icon('skull', 13) : '<i>!</i>') + '</i><span>' + esc(text) + '</span>' + (retreat ? '<b>퇴각' + icon('chev', 12) + '</b>' : quit ? '<b>' + esc((DS.STAND_TXT && DS.STAND_TXT.quitB) || '내려놓기') + icon('chev', 12) + '</b>' : wp ? '<b>바로 가기' + icon('chev', 12) + '</b>' : guide ? '<b>길 안내' + icon('chev', 12) + '</b>' : menu ? '<b>부대' + icon('chev', 12) + '</b>' : '');      // r26 art: 금빛 마름모 표식 + 리본 + 오른쪽 알약 단추
   if (el._qt !== text) { el._qt = text; el.innerHTML = qh; if (!calm()) { el.classList.remove('qnew'); void el.offsetWidth; el.classList.add('qnew'); } } else if (el.innerHTML !== qh) el.innerHTML = qh;
-  el._guide = guide || null; el._retreat = retreat; el._menu = menu; el._dest = guide ? dest : null;
+  el._guide = guide || null; el._retreat = retreat; el._quit = quit; el._menu = menu; el._dest = guide ? dest : null;
   el.classList.toggle('retreat', !!retreat);      // r4 polish: 퇴각 단추는 붉게 구분 (style.css)
+  el.classList.toggle('stdq', !!G.stand);
   G.view.guide = guide ? { x: guide.x, y: guide.t === 'gate' || guide.t === 'dungeon' ? guide.y - 1 : guide.y } : null;
 }
 DS.updateQuest = updateQuest;
@@ -1490,6 +1591,7 @@ function bannerSoon(title, sub, ms) { G.pendBan = [title, sub, ms]; G.banAt = pe
 function questGo(e) {
   if (e !== 'warp' && e !== 'cont' && performance.now() - (G.warpAt || 0) < 700) return;      // r4 map: 바로 이동 직후의 두 번째 탭은 먹는다 (입구 창이 두 번 뜨지 않게)
   var q = $('#quest');
+  if (G.stand) { if (q._quit && !G.ending) { A('tap'); standQuit(); } return; }      // 2.8 마지막 물결
   if (q._retreat && G.scn && !G.ending) {
     // r8 hud: 줄 전체가 아니라 「퇴각 ▸」 칩만 단추다 (위쪽 적을 누르다 퇴각 창이 뜨던 것)
     var qb = $('b', q), qr = qb && e && e.detail !== 0 && e.clientX != null ? qb.getBoundingClientRect() : null;
@@ -1734,6 +1836,7 @@ function onEvents(evs) {
   for (i = 0; i < evs.length; i++) {
     e = evs[i];
     try {      // r30: 사건 하나의 오류가 같은 프레임의 나머지 사건(승리·패배·죽음)을 삼키지 않게
+    if (G.stand && standEv(e)) continue;      // 2.8 마지막 물결: 쓰러짐 · 보상 · 끝은 그 싸움의 손이 먼저
     switch (e.t) {
       case 'reward':
         sv.gold += Math.round(e.gold * DS.BAL.gold); sv.kills++; G.gain.exp += e.exp; G.gain.gold += e.gold;
@@ -2363,7 +2466,8 @@ function loop1(now) {
   }
   if (sim) {
     var slw = G.view && G.view.slowMul ? G.view.slowMul() : 1;      // r16 fx: 죽음 연출 동안 잠깐 느리게 (실제 시간으로 짧게)
-    var spdM = sim._er ? (slw < 1 ? 1 : DS.ERASE.slow) : DS.spdOf(G.save.opt.speed);      // r36: 1 · 1.5 · 2 · r30: 죽음 슬로우와 지우기 슬로우는 겹치지 않는다 (더 느린 하나만)      // r17 boss: 이름 지우기 예고 동안은 배속과 상관없이 실제 시간보다 조금 느리게
+    var spdM = sim._er ? (slw < 1 ? 1 : DS.ERASE.slow) : DS.spdOf(G.save.opt.speed);
+    if (G.stand && G.stand.fin) spdM = Math.min(spdM, calm() ? 0.5 : 0.25);      // 2.8: 마지막 사람이 쓰러진 뒤 잠깐, 세상이 느려진다      // r36: 1 · 1.5 · 2 · r30: 죽음 슬로우와 지우기 슬로우는 겹치지 않는다 (더 느린 하나만)      // r17 boss: 이름 지우기 예고 동안은 배속과 상관없이 실제 시간보다 조금 느리게
     if (DS.Joy) { try { DS.Joy.tick(); } catch (x) { loopErr(x, 'joy'); } }      // r40: 조이스틱이 쥔 걸음을 한 칸 앞씩 고친다
     if (!G.pause && G.hold === 0 && !G.ending && !(G.scn && (G.beatArm || now < (G.beatT || 0)))) { try { sim.update(dt * slw * spdM); } catch (x) { loopErr(x, 'sim'); } if (DS.ageAdvance) DS.ageAdvance(G.save, dt * slw * DS.spdOf(G.save.opt.speed)); }      // 나이: 세계 달력은 게임 속 시간(배속 포함)으로 흐른다
     else if (G.ending && sim.result) sim.acc = 0;

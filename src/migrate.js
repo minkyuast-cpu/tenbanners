@@ -379,7 +379,7 @@ M.open = function () {
 };
 function passOn(s) { return !!(s && s.eg && s.eg.pass) || !!(DS.egPassOn && G().save && DS.egPassOn(G().save)); }      // 3.3.0: 스무 해 창 동안은 이사 코드를 만들지 않는다
 function build(q, body, raw, from, s) {
-  if (passOn(s)) { body.innerHTML = '<p>' + esc((DS.LORE && DS.LORE.gen && DS.LORE.gen.up) || '스무 해 창을 닫은 뒤에 올릴 수 있다.') + '</p>'; return; }
+  if (passOn(s)) { body.innerHTML = '<p>' + esc((DS.LORE && DS.LORE.gen && DS.LORE.gen.up) || '평화의 창을 닫은 뒤에 올릴 수 있다.') + '</p>'; return; }
   var sm = sumOf(s);
   body.innerHTML = '<p class="dim">이사 코드를 만드는 중…</p>';
   M.encode(raw, { o: from, sum: sm ? { name: sm.name, cls: sm.cls, tier: sm.tier, cleared: sm.cleared } : null }).then(function (code) {
