@@ -155,10 +155,8 @@ DS.egMemText = memLines;
 // ── 4.0 돌아온 어스름의 왕 (30번 맺음의 탈출 뒤) — 대마다 30번 도입 끝에, 이 대에 떠난 우리 사람의 이름을 쥐고 문 앞에 앉아 있다 ──
 // 글은 lore.js gen.king (벌은 대수로 돌아가며). 이름 = 이 장을 연 뒤(스무 해 + 이 장의 싸움) 떠난 이, 장을 닫는 낭독(egCloseLines)과 같은 셈. 먼동의 말은 3대째까지, 그 뒤는 대장이 잇는다.
 var SPK = { '옛 맹주 먼동': 'elder_mundong', '옛 대장 먼동': 'elder_mundong', '어스름의 왕': 'duskking' };
-function erNames(s, g) { var r = s && s.erLast; return r && r.g === g - 1 && r.names && r.names.length ? r.names.slice() : []; }      // r24: 지난 대 30번에서 왕이 쥐고 간 이름
 function goneNames(s, g) {
   var e = E(s), P = LP(s), t0 = e.t0 || 0, seen = {}, out = [];
-  if (g) erNames(s, g).forEach(function (n) { if (!seen['n:' + n]) { seen['n:' + n] = 1; out.push(n); } });      // r24: 그 이름부터 (30번 「지워진 이름」 → 「이어지는 빚」)
   ((s.lin && s.lin.log) || []).forEach(function (ev) { if (ev && ev.t === 'death' && (ev.tm || 0) >= t0 && P[ev.a] && !seen[ev.a]) { seen[ev.a] = 1; var n = nm(s, ev.a); if (!seen['n:' + n]) { seen['n:' + n] = 1; out.push(n); } } });
   return out;
 }
@@ -170,11 +168,11 @@ function flatSpk(out, hn) {      // 이야기 창 한 줄씩 — 말에는 초�
 }
 DS.egKingLines = function (s, g) {
   if (!s || !s.lin || !(g > 1)) return [];
-  var ers = erNames(s, g), names = goneNames(s, g), hn = headNm(s), v = { a: names[0] || '', e: ers[0] || '', list: names.slice(0, 6).join(', '), h: hn, n: g, yw: DS.standYW ? DS.standYW(DS.egYearsNow(s)) : '스무 해' }, r = g - 2, old = g <= 3, out = [];
+  var names = goneNames(s, g), hn = headNm(s), v = { a: names[0] || '', list: names.slice(0, 6).join(', '), h: hn, n: g, yw: DS.standYW ? DS.standYW(DS.egYearsNow(s)) : '스무 해' }, r = g - 2, old = g <= 3, out = [];
   out = out.concat(lines('king.shade', v, r));
   if (old) out = out.concat(lines('king.shadeDawn', v, r));
   out = out.concat(lines('king.come', v, r));
-  if (names.length) out = out.concat(lines('king.hold', v), ers.length && txt('king.er') ? lines('king.er', v) : lines('king.say', v, r + (names.length % 2)), g === 2 ? lines('king.first', v) : [], lines(old ? 'king.dawn' : 'king.head', v, r));
+  if (names.length) out = out.concat(lines('king.hold', v), lines('king.say', v, r + (names.length % 2)), g === 2 ? lines('king.first', v) : [], lines(old ? 'king.dawn' : 'king.head', v, r));
   else out = out.concat(lines('king.empty', v), lines('king.emptySay', v), lines(old ? 'king.dawnEmpty' : 'king.headEmpty', v));
   return flatSpk(out, hn);
 };
@@ -569,10 +567,7 @@ DS.egCloseLines = function (g, s) {
   if (rl0 && DS.standWW) out = out.concat(lines(rl0.sw > 0 ? 'close.peace' : 'close.peace0', { yw: DS.standYW(rl0.y || DS.EG.years), ww: DS.standWW(rl0.sw), p: g - 1 }));
   var e = E(s), P = LP(s), t0 = e.t0 || 0, names = [], seen = {}, twice = [], lg = s.lin.log || [], fail = e.call && e.call.g === g && e.call.used === 1 && !e.call.ok ? e.call.pid : 0, r = g - 2, hn = headNm(s);
   if (fail && P[fail]) { names.push(nm(s, fail)); seen[fail] = 1; }
-  var ep = s.erPrev && s.erPrev.g === g - 1 ? s.erPrev : s.erLast && s.erLast.g === g - 1 ? s.erLast : null;      // r24: 지난 대 문 앞에서 왕이 쥐고 간 이름 — 돌아온 왕이 들고 왔으니 이번에 함께 부른다
-  if (ep && ep.names) ep.names.forEach(function (n) { if (n && names.indexOf(n) < 0) names.push(n); });
   lg.forEach(function (ev) { if (ev && ev.t === 'death' && (ev.tm || 0) >= t0 && P[ev.a] && !seen[ev.a]) { seen[ev.a] = 1; names.push(nm(s, ev.a)); if (P[ev.a].rv && P[ev.a].st !== 'live') twice.push(nm(s, ev.a)); } });
-  if (s.erLast && s.erLast.g === g && s.erLast.names && s.erLast.names.length && DS.ERASE_TXT) out.push(DS.ERASE_TXT.close(s.erLast.names));      // r17 boss: 그 대 귀환전에서 지워진 이름부터
   if (names.length) { out = out.concat(lines('close.call', {})); var more = names.length - 6; out.push(names.slice(0, 6).join('. ') + '.' + (more > 0 ? fill(txt('close.more') || ', 그 밖에 {k}', { k: numN(more) }) : '')); out = out.concat(lines('close.light', {}, r)); var fa = names[fail && P[fail] ? 1 : 0]; if (fa) out = out.concat(lines('close.thank', { a: fa }, r)); }
   else out = out.concat(lines('close.none', {}), lines('close.noneFlee', {}));
   if (fail && P[fail]) { out = out.concat(lines('close.back', {})); lines('close.wait', {}, h2(fail, g, 13) * 3).forEach(function (l) { out.push(typeof l === 'object' ? l : { w: nm(s, fail), t: [l] }); }); }

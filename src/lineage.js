@@ -947,7 +947,6 @@ function linMarMove(s, Lr, o, n) {
   (s.mercs || []).forEach(function (m) { if (m && m.sn === o) m.sn = n; });
   (Array.isArray(Lr.log) ? Lr.log : []).forEach(function (e) { var x = e && e.x; if (x && typeof x === 'object') ['osn', 'name', 'old'].forEach(function (q) { if (typeof x[q] === 'string') x[q] = f(x[q]); }); });
   var c = s.coffins; (c && Array.isArray(c.list) ? c.list : []).forEach(function (r) { if (r && typeof r === 'object' && r.sn === o) r.sn = n; });
-  var e2 = s.erLast; if (e2 && Array.isArray(e2.names)) e2.names = e2.names.map(function (t) { return typeof t === 'string' ? t.split(o).join(n) : t; });
 }
 // ── 저장: 빠진 칸을 채운다 (fixSave 끝에서). 옛 저장은 결정적으로 배정 ──
 DS.linFix = function (s) {

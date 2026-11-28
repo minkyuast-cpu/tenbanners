@@ -4,7 +4,7 @@
 //     (연무장 · 온라인의 싸움은 DS.G.sim / DS.G.scn 을 쓰지 않는다). 설정 「전투 대사」(opt.bark)를 끄면 같이 꺼진다.
 //   때: 목표 보스(u.obj)의 체력이 DS.BANTER_TXT.at 의 문턱(7할 · 3할) 아래로 처음 내려갈 때 한 번씩. 한 번에 두 문턱을 넘으면 낮은 쪽 하나만. 숨이 넘어가는 한 방에는 말하지 않는다(마지막 한마디가 먼저).
 //     보스 없는 판(17번)은 n번째 습격이 올 때 맹주가 한마디.
-//   죽음 장면 · 붉은 칸 예고 · 이름 지우기(30번) 중에는 미뤘다가, 5초 안에 틈이 안 나면 버린다.
+//   죽음 장면 · 붉은 칸 예고 · 30번 마지막 싸움의 막 넘김 중에는 미뤘다가, 5초 안에 틈이 안 나면 버린다.
 var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
@@ -40,7 +40,7 @@ DS.banterCur = function () { return cur ? cur.B : null; };
 function on() { var sv = G && G.save; return !!(sv && !(sv.opt && sv.opt.bark === false)); }
 function busy() {      // 지금은 말풍선을 띄울 때가 아니다
   var v = G.view; if (!v || !v.bark) return true;
-  if (v.dz || (v.casting && v.casting()) || G.er || G.ending) return true;
+  if (v.dz || (v.casting && v.casting()) || G.ending || (DS.finBusy && DS.finBusy())) return true;
   return !!document.querySelector('.cine');
 }
 function start(sim, sc) {

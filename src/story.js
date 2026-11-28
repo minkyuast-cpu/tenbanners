@@ -126,7 +126,7 @@ Object.keys(DS.BOSSES || {}).forEach(function (k) { if (DS.BOSSES[k].name) REV[D
 var LINE = Object.getPrototypeOf(DS.say('memo', ''));
 function isKey(k) { if (typeof k !== 'string' || !k) return false; var l = DS.say(k, ''); return l.w !== k || !!l.c; }
 // r8: 화자의 사망·후계에 따라 갈리는 글 — heir(자리를 이은 이가 있을 때) · gone(방금 쓰러져 빈자리일 때) · of(그 줄이 기대는 사람 키). 읽는 쪽은 game.js 의 story()
-function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'er', 'a', 'y', 'dz', 'ch', 'roll', 'chat'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
+function keep(o, x) { ['heir', 'gone', 'of', 'no', 'ab', 'me', 'need', 'a', 'y', 'dz', 'ch', 'roll', 'chat'].forEach(function (k) { if (own(x, k)) o[k] = x[k]; }); return o; }
 function toLine(x) {
   if (x == null || typeof x !== 'object' || typeof x.t !== 'string' || 'lines' in x) return x;
   if (x.s && isKey(x.s)) return keep(DS.say(x.s, x.t), x);
@@ -229,8 +229,6 @@ if (endingTouched) {
     var get = function () {
       var sv = DS.G && DS.G.save, f = sv && sv.fallen, out = fix.slice(), F = DS.LORE.endingFallen || {};
       if (at >= 0) out[at] = !f || f.length >= 30 ? (F.base || FALLEN_OLD) : f.length ? (typeof F.some === 'function' ? F.some(f.length, f) : F.base) : (F.none || F.base);
-      var ei = out.indexOf('{erased}');      // r17 boss: 이번 30번 승리에서 지워진 이름 (없으면 뺀다 · 지킬 이름이 있었는데 다 지켰으면 그 줄)
-      if (ei >= 0) { var er = sv && sv.erLast, ET = DS.ERASE_TXT; if (er && ET && er.names && er.names.length) { var el = ET.ending(er.names); Array.prototype.splice.apply(out, [ei, 1].concat(norm([].concat(el)))); } else if (er && ET && er.marked) out[ei] = ET.endingKept; else out.splice(ei, 1); }      // r24: 지워진 이름 줄은 여러 줄(지문 + 대장의 다짐)일 수 있다
       return DS.storyFit ? DS.storyFit(out) : out;
     };
     if (d.configurable) Object.defineProperty(L, 'ending', { enumerable: true, configurable: true, get: get });
@@ -288,8 +286,6 @@ function meFit(l, K, hn, out) {
 function bare(x, hn) { x = toLine(x); return typeof x === 'string' ? subHero(x, hn) : cpLine(x, hn); }
 // r24: 그 사람 본인이 이 판에 있다 — 합류했고, 숨을 거두지 않았고, 대장이 되지도 않았다 (바우·슬기처럼 대장 병과와 겹칠 수 있는 이의 줄 { need: 키 })
 DS.castHere = function (s, k) { return !!(s && DS.CAST_NAME && DS.CAST_NAME[k]) && (s.mercs || []).some(function (m) { return m.cast === k; }) && !DS.castNow(s, k); };
-// r24: 이번 30번 승리에서 지워진 이름이 있었다 — 줄의 er 글(빈 글 = 뺀다)로 바꾼다 (웃음으로 맺지 않게)
-function erNow(sv) { var e = sv && sv.erLast; return !!(e && e.names && e.names.length); }
 // 2.5.0 판의 선택지: 줄의 ch = '3a' · '3b' · '3-'(아직 안 골랐다) · '3a-'(a 이거나 안 골랐다). 이번 대에 고른 것은 choice.js 의 DS.chPick (없으면 '' — 안 골랐다)
 DS.chOk = function (sv, spec) {
   var m = /^(\d+)([ab-]+)$/.exec(String(spec || '')); if (!m) return true;
@@ -330,7 +326,6 @@ DS.storyFit = function (lines, sv) {
       var dl = deadOf(), who = dl[strHash(l.t) % dl.length], yo = Object.create(Object.getPrototypeOf(l)); Object.keys(l).forEach(function (k) { if (k !== 'y') yo[k] = l[k]; });
       yo.w = '단톡방 · ' + who.n; l = yo;
     }
-    if (l && typeof l === 'object' && l.er !== undefined && erNow(sv)) { if (!l.er) return; l = toLine(l.er); }
     if (l && typeof l === 'object' && l.need && !DS.castHere(sv, l.need)) return;
     if (hasPrev(l)) { if (!prevOf()) return; l = subPrev(l); }
     if (typeof l === 'string') { if (!(K && twoOf(l, K))) out.push(subHero(l, hn)); return; }

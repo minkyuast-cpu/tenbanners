@@ -304,6 +304,7 @@ DS.fixSave = function (s) {
   if (!s.party.length) s.party = [s.hero];      // 2.2.0: 끝의 DS.pSync → DS.partySync 가 가주가 선 가문 모두로 맞춘다
   for (k in s.cleared) if (!(+k >= 1 && +k <= DS.SCENARIOS.length)) delete s.cleared[k];
   if (s.runs != null) { var rr = DS.runsFix ? DS.runsFix(s.runs) : null; if (rr) s.runs = rr; else delete s.runs; }      // 2.3.2: 대가 끊겨 처음부터 다시 걸은 기록 (옛 저장에는 없다)
+  delete s.erLast; delete s.erPrev; delete s.erN; if (s.seen && typeof s.seen === 'object') delete s.seen.erase;      // 2.9 마지막 싸움: 30번의 「이름 지우기」를 걷었다 — 옛 저장의 그 기록(지워진 이름 · 지킨 수 · 시도 수)은 더 읽지 않는다 (지워진 이는 그때 이미 쓰러짐으로 적혔다)
   if (!own(DS.ZONES, s.town) || !DS.ZONES[s.town].town) s.town = 'haemil';
   if (!own(DS.ZONES, s.zone)) { s.zone = s.town; s.pos = null; }
   if (!s.pos || typeof s.pos !== 'object' || !int(s.pos.x) || !int(s.pos.y) || s.pos.x < 0 || s.pos.y < 0) s.pos = null;      // 자리가 숫자 칸이 아니면 지역 입구에서 다시 선다 (그대로 두면 이어하기에서 넘어진다)

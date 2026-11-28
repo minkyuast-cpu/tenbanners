@@ -26,8 +26,8 @@
 //   2.2.7: 요약에 시나리오 · 들판마다 쓰러짐(dAt) · 전멸(wAt) · 필살기(uAt) · 처음 싸운 길이(tAt) · 처음 싸움 [이김, 쓰러짐, 레벨](ft). BOTREC=1: 안전 대신 권장에서 들어간다
 //   2.2.9 합일(새 규칙): 깃대가 있고 서로 다른 세 가문의 가주 셋이 7단 Lv10 이면 합일 — 대표는 남은 해가 가장 긴 가주(맹주가 늙었으면 넣지 않는다), 흡수할 둘도 남은 해가 긴 이(대표가 그 해를 받는다).
 //     합일한 가주를 셋(BOTFUSET)까지 두고, 떠나면 다시 (가문이 BOTKEEP(4) 넘게 남는 동안 · 문턱 앞인데 합일한 이가 없으면 둘까지). 시나리오에서는 처음 세 번(BOTRETTRIES)만 물러난다 —
-//     가주 · 맹주가 둘째로 쓰러지거나 합일한 이의 체력이 15%(맹주는 30%) 밑이면 퇴각(진 판으로 센다). 30번의 이름 지우기는 맹주의 부름 · 곁의 가주로 구한다.
-//     요약 칸: fuse · fuseAt · shut(잠든 가문@시나리오) · xDeaths(8단 위의 죽음 — 이름 지우기 포함) · xNat(8단 위의 천수) · erased · retreats · retX · reopens · wake · openGold(가문을 열 때 쓴 골드)
+//     가주 · 맹주가 둘째로 쓰러지거나 합일한 이의 체력이 15%(맹주는 30%) 밑이면 퇴각(진 판으로 센다).
+//     요약 칸: fuse · fuseAt · shut(잠든 가문@시나리오) · xDeaths(8단 위의 죽음) · xNat(8단 위의 천수) · retreats · retX · reopens · wake · openGold(가문을 열 때 쓴 골드)
 // 시간: hours = (엔진 시간 + 걷는 몫) / 3600. 게임 달력도 엔진 시간만큼 흐른다 (DS.ageAdvance — 게임과 같다).
 // 옛 규칙 비교: LOAD_SRC=/home/user/src/src node tools/bot.js inf 1 — 2.1.2(저장 v12) 규칙으로 같은 정책을 돌린다 (가솔 자동 채움 · 출전 셋 = 레벨 높은 셋 ·
 //   가솔 빈자리가 있으면 1회 모집 · 자동 후계 DS.succTick). 같은 시간 셈이라 전 → 후 를 견줄 수 있다.
@@ -214,8 +214,7 @@ function run(sim, mode, zid, maxT) {
       } else if (e.t === 'die') {
         const u = sim.byId[e.id]; if (!u) continue;
         if (u.side === 'ally' && !e.flee) {
-          if (e.erase) st.erased = (st.erased || 0) + 1;
-          if (u.role === 'cmd' && mode === 'scn' && RETREAT && !res && !e.erase) fell++;      // 이름 지우기(30번의 정해진 장치)로 사라진 이는 세지 않는다      // 2.2.9: 시나리오에서 가주 · 맹주가 둘째로 쓰러지면 남은 이를 지키러 물러난다 (사람이 하듯 — 쓰러짐 창의 「퇴각」)
+          if (u.role === 'cmd' && mode === 'scn' && RETREAT && !res) fell++;      // 2.2.9: 시나리오에서 가주 · 맹주가 둘째로 쓰러지면 남은 이를 지키러 물러난다 (사람이 하듯 — 쓰러짐 창의 「퇴각」)
           if (u.role === 'cmd') {
             const ch = s.chars[u.ch]; if (!ch) continue;
             if (u.ch === s.hero) { if (ch.ps && D.pL(ch.ps) > 70) { st.xDeaths = (st.xDeaths || 0) + 1; st.log.push('8+ hero died L' + D.pL(ch.ps) + ' @' + Object.keys(s.cleared).length); } ch.down = true; st.heroDeaths++; st.deaths++; st.dAt[where] = (st.dAt[where] || 0) + 1; st.log.push('hero died ' + mode + (zid ? ' ' + zid : '') + ' L' + D.pL(ch.ps) + ' houses ' + D.partyIds(s).length + ' @h' + ((st.simT + st.over) / 3600).toFixed(2)); }
@@ -235,13 +234,6 @@ function run(sim, mode, zid, maxT) {
         const u = sim.byId[e.id]; if (!u || u.side !== 'ally' || u.role !== 'cmd') continue;
         const S = D.SKILLS[e.sk]; if (!S) continue;
         if (S.ult) { const k = hcls(sim, u) || '?'; st.ult[k + ':' + e.sk] = (st.ult[k + ':' + e.sk] || 0) + 1; st.uAt[where] = (st.uAt[where] || 0) + 1; } else st.sk[e.sk] = (st.sk[e.sk] || 0) + 1;
-      } else if (e.t === 'erase' && RETREAT) {      // 2.2.9: 30번의 이름 지우기 — 사람이 하듯 지워질 가주를 구한다 (맹주의 부름 한 번 · 다른 가주가 곁으로 가서 감싼다). 합일한 이 먼저
-        const h = sim.erHero(), K = sim._er, marked = (e.ids || []).map(id => sim.byId[id]).filter(u => u && !u.dead && u.erM).sort((a, b) => (b.tier || 0) - (a.tier || 0) || (b.role === 'cmd') - (a.role === 'cmd'));
-        marked.forEach((u, i) => {
-          if (i === 0 && K && !K.er.called && h && !h.dead && !h.erM) { sim.setOrder(h.id, { t: 'call', tid: u.id }); st.erCall = (st.erCall || 0) + 1; return; }
-          const g = sim.erGuard(u).filter(c => !c.dead && !(c.order && c.order.t === 'call')).sort((a, b) => (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y)))[0];
-          if (g) { sim.setOrder(g.id, { t: 'move', x: u.x, y: u.y }); st.erCover = (st.erCover || 0) + 1; }
-        });
       } else if (e.t === 'shade') { st.shade = (st.shade || 0) + 1; if (e.auto) st.shadeAuto = (st.shadeAuto || 0) + 1; st.shAt = st.shAt || {}; st.shAt[where] = (st.shAt[where] || 0) + 1;
       } else if (e.t === 'shadeEnd') { st.shadeEnd = st.shadeEnd || {}; st.shadeEnd[e.why] = (st.shadeEnd[e.why] || 0) + 1;
       } else if (e.t === 'win') res = 'win';
@@ -345,7 +337,6 @@ function scenario(sc) {
   const b = D.buildScenario(sc, D.partySpecs(s).length, s.chars[s.hero] ? s.chars[s.hero].cls : 'inf');
   const sim = new D.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: (rnd() * 1e6 | 0) + sc.id, inv: s.items, mode: 'scn' });
   sim.heroId = 'c' + s.hero;
-  if (sc.boss === 'herald') sim.erSeed = [s.hero, s.name, 1, (s.erN = (s.erN || 0) + 1)].join(':');
   if (D.linBattleStart) D.linBattleStart(s);
   place(sim, D.partySpecs(s), b.start); arm(sim);
   const t0s = st.simT, r = run(sim, 'scn', null, 900);
@@ -427,7 +418,7 @@ if (gen2 && !stuck && s.cleared[30]) {      // 다음 세대의 장: 스무 해 
 const H = (st.simT + st.over) / 3600;
 const out = { cls, seed, main, g2, hours: +H.toFixed(2), choices: st.choices || 0, heirlooms: Object.keys(s.gh || {}).filter(k => s.gh[k] && s.gh[k].hl).length, reEquip: st.reEquip || 0, reKeep: st.reKeep || 0, bare: D.gearBare ? D.gearBare(s).length : 0, bag: Object.keys(s.gear || {}).reduce((n, k) => n + s.gear[k], 0), shade: st.shade || 0, shadeAuto: st.shadeAuto || 0, shadeDmg: Math.round(st.shadeDmg || 0), shadeEnd: st.shadeEnd || {}, shAt: st.shAt || {}, cleared: Object.keys(s.cleared).length, wipes: st.wipes, deaths: st.deaths, heroDeaths: st.heroDeaths, bearDeaths: st.bearDeaths, kinDeaths: st.kinDeaths, bdc: st.bdc, dmg: st.dmg, dsk: st.dsk, atkN: st.atkN, sk: st.sk, ult: st.ult, dAt: st.dAt, wAt: st.wAt, uAt: st.uAt, tAt: st.tAt, ft: st.ft, hcls: D.charList(s).map(c => c.cls),
   vacMax: st.vacMax, vacAvg: +(st.vacSum / Math.max(1, st.vacN)).toFixed(2), vacEnd: D.bnEmpty(s).length, recruits: st.recruits, recruitGold: st.recruitGold, tickets: st.tickets, kinSent: st.kinSent, sbSeat: st.sbSeat,
-  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, lapses: st.lapses || [], g2lapse: st.g2lapse || 0, runs: s.runs || null, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, openGold: st.openGold || 0, xDeaths: st.xDeaths || 0, xNat: st.xNat || 0, erCall: st.erCall || 0, erCover: st.erCover || 0, erased: st.erased || 0, retreats: st.retreats || 0, retX: st.retX || 0, fieldRet: st.fieldRet || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
+  births: st.births, inv: invBad, pit: st.pit || 0, pitBest: st.pitBest || 0, pitLoss: st.pitLoss || 0, pitTickets: st.pitTickets || 0, pick: [st.pick1 || 0, st.pick2 || 0, st.pick3 || 0], fuse: st.fuse, lapse: st.lapse, lapses: st.lapses || [], g2lapse: st.g2lapse || 0, runs: s.runs || null, field: st.field, fieldH: +(st.fieldT / 3600).toFixed(2), opens: st.opens || 0, reopens: st.reopens || 0, houses: D.charList(s).length, openGold: st.openGold || 0, xDeaths: st.xDeaths || 0, xNat: st.xNat || 0, retreats: st.retreats || 0, retX: st.retX || 0, fieldRet: st.fieldRet || 0, fuseAt: st.fuseAt || [], shut: st.shut || [], wake: st.wake || [], fzEnd: D.persons(s).filter(p => p.who.fz).length, sortieSw: st.sortieSw || 0, fuseTrain: st.fuseTrain || 0,
   hAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.houses), LAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.L), eL: Object.keys(st.eL).map(k => st.eL[k]), replays: st.replays || 0, rAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.rL), hrAt: st.perScn.filter(p => !/^g/.test(p.n)).map(p => p.h), scn: st.scn, units: D.partySpecs(s).length, gold: s.gold, realS: +((Date.now() - t0) / 1000).toFixed(1), stuck };
 if (process.env.BOTLOG) { console.log(st.log.join('\n')); console.log(st.perScn.map(p => p.n + ':' + p.h + 'h L' + p.L + ' u' + p.units + ' v' + p.vac + (p.tries > 1 ? ' t' + p.tries : '')).join('  ')); }
 console.log(`${cls} seed${seed}: ${out.cleared}/30 in ${out.hours}h, wipes ${out.wipes}, deaths ${out.deaths} (hero ${out.heroDeaths}, bearer ${out.bearDeaths}, kin ${out.kinDeaths}), recruits ${out.recruits}, kin sent ${out.kinSent}, vacancies max ${out.vacMax}/avg ${out.vacAvg}`);

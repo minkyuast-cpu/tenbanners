@@ -102,8 +102,6 @@ module.exports = async function (page, shot, L) {
       DS.linSettle(s, '시험'); var e1 = DS.linAutoAll(s) || []; if (DS.sbTick) DS.sbTick(s); DS.mercTidy(s);
       out.info.c = { heroGen: JSON.stringify(DS.castNow(s, 'hero')), prev: DS.storyPrev(s), vac: DS.linVacant ? DS.linVacant(s).length : -1, houses: DS.charList(s).length, evs: e1.length };
       walk('c.모두 대를 이었다', s);
-      s.erLast = { g: 1, names: ['가람', '나래'], marked: 2 };      // 문 앞에서 이름을 잃은 날의 맺음
-      walk('c.이름을 잃은 날', s);
     })();
     // (d) 가주 자리가 빈 가문 (이을 사람이 없다) · 합일로 잠든 가문
     (function () {

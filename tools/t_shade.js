@@ -83,18 +83,15 @@ module.exports = async (page, shot, L) => {
   await ev(() => { DS.G.pause = true; });
   const after = await ev(() => { var s = DS.G.save; return { fallen: JSON.stringify(s.fallen), lin: JSON.stringify(s.lin), mercs: s.mercs.length, chars: JSON.stringify(Object.keys(s.chars).map(function (k) { return [k, s.chars[k].L, !!s.chars[k].vac]; })), items: JSON.stringify(s.gear || {}) }; });
   A(after.fallen === before.fallen && after.lin === before.lin && after.mercs === before.mercs && after.chars === before.chars && after.items === before.items, 'save.fallen · lineage · houses · roster · bag untouched by the shade');
-  // 쓰러뜨려도 죽음이 아니다 (엔진 kill → 걷힘) · 이름 지우기 후보가 아니다
+  // 쓰러뜨려도 죽음이 아니다 (엔진 kill → 걷힘)
   c = await ev(() => {
     var s = DS.G.save, b = DS.buildScenario(DS.scn(13), 3, 'inf'), sim = new DS.Sim({ map: b.map, units: [], mode: 'scn', seed: 9, inv: {} }), sp = DS.partySpecs(s).slice(0, 3), ev0;
     sp.forEach(function (u, i) { u.x = b.start[i % b.start.length][0]; u.y = b.start[i % b.start.length][1]; sim.add(u); });
     sim.heroId = 'c' + s.hero; DS.shadeArm(sim, s); var sh = sim.shadeCall(0); sim.drain();
     sim.hurt(sh, sh.mhp * 5, null); ev0 = sim.drain().map(function (e) { return e.t + (e.flee ? ':flee' : '') + (e.why ? ':' + e.why : ''); });
-    var sim2 = new DS.Sim({ map: b.map, units: [], mode: 'scn', seed: 9, inv: {} }); sp.forEach(function (u) { sim2.add(Object.assign({}, u, { id: null })); }); sim2.heroId = sim2.cmds()[0].id; DS.shadeArm(sim2, s); var sh2 = sim2.shadeCall(0);
-    var K = { id: 'kk', x: 2, y: 2, hp: 100, mhp: 100 }; sim2.erInit(K); sim2.erStart(K); var ids = (K.er.on && K.er.on.ids) || [];
-    return { ev: ev0, lose: sim.result, cmdsLeft: sim.cmds().length, erIds: ids, shadeMarked: ids.indexOf(sh2.id) >= 0 || !!sh2.erM };
+    return { ev: ev0, lose: sim.result, cmdsLeft: sim.cmds().length };
   });
   A(c.ev.indexOf('die:flee') >= 0 && c.ev.indexOf('shadeEnd:down') >= 0 && !c.lose && c.cmdsLeft === 3, 'struck down: it fades (' + c.ev.join(' ') + '), no death, no defeat');
-  A(!c.shadeMarked, 'the dusk king\'s erase never picks the shade (marked ' + JSON.stringify(c.erIds) + ')');
   // ④ 자동: 맹주가 「자동」이면 가주가 위태로울 때 스스로
   await ev(() => { var s = DS.G.save; s.chars[s.hero].manual = false; DS.ui.closeAll(); DS.G.quiet = true; DS.startScenario(DS.scn(13)); DS.G.pause = true; });
   await sleep(700); await L.skipStory(page, 5);
@@ -115,15 +112,13 @@ module.exports = async (page, shot, L) => {
     return { used: sim.shd.used };
   });
   A(!c.used, 'manual 맹주: the shade is only called by the button');
-  // ⑤ 들판 · 연무장 · 이름 지우기 중
+  // ⑤ 들판 · 연무장
   await ev(() => { DS.G.pause = false; DS.ui.closeAll(); DS.enterZone('dawn'); });
   await sleep(600);
   c = await ev(() => ({ btn: !!document.querySelector('#acts .act.item.shade'), shd: !!DS.G.sim.shd, items: document.querySelectorAll('#acts .arow.it .act.item').length }));
   A(!c.btn && !c.shd && c.items === 3, 'field: no name calling (three item slots)');
   c = await ev(() => { var s = DS.G.save, a = DS.arenaSpec(s, 'h'), m = DS.arenaRoster ? DS.arenaRoster(s) : []; var b = a ? JSON.parse(JSON.stringify(a)) : null; var d = a && b ? DS.arenaDuel(a, b, { seed: 3 }) : null; return { duel: !!d, shd: !!(d && d.sim.shd), arm: d ? DS.shadeArm(d.sim, s) : 'x' }; });
   A(c.duel && !c.shd && c.arm === null, 'arena duel: no shade, arming refused (' + JSON.stringify(c) + ')');
-  c = await ev(() => { var sim = { shd: { cands: [{ n: 'x' }], used: false }, byId: {}, result: null, _er: {}, shadeCaller: function () { return {}; } }; return DS.shadeUI.why.call(null) !== undefined && (function () { var g = DS.G, s0 = g.sim; g.sim = sim; var w = DS.shadeUI.why(); g.sim = s0; return w; })(); });
-  A(c === '지금은 산 이름부터 지킨다', 'during the dusk king\'s erase the button waits 「' + c + '」');
   // 웹 화면 폭
   c = await ev(() => document.documentElement.scrollWidth);
   A(c <= 390, 'no horizontal scroll (' + c + ')');

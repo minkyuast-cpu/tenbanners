@@ -572,8 +572,7 @@ function startScenario(s) {
   G.sim = sim; G.scn = s; G.aim = null; G.bossId = null; G.pendPoi = null; G.ending = false; G.gain = { exp: 0, gold: 0, loot: [] }; G.wasCombat = false; G.lost = [];
   G.goal = null; G.bcast = null; G.pendCamp = null; G.scnSaid = false; G.stats = { kills: {}, dmg: {} }; G.dangerOn = false; G.bearLost = [];
   var cvS = $('#cv'); if (cvS) cvS.classList.remove('defeat');
-  sim.heroId = 'c' + sv.hero; G.er = null; G.erased = []; G.erSavedN = 0; G.erMarkN = 0; erBandOff();
-  if (s.boss === 'herald') { sv.erN = (sv.erN || 0) + 1; sim.erSeed = [sv.hero, sv.name || '', (sv.eg && sv.eg.gen) || 1, sv.erN].join(':'); }      // r17 boss: 이름 지우기 대상은 저장 + 30번 시도 횟수로 정해진다 (같은 시도면 같은 사람, 다시 하면 다른 사람)
+  sim.heroId = 'c' + sv.hero;
   if (DS.linBattleStart) DS.linBattleStart(sv);      // 갓 숨진 이를 관에 모실 때는 다음 싸움 전까지
   placeParty(sim, 6, 17, b.start);
   if (DS.shadeArm) { if (DS.shadeUI) DS.shadeUI.off(); DS.shadeArm(sim, sv, { scn: s }); }      // 2.5.0 이름 부르기: 출전마다 부를 이름 (shade.js — 갱도 · 다음 세대의 장도)
@@ -599,7 +598,7 @@ function startStand(seed, cb) {
   G.ret = { zone: sv.town, pos: null }; G.keepRet = null;
   var B = DS.standBuild(sv, { seed: seed }), sim = B.sim;
   G.sim = sim; G.scn = STD_SCN; G.aim = null; G.bossId = null; G.pendPoi = null; G.ending = false; G.gain = { exp: 0, gold: 0, loot: [] }; G.wasCombat = false; G.lost = [];
-  G.goal = null; G.bcast = null; G.pendCamp = null; G.scnSaid = false; G.stats = { kills: {}, dmg: {} }; G.dangerOn = false; G.bearLost = []; G.er = null; erBandOff();
+  G.goal = null; G.bcast = null; G.pendCamp = null; G.scnSaid = false; G.stats = { kills: {}, dmg: {} }; G.dangerOn = false; G.bearLost = [];
   G.stand = { std: B.std, ids: [], t0: performance.now(), fin: 0, cb: cb || null, n0: B.specs.length, falls: 0 };
   var cvS = $('#cv'); if (cvS) cvS.classList.remove('defeat');
   sim.units.forEach(function (u) {
@@ -718,8 +717,6 @@ function onWin() {
   if (bl && bl.length) drops = drops.concat(bl);
   if (out.gear && DS.gear(out.gear)) drops.unshift({ kind: 'gear', id: out.gear, n: 1, grade: DS.gear(out.gear).grade, name: DS.gear(out.gear).name, boss: s.boss || 'scn' });      // 2.1.0: 정해진 보상 전설 (맹세의 검 · 용뼈 창)
   out.drops = drops; if (!ulw0 && DS.ultOpen && DS.ultOpen(sv)) G.ulwArm = true;
-  if (s.boss === 'herald') { if (sv.erLast && sv.erLast.g !== ((DS.egActive && DS.egActive(sv) && sv.eg && sv.eg.gen) || 1)) sv.erPrev = sv.erLast;      // r24: 지난 대에 왕이 쥐고 간 이름 — 이 대의 장을 닫는 낭독이 먼저 부른다 (endgame.js egCloseLines)
-    sv.erLast = { g: (DS.egActive && DS.egActive(sv) && sv.eg && sv.eg.gen) || 1, names: (G.erased || []).slice(), saved: G.erSavedN || 0, marked: G.erMarkN || 0 }; }      // r17 boss: 맺음 낭독이 읽는다
   barkAny('win', true);      // r32 전투 대사
   linEnd(true);      // 2.9 가계도: 쓰러진 지휘관은 숨을 거둔다 (예전: 간신히 일어났다) · 함께 이긴 부부의 정·출산 · 슬픔 판 수
   persist();
@@ -1943,10 +1940,7 @@ function onEvents(evs) {
       case 'bossUlt': u = sim.byId[e.id]; if (u && SK[e.sk]) bossCut(u, SK[e.sk]); break;      // 2.3.0 큰 보스의 비기: 보스 컷인
       case 'enrage': u = sim.byId[e.id]; if (u) { vban('rage', u.name + ' 격노', (u.enr && u.enr.say) || '', calm() ? 1100 : 1500); A('phase'); if (u.id === G.bossId) { var bel0 = $('#boss'); if (bel0) bel0.classList.add('rage'); } } break;
       case 'wave': vban('wave', e.text || '증원!', '', 1400); A('warn'); break;
-      case 'erase': erBegin(e); break;      // r17 boss: 어스름의 왕의 이름 지우기
       case 'shade': case 'shadeEnd': if (DS.shadeUI) DS.shadeUI.ev(e); break;      // 2.5.0 이름 부르기 (shade.js)
-      case 'eraseSave': erSaved(e); break;
-      case 'eraseEnd': erEnd(e); break;
       case 'say': if (e.id === G.bossId && !(G.bcast && G.bcast.tid)) G.bcast = { name: e.text, until: performance.now() + 1500 }; break;
       case 'cast':
         if (e.id === G.bossId && SK[e.sk]) G.bcast = { tid: e.tid, name: SK[e.sk].name, dur: e.dur, t0: sim.t };
@@ -2202,78 +2196,6 @@ function fuseNews(up) {
   else banner((nm ? nm + ', ' : '') + '7단 Lv10', '합일: 7단 Lv10 가주 ' + P.n + '/' + P.of + (sv.crest ? '' : ', 맹세의 깃대는 아직'), 2800);
   if (!G.scn) updateQuest();
 }
-// ───────── r17 boss: 이름 지우기 (30번 어스름의 왕) ─────────
-// 엔진(engine.js erStart…)이 'erase' → 'eraseSave'* → 'eraseEnd' 를 보낸다. 여기서는 화면 위 띠(이름 · 남은 시간 · 감싼다/부른다), 왕의 한마디, 곡, 외침.
-//   띠의 단추: 「감싼다」 = 그 사람을 감쌀 수 있는 가장 가까운 가주에게 그 자리로 가라는 이동 명령 · 「부른다」 = 대장의 이름 부르기(한 싸움에 한 번, 틱이 차는 대로).
-function erFill(t, o) { return fill(String(t || '').replace(/\{(\w+)\}/g, function (m, k) { return o && o[k] != null ? o[k] : m; })); }
-function erNm(u) { return u ? String(u.mn || u.name || '') : ''; }
-function erBandEl() { var el = $('#erase'); if (!el) { var sg = $('#s-game'); if (!sg) return null; el = document.createElement('div'); el.id = 'erase'; el.setAttribute('role', 'alert'); sg.appendChild(el); } return el; }
-function erBandOff() { var el = $('#erase'); if (el) { el.classList.remove('on'); el.innerHTML = ''; } }
-function erBegin(e) {
-  var sim = G.sim, sv = G.save, T = DS.ERASE_TXT, K = sim.byId[e.id], gen = (DS.egActive && DS.egActive(sv) && sv.eg && sv.eg.gen) || 1;
-  var us = e.ids.map(function (id) { return sim.byId[id]; }).filter(Boolean), names = {}, list = us.map(function (u) { names[u.id] = erNm(u); return erNm(u); });
-  G.er = { k: e.k, ids: e.ids.slice(), names: names, king: e.id, t0: performance.now(), real: e.dur / DS.ERASE.slow, saved: {}, how: {} };
-  G.erMarkN += us.length;
-  var line = (gen > 1 && T.kingGen ? T.kingGen : T.king)[e.k % T.king.length];
-  if (K) G.view.float(K.x, K.y, line, '#c7c2dc', { dy: -30, life: 2.6 });
-  if (G.view.erOn) G.view.erOn({ ids: e.ids, names: names, dur: G.er.real, king: e.id });
-  DS.Audio.bgm('erase'); A('dark'); setTimeout(function () { A('phase'); }, 120);
-  var el = erBandEl(); if (!el) return;
-  var first = !sv.seen.erase; sv.seen.erase = 1;
-  el.innerHTML = '<p class="ek">' + esc(line) + '</p><b class="et">' + esc(erFill(T.band, { list: list.join(', ') })) + '</b><i class="ebar"><u></u></i>' +
-    '<div class="erow">' + us.map(function (u) { return '<span class="echip" data-er="' + u.id + '"><em>' + esc(names[u.id]) + '</em><button class="ecov" data-cov="' + u.id + '">' + esc(T.cover) + '</button><button class="ecall" data-call="' + u.id + '">' + esc(T.call) + '</button></span>'; }).join('') + '</div>' +
-    (first ? '<small class="ehint">' + esc(T.hint) + '</small>' : '');
-  el.classList.remove('done'); el.classList.add('on');
-  Array.prototype.forEach.call(el.querySelectorAll('[data-cov]'), function (b) { b.addEventListener('click', function () { DS.Audio.unlock(); erCover(b.getAttribute('data-cov')); }); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-call]'), function (b) { b.addEventListener('click', function () { DS.Audio.unlock(); erCall(b.getAttribute('data-call')); }); });
-  erBandTick();
-}
-function erCover(id) {
-  var sim = G.sim, u = sim && sim.byId[id]; if (!u || !u.erM || !sim._er) return;
-  var gs = sim.erGuard(u).filter(function (c) { return !c.dead && !(c.order && c.order.t === 'call'); }).sort(function (a, b) { return (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y)); });
-  if (!gs.length) { A('cancel'); toast(DS.ERASE_TXT.noGuard, 1600); return; }
-  sim.setOrder(gs[0].id, { t: 'move', x: u.x, y: u.y }); G.er.how[id] = 'cover:' + gs[0].id; A('ok');
-  G.view.float(gs[0].x, gs[0].y, erFill(DS.ERASE_TXT.go, { a: erNm(u) }), '#f6cf57', { dy: -16, life: 1.4 });
-}
-function erCall(id) {
-  var sim = G.sim, u = sim && sim.byId[id], h = sim && sim.erHero(), K = sim && sim._er; if (!u || !u.erM || !K) return;
-  if (K.er.called || !h || h.dead || h.erM) { A('cancel'); toast(DS.ERASE_TXT.callUsed, 1600); return; }
-  sim.setOrder(h.id, { t: 'call', tid: id }); G.er.callT = id; A('ok');
-}
-function erBandTick() {
-  var E = G.er, el = $('#erase'), sim = G.sim; if (!E || !el || !sim) return;
-  var K = sim._er, O = K && K.er.on, f = O ? Math.max(0, O.t / O.dur) : 0, bar = $('.ebar u', el); if (bar) bar.style.width = (f * 100).toFixed(1) + '%';
-  if (!O) return;
-  var h = sim.erHero(), callable = !K.er.called && h && !h.dead && !h.erM;
-  Array.prototype.forEach.call(el.querySelectorAll('.echip'), function (c) {
-    var id = c.getAttribute('data-er'), u = sim.byId[id], live = u && !u.dead && u.erM, cb = $('.ecall', c), vb = $('.ecov', c);
-    c.classList.toggle('saved', !!E.saved[id]); c.classList.toggle('gone', !u || (u.dead && !E.saved[id]));
-    if (vb) vb.disabled = !live || !sim.erGuard(u).length;
-    if (cb) { cb.disabled = !live || !callable || (E.callT && E.callT !== id); var pend = E.callT === id && live && callable; cb.classList.toggle('pend', !!pend); cb.textContent = pend ? DS.ERASE_TXT.calling + ' ' + Math.floor(h.gauge) + '/' + DS.ERASE.call : DS.ERASE_TXT.call; }
-  });
-}
-function erSaved(e) {
-  var sim = G.sim, u = sim.byId[e.id], by = e.by && sim.byId[e.by], T = DS.ERASE_TXT; if (!G.er) return;
-  G.er.saved[e.id] = e.how; G.erSavedN++;
-  if (G.view.erSaved) G.view.erSaved(e.id);
-  if (u) G.view.float(u.x, u.y, T.saved[e.how] || T.saved.heal, '#f6cf57', { dy: -26, life: 1.8 });
-  if (by && e.how === 'call') G.view.float(by.x, by.y, '「' + erNm(u) + '」', '#fff3c4', { dy: -20, life: 2.2, big: true });
-  A(e.how === 'heal' ? 'heal' : 'star'); erBandTick();
-}
-function erEnd(e) {
-  var sim = G.sim, T = DS.ERASE_TXT, el = $('#erase'), E = G.er; if (!E) return;
-  var names = e.dead.map(function (id) { return E.names[id]; }).filter(Boolean);
-  G.erased = (G.erased || []).concat(names);
-  if (G.view.erOff) G.view.erOff();
-  if (el) { var b = $('.et', el); if (b) b.textContent = names.length ? erFill(T.gone, { list: names.join(', ') }) : T.none; el.classList.add('done'); Array.prototype.forEach.call(el.querySelectorAll('button'), function (x) { x.disabled = true; }); setTimeout(function () { if (G.er === E || !G.er) { erBandOff(); } }, 2600); }
-  e.dead.forEach(function (id, i) {      // 남은 사람이 짧게 그 이름을 외친다 (같은 가문 먼저)
-    var dv = G.view.vu[id], du = dv && dv.u, own = du && (du.role === 'merc' ? du.owner : du.id);
-    var near = sim.units.filter(function (x) { return !x.dead && x.side === 'ally' && (x.role === 'merc' || x.role === 'cmd') && x.id !== id && x.ch !== G.save.hero; }).sort(function (a, b) { return ((a.owner === own || a.id === own) ? 0 : 1) - ((b.owner === own || b.id === own) ? 0 : 1); })[0];
-    if (near) G.view.float(near.x, near.y, erFill(T.shout[(i + e.k) % T.shout.length], { a: E.names[id] }), '#efe6d0', { dy: -16, life: 2.4, delay: 0.9 + i * 0.5 });
-  });
-  if (!sim.result) setTimeout(function () { if (G.sim === sim && !sim.result && !sim._er) DS.Audio.bgm('boss'); }, 2200);
-  G.er = null;
-}
 // r16 fx: 우리 편 사람이 영영 쓰러지는 순간의 장면 (view.deathScene) — 나이·성격·깃발을 실어 보낸다. 그린 시간(ms), 안 그리면 0
 // r32: 마지막 한마디를 고르고 남긴다 — 부대원 줄이면 rec.lw (추모 기록·가계 기록이 옮긴다), 대장이면 가계의 사람 줄 P.lw. 장면이 없어도(Node·연출 끔) 남긴다
 function dieAge(u, rec) { var age = ''; try { var dr = DS.unitDress ? DS.unitDress(u) : null; age = dr && dr.g || ''; } catch (x) { age = ''; } if (!age && rec && rec.eld) age = 'elder'; return age; }
@@ -2294,8 +2216,7 @@ function deathFx(u, e, rec, flag, name) {
   if (!G.view || !G.view.deathScene) return 0;
   var age = dieAge(u, rec), light = false;
   try { var pk = rec && DS.mercPersona ? DS.mercPersona(rec).key : ''; light = pk === 'chatty' || pk === 'brag'; } catch (x) { light = false; }
-  if (e && e.erase && G.view.erSuck) G.view.erSuck(u.id, name || u.mn || u.name);      // r17 boss: 지워진 이름이 왕 쪽으로 빨려 든다
-  return G.view.deathScene(u.id, { by: e.by, name: name || u.name, flag: !!flag && u.role === 'cmd', flagCol: u.flagCol, age: age, light: light, last: lw, force: e && e.erase ? 'dusk' : undefined });
+  return G.view.deathScene(u.id, { by: e.by, name: name || u.name, flag: !!flag && u.role === 'cmd', flagCol: u.flagCol, age: age, light: light, last: lw });
 }
 // r30: 마지막 한마디 고르기 — 산 아이가 있으면 아이, 산 배우자가 있으면 배우자, 가문을 잇는 사람(가주·대장)은 가문, 아니면 성격(대장은 lead · 노년 elder · 어린 몸 young).
 //   18자를 넘으면 이름 없는 줄. 같은 사람은 같은 싸움에서 같은 줄 (해시)
@@ -2467,8 +2388,8 @@ function loop1(now) {
   }
   if (sim) {
     var slw = G.view && G.view.slowMul ? G.view.slowMul() : 1;      // r16 fx: 죽음 연출 동안 잠깐 느리게 (실제 시간으로 짧게)
-    var spdM = sim._er ? (slw < 1 ? 1 : DS.ERASE.slow) : DS.spdOf(G.save.opt.speed);
-    if (G.stand && G.stand.fin) spdM = Math.min(spdM, calm() ? 0.5 : 0.25);      // 2.8: 마지막 사람이 쓰러진 뒤 잠깐, 세상이 느려진다      // r36: 1 · 1.5 · 2 · r30: 죽음 슬로우와 지우기 슬로우는 겹치지 않는다 (더 느린 하나만)      // r17 boss: 이름 지우기 예고 동안은 배속과 상관없이 실제 시간보다 조금 느리게
+    var spdM = DS.spdOf(G.save.opt.speed);
+    if (G.stand && G.stand.fin) spdM = Math.min(spdM, calm() ? 0.5 : 0.25);      // 2.8: 마지막 사람이 쓰러진 뒤 잠깐, 세상이 느려진다      // r36: 1 · 1.5 · 2
     if (DS.Joy) { try { DS.Joy.tick(); } catch (x) { loopErr(x, 'joy'); } }      // r40: 조이스틱이 쥔 걸음을 한 칸 앞씩 고친다
     if (!G.pause && G.hold === 0 && !G.ending && !(G.scn && (G.beatArm || now < (G.beatT || 0)))) { try { sim.update(dt * slw * spdM); } catch (x) { loopErr(x, 'sim'); } if (DS.ageAdvance) DS.ageAdvance(G.save, dt * slw * DS.spdOf(G.save.opt.speed)); }      // 나이: 세계 달력은 게임 속 시간(배속 포함)으로 흐른다
     else if (G.ending && sim.result) sim.acc = 0;
@@ -2476,7 +2397,7 @@ function loop1(now) {
     try { G.view.frame(dt, evs); } catch (x) { loopErr(x, 'view'); }      // 그림의 오류가 사건(승리·죽음)을 잃게 하지 않는다
     if (evs.length) onEvents(evs);
     if (DS.fieldFrame) { try { DS.fieldFrame(now, evs); } catch (x) { loopErr(x, 'field'); } }      // r47: 기습·필드 보스 연출 (field.js)
-    try { if (G.er) erBandTick(); if (now - G.hudT > 90) { G.hudT = now; updateHud(now); } if (now - (G.barT || 0) > 1500 && DS.barBadge) { G.barT = now; DS.barBadge(); } } catch (x) { loopErr(x, 'hud'); }      // r38: 메뉴 단추의 막사 배지
+    try { if (now - G.hudT > 90) { G.hudT = now; updateHud(now); } if (now - (G.barT || 0) > 1500 && DS.barBadge) { G.barT = now; DS.barBadge(); } } catch (x) { loopErr(x, 'hud'); }      // r38: 메뉴 단추의 막사 배지
     checkExit();
     if (G.mournOn) mournTick(now);
     if (!!G.riteBusy !== !!G.riteWas) { if (G.riteWas && !G.saveFailAt) savedTick(); G.riteWas = !!G.riteBusy; }      // 2.6: 의식이 끝나면 (그 끝에 저장한다 — lineageFlush) 「저장됨」
@@ -2498,7 +2419,7 @@ DS.startGame = function () {
     (function () { var q = $('#quest'), lp = null; q.addEventListener('pointerdown', function () { clearTimeout(lp); lp = setTimeout(function () { if (q._qt) toast(q._qt, 3600); }, 520); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { q.addEventListener(ev, function () { clearTimeout(lp); }); }); })();      // r26: 길게 누르면 목표 전문
     $('#bMenu').addEventListener('click', function () { A('tap'); DS.openMenu('party'); });
     $('#bMap').addEventListener('click', function () { A('tap'); DS.openMenu('map'); });
-    $('#bPause').addEventListener('click', function () { if (G.sim && G.sim._er && !G.pause) { A('cancel'); toast(DS.ERASE_TXT.noPause, 1800); return; } G.softUntil = 0; G.pause = !G.pause; A('tap'); renderSys(); if (G.pause) toast('멈춤. 멈춘 채로 명령을 내린다'); });
+    $('#bPause').addEventListener('click', function () { G.softUntil = 0; G.pause = !G.pause; A('tap'); renderSys(); if (G.pause) toast('멈춤. 멈춘 채로 명령을 내린다'); });
     $('#bSpeed').addEventListener('click', function () { sv = G.save; var SP = DS.SPEEDS, si = SP.indexOf(DS.spdOf(sv.opt.speed)); sv.opt.speed = SP[(si + 1) % SP.length]; A('tap'); renderSys(); });      // r36: 1 → 1.5 → 2 → 1
     $('#bAutoU').addEventListener('click', function () {
       var me = G.sim.byId[G.sel]; if (!me) return;

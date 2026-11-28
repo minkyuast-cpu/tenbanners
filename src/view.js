@@ -797,7 +797,7 @@ V.frame = function (dt, evs) {
   // r7: 프레임이 꾸준히 늦으면(평균 28ms↑, 중저가 폰) 이 장면 동안은 덧그림(빛·물비늘·비)을 끈다 — 켰다 껐다 하지 않게 장면 끝까지 유지
   this.ema = (this.ema || 0.016) * 0.97 + dt * 0.03; if (!this.lowFx && this.ema > 0.028 && this.time > 3) this.lowFx = true;
   var Gs = DS.G && DS.G.save; this.spd = DS.spdOf ? DS.spdOf(Gs && Gs.opt && Gs.opt.speed) : 1;      // r36: 1 · 1.5 · 2
-  var Gm = DS.G && DS.G.sim; this.spdV = Gm && Gm._er && DS.ERASE ? DS.ERASE.slow : Math.max(1, Math.min(2, this.spd));      // 1.0.4: 화면의 걸음·예고도 배속을 따른다 (전에는 걸음 그림이 늘 1배속이라 필드에서 배속이 안 먹는 것처럼 보였다)
+  this.spdV = Math.max(1, Math.min(2, this.spd));      // 1.0.4: 화면의 걸음·예고도 배속을 따른다 (전에는 걸음 그림이 늘 1배속이라 필드에서 배속이 안 먹는 것처럼 보였다)
   if (this.skClock) this.skClock();      // 2.7 기술 연출의 게임 시계 (사건을 받기 전에)
   if (evs && evs.length) this.handle(evs);
   if (this.time - (this.seaT || 0) > 1) { this.seaT = this.time; try { this.seasonTick(); } catch (x) {} }      // 2.6 계절
@@ -889,7 +889,6 @@ V.frame = function (dt, evs) {
       this.lastPh = ph;
     }
   } else if (this.beats && this.sim) { var me0 = this.sim.byId[this.sel]; if (!me0 || me0.hp > me0.mhp * 0.5) this.beats = 0; }
-  if (this.er || this.erDim > 0 || (this.erFx && this.erFx.length)) this.drawErase(g, dt);      // r17 boss: 이름 지우기 (실제 시간)
   if (this.std && this.drawStand) { try { this.drawStand(g, dt); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'stand'); } }      // 2.8 마지막 물결: 어두워지는 하늘 · 쓰러짐 · 심장 (stand.js)
   if (this.drawBarks && this.barks && this.barks.length) { try { this.drawBarks(g); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'barks'); } }      // r32 전투 대사
   if (this.drawDeathOver && (this.dzVig > 0.01 || this.dz || this.time - (this.dsSeen == null ? -9 : this.dsSeen) < 0.2)) { try { this.drawDeathOver(g); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'deathOver'); } }      // r30: 죽음 연출의 어두운 테두리·말풍선
@@ -2001,67 +2000,6 @@ V.drawText = function (g, dt) {
     }
   }
 };
-// ── r17 boss: 「이름 지우기」 (30번 어스름의 왕) ── 실제 시간으로 그린다 (배속과 무관)
-//   erOn(o): 예고가 걸렸다 — o.ids(대상 유닛) · o.names · o.dur(실제 초) · o.king. 화면이 어두워지고, 대상 머리 위 이름이 점점 바랜다 (글자가 하나씩 회색으로 빠진다).
-//   erSaved(id): 표식이 걷혔다 — 이름이 금빛으로 돌아온다 · erOff(): 예고가 끝났다 · erSuck(id, name): 지워진 이의 이름 글자가 왕 쪽으로 빨려 든다.
-//   죽음 연출이 꺼져 있으면(설정) 어둠·빨려 듦은 옅게만, 표식은 그대로 (규칙에 필요한 정보라서).
-V.erOn = function (o) { this.er = { ids: o.ids.slice(), names: o.names || {}, dur: o.dur || 3, t: 0, king: o.king, saved: {}, on: true }; this.erDim = this.erDim || 0; this.shake = Math.max(this.shake, 0.35); };
-V.erSaved = function (id) { if (this.er) this.er.saved[id] = this.er.t; var v = this.vu[id]; if (v) { this.rings.push({ x: v.x, y: v.y + 0.35, t: 0, dur: 0.6, c: '#f6cf57', r: 16 }); this.burst(v.x, v.y - 0.3, ['#f6cf57', '#fff6d0'], 12, { up: 30, grav: -10, spd: 12, life: 0.8 }); } };
-V.erOff = function () { if (this.er) this.er.on = false; };
-V.erSuck = function (id, name) {
-  var v = this.vu[id], K = this.er && this.vu[this.er.king]; if (!v) return;
-  (this.erFx || (this.erFx = [])).push({ x0: v.x, y0: v.y, kx: K ? K.x : v.x, ky: K ? K.y - 1 : v.y - 3, t: -0.6, dur: 1.6, name: String(name || '') });
-};
-V.drawErase = function (g, dt) {
-  var E = this.er, fx = this.erFx, on = E && E.on, calmFx = !DS.deathFxOn || !DS.deathFxOn(), i, k;
-  this.erDim = Math.max(0, Math.min(1, (this.erDim || 0) + (on ? dt * 2.5 : -dt * 0.8)));
-  if (this.erDim > 0.01) {
-    var a = this.erDim * (calmFx ? 0.18 : 0.42);
-    g.fillStyle = 'rgba(8,6,18,' + a.toFixed(3) + ')'; g.fillRect(0, 0, this.W, this.H);
-    if (!calmFx) { var gr = g.createRadialGradient(this.W / 2, this.H / 2, Math.min(this.W, this.H) * 0.25, this.W / 2, this.H / 2, Math.max(this.W, this.H) * 0.7); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(20,10,30,' + (this.erDim * 0.55).toFixed(3) + ')'); g.fillStyle = gr; g.fillRect(0, 0, this.W, this.H); }
-  }
-  if (E) {
-    E.t += dt;
-    if (!on && E.t > E.dur + 1.2) { this.er = null; E = null; }
-  }
-  if (E) for (i = 0; i < E.ids.length; i++) {
-    var id = E.ids[i], v = this.vu[id]; if (!v || v.ds || v.dying >= 0) continue;
-    var sc = this.screenOf(v.x, v.y), nm = String(E.names[id] || v.u.mn || v.u.name || ''), sv = E.saved[id];
-    var f = Math.max(0, Math.min(1, E.t / E.dur)), y = sc.y - 30 * this.k / 2 - 12;
-    if (sv != null) {      // 걷혔다: 금빛으로 돌아와 잠깐 떠 있다가 사라진다
-      var q = E.t - sv; if (q > 1.4) continue;
-      g.globalAlpha = Math.max(0, 1 - q / 1.4); g.font = cvFont(12); label(g, nm, sc.x, y - q * 8, '#f6cf57', 12, 'rgba(20,16,30,.7)'); g.globalAlpha = 1; continue;
-    }
-    if (!on) continue;
-    // 고리: 발밑에서 맥박치며 좁아진다
-    var r = (10 + 6 * (1 - f)) * this.k / 2 + Math.sin(E.t * 9) * 1.5;
-    g.strokeStyle = 'rgba(167,161,194,' + (0.5 + 0.4 * Math.sin(E.t * 9)).toFixed(3) + ')'; g.lineWidth = 2; g.beginPath(); g.ellipse(sc.x, sc.y + 5 * this.k / 2, r, r * 0.4, 0, 0, Math.PI * 2); g.stroke();
-    // 이름: 글자가 앞에서부터 하나씩 바래 간다
-    g.font = cvFont(12); var w = g.measureText(nm).width, x0 = sc.x - w / 2, n = nm.length, gone = f * n;
-    g.fillStyle = 'rgba(20,16,30,.72)'; g.fillRect(x0 - 5, y - 9, w + 10, 17);
-    g.textBaseline = 'middle'; g.textAlign = 'left';
-    var cx = x0;
-    for (k = 0; k < n; k++) {
-      var ch = nm[k], cw = g.measureText(ch).width, fade = Math.max(0, Math.min(1, gone - k));
-      g.globalAlpha = 1 - fade * 0.8; g.fillStyle = fade > 0.5 ? '#6f6a80' : '#efe6d0';
-      g.fillText(ch, cx, y + (fade > 0 ? Math.sin(E.t * 14 + k) * fade : 0)); cx += cw;
-    }
-    g.globalAlpha = 1; g.textAlign = 'center';
-    // 남은 시간: 이름 밑 가는 줄
-    g.fillStyle = '#3a2d55'; g.fillRect(x0 - 5, y + 9, w + 10, 2); g.fillStyle = '#c7c2dc'; g.fillRect(x0 - 5, y + 9, (w + 10) * (1 - f), 2);
-  }
-  if (fx && fx.length) for (i = fx.length - 1; i >= 0; i--) {      // 빨려 드는 이름
-    var p = fx[i]; p.t += dt; if (p.t < 0) continue; if (p.t > p.dur) { fx.splice(i, 1); continue; }
-    var e = p.t / p.dur, ee = e * e, s0 = this.screenOf(p.x0, p.y0 - 1.2), s1 = this.screenOf(p.kx, p.ky);
-    g.font = cvFont(12);
-    for (k = 0; k < p.name.length; k++) {
-      var lag = Math.max(0, Math.min(1, ee * 1.25 - k * 0.06)), px = s0.x + (s1.x - s0.x) * lag + Math.sin(lag * 6 + k) * 10 * (1 - lag), py = s0.y + (s1.y - s0.y) * lag - Math.sin(lag * Math.PI) * 24;
-      g.globalAlpha = (1 - lag) * (calmFx ? 0.6 : 1); g.fillStyle = lag > 0.3 ? '#8d8a99' : '#efe6d0'; g.fillText(p.name[k], px + (k - p.name.length / 2) * 9 * (1 - lag), py);
-    }
-    g.globalAlpha = 1;
-  }
-};
-
 })();
 
 // ───────── 아이콘 (2.8) — 소모품·용병 물건·장비의 작은 픽셀 그림 ─────────

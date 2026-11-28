@@ -1,7 +1,7 @@
 // 전민 — 2.6.0 규칙 시험: ① 병과에 맞지 않는 장비 −50% ② 떠난 이의 장비는 가방으로 ③ 맹주 넘기기 — 진짜 화면에서 (390×844)
 //   PAGE=…/dist/test.html H=844 OUT=<폴더> node tools/shot.js tools/t_rules26.js
 //   ① 수치(위력 · 치명타 · 강화 몫 · 옵션 수치는 절반, 깎는 값 · 기술은 그대로) · 붉은 꼬리표(장비 칸 · 고르기 창 · 가방 자세히) · 비교 화살표가 깎인 값 · 자동 장착 · 도움말 · 옛 저장의 소식 한 줄
-//   ② 죽음의 길마다: 가주 전사(진짜 싸움 판의 die 사건) · 이름 지우기(die + erase) · 가주 천수 · 맹주 전사(후계 의식) · 맹주 천수 — 장비가 가방으로, 유품은 한 점, 후계는 빈손,
+//   ② 죽음의 길마다: 가주 전사(진짜 싸움 판의 die 사건) · 가주 천수 · 맹주 전사(후계 의식) · 맹주 천수 — 장비가 가방으로, 유품은 한 점, 후계는 빈손,
 //      「장비 N점이 가방으로 돌아왔다」(이별 연출 · 추도 창) · 새 가주의 「장비가 없다」 창과 한 번에 입히기 · 부대 탭의 빈 칸 표시 · 가방 한도를 넘겨도 잃지 않는다
 //   ③ 단추의 꺼진 까닭(받을 사람 없음 · 시나리오 중 · 싸우는 중 · 앉은 지 한 해 안) · 경고 글 · 받을 사람 목록(기본 = 저절로였다면 고를 사람 · 못 받는 사람의 까닭) · 두 걸음 확인(잠금 · 짧게 누르면 안 넘어감 · 길게 눌러야)
 //      · 연출이 끝까지 · 옛 맹주는 까닭 「맹주 자리를 넘김」으로 떠나고 · 후계가 맹주 · 유품 한 점 · 장비는 가방 · 스무 해 없음 · 연출 · 의식이 겹치지 않는다 · 8단 위의 남긴 뜻 · 도중 실패는 통째로 되돌린다
@@ -104,7 +104,7 @@ module.exports = async (page, shot, L) => {
   // ───────── ② 떠난 이의 장비는 가방으로 ─────────
   // (가) 가주 전사 — 진짜 싸움 판: 들판에서 가주 유닛을 쓰러뜨린다 (game.js 의 die → bearerFell → DS.linMercDied)
   const bagN = () => ev(() => { var s = DS.G.save, n = 0; for (var k in s.gear) n += s.gear[k]; return n; });
-  const fell = async (erase) => {
+  const fell = async () => {
     const pre = await ev(() => {
       var s = DS.G.save, sim = DS.G.sim, u = sim.units.filter(function (x) { return x.side === 'ally' && x.role === 'cmd' && !x.dead && x.ch !== s.hero; })[0]; if (!u) return null;
       var ch = s.chars[u.ch], b = DS.bearer(s, ch); b.it = 'mg_whet'; s.coffins.have = Math.max(s.coffins.have || 0, 2);
@@ -112,7 +112,7 @@ module.exports = async (page, shot, L) => {
       window.__f = { ch: ch.id, w: ch.w, a: ch.a, mid: b.id, n: b.n, bag: n, whet: s.items.mg_whet || 0, hl: Object.keys(s.gh || {}).filter(function (k) { return s.gh[k].hl; }).length };
       return window.__f;
     });
-    await ev((er) => { var s = DS.G.save, sim = DS.G.sim, u = sim.byId['c' + window.__f.ch]; DS.G.quiet = true; if (er) sim._erK = 1; sim.kill(u, null); sim._erK = 0; }, erase);
+    await ev(() => { var s = DS.G.save, sim = DS.G.sim, u = sim.byId['c' + window.__f.ch]; DS.G.quiet = true; sim.kill(u, null); });
     await waitFor(() => { var s = DS.G.save, f = window.__f; return !s.mercs.some(function (m) { return m.id === f.mid; }); });
     await sleep(300);
     const post = await ev(() => {
@@ -123,7 +123,7 @@ module.exports = async (page, shot, L) => {
     return { pre, post };
   };
   await ev(() => { DS.G.quiet = true; DS.enterZone('dawn', null, null); }); await sleep(1200); await L.closeAll(page);
-  let f = await fell(false);
+  let f = await fell();
   A(f.pre && f.pre.w && f.pre.a && f.post.w == null && f.post.a == null && f.post.bag === f.pre.bag + 2 && f.post.bw >= 1 && f.post.ba >= 1 && f.post.whet === f.pre.whet + 1,
     'a 가주 falls in a real field fight: weapon and armour leave the house and land in the bag (' + f.pre.w + ', ' + f.pre.a + '), the held 숫돌 too');
   A(f.post.hl === f.pre.hl + 1 && f.post.hlW && f.post.lock && f.post.gb === 3 && f.post.q.join() === '3', 'exactly one heirloom is made (the weapon, locked, now in the bag); the death event says 3 pieces came back');
@@ -158,18 +158,15 @@ module.exports = async (page, shot, L) => {
   c = await ev(() => { var s = DS.G.save, f = window.__f, ch = s.chars[f.ch]; return { w: ch.w, a: ch.a, hl: !!DS.hlOf(s, ch.w), btn: !!document.querySelector('[data-autoeq]'), bonus: DS.hlBonus(s, ch) }; });
   A(c.w && c.a && !c.btn && c.hl && c.bonus, 'one tap dresses the heir (' + c.w + ', ' + c.a + '); the house heirloom is back on with its bonus ' + JSON.stringify(c.bonus));
   await L.closeAll(page);
-  // (나) 이름 지우기(30번의 die + erase)도 같은 길
-  f = await fell(true);
-  A(f.pre && f.post.w == null && f.post.a == null && f.post.bag === f.pre.bag + 2 && f.post.hl === f.pre.hl + 1, 'erased by the dusk king (die + erase): same — gear in the bag, one heirloom');
   await ev(() => { DS.G.lineageQ = []; DS.ui.closeAll(); var s = DS.G.save; DS.linBattleStart(s); DS.sbTick(s); DS.mercTidy(s); DS.rebuildParty(); }); await sleep(300); await L.closeAll(page);
-  // (다) 가주 천수 — 마을에 들어설 때의 나이 판정 (DS.ageCheck)
+  // (나) 가주 천수 — 마을에 들어설 때의 나이 판정 (DS.ageCheck)
   c = await ev(() => {
     var s = DS.G.save, ch = DS.charList(s).filter(function (x) { return x.id !== s.hero && DS.bearer(s, x, 1) && x.w && x.a; })[0], b = DS.bearer(s, ch), w = ch.w, a = ch.a, n = 0, k; for (k in s.gear) n += s.gear[k];
     b.by = s.cal.t - 80 * 600; b.ls = 60; var evs = DS.ageCheck(s, '해밀'); var n2 = 0; for (k in s.gear) n2 += s.gear[k];
     return { cls: ch.cls, w0: w, a0: a, w: ch.w, a: ch.a, d: n2 - n, gone: !s.mercs.some(function (m) { return m.id === b.id; }), ev: evs.map(function (e) { return e.t + (e.gb != null ? ':' + e.gb : ''); }) };
   });
   A(c.gone && c.w == null && c.a == null && c.d === 2, 'a 가주 dies of old age (' + c.cls + '): gear returns to the bag too [' + c.ev.join(', ') + ']');
-  // (라) 가방 한도: 보통 장비가 한도(40)를 넘겨도 돌아오는 장비는 그대로 들어간다
+  // (다) 가방 한도: 보통 장비가 한도(40)를 넘겨도 돌아오는 장비는 그대로 들어간다
   c = await ev(() => {
     var s = DS.G.save, t = JSON.parse(JSON.stringify(s)); t = DS.fixSave(t);
     for (var i = 0; i < 60; i++) t.gear['sword.A+' + (1 + i % 20)] = (t.gear['sword.A+' + (1 + i % 20)] || 0) + 1;

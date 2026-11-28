@@ -23,14 +23,6 @@ if (DS.BAL.cmdBest == null) DS.BAL.cmdBest = true;
 //   skTune: 기술 표의 하위 호환 정리 (data.js 의 DS.SK_R8 — 조준 사격 틱 50→45, 짧은 호령 12·15초→20·25초). DS.skTune(false) 로 3.2.1 값.
 if (DS.BAL.skTune == null) DS.BAL.skTune = true;
 if (DS.skTune) DS.skTune(DS.BAL.skTune);
-// ── r17 boss (4.0.3): 30번 어스름의 왕의 「이름 지우기」 — 왕(duskking) 유닛에만 붙는 분기. 끄면(DS.BAL.nameErase=false) 그 전과 똑같다 (tools/eng/hash.js)
-//   체력 th[k] 문턱마다 한 번: 대장을 뺀 우리 사람 n[k] 명(두 번째는 첫 번째와 겹치지 않게)에 표식 → 왕 쪽으로 pull 칸 끌려가 굳는다 → dur 초(엔진 시간) 뒤 표식이 남은 이는 즉사.
-//   막는 길: ① 감싸기 — 그 사람의 가주(가주가 대상이면 다른 가주)가 이동 명령으로 곁(1칸)에 와서 cover 초 붙어 있으면 걷힌다 (명령 없이 우연히 곁에 선 것은 아니다 — 자동 전투는 거의 못 구한다). 감싼 이는 최대 HP 의 coverHurt 를 대신 잃는다(죽지는 않는다)
-//            ② 치유·정화 — 한 사람에게 거는 치유·정화 기술을 그 사람에게 쓰면 걷힌다 (모두 치유처럼 넓게 퍼지는 것은 안 된다)
-//            ③ 이름을 부른다 — 대장만, 한 싸움에 한 번, 한 명. 틱이 call 이상 차는 순간 틱을 모두 쓴다 (모자라면 차기를 기다린다 — 시간이 다 가면 못 부른다)
-//   예고 중 왕의 체력은 문턱 밑으로 내려가지 않는다. 지워진 사람 하나마다 왕의 남은 체력 hpCut·공격 atkCut 이 준다 (남은 사람으로 이길 수 있게).
-//   대상 고르기는 sim.erSeed(게임: 저장 씨앗 + 30번 시도 횟수) 로 결정적 — 엔진 난수(this.rand)는 부르지 않는다.
-if (DS.BAL.nameErase == null) DS.BAL.nameErase = true;
 // ── r32 필살기: 유닛의 u.ult(기술 id) · u.uc(필살 게이지 0~100) · u.ultP(세기 배율) · u.ultR(차는 빠르기). 끄면(DS.BAL.ult=false) 사양이 ult 를 싣지 않아 그 전과 똑같다.
 //   게이지는 싸움 중에만 찬다 (DS.ULT.charge 초에 100). 때리면 hitGain, 맞으면 받은 피해 ÷ 최대 체력 × hurtGain 만큼 더. 쓰면 0. 엔진 난수는 부르지 않는다.
 if (DS.BAL.ult == null) DS.BAL.ult = true;
@@ -38,7 +30,6 @@ if (DS.BAL.healAlly == null) DS.BAL.healAlly = 0.5;      // 2.1.1: 우리 편 �
 //   r36 (1.3.0): 필살기는 맹주만 지니고(DS.ultSpec), 사람이 눌러야만 나간다 — 자동 조작·전체 자동에서도 스스로 쓰지 않는다 (가득 찬 게이지는 그대로 기다린다).
 //   DS.BAL.ultAuto = true 는 검사 도구(봇)만 켠다: 사람이 가득 차면 누른다고 치고 옛 자동 판단(P.aiUlt)을 그대로 쓴다.
 if (DS.BAL.ultAuto == null) DS.BAL.ultAuto = false;
-DS.ERASE = { th: [2 / 3, 1 / 3], n: [2, 3], cmdMax: 1, dur: 2.2, pull: 2, cover: 0.8, coverHurt: 0.25, call: 50, hpCut: 0.15, atkCut: 0.12, slow: 0.8 };      // dur 2.2 × 화면 slow 0.8 = 실제 2.75초 (배속 무시)
 
 // ── 2.3.0 큰 몸 (여러 칸을 차지하는 유닛): u.fw × u.fh 칸, (u.x, u.y) 는 왼쪽 위 칸. 없으면 한 칸.
 //   거리는 두 몸의 가장 가까운 칸 사이 (맨해튼) — 큰 보스는 어느 칸에 붙어도 붙은 것이고, 사거리도 가장 가까운 칸까지 잰다 (서로 같다).
@@ -81,7 +72,7 @@ function Sim(o) {
   this.dz = { ally: new Uint8Array(n), enemy: new Uint8Array(n) };
   this.sq = []; this.zn = []; this._qid = 0;      // 여러 박자 기술: 기다리는 박자(sq) · 남은 자리(zn) — 아래 「여러 박자」
   this.groups = []; this.chk = 0; this.block = o.block || null; this.hz = []; this._hzC = 0;      // 2.3.0: 땅에 남은 위험 (hazard)
-  this.seed0 = o.seed || 7; this.erSeed = o.erSeed; this._ver = 0; this._allyV = -1; this._ally = null; this._us = []; this.swp = 0;      // 명부가 바뀐 횟수, 살아 있는 아군 목록(캐시), 틱마다 쓰는 임시 목록
+  this.seed0 = o.seed || 7; this._ver = 0; this._allyV = -1; this._ally = null; this._us = []; this.swp = 0;      // 명부가 바뀐 횟수, 살아 있는 아군 목록(캐시), 틱마다 쓰는 임시 목록
   var self = this;
   (o.units || []).forEach(function (s) { self.add(s); });
   (o.spawns || []).forEach(function (g) { self.groups.push(g); self.spawnGroup(g); });
@@ -429,7 +420,6 @@ P.hurt = function (v, dmg, src, o) {
   }
   v.hp -= dmg; this.lastHit = this.t;
   if (v.enr && !v.enraged && v.hp > 0 && v.hp <= v.mhp * v.enr.th) this.enrage(v);      // 2.3.0 격노
-  if (v.er && dmg < v.mhp) this.erHit(v);      // r17: 이름 지우기 문턱 (왕만). 최대 체력 이상 한 방(시험·연출의 즉사)은 건너뛴다 — 실제 싸움에는 없는 값
   if (src && src.side === 'enemy' && v.side === 'ally') src.prov = this.t + 6;      // 우리를 때린 적은 멀어도 내버려 두지 않는다
   if (v.ult && dmg > 0) v.uc = Math.min(100, (v.uc || 0) + dmg / (v.mhp || 1) * DS.ULT.hurtGain * this.ultUp(v));      // r32: 맞으면 필살 게이지가 조금 더 찬다
   if (src && src.ult && src !== v && o.type !== 'reflect') src.uc = Math.min(100, (src.uc || 0) + DS.ULT.hitGain * this.ultUp(src));
@@ -460,8 +450,7 @@ P.kill = function (v, by) {
   var self = this;
   v.dead = true; v.deadT = this.t; v.hp = 0; this.unplace(v); this._ver++;
   if (v.rsv || v.rsvU) { v.rsv = null; v.rsvU = false; }      // 2.2.3: 쓰러지면 예약도 거둔다
-  var de = { t: 'die', id: v.id, by: by ? by.id : null }; if (this._erK) de.erase = 1;
-  this.emit(de);
+  this.emit({ t: 'die', id: v.id, by: by ? by.id : null });
   if (this.std) this.std.died(this, v, by);      // 2.8 마지막 물결 (stand.js): 쓰러진 우리 사람은 그 싸움에서만 빠진다. 따르던 가문원은 남은 가주에게, 끝은 물결이 정한다
   if (by && by.fx && !by.dead && by.side !== v.side) {
     if (by.fx.killHp) this.heal(by, by.mhp * by.fx.killHp);
@@ -483,7 +472,7 @@ P.kill = function (v, by) {
     if (v.obj) {
       if (v.phase2) {
         var s = this.mk(null, { boss: v.phase2, x: v.x, y: v.y, grp: v.grp }); s.obj = true;
-        var nu = this.add(s); if (nu) { nu.aggro = true; nu.gauge = 30; this.emit({ t: 'phase', id: nu.id }); if (nu.type === 'duskking' && DS.BAL.nameErase) this.erInit(nu); }
+        var nu = this.add(s); if (nu) { nu.aggro = true; nu.gauge = 30; this.emit({ t: 'phase', id: nu.id }); }
       } else this.win();
     } else if (this.objective === 'all') this.checkAll();
   }
@@ -719,7 +708,6 @@ P.resolve = function (u, id, tiles, unitTgt, o) {
   else if ((S.tg === 'enemy' || S.tg === 'ally') && unitTgt) vs = unitTgt.dead ? [] : [unitTgt];
   else vs = this.victims(u, S, tiles);
   if (!o) this.emit({ t: 'skill', id: u.id, sk: id, fx: S.fx, tiles: tiles || vs.map(function (v) { return [v.x, v.y]; }), from: [u.x, u.y] });
-  if (this._er && u.side === 'ally' && S.tg === 'ally' && unitTgt && unitTgt.erM && S.eff.some(function (e) { return e.t === 'heal' || e.t === 'cleanse'; })) this.erSave(unitTgt, 'heal', u);      // r17: 한 사람에게 거는 치유·정화
   var hk0 = u.side === 'ally' && !S.ult && !S.item ? DS.BAL.healAlly : 1, hup = u.fx && u.fx.healUp ? 1 + u.fx.healUp : 1, by = u.side === 'ally' ? u.id : null, ctr0 = vs[0] || null;
   // 2.2.6 to: 그 덧효과만 다른 무리에게 — 'self' 쓰는 이 · 'ally' / 'foe' 쓰는 이(at: 'tgt' 면 첫 대상) 둘레 r 칸
   function grp(e) {
@@ -1221,11 +1209,6 @@ P.runOrder = function (u) {
         if (u.gauge < c) { this.wait(u); return true; }
         this.cast(u, o.id, v); u.order = null; return true;
       }, 80);
-    case 'call':      // r17: 이름을 부른다 — 틱이 차는 대로
-      v = this.byId[o.tid];
-      if (!this._er || !v || v.dead || !v.erM || (this._er.er.called)) { u.order = null; return false; }
-      if (u.gauge < DS.ERASE.call) { this.wait(u, 0.1); return true; }
-      u.gauge = 0; this._er.er.called = u.id; this.erSave(v, 'call', u); this.say(u, v.mn || v.name); u.order = null; u.busy = 0.4; return true;
     case 'item':
       v = o.tid ? this.byId[o.tid] : u;
       if (!v || v.dead || !(this.inv[o.key] > 0)) { u.order = null; return false; }
@@ -1982,7 +1965,6 @@ P.enemySkill = function (u, allies) {
 
 P.think = function (u) {
   u.idle = false;
-  if (u.erM) { this.wait(u, 0.2); return; }      // r17: 이름이 바래는 동안은 굳는다
   if (u.side === 'enemy') return this.aiEnemy(u);
   if (u.role === 'shade' && this.aiShade) return this.aiShade(u);      // 2.5.0 이름 부르기의 그림자 (shade.js)
   if (u.role === 'cmd') {
@@ -2069,7 +2051,6 @@ P.tick = function (dt) {
     if (u.busy > 0) u.busy -= dt;
     if (u.busy <= 0 && !u.casting) this.think(u);
   }
-  if (this._er) this.erTick(dt);      // r17: 이름 지우기 예고
   if (this.hz.length) this.hazTick(dt);      // 2.3.0 땅의 위험
   if (this.sq.length) this.seqTick(dt);      // 여러 박자 · 예고 낙하
   if (this.zn.length) this.zoneTick(dt);      // 남는 자리
@@ -2094,69 +2075,4 @@ P.tick = function (dt) {
   }
 };
 
-// ───────── r17: 이름 지우기 (30번 어스름의 왕) ─────────
-function erRng(seed) { var h = 2166136261 >>> 0, s = String(seed); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return DS.rng((h % 2147483646) + 1); }
-P.erInit = function (k) { k.er = { k: 0, on: null, used: {}, called: null, rng: erRng((this.erSeed != null ? this.erSeed : this.seed0) + ':erase'), log: [] }; if (k.erTh) k.er.th = k.erTh; if (k.erPlus) k.er.plus = k.erPlus; };      // r33 legacy: 대마다 왕의 비틀기 — 유닛의 erTh(문턱)·erPlus(한 번에 더 지울 수). 없으면 그 전과 같다
-P.erHit = function (v) {
-  var E = v.er, C = DS.ERASE;
-  if (E.on) { if (v.hp < E.floor) v.hp = E.floor; return; }
-  var TH = E.th || C.th;
-  if (E.k < TH.length && v.hp <= v.mhp * TH[E.k] && !this.result) { E.floor = Math.max(1, Math.round(v.mhp * TH[E.k])); if (v.hp < E.floor) v.hp = E.floor; this.erStart(v); }
-};
-P.erHero = function () { var h = this.heroId && this.byId[this.heroId]; if (h) return h; for (var i = 0; i < this.units.length; i++) { var u = this.units[i]; if (u.side === 'ally' && u.role === 'cmd' && u.hero) return u; } return this.byId[this.leader] || null; };
-P.erStart = function (v) {
-  var E = v.er, C = DS.ERASE, k = E.k++, self = this, hero = this.erHero(), R = E.rng, i;
-  var cand = this.units.filter(function (u) { return !u.dead && u.side === 'ally' && (u.role === 'cmd' || u.role === 'merc') && u !== hero && !E.used[u.id]; });
-  cand.sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; });
-  for (i = cand.length - 1; i > 0; i--) { var j = Math.floor(R() * (i + 1)), t = cand[i]; cand[i] = cand[j]; cand[j] = t; }
-  var n = Math.min(cand.length, (k === 0 ? C.n[0] : cand.length >= 6 ? C.n[1] : C.n[0]) + (E.plus || 0)), pick = [], nc = 0;
-  for (i = 0; i < cand.length && pick.length < n; i++) { if (cand[i].role === 'cmd') { if (nc >= C.cmdMax) continue; nc++; } pick.push(cand[i]); }      // 가주는 한 번에 cmdMax 명까지 (가주가 지워지면 그 가솔 둘도 흩어진다)
-  if (!pick.length) return;
-  pick.forEach(function (u) {
-    E.used[u.id] = 1; u.erM = { k: k, cov: 0 }; u.order = null; u.casting = null;
-    self.tele = self.tele.filter(function (T) { if (T.u === u) { self.emit({ t: 'castEnd', tid: T.id, cancel: true }); return false; } return true; });
-    for (var s = 0; s < C.pull; s++) {      // 왕 쪽으로 끌려간다 (빈 칸만)
-      var kn = nearT(v, u.x, u.y), dx = kn.x - u.x, dy = kn.y - u.y; if (Math.abs(dx) + Math.abs(dy) <= 2) break;
-      var opts = Math.abs(dx) >= Math.abs(dy) ? [[Math.sign(dx), 0], [0, Math.sign(dy)]] : [[0, Math.sign(dy)], [Math.sign(dx), 0]], moved = false;
-      for (var q = 0; q < 2 && !moved; q++) { var nx = u.x + opts[q][0], ny = u.y + opts[q][1]; if ((opts[q][0] || opts[q][1]) && self.pass(u.mt, nx, ny) && !self.occ[ny * self.w + nx]) { self.moveTo(u, nx, ny); moved = true; } }
-      if (!moved) break;
-    }
-    self.emit({ t: 'knock', id: u.id, x: u.x, y: u.y });
-  });
-  E.on = { k: k, t: C.dur, dur: C.dur, ids: pick.map(function (u) { return u.id; }), saved: [], dead: [] };
-  this._er = v; this.reDanger();
-  this.emit({ t: 'erase', id: v.id, k: k, ids: E.on.ids.slice(), dur: C.dur });
-};
-P.erGuard = function (u) {      // 감쌀 수 있는 사람: 가솔이면 그 가주, 가주면 다른 가주 (굳은 이는 못 감싼다)
-  var self = this;
-  if (u.role === 'merc') { var o = this.byId[u.owner]; return o && !o.dead && !o.erM ? [o] : []; }
-  return this.cmds().filter(function (c) { return c !== u && !c.erM; });
-};
-P.erSave = function (u, how, by) {
-  var K = this._er; if (!K || !u.erM) return;
-  var E = K.er; delete u.erM; E.on.saved.push(u.id); E.log.push([E.on.k, u.id, how]);
-  if (how === 'cover' && by) { var d = Math.round(by.mhp * DS.ERASE.coverHurt); by.hp = Math.max(1, by.hp - d); this.emit({ t: 'hit', id: by.id, v: d, type: 'dark', cover: 1 }); }
-  this.emit({ t: 'eraseSave', id: u.id, how: how, by: by ? by.id : null });
-};
-P.erTick = function (dt) {
-  var K = this._er, E = K.er, O = E.on, C = DS.ERASE, self = this;
-  if (!O) { this._er = null; return; }
-  O.ids.forEach(function (id) {
-    var u = self.byId[id]; if (!u || u.dead || !u.erM) return;
-    var g = self.erGuard(u).filter(function (c) { return dist(c, u) <= 1 && ((c.order && c.order.t === 'move') || c.holdT > self.t); })[0];      // 명령으로 와서 선 사람만 (도착하면 holdT 동안 그 자리)
-    if (g) { u.erM.cov += dt; if (u.erM.cov >= C.cover) self.erSave(u, 'cover', g); } else u.erM.cov = Math.max(0, u.erM.cov - dt);
-  });
-  O.t -= dt;
-  if (O.t > 0 && !K.dead) return;
-  this._er = null; E.on = null;
-  var n = 0;
-  O.ids.forEach(function (id) {
-    var u = self.byId[id]; if (!u || !u.erM) return;
-    delete u.erM; if (u.dead) return;
-    self._erK = true; self.kill(u, K); self._erK = false; O.dead.push(id); E.log.push([O.k, id, 'erased']); n++;
-  });
-  if (n && !K.dead) { K.hp = Math.max(1, Math.round(K.hp * (1 - C.hpCut * n))); K.atk = Math.round(K.atk * (1 - C.atkCut * n)); K.mag = Math.round(K.mag * (1 - C.atkCut * n)); K.gauge = 0; }      // 지운 이름의 무게에 잠깐 비틀거린다
-  this.emit({ t: 'eraseEnd', id: K.id, k: O.k, dead: O.dead, saved: O.saved });
-  var TH = E.th || C.th; if (!this.result && K.hp <= K.mhp * (TH[E.k] == null ? -1 : TH[E.k])) this.erHit(K);      // 깎인 체력이 벌써 다음 문턱 밑이면 곧바로
-};
 })();

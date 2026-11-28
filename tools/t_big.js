@@ -150,7 +150,7 @@ module.exports = async (page, shot, L) => {
   }
   await ev(() => { if (DS.G.sim && !DS.G.sim.result) DS.G.sim.win(); }); await L.settle(page, 15000);
   await fight(30, false);
-  const dk = await ev(() => { DS.ERASE.th = []; var sim = DS.G.sim, h = sim.units.filter(function (u) { return u.role === 'boss'; })[0]; DS.G.view.focus = h.id; sim.rouse(h); sim.hurt(h, h.hp + 5, null, {}); var k = sim.units.filter(function (u) { return u.role === 'boss' && !u.dead; })[0]; if (k) DS.G.view.focus = k.id; return k ? { n: k.name, fw: k.fw, fh: k.fh } : null; });
+  const dk = await ev(() => { var sim = DS.G.sim, h = sim.units.filter(function (u) { return u.role === 'boss'; })[0]; DS.G.view.focus = h.id; sim.rouse(h); sim.hurt(h, h.hp + 5, null, {}); var k = sim.units.filter(function (u) { return u.role === 'boss' && !u.dead; })[0]; if (k) DS.G.view.focus = k.id; return k ? { n: k.name, fw: k.fw, fh: k.fh } : null; });
   await L.sleep(2400);
   A(dk && dk.fw === 2 && dk.fh === 4, 'the second phase (' + (dk && dk.n) + ') is a 2×4 body');
   await vshot('boss_2x4.png', await bossClip()); await shot('boss_2x4');

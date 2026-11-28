@@ -1,9 +1,9 @@
 // 전민 — 이름 부르기 (싸움마다 한 번): 먼저 간 이의 이름을 부르면 그 사람의 그림자가 잠깐 와서 같이 싸운다.
-//   경전 §1 「사람은 두 번 죽는다 … 아무도 그 이름을 부르지 않을 때」 · §10 먼저 간 사람들(DS.storyDead) · 30번 이름 부르기(DS.ERASE_TXT)와 같은 말.
+//   경전 §1 「사람은 두 번 죽는다 … 아무도 그 이름을 부르지 않을 때」 · §10 먼저 간 사람들(DS.storyDead).
 //   규칙: 출전(시나리오 · 다음 세대의 장 · 갱도)에서만, 한 싸움에 한 번. 들판(필드 보스 포함) · 연무장 · 무술대회 · 온라인에는 없다.
 //     부를 이름 = 싸움이 시작될 때 이번 대에 먼저 간 이들(DS.storyDead) 가운데 병과를 알 수 있는 셋까지. 그 싸움에서 쓰러진 이는 그 싸움에서 부르지 못한다.
 //     그림자: 그 사람의 병과 · 기록의 레벨(부대 평균과 7단 Lv10 을 넘지 않는다)의 기본 장비 능력치 × SHADE.k (체력은 × SHADE.hk), SHADE.dur 초 뒤 걷힌다. 적은 산 사람을 먼저 노린다 (SHADE.shun).
-//     치유 · 가호를 받지 않고(엔진 friends · heal) · 이름 지우기 대상이 아니고(가주 · 가솔만) · 쓰러져도 죽음이 아니다(엔진 kill → shadeEnd: 걷힐 뿐).
+//     치유 · 가호를 받지 않고(엔진 friends · heal) · 쓰러져도 죽음이 아니다(엔진 kill → shadeEnd: 걷힐 뿐).
 //     경험치 · 공훈 · 전리품 · 추모 기록 · 가계 기록에 아무것도 남기지 않는다. 저장 칸은 늘지 않는다 (싸움마다의 것은 sim.shd).
 //     자동: 부르는 이(맹주, 없으면 남은 가주)가 「자동」이면 가주가 위태롭거나(체력 SHADE.low 아래) 보스가 격노하면 스스로 부른다 (필살기와 같은 약속 — 「수동」이면 단추로만).
 //   엔진 쪽(머리 없는 봇도 읽는다): DS.shadeArm · Sim.shadeCall · shadeEnd · aiShade · shadeTick. 화면 쪽: DS.shadeUI (game.js 가 단추 · 사건을 넘긴다).
@@ -30,7 +30,6 @@ var T = DS.SHADE_TXT = {
   used: '이름은 한 싸움에 한 번 부른다',
   gone: '그림자가 다녀갔다',
   noHere: '여기서는 이름을 부를 수 없다',
-  erase: '지금은 산 이름부터 지킨다',
   nobody: '부를 사람이 없다',
   call: '{n}!',
   hint: '먼저 간 이를 부를 수 있다',
@@ -133,13 +132,15 @@ var P = DS.Sim && DS.Sim.prototype; if (!P) return;
 function dist(a, b) { return DS.fpDist ? DS.fpDist(a, b) : Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
 // 부르는 이: 맹주 → 고른 사람(leader) → 남은 가주 (굳은 이는 부르지 못한다)
 P.shadeCaller = function () {
-  var h = this.erHero ? this.erHero() : null;
-  if (h && !h.dead && h.side === 'ally' && h.role === 'cmd' && !h.erM) return h;
-  var c = this.cmds().filter(function (u) { return !u.erM; }); return c[0] || null;
+  var h = this.heroId && this.byId[this.heroId];
+  if (!h) for (var i = 0; i < this.units.length; i++) { var u = this.units[i]; if (u.side === 'ally' && u.role === 'cmd' && u.hero) { h = u; break; } }
+  if (!h) h = this.byId[this.leader] || null;
+  if (h && !h.dead && h.side === 'ally' && h.role === 'cmd') return h;
+  return this.cmds()[0] || null;
 };
 // 이름을 부른다: i = 고른 이름(차례), by = 부르는 이 id (없으면 shadeCaller). 돌려주는 것: 그림자 유닛 또는 null
 P.shadeCall = function (i, by, auto) {
-  var S = this.shd; if (!S || S.used || this.result || this._er) return null;
+  var S = this.shd; if (!S || S.used || this.result) return null;
   var c = S.cands[i || 0]; if (!c || !c.spec) return null;
   var who = by && this.byId[by] && !this.byId[by].dead && this.byId[by].side === 'ally' && this.byId[by].role === 'cmd' ? this.byId[by] : this.shadeCaller(); if (!who) return null;
   var sp = {}, k; for (k in c.spec) sp[k] = c.spec[k];
@@ -179,7 +180,7 @@ P.aiShade = function (u) {
 };
 // 자동: 부르는 이가 「자동」이고 싸움이 붙은 지 wait 초가 지났으면, 가주가 위태롭거나 보스가 격노할 때 가장 무거운 이름을 부른다 (tick 의 0.25초 점검에서)
 P.shadeTick = function () {
-  var S = this.shd; if (!S || S.used || !S.cands.length || this.result || this._er) return;
+  var S = this.shd; if (!S || S.used || !S.cands.length || this.result) return;
   if (!this.combat) return;
   if (S.t0 == null) S.t0 = this.t;
   if (this.t - S.t0 < DS.SHADE.wait || S.hold) return;
@@ -202,7 +203,6 @@ function why(sim) {
   if (S.used) return sim.byId[S.id] && !sim.byId[S.id].dead ? T.used : T.gone;
   if (!S.cands.length) return T.none;
   if (sim.result) return T.used;
-  if (sim._er) return T.erase;
   if (!sim.shadeCaller()) return T.nobody;
   return '';
 }
@@ -243,7 +243,7 @@ DS.shadeUI = {
     b.addEventListener('click', function () {
       DS.Audio.unlock && DS.Audio.unlock();
       var sim = g.sim, w = why(sim);
-      if (w) { if (U().deny) U().deny(b, w === T.none ? '없음' : w === T.erase ? '지금은' : '한 번', w); else if (U().toast) U().toast(w, 1600); return; }
+      if (w) { if (U().deny) U().deny(b, w === T.none ? '없음' : '한 번', w); else if (U().toast) U().toast(w, 1600); return; }
       if (g.shadePick) { pickOff(); A('cancel'); return; }
       pickOpen(b);
     });

@@ -34,7 +34,7 @@ function run(sim, mode, maxT) {
   while (!res) {
     sim.update(STEP);
     for (const e of sim.drain()) {
-      if (e.t === 'die') { const u = sim.byId[e.id]; if (u && u.side === 'ally' && !e.flee && !e.erase && (u.role === 'cmd' || u.role === 'merc')) { dead++; if (u.role === 'cmd') cmdDead++; } }      // 30번의 이름 지우기(정해진 장치)는 세지 않는다
+      if (e.t === 'die') { const u = sim.byId[e.id]; if (u && u.side === 'ally' && !e.flee && (u.role === 'cmd' || u.role === 'merc')) { dead++; if (u.role === 'cmd') cmdDead++; } }
       else if (e.t === 'win') res = 'win'; else if (e.t === 'lose') res = 'lose';
     }
     if (sim.result) res = sim.result;
@@ -58,7 +58,6 @@ function fightScn(s, sc, seed) {
   const b = D.buildScenario(sc, D.partySpecs(s).length, s.chars[s.hero] ? s.chars[s.hero].cls : 'inf');
   const sim = new D.Sim({ map: b.map, units: b.units, mk: b.mk, objective: b.objective, waves: b.waves, seed: seed * 131 + (sc.id || 0), inv: s.items, mode: 'scn' });
   sim.heroId = 'c' + s.hero;
-  if (sc.boss === 'herald') sim.erSeed = [s.hero, s.name, 1, seed].join(':');
   place(sim, D.partySpecs(s), b.start);
   return run(sim, 'scn', 900);
 }

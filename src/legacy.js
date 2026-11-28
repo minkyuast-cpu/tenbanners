@@ -1,5 +1,5 @@
 // r33 legacy: 「가문의 위업」 — 세대를 거듭할수록 가문이 자란다는 것을 눈으로 느끼게 한다.
-//   ① 결산: 메인 맺음(1대)과 다음 세대의 장을 마칠 때마다 점수 줄(깬 장, 우두머리, 어스름의 왕, 살아남은 가주, 아이, 지킨 이름, 한계 돌파, 바친 재물, 잃은 사람)을 세어 올린다.
+//   ① 결산: 메인 맺음(1대)과 다음 세대의 장을 마칠 때마다 점수 줄(깬 장, 우두머리, 어스름의 왕, 살아남은 가주, 아이, 한계 돌파, 바친 재물, 잃은 사람)을 세어 올린다.
 //      누계가 문턱을 넘으면 가문 등급이 오른다 (이름 없는 집 → 이름난 집 → 명문 → 대명문 → 전설의 가문, 그 뒤로는 별). 오를 때마다 가호 셋 가운데 하나를 고른다 (쌓인다).
 //   ② 보이는 것: 맹주 가문 문장의 테(동 → 은 → 금 → 보석), 「n대째」 표, 타이틀의 가문 이름과 등급, 「가문의 유산」 창.
 //   ③ 대마다 새것: 돌아온 어스름의 왕의 비틀기(대마다 하나씩 쌓인다), 장을 마칠 때 맹주 가문 이름·칭호가 열린다, 등급만큼 장의 적이 조금 세진다.
@@ -54,7 +54,7 @@ DS.LG_UNLOCK = [
 ];
 // 돌아온 어스름의 왕의 비틀기: 그 대에 하나가 더해지고 앞의 것도 남는다 (g = 다음 세대의 장 번호)
 DS.LG_TWIST = [
-  { g: 2, k: 'er', say: '이번에는 이름을 하나 더 맡겠습니다.', note: '왕이 한 번에 이름 하나를 더 지운다.', sh: '이름 하나를 더 지운다' },
+  { g: 2, k: 'gate', say: '이번에는 문을 조금 더 열어 두었습니다.', note: '문이 열릴 때 어스름이 더 쏟아진다.', sh: '어스름이 더 쏟아진다' },
   { g: 3, k: 'sum', say: '저희 쪽에도 이름 없는 직원이 좀 있습니다.', note: '왕이 그림자를 불러낸다.', sh: '그림자를 부른다' },
   { g: 4, k: 'hp', say: '맡은 이름만큼 제 몸이 무거워졌습니다.', note: '왕의 몸이 대마다 더 단단해진다.', sh: '몸이 더 단단하다' },
   { g: 5, k: 'spd', say: '이번에는 기다려 드리지 않겠습니다.', note: '왕이 더 빨리 움직인다.', sh: '더 빨리 움직인다' }
@@ -137,7 +137,6 @@ DS.lgRows = function (s, g, k, gens) {
   rows.push(['king', many, many * P.king]);
   var hd = headsAlive(s); rows.push(['head', hd, hd * P.head]);
   var kid = Math.min(DS.LG.kidMax * many, since(s, t0, 'birth')); rows.push(['kid', kid, kid * P.kid]);
-  var er = s.erLast, nm = er && (k === 'retro' || er.g === g) ? Math.max(0, Math.round(+er.saved || 0)) : 0; rows.push(['name', nm, nm * P.name]);
   var bk = Math.min(DS.LG.brkMax * many, L.brk); if (bk) rows.push(['brk', bk, bk * P.brk]);
   if (L.don.pts) rows.push(['don', L.don.gold, L.don.pts]);
   var lost = lostSince(s, t0); rows.push(['lost', lost, Math.max(DS.LG.lostMin * many, lost * P.lost)]);
@@ -254,10 +253,10 @@ if (esc0) DS.egScn = function (n, g, save) {
 // 왕의 그림자 부름: 망령 부름(b_sumGhost)보다 순하게 — 한 번에 하나, 곁에 둘까지, 더 드물게
 if (DS.SKILLS && DS.SKILLS.b_sumGhost && !DS.SKILLS.lg_shade) { DS.SKILLS.lg_shade = JSON.parse(JSON.stringify(DS.SKILLS.b_sumGhost)); DS.SKILLS.lg_shade.name = '그림자 부름'; DS.SKILLS.lg_shade.cap = 2; DS.SKILLS.lg_shade.cd = 24; DS.SKILLS.lg_shade.eff[0].n = 1; }
 var bs0 = DS.buildScenario;
-// 공정함의 밸브: 같은 장의 같은 판을 다시 걸으면(시도 2번째부터) 등급 몫이 빠지고 가장 새 비틀기가 빠진다. 3번째부터는 왕의 비틀기는 「이름 하나 더」만 남는다.
+// 공정함의 밸브: 같은 장의 같은 판을 다시 걸으면(시도 2번째부터) 등급 몫이 빠지고 가장 새 비틀기가 빠진다. 3번째부터는 왕의 비틀기는 「어스름이 더 쏟아진다」만 남는다.
 //   긴장은 첫 걸음에만 — 진 뒤에 벽이 되지 않게. 시도 수는 buildScenario 가 판마다 한 번 불리는 것으로 센다 (game.js startScenario · campaign.js 같은 길)
 DS.lgTries = function (s, sc) { var A = s && s.lg && s.lg.att; return A && sc && A.g === sc.gen && A.id === sc.id ? A.n : 0; };
-DS.lgActTwists = function (g, tries) { var tw = DS.lgTwists(g); if (tries >= 3) return tw.filter(function (t) { return t.k === 'er'; }); if (tries >= 2) return tw.slice(0, -1); return tw; };
+DS.lgActTwists = function (g, tries) { var tw = DS.lgTwists(g); if (tries >= 3) return tw.filter(function (t) { return t.k === 'gate'; }); if (tries >= 2) return tw.slice(0, -1); return tw; };
 if (bs0) DS.buildScenario = function (s, a, b, c) {
   var tries = 0, sv0 = S();
   if (s && s.gen >= 2 && !s.pit && sv0 && sv0.lg) {
@@ -272,10 +271,9 @@ if (bs0) DS.buildScenario = function (s, a, b, c) {
     var u = mk0(t, o);
     if (u && o && o.boss === 'duskking') {
       var sk = (u.skills || []).slice(), tw = {}; DS.lgActTwists(g, tries).forEach(function (t) { tw[t.k] = 1; });
-      if (tw.er) u.erPlus = 1;
+      if (tw.gate) u.finMore = 1;      // 2.9 마지막 싸움: 문이 열릴 때 쏟아지는 어스름이 한 몫 더 (final.js)
       if (tw.sum && sk.indexOf('lg_shade') < 0 && DS.SKILLS.lg_shade) sk.push('lg_shade');
       if (tw.curse && sk.indexOf('b_curse') < 0 && DS.SKILLS.b_curse) sk.push('b_curse');
-      if (tw.th) u.erTh = [2 / 3, 1 / 2, 1 / 3];
       var hp = tw.hp ? DS.lgKingHp(g) : 0; if (hp) { u.hp = u.mhp = Math.round((u.mhp || u.hp) * (1 + hp)); }
       if (tw.spd && u.spd) u.spd = u.spd * 1.06;
       u.skills = sk;

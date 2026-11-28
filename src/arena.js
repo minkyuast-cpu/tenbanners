@@ -385,7 +385,7 @@ function specFor(key) { if (key && key.indexOf('c:') === 0) { var e = entry(key)
 
 DS.arenaCan = function () {
   var g = G(); if (!g || !g.save || !g.sim || !g.zone) return '아직 갈 수 없다';
-  if (g.scn || g.ending || g.sim.combat || g.sim._er || (g.sim.units || []).some(function (u) { return !u.dead && u.side === 'enemy' && u.aggro; })) return L.busy;
+  if (g.scn || g.ending || g.sim.combat || (g.sim.units || []).some(function (u) { return !u.dead && u.side === 'enemy' && u.aggro; })) return L.busy;
   return null;
 };
 DS.arenaOpen = function (o) {

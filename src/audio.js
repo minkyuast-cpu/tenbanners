@@ -181,7 +181,7 @@ var LVL = {"tap":3.63,"ok":1.95,"cancel":2.26,"step":1.3,"slash":2.26,"punch":2.
   "shieldSlam":1.5,"shieldUp":2.88,"wallUp":1.81,"quakeHit":1.17,"whirl":2.82,"shout":2.57,"emberPop":3.89,"fireRoar":2.29,"iceShot":3.67,"iceBreak":3.43,"freeze":1.62,"zap":2.83,"thunderBig":0.98,
   "fallWhistle":1.46,"meteorHit":1.06,"starFall":1.62,"chant":1.66,"runeTick":3.43,"skL2":1.53,"skL3":0.99,"skL4":1.1,"skL5":0.8};      // 2.6: 같은 probe 로 혼인 −22 · 출생 −23.5 (오르골은 조금 작게)      // r26: 새 화면 소리 — 같은 probe 로 조작 −32 · 동전 똑딱 −40 · 기대 −27 · 띠 −22 · 심장 −27
 var skT = {};
-var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89,"erase":2.0,"mourn":1.93};
+var BGV = {"map":1.86,"town":1.6,"battle":1.17,"boss":1.06,"title":1.92,"dark":2.04,"victory":1.35,"ending":1.89,"night":2.0,"mourn":1.93};
 
 // ── 배경음: 16분음표 시퀀서 ──
 // 음 이름 → 주파수
@@ -214,8 +214,8 @@ var TRACKS = {
   // 승리 — 한 번만 울리는 짧은 곡
   victory: { bpm: 120, lead: pat('C5 - C5 C5 E5 - G5 - C6 - - - G5 - E5 - F5 - A5 - C6 - A5 - G5 - - - C6 - - -'),
     bass: pat('C3 - - - G2 - - - C3 - - - E3 - - - F2 - - - A2 - - - G2 - - - C3 - - -'), lv: 0.04, bv: 0.05, type: 'square', once: true },
-  // r17 boss: 이름 지우기 — 느리고 낮은 반음 맴돌기 (북 없이)
-  erase: { bpm: 56, lead: pat('E4 - F4 - E4 - - - D#4 - E4 - - - - - B3 - C4 - B3 - - - A#3 - B3 - - - - -'),
+  // 2.9 마지막 싸움 넷째 막 「밤이 내린다」 — 느리고 낮은 반음 맴돌기 (북 없이 · 예전 이름 지우기의 곡)
+  night: { bpm: 56, lead: pat('E4 - F4 - E4 - - - D#4 - E4 - - - - - B3 - C4 - B3 - - - A#3 - B3 - - - - -'),
     bass: pat('E1 - - - - - - - E1 - - - - - - - F1 - - - - - - - E1 - - - - - - -'), lv: 0.04, bv: 0.07, type: 'sine', echo: true },
   // 2.6 애도 — 전멸 카드 · 의식 · 교회 앞. 느린 여덟 마디 단조 (한 마디에 두 음, 북 없이)
   mourn: { bpm: 60, lead: pat('A4 - - - C5 - - - B4 - - - A4 - - - G4 - - - A4 - - - E4 - - - - - - - F4 - - - A4 - - - G4 - - - E4 - - - F4 - - - E4 - D4 - E4 - - - - - - -'),
