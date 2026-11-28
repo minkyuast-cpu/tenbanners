@@ -551,7 +551,7 @@ function enterZone(id, from, pos) {
   else if (z.town && DS.ageCheck && DS.linSettle) {      // 나이: 마을에 들어서면 쉬는 때 — 성년·노년·천수
     var aq = []; try { aq = DS.ageCheck(s, z.name).concat(DS.ageSettle ? DS.ageSettle(s, z.name) : []); } catch (x) { if (DS.DEBUG) throw x; }      // 자연사만 확정 (싸움 밖에서 down 인 지휘관은 정상 플레이에선 생기지 않는다 — 시험의 유령을 건드리지 않게)
     if (aq.length) { G.lineageQ = (G.lineageQ || []).concat(aq); setTimeout(function () { if (G.zone === z && !G.scn && G.sim && !G.sim.combat) lineageFlush(function () { rebuildParty(); persist(); }); }, 900); }
-    if (DS.standLateGo && DS.standLate && DS.standLate(s)) setTimeout(function go() { if (G.zone !== z || G.scn) return; if (G.hold > 0 || document.querySelector('.ov')) { setTimeout(go, 800); return; } DS.standLateGo(s); }, 1400);      // 2.8: 마지막 물결을 치르다 꺼진 판 — 그때까지 막은 물결로 끝났다. 결과를 보이고 창을 연다
+    if (DS.standLateGo && DS.standLate && DS.standLate(s)) setTimeout(function go() { if (G.zone !== z || G.scn) return; if (G.hold > 0 || document.querySelector('.ov')) { setTimeout(go, 800); return; } DS.standLateGo(s); }, 1400);      // 2.8: 마지막 물결을 치르다 꺼진 판, 그때까지 막은 물결로 끝났다. 결과를 보이고 창을 연다
     if (DS.egLateNote && DS.egCallOpen && DS.egCallOpen(s) && s.eg.call.late && !s.eg.call.seen) setTimeout(function go() { if (G.zone !== z || G.scn) return; if (G.hold > 0) { setTimeout(go, 800); return; } DS.egLateNote(s); }, 1600);      // 3.3.0: 3.2.x 의 진행 중 장 — 밀린 새벽 알림 (한 번)
   }
   persist();
@@ -589,7 +589,7 @@ function startScenario(s) {
 var BEAT_MS = 1200;
 DS.startScenario = startScenario;
 // ───────── 2.8 마지막 물결 (stand.js): 다음 세대로 넘기기 전 어스름의 문 앞에서 끝없는 물결을 막는다 ─────────
-//   G.scn 은 이 싸움의 표(시나리오가 아니다 · stand: 1) — 시나리오 중에 막히는 마을 일 · 지도 · 편성이 그대로 막힌다. G.stand = { std, ids, t0, fin, ... }
+//   G.scn 은 이 싸움의 표(시나리오가 아니다 · stand: 1). 시나리오 중에 막히는 마을 일 · 지도 · 편성이 그대로 막힌다. G.stand = { std, ids, t0, fin, ... }
 //   쓰러진 이는 그 싸움에서만 빠진다: 쓰러짐 · 보상 · 공훈 · 가계의 죽음 처리를 모두 건너뛴다 (standEv 가 사건을 먼저 받는다). 끝나면 DS.standFinale (stand.js) 가 결과 · 맺음 · 창을 잇는다
 var STD_SCN = { id: 0, stand: 1, name: '마지막 물결', boss: null, mobs: [], L: 1, theme: 'nether', tier: 0, reward: {} };
 function startStand(seed, cb) {
@@ -627,6 +627,7 @@ function standEv(e) {      // 돌려주는 것: 이 사건을 여기서 다 다�
       if (!u) return true;
       if (u.side === 'enemy') {
         if (u.role === 'boss' && e.id === G.bossId && !e.flee) { var lw = bossQuote(u, 'last'); if (lw) { bossSay(lw); G.bossHold = performance.now() + 2200; } }
+        if (u.role === 'boss') setTimeout(function () { if (!G.stand || G.sim !== sim || G.stand.fin) return; var b0 = G.bossId && sim.byId[G.bossId]; if (b0 && !b0.dead) return; var nb = sim.units.filter(function (x) { return !x.dead && x.side === 'enemy' && x.role === 'boss'; })[0]; if (nb) showBoss(nb); }, 2400);      // 다음 보스의 막대
         if (e.by && !e.flee && Math.random() < 0.25) bark(sim.byId[e.by], 'kill');
         return true;
       }

@@ -15,10 +15,10 @@ var ST = DS.STAND = {
   boss0: 1, bossEvery: 3, bossMax: 6,   // B(n) = min(bossMax, boss0 + floor((n - 1) / bossEvery))
   mob0: 4, mobPer: 2, mobMax: 60,       // M(n) = min(mobMax, mob0 + mobPer · n)
   live: 34,                             // 한꺼번에 서 있는 적 (넘는 몫은 줄을 서서 자리가 나면 들어온다)
-  dL: -6, LperW: 1, Lmax: 100,          // 적 레벨 = 우리 평균 레벨 + dL + LperW · (n - 1)
-  k0: 1.0, kW: 0.05,                    // 적 세기 = (k0 + kW · (n - 1)) × 대마다 배율 (DS.EG.step · cap, 장 시나리오와 같다)
+  dL: -10, LperW: 1, Lmax: 100,         // 적 레벨 = 우리 평균 레벨 + dL + LperW · (n - 1)
+  k0: 0.75, kW: 0.025,                  // 적 세기 = (k0 + kW · (n - 1)) × 대마다 배율 (DS.EG.step · cap, 장 시나리오와 같다)
   bossHp: 1.0, bossAtk: 1.0,            // 보스 체력 · 공격 손잡이
-  mobHp: 1.0, mobAtk: 1.0,              // 무리 체력 · 공격 손잡이 (무리는 많다 — 하나하나는 가볍게)
+  mobHp: 0.35, mobAtk: 0.45,            // 무리 체력 · 공격 손잡이 (무리는 많다. 하나하나는 가볍게)
   first: 2.5,                           // 첫 물결까지 (엔진 초)
   rest: 4.5,                            // 물결 사이 숨 돌리기 (엔진 초)
   heal: 0.10, mana: 0.10,               // 숨 돌릴 때 돌아오는 몫 (최대치의 비율) · 필살 게이지는 그대로 이어진다
@@ -64,7 +64,7 @@ var HOLD = [7, 9];      // 지키는 자리
 var STARTS = (function () { var a = []; for (var y = 7; y <= 13; y++) for (var x = 2; x <= 12; x++) if (MAP[y].charAt(x) === '_') a.push([x, y]); var d = function (p) { return Math.abs(p[0] - HOLD[0]) + Math.abs(p[1] - HOLD[1]) * 1.3; }; return a.sort(function (p, q) { return d(p) - d(q) || p[1] - q[1] || p[0] - q[0]; }); })();
 var GATE = [[7, 1], [5, 2], [9, 2], [3, 2], [11, 2], [7, 3]];
 
-// 보스: 서른 판의 진짜 보스 (먼동 · 왕은 빼고 — 그 둘은 30번의 장치가 있다). 무리는 그 보스가 있던 판의 적
+// 보스: 서른 판의 진짜 보스 (먼동 · 왕은 빼고. 그 둘은 30번의 장치가 있다). 무리는 그 보스가 있던 판의 적
 var POOL = null;
 function pool() { if (POOL) return POOL; POOL = []; (DS.SCENARIOS || []).forEach(function (s) { if (s.boss && s.boss !== 'herald' && s.boss !== 'duskking' && DS.BOSSES[s.boss] && POOL.indexOf(s.boss) < 0) POOL.push(s.boss); }); return POOL; }
 function mobsOf(boss) { var sc = (DS.SCENARIOS || []).filter(function (s) { return s.boss === boss; })[0]; return sc && sc.mobs && sc.mobs.length ? sc.mobs : ['demon', 'gargoyle', 'ghost', 'darkMage']; }
@@ -89,7 +89,7 @@ DS.standRoster = function (s) {
 };
 DS.standCount = function (s) { var r = DS.standRoster(s); return { all: r.length, cmd: r.filter(function (u) { return u.role === 'cmd'; }).length, kin: r.filter(function (u) { return u.role === 'merc'; }).length }; };
 
-// ── 물결을 부르고 세는 것 (sim.std — 엔진이 틱마다 · 쓰러질 때마다 부른다) ──
+// ── 물결을 부르고 세는 것 (sim.std: 엔진이 틱마다 · 쓰러질 때마다 부른다) ──
 function Std(s, sim, specs, o) {
   var sum = 0; specs.forEach(function (u) { sum += +u.L || 1; });
   this.g = DS.egGen ? DS.egGen(s) : 1; this.Lp = specs.length ? sum / specs.length : 1;
@@ -404,9 +404,13 @@ DS.standResult = function (s, rec, cb, o) {
   return ov;
 };
 // 결과 → 맺음 → 창 (egStart). 그다음 마을로 (창은 마을에 들어서면 열린다)
+var busy = false;      // 결과 · 맺음이 떠 있는 동안 (꺼졌다 연 판의 안내가 겹쳐 뜨지 않게)
 function after(s, rec, o, leave) {
+  busy = true;
+  DS.standMetaSet(s, rec, 0);
   DS.standResult(s, rec, function () {
     U.story(DS.standOutroLines(s, rec), function () {
+      busy = false;
       if (leave) leave();      // 싸움터를 걷고 마을로 (그래야 창을 열 수 있다)
       var r = DS.egStart(s); persist();
       if (r) setTimeout(function () { if (DS.egPassOn(s) && !document.querySelector('.ov.egpass')) DS.egPassOpen(s); }, leave ? 500 : 0);
@@ -420,11 +424,12 @@ DS.standGo = function (S) {
   var d = DS.standDone(S);
   if (d) { after(S, d, { late: !!d.late }); return null; }
   var m = DS.standMeta(S);
-  if (m) { var rc = DS.standClose(S, { w: m.w, r: m.r, b: m.b }, true); persist(); after(S, rc, { meta: 1 }); return null; }      // 기기에 남은 기록: 되돌린 저장이다 — 다시 싸우지 않는다
+  if (m) { var rc = DS.standClose(S, { w: m.w, r: m.r, b: m.b }, true); persist(); after(S, rc, { meta: 1 }); return null; }      // 기기에 남은 기록: 되돌린 저장이다. 다시 싸우지 않는다
   U.story(DS.standIntroLines(S), function () {
     var seed = ((Date.now() & 0x3fffffff) ^ ((S.eg && S.eg.seed) || 0)) >>> 0 || 1;
     DS.standMark(S, seed); DS.standMetaSet(S, null, 1); persist();
-    if (DS.standScene) DS.standScene(seed);
+    var go = function () { if (DS.standScene) DS.standScene(seed); };
+    if (DS.stageFade) DS.stageFade(go, 520); else go();      // 검게 가라앉았다가 문 앞에서 걷힌다
   }, TX.title);
   return true;
 };
@@ -440,7 +445,7 @@ DS.standFinale = function (S, std, leave) {
 // 꺼졌다 다시 연 판: 마을에 들어서면 결과를 보이고 창으로 (enterZone 이 부른다)
 DS.standLate = function (s) { var d = DS.standDone(s); return !!(d && d.late && !(s.eg && s.eg.pass)); };
 DS.standLateGo = function (s) {
-  s = s || sv(); var d = DS.standDone(s); if (!d || !DS.standLate(s) || document.querySelector('.ov.stdov')) return;
+  s = s || sv(); var d = DS.standDone(s); if (busy || !d || !DS.standLate(s) || document.querySelector('.ov.stdov')) return;
   var can = DS.egCanStart(s); if (!can.ok) return;
   after(s, d, { late: 1 });
 };

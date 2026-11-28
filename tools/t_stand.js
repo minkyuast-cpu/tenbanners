@@ -13,7 +13,7 @@ module.exports = async function (page, shot, L) {
     for (var i = 0; i < 3; i++) { var r0 = DS.recruitHero(s, Math.random), m = r0 && (r0.m || r0); if (m && m.id) { var mm = s.mercs.filter(function (x) { return x.id === m.id; })[0] || m; mm.o = s.hero; mm.kn = 1; delete mm.sb; delete mm.h; mm.L = 60; } }
     DS.mercTidy(s); if (DS.pSync) DS.pSync(s);
     for (var id = 1; id <= 30; id++) DS.applyClear(s, DS.scn(id));
-    s.crest = s.crest || 1; s.opt.cine = 'off'; s.opt.speed = 2; s.eg.intro = 1;
+    s.crest = s.crest || 1; s.opt.cine = 'off'; s.opt.speed = 2; s.eg.intro = 1; ['tele', 'cdanger', 'herb', 'combat', 'taunt', 'mdead', 'idle', 'stance'].forEach(function (k) { s.seen[k] = 1; });
   });
   let c = await ev(() => { const s = DS.G.save, R = DS.standRoster(s); return { can: DS.egCanStart(s), all: R.length, cmd: R.filter(u => u.role === 'cmd').length, kin: R.filter(u => u.role === 'merc').length, chars: DS.charList(s).length, sortie: DS.partySpecs(s).filter(u => u.role === 'cmd').length }; });
   A(c.can.ok && c.cmd === c.chars && c.cmd >= 10 && c.kin >= 3, 'everyone is called: ' + c.cmd + ' heads (all ' + c.chars + ' houses, not only the sortie of ' + c.sortie + ') + ' + c.kin + ' kin');
@@ -34,7 +34,7 @@ module.exports = async function (page, shot, L) {
   A(c.on && c.scn && c.mark && c.mark.on === 1 && c.mark.g === 1, 'the stand starts with an in-progress marker in the save');
   A(c.ally >= 13 && c.chips >= 10, 'everyone is on the field: ' + c.ally + ' units, ' + c.chips + ' house chips');
   // 물결 1
-  for (let i = 0; i < 80; i++) { if (await ev(() => DS.G.stand && DS.G.stand.std.n >= 1 && ((DS.G.pause = true), true))) break; await sleep(100); }
+  for (let i = 0; i < 80; i++) { if (await ev(() => DS.G.stand && DS.G.stand.std.n >= 1 && ((DS.G.pause = true), (DS.G.softUntil = 0), true))) break; await sleep(100); }
   await sleep(300);
   c = await ev(() => { const sim = DS.G.sim, std = DS.G.stand.std, bs = sim.units.filter(u => u.side === 'enemy' && u.std === 'b' && u.stdW === 1), ms = sim.units.filter(u => !u.dead && u.side === 'enemy' && u.std === 'm'); return { n: std.n, b: bs.length, m: (std.made[1] || 0) + std.q.filter(x => x.n === 1).length, q: document.querySelector('#quest').innerText, B: DS.standB(1), M: DS.standM(1) }; });
   A(c.n === 1 && c.b === c.B && c.m === c.M && /물결 1/.test(c.q), 'wave 1: ' + c.b + ' boss, ' + c.m + ' monsters (B ' + c.B + ', M ' + c.M + '), the HUD reads 「' + c.q + '」');
@@ -42,7 +42,8 @@ module.exports = async function (page, shot, L) {
   // 물결을 억지로 넘긴다: 보스만 쓰러뜨리면 그 물결을 막은 것 · 남은 무리는 다음 물결로 이어진다
   const force = async (n) => ev((n) => {
     const sim = DS.G.sim, std = sim.std;
-    while (std.q.length && std.liveFoes(sim) < 30) std.spawn(sim, std.q.shift());      // 줄 선 무리를 먼저 다 들인다 (남는 몫이 생기게)
+    if (!std.q.length && !sim.units.some(u => !u.dead && u.side === 'enemy' && u.std !== 'b')) for (let i = 0; i < 3; i++) std.q.push({ type: 'ghost', n: std.n });      // 남는 몫이 생기게 (이 물결의 무리 셋)
+    while (std.q.length && std.liveFoes(sim) < 30) std.spawn(sim, std.q.shift());      // 줄 선 무리를 먼저 다 들인다
     sim.units.filter(u => !u.dead && u.side === 'enemy' && u.std === 'b').forEach(u => sim.kill(u, null));
     const left = sim.units.filter(u => !u.dead && u.side === 'enemy').length + std.q.length;
     std.qT = sim.t + 99;      // 줄 선 무리는 잠깐 세워 둔다 (이어지는 몫을 세려고)
@@ -50,13 +51,13 @@ module.exports = async function (page, shot, L) {
     const live = sim.units.filter(u => !u.dead && u.side === 'enemy').length;
     std.next = sim.t;      // 숨 돌리기를 건너뛴다
     const hp0 = sim.units.filter(u => u.side === 'ally' && !u.dead).map(u => u.hp / u.mhp);
-    return { w: std.w, left, live, hp0 };
+    return { w: std.w, left, live, q: std.q.length, pause: DS.G.pause, n: std.n, next: std.next, t: sim.t };
   }, n);
   for (let k = 2; k <= 4; k++) {
     const before = await force(k);
     await ev(() => { DS.G.pause = false; }); await sleep(250); await ev(() => { DS.G.pause = true; });
     c = await ev((k) => { const sim = DS.G.sim, std = sim.std, bs = sim.units.filter(u => u.side === 'enemy' && u.std === 'b' && u.stdW === k), pl = std.plan[k], made = (std.made[k] || 0) + std.q.filter(x => x.n === k).length, old = sim.units.filter(u => !u.dead && u.side === 'enemy' && u.std === 'm' && u.stdW < k).length + std.q.filter(x => x.n < k).length; return { n: std.n, w: std.w, b: bs.length, made, carry: pl.carry, old, B: DS.standB(k), M: DS.standM(k), st: DS.G.save.eg.stand }; }, k);
-    A(c.n === k && c.w === k - 1 && c.b === c.B && c.made === c.M && c.carry === before.live && c.carry > 0 && c.old > 0 && c.st.w === k - 1, 'wave ' + k + ': ' + c.b + ' bosses (B ' + c.B + '), ' + c.made + ' new monsters (M ' + c.M + ') on top of ' + c.carry + ' left over from earlier waves, marker w ' + c.st.w);
+    A(c.n === k && c.w === k - 1 && c.b === c.B && c.made === c.M && c.carry === before.live && c.carry > 0 && c.old > 0 && c.st.w === k - 1, 'wave ' + k + ': ' + c.b + ' bosses (B ' + c.B + '), ' + c.made + ' new monsters (M ' + c.M + ') on top of ' + c.carry + ' left over from earlier waves, marker w ' + c.st.w + (c.carry > 0 ? '' : ' ' + JSON.stringify({ before: before, c: c })));
   }
   // 숨 돌리기: 조금만 돌아온다 (10%)
   c = await ev(() => { const sim = DS.G.sim, std = sim.std, us = sim.units.filter(u => u.side === 'ally' && !u.dead && (u.role === 'cmd' || u.role === 'merc')); us.forEach(u => { u.hp = Math.max(1, Math.round(u.mhp * 0.3)); }); sim.units.filter(u => !u.dead && u.side === 'enemy').forEach(u => { u.dead = true; sim.unplace(u); }); std.q.length = 0;
@@ -94,7 +95,7 @@ module.exports = async function (page, shot, L) {
   A(/물결 14번/.test(c.t) && /열네 해/.test(c.t) && c.sw <= 390, 'result card: 「물결 14번」, peace 「열네 해」, fits 390 px');
   A(!(await bad('.ov.stdov')), 'no undefined/NaN on the result card');
   await shot('result');
-  await page.click('.ov.stdov [data-close]'); await sleep(600);
+  await sleep(400); await page.click('.ov.stdov [data-close]'); await sleep(600);
   c = await ev(() => { const o = document.querySelector('.ov.story'); return o ? o.innerText : ''; });
   A(/열네 번/.test(c) || /열네 해/.test(c) || true, 'outro scene opens');
   // 맺음을 끝까지 읽어 본다 (글에 그 수)
@@ -121,4 +122,43 @@ module.exports = async function (page, shot, L) {
   // 거르기 (fixSave): 망가진 기록
   c = await ev(() => { const raw = JSON.parse(JSON.stringify(DS.G.save)); raw.eg.hist.push({ g: 7, t: 'x', w: 'NaN', p: 99, last: '<b>' }); raw.eg.stand = { g: 'q' }; const f = DS.fixSave(raw); const h = f.eg.hist.filter(x => x.g === 7)[0]; return { h, st: f.eg.stand || null }; });
   A(c.h && c.h.w === 0 && c.h.p === 5 && !/</.test(c.h.last) && !c.st, 'fixSave cleans broken stand records ' + JSON.stringify(c.h));
+  A(!(await bad('body')), 'no undefined/NaN on screen');
+
+  // ── 둘째: 조용한 연출 · 가로 화면 · 싸우다 창을 닫고 다시 열면 그때까지 막은 물결로 끝난다 (다시 싸우지 않는다) ──
+  await L.newGame(page, { name: '다시', cls: 'mag' });
+  await L.edit(page, function () {
+    DS.houseOpenN(s, 4); DS.mercTidy(s);
+    DS.charList(s).forEach(function (c) { var b = c.id === s.hero ? c.ps : DS.bearer(s, c); if (b) { b.L = 60; b.exp = 0; } });
+    DS.mercTidy(s); if (DS.pSync) DS.pSync(s);
+    for (var id = 1; id <= 30; id++) DS.applyClear(s, DS.scn(id));
+    s.crest = s.crest || 1; s.opt.cine = 'off'; s.opt.speed = 1; s.eg.intro = 1; s.opt.calm = true; DS.applyCalm(); ['tele', 'cdanger', 'herb', 'combat', 'taunt', 'mdead', 'idle', 'stance'].forEach(function (k) { s.seen[k] = 1; });
+  });
+  const pre = await ev(() => JSON.stringify(DS.G.save));
+  await ev(() => { DS.ui.closeAll(); DS.standGo(DS.G.save); });
+  await sleep(500); await L.skipStory(page); await sleep(500);
+  for (let i = 0; i < 80; i++) { if (await ev(() => DS.G.stand && DS.G.stand.std.n >= 1)) break; await sleep(100); }
+  await page.setViewportSize({ width: 844, height: 390 }); await sleep(1200);
+  c = await ev(() => ({ calm: document.documentElement.classList.contains('calm') && DS.calmFx(), sw: document.documentElement.scrollWidth, n: DS.G.stand.std.n }));
+  A(c.calm && c.n >= 1 && c.sw <= 844, 'calm mode runs the stand (wave ' + c.n + '), landscape fits');
+  await shot('calm_landscape');
+  await page.setViewportSize({ width: 390, height: 844 }); await sleep(400);
+  await ev(() => { const sim = DS.G.sim, std = sim.std; for (let k = 0; k < 2; k++) { sim.units.filter(u => !u.dead && u.std === 'b').forEach(u => sim.kill(u, null)); if (k === 0) { std.next = sim.t; std.tick(sim, 0); } } });
+  await sleep(600);      // 화면이 stdClear 를 받아 저장한다
+  c = await ev(() => { const std = DS.G.sim.std, raw = JSON.parse(localStorage.getItem(DS.Save.KEY || 'tenbanners_v5') || 'null'); return { w: std.w, saved: raw && raw.eg && raw.eg.stand }; });
+  A(c.w === 2 && c.saved && c.saved.on === 1 && c.saved.w === 2, 'mid-stand the save carries the marker (on, w ' + (c.saved && c.saved.w) + ')');
+  await page.reload(); await page.waitForSelector('#btnCont', { timeout: 30000 }); await page.click('#btnCont'); await sleep(1500);
+  await ev(() => { DS.G.quiet = true; document.querySelectorAll('.ov').forEach(o => { if (!o.querySelector('.stdres') && o.close) o.close(); }); });
+  for (let i = 0; i < 60; i++) { if (await ev(() => !!document.querySelector('.ov.stdov'))) break; await ev(() => { document.querySelectorAll('.ov').forEach(o => { if (!o.classList.contains('stdov') && o.close) o.close(); }); }); await sleep(250); }
+  c = await ev(() => { const s = DS.G.save, o = document.querySelector('.ov.stdov'); return { st: s.eg.stand, stand: !!DS.G.stand, txt: o ? o.innerText : '' }; });
+  A(c.st && c.st.on === 0 && c.st.late === 1 && c.st.w === 2 && c.st.p === 5 && !c.stand && /싸우는 도중에 끝났다/.test(c.txt) && /다섯 해/.test(c.txt), 'reloading mid-stand cannot retry: the marker resolved to 2 waves, peace 5 (the minimum), the result says so');
+  await shot('late_result');
+  await sleep(400); await page.click('.ov.stdov [data-close]'); await sleep(500);
+  await L.skipStory(page);
+  for (let i = 0; i < 40; i++) { if (await ev(() => !!document.querySelector('.ov.egpass'))) break; await sleep(250); }
+  c = await ev(() => ({ years: DS.G.save.eg.pass && DS.G.save.eg.pass.years, can: DS.standDone(DS.G.save) }));
+  A(c.years === 5 && !c.can, 'then the window opens for 5 years ' + JSON.stringify(c) + (await ev(() => (document.querySelector('#toast') || {}).innerText + '|' + [...document.querySelectorAll('.ov')].map(o => o.className).join(','))));
+  // 싸우기 전 저장으로 되돌려도: 기기에 남은 기록이 이긴다
+  c = await ev((pre) => { const old = DS.fixSave(JSON.parse(pre)); const m = DS.standMeta(old); return m && { w: m.w, on: m.on }; }, pre);
+  A(c && c.w === 2 && c.on === 0, 'a save from before the stand still finds this device\'s record (w ' + (c && c.w) + '): no second try');
+  A(!(await bad('body')), 'no undefined/NaN on screen (second run)');
 };
