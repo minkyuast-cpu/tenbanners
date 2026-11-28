@@ -462,6 +462,7 @@ P.kill = function (v, by) {
   if (v.rsv || v.rsvU) { v.rsv = null; v.rsvU = false; }      // 2.2.3: 쓰러지면 예약도 거둔다
   var de = { t: 'die', id: v.id, by: by ? by.id : null }; if (this._erK) de.erase = 1;
   this.emit(de);
+  if (this.std) this.std.died(this, v, by);      // 2.8 마지막 물결 (stand.js): 쓰러진 우리 사람은 그 싸움에서만 빠진다. 따르던 가문원은 남은 가주에게, 끝은 물결이 정한다
   if (by && by.fx && !by.dead && by.side !== v.side) {
     if (by.fx.killHp) this.heal(by, by.mhp * by.fx.killHp);
     if (by.fx.killGauge) by.gauge = Math.min(100, by.gauge + by.fx.killGauge);
@@ -469,7 +470,7 @@ P.kill = function (v, by) {
   }
   this.tele = this.tele.filter(function (t) { if (t.u === v) { self.emit({ t: 'castEnd', tid: t.id, cancel: true }); return false; } return true; });
   this.reDanger();
-  if (v.side === 'ally' && v.role === 'cmd') {
+  if (v.side === 'ally' && v.role === 'cmd' && !this.std) {
     this.units.forEach(function (m) { if (!m.dead && m.owner === v.id) { if (m.role === 'merc') self.flee(m); else self.kill(m, by); } });   // 용병은 흩어질 뿐 죽지 않는다
     if (!this.cmds().length && !this.result) { this.result = 'lose'; this.rsvClear(); this.emit({ t: 'lose' }); }
     else if (this.leader === v.id) { var c = this.cmds()[0]; if (c) { this.leader = c.id; this.emit({ t: 'leader', id: c.id }); } }
@@ -2025,6 +2026,7 @@ P.tick = function (dt) {
     if (this.t - this.swp >= 3) { this.swp = this.t; this.sweep(); }
     if (this.shd && this.shadeTick) this.shadeTick();      // 2.5.0: 이름 부르기 — 자동이면 위태로울 때 스스로 (shade.js)
   }
+  if (this.std) { this.std.tick(this, dt); if (this.result) return; }      // 2.8 마지막 물결 (stand.js): 물결을 부르고 센다 (엔진 시간 · 엔진 난수만)
   var peace = !this.combat;
   for (i = 0; i < us.length; i++) {
     u = us[i]; if (u.dead) continue;

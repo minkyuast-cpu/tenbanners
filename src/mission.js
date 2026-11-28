@@ -170,7 +170,7 @@ function pill(pop) {
 setInterval(function () {
   try {
     var sim = G.sim, sc = G.scn;
-    if (sc && sim && !sc.pit && sim.mode === 'scn' && (!M || M.sim !== sim) && !G.ending) start(sim, sc);
+    if (sc && sim && !sc.pit && !sc.stand && sim.mode === 'scn' && (!M || M.sim !== sim) && !G.ending) start(sim, sc);      // 2.8: 마지막 물결에는 훈수가 없다
     if (!sc || !M || M.scn !== sc) { var e = document.getElementById('msn'); if (e && !e.hidden) e.hidden = true; if (!sc) M = null; return; }
     if (M.popAt && performance.now() - M.popAt > 4600) { M.popAt = 0; }
     if (!M.popAt && !M.popDue) pill(false);

@@ -23,7 +23,7 @@ function bat(w) { w = String(w).replace(/[」』"'\)\]\s.]+$/, ''); var c = Stri
 function jo(w, pair) { if (pair === '으로') { var b = bat(w); return b && b !== 8 ? '으로' : '로'; } if (pair === '이냐') return bat(w) > 0 ? '이냐' : '냐'; return bat(w) > 0 ? pair[0] : pair[1]; }
 function fill(t, v) {
   t = t && typeof t === 'object' && !(t instanceof Array) ? t.t : t;
-  return String(t == null ? '' : t).replace(/\{(\w+)\}(\{(이가|은는|을를|과와|으로|이냐)\})?/g, function (all, k, j, pair) { var w = v && v[k] != null ? String(v[k]) : (k === 'hero' ? all : ''); return w + (pair ? jo(w, pair) : ''); });
+  return String(t == null ? '' : t).replace(/\{(\w+)\}(\{(이가|은는|을를|과와|으로|이냐)\})?/g, function (all, k, j, pair) { var w = v && v[k] != null ? String(v[k]) : (k === 'hero' ? all : k === 'yw' ? curYW() : ''); return w + (pair ? jo(w, pair) : ''); });
 }
 // 글 한 덩이 → 줄 목록. 줄은 글 또는 { w: 화자, t: [줄…] }. { pick: [벌…] } 은 seed 로 한 벌
 function lineList(a, v, seed) {
@@ -60,7 +60,7 @@ DS.egFix = function (s) {
   if (!e.c || typeof e.c !== 'object' || Array.isArray(e.c)) e.c = {};
   for (var k in e.c) if (!(+k >= 1 && +k <= DS.SCENARIOS.length) || !e.c[k]) delete e.c[k]; else e.c[k] = 1;
   e.t0 = Math.max(0, +e.t0 || 0);
-  e.hist = (Array.isArray(e.hist) ? e.hist : []).filter(function (h) { return h && typeof h === 'object' && +h.g >= 1; }).map(function (h) { return { g: Math.round(+h.g), t: Math.max(0, Math.round(+h.t || 0)) }; }).slice(-20);
+  e.hist = (Array.isArray(e.hist) ? e.hist : []).filter(function (h) { return h && typeof h === 'object' && +h.g >= 1; }).map(function (h) { var o = { g: Math.round(+h.g), t: Math.max(0, Math.round(+h.t || 0)) }; if (h.w != null && DS.standFixRec) { var r = DS.standFixRec(h); o.w = r.w; o.r = r.r; o.b = r.b; o.p = r.p; o.last = r.last; if (r.lp) o.lp = r.lp; } return o; }).slice(-20);      // 2.8: 그 대의 마지막 물결 (stand.js)
   e.intro = e.intro ? 1 : 0;
   // 3.3.0
   if (!(+e.seed >= 1 && +e.seed <= 2147483647 && Math.floor(+e.seed) === +e.seed) && s.chars) e.seed = DS.egSeed(s);
@@ -69,9 +69,10 @@ DS.egFix = function (s) {
   if (e.on && e.gen > 1 && !e.call) e.call = { g: e.gen, used: 0, late: 1 };      // 3.2.x 의 진행 중인 장: 「밀린 새벽」 한 번 (마을에서 알림)
   var ps = e.pass;
   if (ps && (typeof ps !== 'object' || Array.isArray(ps) || +ps.g !== e.gen || !FACES[ps.f] || !e.on)) { delete e.pass; ps = null; }
-  if (ps) { ps.y = Math.max(0, Math.min(DS.EG.years, Math.round(+ps.y || 0))); if (!Array.isArray(ps.L)) ps.L = []; if (!Array.isArray(ps.dead)) ps.dead = []; ps.nl = Math.max(0, +ps.nl || 0); ps.na = Math.max(0, +ps.na || 0); }
+  if (ps) { ps.years = +ps.years >= 1 && +ps.years <= 60 ? Math.round(+ps.years) : DS.EG.years; ps.y = Math.max(0, Math.min(ps.years, Math.round(+ps.y || 0))); if (!Array.isArray(ps.L)) ps.L = []; if (!Array.isArray(ps.dead)) ps.dead = []; ps.nl = Math.max(0, +ps.nl || 0); ps.na = Math.max(0, +ps.na || 0); }
   e.roll = (Array.isArray(e.roll) ? e.roll : []).filter(function (r) { return r && typeof r === 'object' && +r.g >= 1; });
   if (s.coffins && Array.isArray(s.coffins.list) && DS.linRecRg) s.coffins.list.forEach(function (r) { if (!(+r.rg >= 1 && +r.rg <= 5)) r.rg = DS.linRecRg(r); if (r.tr) r.tr = 1; var q = s.lin && s.lin.P && s.lin.P[r.pid]; if (!r.seat && q && q.seat) r.seat = q.seat; if (!r.head && q && q.k === 'c' && q.seat && q.seat === s.hero) r.head = 1; });
+  if (DS.standFix) DS.standFix(s);      // 2.8 마지막 물결: 치르던 표는 그때까지 막은 물결로 끝낸다
   if (s.chars) s.need = '3.3.0';      // 이 저장을 읽을 최소 판 (앞으로의 판이 거른다 — save.js)
   return s;
 };
@@ -81,7 +82,16 @@ DS.egActive = function (s) { return DS.egOn(s) && !!(s.eg && s.eg.on); };      /
 DS.egGen = function (s) { return s && s.eg ? s.eg.gen || 1 : 1; };
 DS.egDone = function (s) { if (!DS.egActive(s)) return 0; var n = 0; for (var k in s.eg.c) if (s.eg.c[k]) n++; return n; };      // 이 장에서 깬 수
 DS.egPassOn = function (s) { return !!(s && s.eg && s.eg.pass); };
-DS.onlineCanUpload = function (s) { return !DS.egPassOn(s); };      // 스무 해 창 동안은 클라우드 올리기·이사 코드를 끈다 (주사위를 되돌리는 길을 막는다)
+// 2.8: 창의 길이 (평화의 해). 창이 열려 있으면 그 창의 것, 아니면 이 대에 치른 마지막 물결이 지킨 해, 그것도 없으면 지난 창(또는 스무 해)
+DS.egYears = function (s) {
+  var e = s && s.eg, ps = e && e.pass; if (ps && +ps.years >= 1) return Math.round(+ps.years);
+  var d = DS.standDone ? DS.standDone(s) : null; if (d) return d.p;
+  return DS.EG.years;
+};
+DS.egYW = function (s) { return DS.standYW ? DS.standYW(DS.egYears(s)) : '스무 해'; };      // 「열일곱 해」
+DS.egYearsNow = function (s) { var e = s && s.eg; if (!e) return DS.EG.years; if (e.pass || (DS.standDone && DS.standDone(s))) return DS.egYears(s); var r = (e.roll || [])[(e.roll || []).length - 1]; return r && +r.y >= 1 ? Math.round(+r.y) : DS.EG.years; };      // 글의 {yw}: 열린 창 · 이번 물결 · 지난 창
+function curYW() { var s = DS.G && DS.G.save; return DS.standYW ? DS.standYW(s ? DS.egYearsNow(s) : DS.EG.years) : '스무 해'; }
+DS.onlineCanUpload = function (s) { return !DS.egPassOn(s) && !(DS.standOn && DS.standOn(s)); };      // 스무 해 창 동안은 클라우드 올리기·이사 코드를 끈다 (주사위를 되돌리는 길을 막는다)
 
 // ── 사람 ──
 function LP(s) { return (s.lin && s.lin.P) || {}; }
@@ -160,7 +170,7 @@ function flatSpk(out, hn) {      // 이야기 창 한 줄씩 — 말에는 초�
 }
 DS.egKingLines = function (s, g) {
   if (!s || !s.lin || !(g > 1)) return [];
-  var ers = erNames(s, g), names = goneNames(s, g), hn = headNm(s), v = { a: names[0] || '', e: ers[0] || '', list: names.slice(0, 6).join(', '), h: hn, n: g }, r = g - 2, old = g <= 3, out = [];
+  var ers = erNames(s, g), names = goneNames(s, g), hn = headNm(s), v = { a: names[0] || '', e: ers[0] || '', list: names.slice(0, 6).join(', '), h: hn, n: g, yw: DS.standYW ? DS.standYW(DS.egYearsNow(s)) : '스무 해' }, r = g - 2, old = g <= 3, out = [];
   out = out.concat(lines('king.shade', v, r));
   if (old) out = out.concat(lines('king.shadeDawn', v, r));
   out = out.concat(lines('king.come', v, r));
@@ -196,7 +206,7 @@ DS.egGate = function (p, s) {
 };
 // 잠금(game.js scnLock): 장 안의 앞 번호를 먼저 · 스무 해 창이 열려 있으면 잠근다
 DS.egLock = function (sc, s) {
-  if (DS.egPassOn(s)) return '스무 해 창을 먼저 닫아야 합니다';
+  if (DS.egPassOn(s)) return '평화의 창을 먼저 닫아야 합니다';
   if (!sc || !sc.gen || !DS.egActive(s)) return null;
   if (sc.gen !== s.eg.gen) return '지난 장의 시나리오입니다';
   if (sc.id > 1 && !s.eg.c[sc.id - 1]) { var pv = DS.scn(sc.id - 1).name; return '이 장의 앞 시나리오(' + (sc.id - 1) + '. ' + pv + ')' + jo(pv, '을를') + ' 먼저 끝내야 합니다'; }
@@ -207,7 +217,8 @@ DS.egLock = function (sc, s) {
 function inFight() { var G = DS.G; return !!(G && (G.scn || (G.sim && G.sim.combat) || G.ending)); }
 DS.egCanStart = function (s) {
   if (!DS.egOn(s)) return { ok: false, why: '30번 엔딩을 본 뒤에 열린다' };
-  if (DS.egPassOn(s)) return { ok: false, why: '스무 해 창이 열려 있다' };
+  if (DS.egPassOn(s)) return { ok: false, why: '평화의 창이 열려 있다' };
+  if (DS.standOn && DS.standOn(s) && inFight()) return { ok: false, why: '마지막 물결을 막는 중이다' };
   if (DS.egActive(s)) return { ok: false, why: E(s).gen + '대째의 장이 진행 중입니다' };
   if (inFight()) return { ok: false, why: '싸움이 끝난 뒤에 연다' };
   if (DS.linVacant && DS.linVacant(s).length) return { ok: false, why: '빈 가주 자리를 먼저 채워야 한다' };
@@ -215,7 +226,7 @@ DS.egCanStart = function (s) {
 };
 // 확인 창의 묶음 (설계서 ②-가): 떠날 이·자랄 이·깃대·관·막사
 DS.egForecast = function (s) {
-  var Y = DS.EG.years, P = LP(s), hero = s.chars[s.hero], hp = heroP(s), leave = [], grow = [], seen = {};
+  var Y = DS.egYearsNow(s), P = LP(s), hero = s.chars[s.hero], hp = heroP(s), leave = [], grow = [], seen = {};      // 2.8: 물결 전에는 지난 평화의 해로 어림한다 (확인 창의 「떠난다 (열네 해라면)」과 같은 수)
   function add(pid, name, role, ent) { if (seen[pid]) return; var L = lifeOf(s, ent); if (L.left == null || L.left > Y) return; seen[pid] = 1; leave.push({ pid: pid, name: name, role: role }); }
   if (hero && hp) { var hl = headLeft(s, hero); if (hl != null && hl <= Y) { seen[hp.id] = 1; leave.push({ pid: hp.id, name: nm(s, hp.id), role: 'head' }); } }
   DS.charList(s).forEach(function (c) { if (c.id === s.hero || c.vac) return; var b = DS.bearer ? DS.bearer(s, c) : null; if (b && b.pid) add(b.pid, nm(s, b.pid), 'flag', b); else if (c.pid) add(c.pid, nm(s, c.pid), 'flag', c); });      // 4.0: 깃발 든 이 (부대원 줄)
@@ -246,9 +257,10 @@ DS.egHouseKids = function (s, alsoYoung) {
 // 돌려주는 것: { g: 새 세대, years: 흐를 해(나이 달력이 없으면 0 — 봇은 멈추고 알린다) } 또는 null
 DS.egStart = function (s) {
   if (!DS.egCanStart(s).ok) return null;
-  var e = E(s), years = DS.ageAdvance ? DS.EG.years : 0;
+  var e = E(s), sd = DS.standDone ? DS.standDone(s) : null, Y = DS.standYears ? DS.standYears(s) : DS.EG.years, years = DS.ageAdvance ? Y : 0;      // 2.8: 창의 길이 = 이 대의 마지막 물결이 지킨 평화의 해 (치르지 않았으면 스무 해)
   e.gen += 1; e.on = 1; e.c = {}; e.t0 = Math.round(+s.time || 0);
-  e.pass = { g: e.gen, y: 0, f: years ? 'years' : 'keep', y0: yr(s), L: [], dead: [], nl: 0, na: 0 };
+  e.pass = { g: e.gen, y: 0, f: years ? 'years' : 'keep', y0: yr(s), L: [], dead: [], nl: 0, na: 0, years: Y };
+  if (sd && DS.standWW) passLine(e.pass, yr(s), lines(sd.w > 0 ? 'pass.open' : 'pass.open0', { n: e.gen - 1, ww: DS.standWW(sd.w), yw: DS.standYW(Y) }).map(String));      // 2.8: 창의 첫 줄 (지킨 물결과 평화의 해)
   e.call = { g: e.gen, used: 0 };
   var woke = DS.fzWakeTick ? DS.fzWakeTick(s) : [];      // 2.2.9: 지난 세대에 합일로 잠든 가문이 깨어난다 (영웅관에서 다시 열 수 있다 · 화면은 save.fzWake 를 연출로)
   return { g: e.gen, years: years, woke: woke };
@@ -259,9 +271,9 @@ DS.egYear = function (s) {
   var e = E(s), ps = e.pass; if (!ps) return null;
   if (ps.f !== 'years') return { done: true, y: yr(s) };
   var stop = DS.egStop(s); if (stop) return { y: yr(s), stop: stop, lines: [] };
-  if (ps.y >= DS.EG.years) {
+  if (ps.y >= DS.egYears(s)) {
     ps.f = 'keep';
-    var end = passLine(ps, yr(s), lines('pass.line.end', { d: ps.nl, k: ps.na }).map(String)), outE = [end];
+    var end = passLine(ps, yr(s), lines('pass.line.end', { d: ps.nl, k: ps.na, yw: DS.egYW(s) }).map(String)), outE = [end];
     var tk = DS.egDawnTickets(s); if (tk) outE.push(passLine(ps, yr(s), ['빈 가문 ' + tk.vac + '곳. 소문을 듣고 영웅 모집권 ' + tk.n + '장이 왔다.']));
     return { done: true, y: yr(s), lines: outE, tickets: tk ? tk.n : 0 };
   }
@@ -319,7 +331,7 @@ DS.egDawnTickets = function (s) {
 DS.egStop = function (s) {
   var vac = DS.linVacant(s).sort(function (a, b) { return (a.id === s.hero ? -1 : 0) - (b.id === s.hero ? -1 : 0) || a.id - b.id; });
   var ch = vac[0]; if (!ch) return null;
-  var P = LP(s), dp = P[ch.vac.pid], head = ch.id === s.hero, e = E(s), ps = e.pass, left = ps ? Math.max(0, DS.EG.years - ps.y) : 0;
+  var P = LP(s), dp = P[ch.vac.pid], head = ch.id === s.hero, e = E(s), ps = e.pass, left = ps ? Math.max(0, DS.egYears(s) - ps.y) : 0;
   var heirs = DS.egHeirs(s, ch.id, left), cord = ps && ps.cord && P[ps.cord];
   return { t: head ? 'head' : 'seat', ch: ch.id, pid: dp ? dp.id : 0, name: dp ? nm(s, dp.id) : '누군가', age: dp && dp.age != null ? dp.age : null, f: flagName(ch.cls, s), heirs: heirs,
     cord: cord && heirs.some(function (h) { return h.cord; }) ? nm(s, cord.id) : '', kid: dp ? (kidsOf(s, dp).filter(function (q) { return !q.ad && (q.st === 'live' || q.st === 'young'); })[0] || null) : null, y: yr(s) };
@@ -348,7 +360,7 @@ DS.egSeat = function (s, chId, pick) {
   var raw = pick && pick.raw ? pick.raw : pick, evs;
   if (raw && raw.young) return null;
   if (raw) evs = DS.linSucceed(s, chId, raw, { nat: 1 });
-  else { var left = ps ? Math.max(0, DS.EG.years - ps.y) : 0, hs = DS.egHeirs(s, chId, left), first = hs.filter(function (h) { return !h.young && !h.soon && (h.raw.opt === 1 || h.raw.opt === 2); })[0] || hs.filter(function (h) { return h.kind === 'pull'; })[0]; evs = DS.linSucceed(s, chId, first ? first.raw : null, { nat: 1 }); }
+  else { var left = ps ? Math.max(0, DS.egYears(s) - ps.y) : 0, hs = DS.egHeirs(s, chId, left), first = hs.filter(function (h) { return !h.young && !h.soon && (h.raw.opt === 1 || h.raw.opt === 2); })[0] || hs.filter(function (h) { return h.kind === 'pull'; })[0]; evs = DS.linSucceed(s, chId, first ? first.raw : null, { nat: 1 }); }
   if (!evs) return null;
   if (head && ps) { if (ps.cord && P[ps.cord]) delete P[ps.cord].cord; delete ps.cord; ps.hd = 1; }
   var b = nm(s, ch.pid), t = head ? lines('pass.head.done', { a: a, b: b, age: age, c: DS.heroCall(s) }) : lines('pass.seat.done', { a: a, b: b, age: age, f: f });
@@ -498,7 +510,8 @@ DS.egClose = function (s) {
   if (e.call && e.call.g === e.gen && e.call.used === 0) e.call.used = 2;
   var P = LP(s); for (var k in P) if (P[k].cord) delete P[k].cord;
   var how = ps.hand ? 'hand' : ps.hd ? 'nat' : 'keep';
-  var r = { g: e.gen, head: DS.heroCall(s), how: how, left: ps.nl || 0, call: (e.call && e.call.used === 1 && e.call.pid) || 0, ok: e.call && e.call.used === 1 ? (e.call.ok ? 1 : 0) : 0 };
+  var r = { g: e.gen, head: DS.heroCall(s), how: how, left: ps.nl || 0, call: (e.call && e.call.used === 1 && e.call.pid) || 0, ok: e.call && e.call.used === 1 ? (e.call.ok ? 1 : 0) : 0, y: ps.years || DS.EG.years };
+  var sh = (e.hist || []).filter(function (h) { return h.g === e.gen - 1 && h.w != null; })[0]; if (sh) r.sw = sh.w;      // 2.8: 이 창을 연 마지막 물결
   e.roll.push(r);
   delete e.pass;
   if (DS.linPrune) DS.linPrune(s);
@@ -552,6 +565,8 @@ DS.egCloseLines = function (g, s) {
   s = s || (DS.G && DS.G.save);
   var out = lines('close.open', { n: g });
   if (!s || !s.lin) return out.concat(lines('close.none', {}));
+  var rl0 = ((s.eg && s.eg.roll) || []).filter(function (r) { return r && r.g === g && r.sw != null; })[0];      // 2.8: 이 대를 연 마지막 물결, 그 평화가 끝났다
+  if (rl0 && DS.standWW) out = out.concat(lines(rl0.sw > 0 ? 'close.peace' : 'close.peace0', { yw: DS.standYW(rl0.y || DS.EG.years), ww: DS.standWW(rl0.sw), p: g - 1 }));
   var e = E(s), P = LP(s), t0 = e.t0 || 0, names = [], seen = {}, twice = [], lg = s.lin.log || [], fail = e.call && e.call.g === g && e.call.used === 1 && !e.call.ok ? e.call.pid : 0, r = g - 2, hn = headNm(s);
   if (fail && P[fail]) { names.push(nm(s, fail)); seen[fail] = 1; }
   var ep = s.erPrev && s.erPrev.g === g - 1 ? s.erPrev : s.erLast && s.erLast.g === g - 1 ? s.erLast : null;      // r24: 지난 대 문 앞에서 왕이 쥐고 간 이름 — 돌아온 왕이 들고 왔으니 이번에 함께 부른다
@@ -619,27 +634,30 @@ DS.egUiTrace = [];
 function trace(k, x) { DS.egUiTrace.push({ k: k, x: x || '', t: Math.round(performance.now()) }); if (DS.egUiTrace.length > 400) DS.egUiTrace.shift(); }
 // 2.7.1 스무 해의 평화 연출: 밤하늘이 새벽으로 밝아 오는 동안 세 줄이 떠오르고, 가주들의 단이 하나씩 1단 Lv1 로 내려앉는다. 합일했던 이는 「합일의 힘이 흩어졌다」. 끝에 이어지는 것 한 줄과 단추 하나
 DS.PEACE_TXT = {
-  eye: '스무 해의 평화', title: '칼을 놓은 스무 해',
-  lines: ['싸움 없는 스무 해가 흘렀다.', '싸움을 모르는 아이들이 자랐고, 어른들은 칼 쥐는 법을 잊었다.', '손이 먼저 잊었다. 몸이 따라 잊었다.'],
+  eye: '{yw}의 평화', title: '칼을 놓은 {yw}',
+  waves: '물결을 {ww} 막았다. 어스름은 {yw} 동안 오지 못했다.', waves0: '물결은 금방 넘쳤다. 그래도 문은 {yw} 동안 닫혀 있었다.',      // 2.8: 이 창을 연 마지막 물결
+  lines: ['싸움 없는 {yw}{이가} 흘렀다.', '싸움을 모르는 아이들이 자랐고, 어른들은 칼 쥐는 법을 잊었다.', '손이 먼저 잊었다. 몸이 따라 잊었다.'],
   fz: '합일의 힘이 흩어졌다', more: '그리고 {n}명 더',
   keep: '모두 1단 Lv1에서 다시 시작한다. 장비와 공훈, 가호, 관은 그대로다.', go: '다시 칼을 든다',
-  cH: '평화', cL: ['싸움 없는 스무 해가 지나면', '모두 1단 Lv1에서 다시 시작한다.', '합일의 힘도 흩어진다. 장비와 공훈, 가호는 남는다.']
+  cH: '평화', cL: ['막은 물결만큼 평화가 이어진다.', '평화가 끝나면 모두 1단 Lv1에서 다시 시작한다.', '합일의 힘도 흩어진다. 장비와 공훈, 가호는 남는다.']
 };
 DS.egPeaceShow = function (s, rows, done) {
   var T = DS.PEACE_TXT, calm = !!(DS.calmFx && DS.calmFx()), show = rows.filter(function (r) { return r.head; }).slice(0, 6), rest = rows.length - show.length;
+  var rl = ((s && s.eg && s.eg.roll) || []).slice(-1)[0] || {}, Y = +rl.y >= 1 ? Math.round(+rl.y) : DS.EG.years, fv = { yw: DS.standYW ? DS.standYW(Y) : '스무 해', ww: rl.sw != null && DS.standWW ? DS.standWW(rl.sw) : '' };      // 2.8: 이 평화의 해
+  var L = (rl.sw != null ? [rl.sw > 0 ? T.waves : T.waves0] : []).concat(T.lines).map(function (t) { return fill(t, fv); }), b0 = 0.5 + L.length * 0.9 + 0.2;
   var lv = function (L) { return DS.tierOfL(L) + '단 Lv' + DS.lvOfL(L); };
   var face = function (r) { var sp = ''; try { if (r.k === 'c' && s.chars[r.id]) sp = U.charSpr(s.chars[r.id], 2); else { var m = (s.mercs || []).filter(function (x) { return x.id === r.id; })[0]; if (m && U.mercSpr) sp = U.mercSpr(m, 2); } } catch (x) { sp = ''; } return sp; };
-  var h = '<div class="result peace"><div class="pz-sky" aria-hidden="true"><i class="pz-sun"></i></div><p class="eyebrow">' + esc(T.eye) + '</p><h2>' + esc(T.title) + '</h2>' +
-    '<div class="pz-l">' + T.lines.map(function (t, i) { return '<p style="--d:' + (0.5 + i * 0.9).toFixed(2) + 's">' + esc(t) + '</p>'; }).join('') + '</div><ul class="pz-r">' +
-    show.map(function (r, i) { return '<li style="--d:' + (3.0 + i * 0.3).toFixed(2) + 's">' + '<span class="pz-f">' + face(r) + '</span><b>' + esc(r.name) + '</b><span class="pz-lv" data-l0="' + r.L0 + '">' + lv(r.L0) + '</span>' + (r.fz ? '<small class="pz-fz">' + esc(T.fz) + '</small>' : '') + '</li>'; }).join('') + '</ul>' +
-    (rest > 0 ? '<p class="pz-more" style="--d:' + (3.2 + show.length * 0.3).toFixed(2) + 's">' + esc(T.more.replace('{n}', rest)) + '</p>' : '') +
-    '<p class="pz-keep" style="--d:' + (3.5 + show.length * 0.3).toFixed(2) + 's">' + esc(T.keep) + '</p><button class="btn gold wide pz-go" data-pzgo="1">' + esc(T.go) + '</button></div>';
-  var o = U.overlay(h, 'peaceov modal' + (calm ? ' calm' : '')), t0 = performance.now(), raf = 0, end = 3.0 + show.length * 0.3 + 1.3;
+  var h = '<div class="result peace"><div class="pz-sky" aria-hidden="true"><i class="pz-sun"></i></div><p class="eyebrow">' + esc(fill(T.eye, fv)) + '</p><h2>' + esc(fill(T.title, fv)) + '</h2>' +
+    '<div class="pz-l">' + L.map(function (t, i) { return '<p style="--d:' + (0.5 + i * 0.9).toFixed(2) + 's">' + esc(t) + '</p>'; }).join('') + '</div><ul class="pz-r">' +
+    show.map(function (r, i) { return '<li style="--d:' + (b0 + i * 0.3).toFixed(2) + 's">' + '<span class="pz-f">' + face(r) + '</span><b>' + esc(r.name) + '</b><span class="pz-lv" data-l0="' + r.L0 + '">' + lv(r.L0) + '</span>' + (r.fz ? '<small class="pz-fz">' + esc(T.fz) + '</small>' : '') + '</li>'; }).join('') + '</ul>' +
+    (rest > 0 ? '<p class="pz-more" style="--d:' + (b0 + 0.2 + show.length * 0.3).toFixed(2) + 's">' + esc(T.more.replace('{n}', rest)) + '</p>' : '') +
+    '<p class="pz-keep" style="--d:' + (b0 + 0.5 + show.length * 0.3).toFixed(2) + 's">' + esc(T.keep) + '</p><button class="btn gold wide pz-go" data-pzgo="1">' + esc(T.go) + '</button></div>';
+  var o = U.overlay(h, 'peaceov modal' + (calm ? ' calm' : '')), t0 = performance.now(), raf = 0, end = b0 + show.length * 0.3 + 1.3;
   if (U.hydrate) U.hydrate(o);
   var els = [].slice.call(o.querySelectorAll('.pz-lv'));
   function tick() {      // 단이 하나씩 내려앉는다: 줄이 떠오른 뒤 0.8초 동안 레벨이 1 까지 센다 (조용한 연출이면 바로 1)
     var t = (performance.now() - t0) / 1000;
-    els.forEach(function (el, i) { var st = 3.0 + i * 0.3 + 0.3, k = calm ? 1 : Math.max(0, Math.min(1, (t - st) / 0.8)), L0 = +el.dataset.l0, L = Math.max(1, Math.round(L0 - (L0 - 1) * k));
+    els.forEach(function (el, i) { var st = b0 + i * 0.3 + 0.3, k = calm ? 1 : Math.max(0, Math.min(1, (t - st) / 0.8)), L0 = +el.dataset.l0, L = Math.max(1, Math.round(L0 - (L0 - 1) * k));
       if (el.dataset.now !== String(L)) { el.dataset.now = String(L); el.textContent = lv(L); if (L === 1) { el.classList.add('one'); if (!calm && DS.ui.A) DS.ui.A('tap'); } } });
     if (!calm && t < end && o.isConnected) raf = requestAnimationFrame(tick);
   }
@@ -653,7 +671,7 @@ DS.egPeaceShow = function (s, rows, done) {
 DS.egPartyRow = function (s) {
   s = s || sv(); if (!DS.egOn(s)) return '';
   var e = E(s), act = DS.egActive(s), last = e.hist[e.hist.length - 1];
-  if (e.pass) return '<div class="row lgentry egrow"><div class="tx"><b>' + e.gen + '대째, 스무 해</b><small>가주 ' + esc(DS.heroCall(s)) + '</small></div><button class="btn small gold" data-eg="pass">스무 해 창</button></div>';
+  if (e.pass) return '<div class="row lgentry egrow"><div class="tx"><b>' + e.gen + '대째, ' + esc(DS.egYW(s)) + '</b><small>가주 ' + esc(DS.heroCall(s)) + '</small></div><button class="btn small gold" data-eg="pass">평화의 창</button></div>';
   var title = act ? e.gen + '대째의 장 <i class="own">' + DS.egDone(s) + ' / ' + DS.SCENARIOS.length + '</i>' : (last ? last.g : 1) + '대째의 장을 마쳤다';
   var sub = '가주 ' + esc(DS.heroCall(s)) + (act ? ', 1번부터 같은 길을 다시 걷는다' : last ? ', ' + hms(last.t) + ' 걸림' : ', 다음 세대가 가문을 이을 차례다');
   var late = DS.egCallOpen(s) && e.call.late ? '<button class="btn small gold" data-eg="late">밀린 새벽</button>' : '';
@@ -686,7 +704,7 @@ if (og0) DS.openGate = function (s, lock) {
 var st0 = DS.startScenario;
 if (st0) DS.startScenario = function (s) {
   var S = sv();
-  if (S && DS.egPassOn(S)) { U.toast('스무 해 창을 먼저 닫아야 합니다'); DS.egPassOpen(S); return; }
+  if (S && DS.egPassOn(S)) { U.toast('평화의 창을 먼저 닫아야 합니다'); DS.egPassOpen(S); return; }
   var k = s && s.gen ? 'gen' + s.gen + '_' + s.id : null;
   if (k && S && !S.seen[k] && s.intro && s.intro.length) { S.seen[k] = 1; if (s.mem) { S.seen['mem' + s.gen + '_' + s.id] = 1; trace('mem', s.id + ':' + s.mem); } U.story(s.intro, function () { st0(s); }, s.name); return; }
   return st0(s);
@@ -716,6 +734,7 @@ DS.egIntro = function (cb) {
 function confirmHtml(S) {
   var F = DS.egForecast(S), g = E(S).gen + 1, T = DS.egT, h = '', c = F.cof, f = F.flag;
   var sec = function (head, body) { return '<div class="egsec"><h5>' + esc(head) + '</h5>' + linesHtml(body, 'in') + '</div>'; };
+  if (DS.standConfirm) { var scf = DS.standConfirm(S); h += sec(scf.h, scf.L); }      // 2.8: 먼저 마지막 물결
   var call = c.have <= 0 ? T('confirm.call.none0', {}) : c.used <= 0 ? T('confirm.call.empty', {}) : c.free <= 0 ? T('confirm.call.base', { u: c.used, f: c.free }).slice(0, 2).concat(T('confirm.call.full', { u: c.used })) : T('confirm.call.base', { u: c.used, f: c.free });
   if (F.barr) call = call.concat(T('confirm.call.barr', {}));
   h += sec(DS.egT1('confirm.callH'), call);
@@ -734,6 +753,7 @@ DS.egOpenStart = function (parent) {
   if (!can.ok) { U.A('cancel'); U.toast(can.why, 3000); return null; }
   var o = U.overlay(confirmHtml(S), 'modal center egov'); trace('open', 'confirm');
   o.querySelector('#egYes').addEventListener('click', function () {
+    if (DS.standGo) { trace('press', 'confirm'); U.A('ok'); o.close(); if (parent && parent.close) parent.close(); DS.standGo(S); return; }      // 2.8: 먼저 마지막 물결 (stand.js), 그 끝에 창이 열린다
     var r = DS.egStart(S); if (!r) { U.A('cancel'); o.close(); return; }
     trace('press', 'confirm');
     U.A('ok'); o.close(); if (parent && parent.close) parent.close();
@@ -753,13 +773,13 @@ DS.egPassOpen = function (S) {
   var box = o.querySelector('.egp'), list = o.querySelector('.egpl'), pane = o.querySelector('.egpp'), tm = null, shownAt = 0, ui = { more: false, picks: {}, open: false, bury: -1, step: '', res: null, kid: null };
   function head() {
     var ps = e.pass || { y0: yr(S) }, y0 = ps.y0 || yr(S);
-    o.querySelector('.egph').innerHTML = '<p class="egey">' + String(DS.egT1('pass.top', { n: e.gen, y0: y0, y1: y0 + DS.EG.years })).split(/,\s*/).map(function (x) { return '<i>' + esc(x) + '</i>'; }).join('') + '</p><h2>' + esc(DS.egT1('pass.title')) + '</h2>' + P_(DS.egT1('pass.who', { a: DS.heroCall(S) }), 'dim');
+    o.querySelector('.egph').innerHTML = '<p class="egey">' + String(DS.egT1('pass.top', { n: e.gen, y0: y0, y1: y0 + DS.egYears(S) })).split(/,\s*/).map(function (x) { return '<i>' + esc(x) + '</i>'; }).join('') + '</p><h2>' + esc(DS.egT1('pass.title')) + '</h2>' + P_(DS.egT1('pass.who', { a: DS.heroCall(S) }), 'dim');
   }
   function lineHtml(l, anim) { return '<div class="egy' + (anim ? ' in' : '') + '"><b>' + esc(l.y + '년') + '</b><span>' + l.t.map(esc).join('<br>') + '</span></div>'; }
   function redrawLines() { list.innerHTML = ((e.pass && e.pass.L) || []).map(lineHtml).join(''); }
   function addLines(ls) { (ls || []).forEach(function (l, i) { list.insertAdjacentHTML('beforeend', lineHtml(l, true)); var el = list.lastElementChild; if (el) el.style.animationDelay = (i * 0.18) + 's'; }); yearTick(ls); }
   // 1.0.10: 세월이 흐르는 연출 — 해마다 줄이 아래에서 떠올라 위로 흘러가며 바래고, 큰 해 숫자가 넘어간다. 목록은 제 칸 안에서 스크롤된다 (전에는 창 전체가 스크롤되지 않아 진행이 막혔다)
-  function yearTick(ls) { var last = ls && ls.length ? ls[ls.length - 1] : null, yb = o.querySelector('.egyear'); if (!last || !yb) return; yb.textContent = last.y + '년'; yb.classList.remove('tick'); void yb.offsetWidth; yb.classList.add('tick'); var bar = o.querySelector('.egbar i'), ps = e.pass || {}, y0 = ps.y0 || yr(S); if (bar) bar.style.width = Math.max(0, Math.min(100, (last.y - y0) / DS.EG.years * 100)) + '%'; }
+  function yearTick(ls) { var last = ls && ls.length ? ls[ls.length - 1] : null, yb = o.querySelector('.egyear'); if (!last || !yb) return; yb.textContent = last.y + '년'; yb.classList.remove('tick'); void yb.offsetWidth; yb.classList.add('tick'); var bar = o.querySelector('.egbar i'), ps = e.pass || {}, y0 = ps.y0 || yr(S); if (bar) bar.style.width = Math.max(0, Math.min(100, (last.y - y0) / DS.egYears(S) * 100)) + '%'; }
   function scrollEnd() {
     var go = function () { if (list) list.scrollTo ? list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' }) : (list.scrollTop = list.scrollHeight); if (pane && pane.firstElementChild) { var sb = o.querySelector('.sheet'); if (sb) sb.scrollTop = sb.scrollHeight; } };
     go(); setTimeout(go, 220);

@@ -890,6 +890,7 @@ V.frame = function (dt, evs) {
     }
   } else if (this.beats && this.sim) { var me0 = this.sim.byId[this.sel]; if (!me0 || me0.hp > me0.mhp * 0.5) this.beats = 0; }
   if (this.er || this.erDim > 0 || (this.erFx && this.erFx.length)) this.drawErase(g, dt);      // r17 boss: 이름 지우기 (실제 시간)
+  if (this.std && this.drawStand) { try { this.drawStand(g, dt); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'stand'); } }      // 2.8 마지막 물결: 어두워지는 하늘 · 쓰러짐 · 심장 (stand.js)
   if (this.drawBarks && this.barks && this.barks.length) { try { this.drawBarks(g); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'barks'); } }      // r32 전투 대사
   if (this.drawDeathOver && (this.dzVig > 0.01 || this.dz || this.time - (this.dsSeen == null ? -9 : this.dsSeen) < 0.2)) { try { this.drawDeathOver(g); } catch (x) { if (DS.loopErr) DS.loopErr(x, 'deathOver'); } }      // r30: 죽음 연출의 어두운 테두리·말풍선
   this.drawText(g, dt);

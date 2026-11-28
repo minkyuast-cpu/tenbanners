@@ -1449,7 +1449,8 @@ function recGens(sv) {
   data.forEach(function (g) {
     var pid = g.hd ? g.hd.pid : hc && hc.pid, r = pid && P[pid], p = pid ? lgP(pid) : null, d = r && r.d, end = g.hd && d && d.tm != null ? lgCalAt(d.tm).yr : 0;
     var why = !g.hd ? (hc && hc.vac ? '뒤를 정하는 중' : '지금의 맹주') : d && d.nk ? '자리를 넘기고 눈을 감음' : d && /천수/.test(d.why || '') ? '천수를 누림' : d && d.why && d.why !== '전사' ? d.why : (d && d.at ? d.at + '에서 쓰러짐' : '싸우다 쓰러짐');
-    out.push({ g: g.g, name: g.hd ? g.hd.n : (hc && !hc.vac ? DS.charName(hc) : g.head || ''), p: p, cur: !g.hd, y0: y0, y1: end, why: why, lost: g.names.length - (g.hd ? 1 : 0) });
+    var sw = DS.standHist ? DS.standHist(sv).filter(function (h) { return pid && h.lp === pid; }).map(function (h) { return h.w; }) : [];      // 2.8: 그 맹주가 문 앞에서 막은 물결
+    out.push({ g: g.g, name: g.hd ? g.hd.n : (hc && !hc.vac ? DS.charName(hc) : g.head || ''), p: p, cur: !g.hd, y0: y0, y1: end, why: why, lost: g.names.length - (g.hd ? 1 : 0), sw: sw });
     if (end) y0 = end;
   });
   return out;
@@ -1457,12 +1458,14 @@ function recGens(sv) {
 DS.showRecord = function (cb, ending) {
   var sv = G.save, t = Math.floor(+sv.time || 0), fl = sv.fallen || [], be = bestEnh(sv), cleared = Object.keys(sv.cleared || {}).length;
   var fz = DS.fuseProg ? DS.fuseProg(sv).fused : 0;      // r42: 합일한 사람 수
+  var sbest = DS.standBest ? DS.standBest(sv) : null;      // 2.8: 마지막 물결 가문 최고
   var cu = function (n) { return '<b class="num" data-cu="' + n + '">' + fmtN(n) + '</b>'; }, gens = [];
   try { gens = lgOn() ? recGens(sv) : []; } catch (x) { gens = []; if (DS.DEBUG) throw x; }
   var html = '<div class="result record poster"><p class="eyebrow">' + (ending ? '엔딩' : '기록') + '</p>' + (ending ? scene('ending') : '') + '<h2>' + esc(sv.name) + '의 가문</h2>' +
     (DS.allyFull ? '<p class="recally">' + esc(DS.allyFull(sv)) + (DS.calNow ? ' · 가문력 ' + fmtN(DS.calNow(sv).yr) + '년' : '') + '</p>' : '');
   if (gens.length) html += '<ol class="recg">' + gens.map(function (g) {
     return '<li' + (g.cur ? ' class="cur"' : '') + '><span class="rgp">' + (g.p ? lgFr(g.p, 'm') : '') + '</span><span class="rgt"><b><i class="num">' + g.g + '대</i> ' + esc(g.name) + '</b><small>' + (g.y1 ? '가문력 ' + fmtN(g.y0) + '~' + fmtN(g.y1) + '년' : '가문력 ' + fmtN(g.y0) + '년~') + ' · ' + esc(g.why) + '</small></span>' +
+      (g.sw && g.sw.length ? '<span class="rgs" title="마지막 물결"><b class="num">' + g.sw.map(function (w) { return fmtN(w); }).join(' · ') + '</b>물결</span>' : '') +
       (g.lost > 0 ? '<span class="rgl" title="이 대에 깃대에 새긴 이름"><b class="num">' + fmtN(g.lost) + '</b>이름</span>' : '') + '</li>';
   }).join('') + '</ol>';
   html += '<div class="recn">' +
@@ -1471,6 +1474,7 @@ DS.showRecord = function (cb, ending) {
     '<span><b>' + (fz ? cu(fz) + '<small>명</small>' : '<small>아직 없음</small>') + '</b><i>합일한 사람</i></span>' +
     (t >= 60 ? '<span><b>' + (t >= 3600 ? '<b class="num">' + fmtN(Math.floor(t / 3600)) + '</b><small>시간 </small>' : '') + '<b class="num">' + Math.floor(t % 3600 / 60) + '</b><small>분</small></b><i>플레이 시간</i></span>' : '') +
     (sv.pitBest > 0 ? '<span><b><b class="num">' + fmtN(sv.pitBest) + '</b><small>층</small></b><i>갱도 최고</i></span>' : '') +
+    (sbest ? '<span><b>' + cu(sbest.w) + '<small>번</small></b><i>마지막 물결 최고</i></span>' : '') +
     '<span class="wide"><b class="ren">' + (be ? '<span class="' + enhCls(be.enh) + '">' + esc(be.name) + '</span>' : '<small>아직 없음</small>') + '</b><i>최고 강화</i></span></div>';
   if (sv.runs && sv.runs.n) {      // 2.3.2 · 2.6.1: 걸음마다 가장 멀리 간 판
     var hs = sv.runs.hist || [], w0 = sv.runs.n - hs.length, top = DS.scnTop ? DS.scnTop(sv) : cleared;
@@ -2209,7 +2213,7 @@ function tabHelp() {
       '8단부터는 가문마다 제 윗길(8, 9, 10단)이다. 대표 기술 하나가 바뀌고, 9단과 10단에 고유 기술을 하나씩 익히며, 필살기도 윗길의 것으로 쓴다.',
       '8단 위의 가주가 쓰러지면 그대로 떠난다. 영웅 모집권 10장을 남긴다. 다음 가주는 제 단으로 서고 8단을 잇지 않는다.',
       '합일의 대표 가문은 그 세대 동안 이름 앞에 <b>大</b>가 붙는다. 大 가문의 가주는 합일하지 않아도 7단 Lv10 뒤에 8단으로 자란다. 8단 가주를 잃어도 다음 가주가 다시 8단에 오를 수 있다.',
-      '<b>합일의 힘은 한 세대만</b> 간다. 다음 세대의 장을 열고 스무 해가 지나면 8단 위의 가주도 1단 Lv1로 돌아가고 大도 걷힌다. 늘어난 수명은 그대로다.',
+      '<b>합일의 힘은 한 세대만</b> 간다. 다음 세대의 장에서 평화가 지나면 8단 위의 가주도 1단 Lv1로 돌아가고 大도 걷힌다. 늘어난 수명은 그대로다.',
       '<b>바닥 없는 갱도</b>는 돌마루 고원 동남쪽에 있고 5단부터 들어간다. 층은 끝이 없다. 깬 층은 몇 번이고 다시 들어가 키를 다진다. 입구에서 「같은 층 다시」, 「다음 층 도전」을 고르거나 층을 직접 고른다. 이기면 결과 창에서 곧장 다음 층이나 같은 층으로 간다.',
       '갱도는 층이 깊을수록 적이 세지고 골드와 경험치가 오른다. 5층마다 수문장 층, 10층마다 밑바닥 층이다. 처음 깬 층은 골드를 한 번 더 주고, ' + DS.PIT.ticketEvery + '층마다 처음 깨면 영웅 모집권 한 장.',
       '<b>권장</b> 레벨은 열에 여덟 넘게 이기고 쓰러지는 이가 하나 이하인 부대 평균이다. 평균이 권장보다 낮으면 「권장 미달」, 이길 확률이 반도 안 되면 「위험」, 넉넉하면 「여유」로 보인다.',
@@ -2234,8 +2238,8 @@ function tabHelp() {
       '삼백 년 전 열 가문의 <b>연맹</b>이 어스름을 문 너머로 밀어냈다. 맹주 <b>먼동</b>은 인수인계 없이 혼자 문 안에 남았다.',
       '<b>선대 단톡방</b>은 떠난 옛 가주들의 훈수다. 가문이 아직 닫혀 있으면 그 집의 목소리는 선대가 대신 낸다. 가문이 열리면 지금 가주가 같은 말버릇으로 말한다.',
       '<b>맹세의 깃대</b>에는 역대 맹주와 가주의 이름이 새겨져 있다. 맨 끝 줄은 늘 비어 있다. 다음 사람 자리다.',
-      '<b>새벽 종</b>은 한 대에 한 번 운다. 스무 해가 지난 새벽, 관에서 기다리던 한 사람을 이름으로 부르면 열다섯 살로 돌아온다. 대답하지 않는 이도 있다.',
-      '문이 닫힐 때 왕은 「스무 해 뒤에 뵙겠습니다」 하고 빠져나간다. 스무 해가 차면 다시 문 앞에 앉는다. 그때는 다음 사람이 이름을 부른다.']]
+      '<b>새벽 종</b>은 한 대에 한 번 운다. 평화가 끝나는 새벽, 관에서 기다리던 한 사람을 이름으로 부르면 열다섯 살로 돌아온다. 대답하지 않는 이도 있다.',
+      '<b>마지막 물결</b>: 다음 세대의 장을 열면 넘겨주기 전에 맹주와 모든 가주, 맹주의 어른 가문원이 어스름의 문 앞에서 끝없는 물결을 막는다. 물결마다 보스와 무리가 늘고, 그 물결의 보스를 모두 쓰러뜨리면 막은 것이다. 쓰러진 이는 그 싸움에서만 빠진다. 한 대에 한 번뿐이다. 막은 물결의 수만큼 평화가 이어진다(' + (DS.STAND ? DS.STAND.minY + '년에서 ' + DS.STAND.maxY + '년' : '다섯 해에서 서른 해') + '). 왕은 「스무 해 뒤에 뵙겠습니다」 하고 빠져나갔지만, 언제 다시 문 앞에 앉을지는 물결이 정한다.']]
   ];
   var LH = LORE().help40;
   if (LH instanceof Array && LH.length) S = LH.filter(function (x) { return x && x.h && x.items; }).map(function (x) { return [esc(x.h), x.short ? esc(x.short) : 0, x.items]; });
@@ -2822,7 +2826,7 @@ function lgCard(id, parent) {
   return o;
 }
 // ── 연대기: 시간순, 「시나리오 n 뒤」가 바뀔 때마다 머리줄
-var LG_KIND = { wed: '혼인', part: '이별', birth: '출생', adopt: '입양', death: '잠듦', heir: '계승', kin: '먼 친척', grief: '슬픔', fuse: '합일', coffin: '관', bury: '묻음', revive: '돌아옴', recall: '돌아옴', hand: '맡김', nat: '천수', adult: '성년', elder: '노년', rename: '개명', succ: '계승', lead: '계승', castHeir: '계승', lapse: '끊김', house: '문패' };
+var LG_KIND = { stand: '물결', wed: '혼인', part: '이별', birth: '출생', adopt: '입양', death: '잠듦', heir: '계승', kin: '먼 친척', grief: '슬픔', fuse: '합일', coffin: '관', bury: '묻음', revive: '돌아옴', recall: '돌아옴', hand: '맡김', nat: '천수', adult: '성년', elder: '노년', rename: '개명', succ: '계승', lead: '계승', castHeir: '계승', lapse: '끊김', house: '문패' };
 function lwLine(t) { return t ? '<small class="lw">마지막 말 「' + esc(t) + '」</small>' : ''; }
 // 2.6.1 연대기: 머리는 가문력 해와 계절 · 같은 일이 셋 넘게 이어지면 한 줄로 접는다(「합일 8건」) · 줄마다 테 두른 작은 초상 · 거르기 단추 · 죽음 줄은 어두운 띠.
 //   사건은 종류와 사람 번호로 저장되어 있고(save.lin.log) 글은 읽을 때 만든다 — 옛 저장도 새 글로 읽힌다.
@@ -3395,7 +3399,7 @@ function lgCoffinClick(e, o) {
 // 3.3.0: 관의 한 사람을 묻는다 (1만 골드 부활 자리) — 되돌릴 수 없다. 0.9초 잠금
 function lgBury(i, parent) {
   var cf = lgCoffins(), c = cf && cf.list[i]; if (!c) return;
-  if (DS.egPassOn && DS.egPassOn(G.save)) { A('cancel'); toast('스무 해 창에서 묻는다'); return; }
+  if (DS.egPassOn && DS.egPassOn(G.save)) { A('cancel'); toast('평화의 창에서 묻는다'); return; }
   var g = GN().cof || {}, nm = lgCofName(c), spr = lgCofSpr(c);
   var q = overlay('<div class="result lgev revive"><p class="eyebrow">관</p>' + (spr ? '<div class="lgdead">' + spr + '</div>' : '') + '<h2>' + esc(lgFill(g.buryAsk || '{a:을를} 묻는다', { a: nm })) + '</h2><p class="rn">' + esc(lgCofRole(c)) + '</p>' +
     '<p class="dim">' + esc(g.buryNote || '이름은 깃대에 남는다. 되돌릴 수 없다.') + '</p><button class="btn red wide" id="yesBury" disabled>' + esc(g.bury || '묻는다') + '</button><button class="btn wide" data-close>' + esc(g.buryNo || '취소') + '</button></div>', 'modal center rite');
