@@ -486,7 +486,7 @@ function count(e) {
   var sg = document.getElementById('s-game'); if (!sg) return;
   var el = document.getElementById('fincount'), T = TX();
   if (!el) { el = document.createElement('div'); el.id = 'fincount'; el.setAttribute('role', 'timer'); el.setAttribute('aria-live', 'off'); sg.appendChild(el); }
-  var tp = document.getElementById('boss'), sgr = sg.getBoundingClientRect(); if (tp && !tp.hidden) { var r = tp.getBoundingClientRect(); el.style.top = Math.max(4, Math.round(r.bottom - sgr.top + 66)) + 'px'; }      // 보스 컷인 띠 밑으로
+  var sgr = sg.getBoundingClientRect(); el.style.top = Math.round(sgr.height * 0.5) + 'px';      // 싸움은 문 앞(위쪽)에서 난다: 수는 비어 있는 가운데 아래에
   el.innerHTML = '<small>' + esc(T.count || '') + '</small><b>' + e.n + '</b><span>' + esc(fillT(T.countSub || '', { n: e.n })) + '</span>';
   el.className = 'on' + (e.n <= 3 ? ' hot' : '') + (calm() ? ' calm' : '');
   if (!calm()) { el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); }
