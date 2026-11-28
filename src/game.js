@@ -578,6 +578,7 @@ function startScenario(s) {
   if (DS.shadeArm) { if (DS.shadeUI) DS.shadeUI.off(); DS.shadeArm(sim, sv, { scn: s }); }      // 2.5.0 이름 부르기: 출전마다 부를 이름 (shade.js — 갱도 · 다음 세대의 장도)
   sim.hunt = !!sv.opt.hunt;
   G.view.setScene(sim, { rows: b.map, theme: b.theme, seed: s.id });
+  if (DS.finArm) DS.finArm(sim, s);      // 2.9 마지막 싸움 (final.js): 30번의 다섯 막 — 막 넘김 띠 · 막 표시 · 그림
   select(G.sel); renderChips(); renderActs(); updateQuest(); renderSys();
   $('#zName').textContent = s.name; $('#zSub').textContent = s.pit ? '던전' : '시나리오 ' + s.id; if (DS.hudCal) try { DS.hudCal(); } catch (x) {}
   $('#boss').hidden = true; layoutInsets();
@@ -1504,7 +1505,7 @@ function updateQuest() {
   var hb = huntCur(sv); huntN = hb ? 0 : bountyOpen(sv);
   var quit = false;
   if (G.stand) { text = DS.standQuest ? DS.standQuest(G.stand.std) : '마지막 물결'; quit = !G.stand.fin; }      // 2.8: 물러날 수 없다 (누르면 칼을 내려놓을지 묻는다)
-  else if (G.scn) { text = G.scn.boss ? '목표: ' + DS.BOSSES[G.scn.boss].name + ' 격파' : '목표: 습격을 모두 막아라'; retreat = true; }
+  else if (G.scn) { text = (DS.finQuest && DS.finQuest()) || (G.scn.boss ? '목표: ' + DS.BOSSES[G.scn.boss].name + ' 격파' : '목표: 습격을 모두 막아라'); retreat = true; }
   else if (hb) {      // 부대 탭 「현상 수배」에서 고른 것: 그 지역까지 길 안내, 닿으면 진행도
     if (z.id !== hb.zone) { text = '수배: ' + hb.title + ', ' + (hb.zoneName || DS.ZONES[hb.zone].name) + ' 쪽'; guide = wayTo(z, hb.zone, function () { return false; }); dest = { zone: hb.zone }; }
     else {
@@ -1835,6 +1836,7 @@ function onEvents(evs) {
     e = evs[i];
     try {      // r30: 사건 하나의 오류가 같은 프레임의 나머지 사건(승리·패배·죽음)을 삼키지 않게
     if (G.stand && standEv(e)) continue;      // 2.8 마지막 물결: 쓰러짐 · 보상 · 끝은 그 싸움의 손이 먼저
+    if (sim && sim.fin && DS.finEv && DS.finEv(e)) continue;      // 2.9 마지막 싸움: 막 넘김 · 초 세기 · 새벽 (final.js)
     switch (e.t) {
       case 'reward':
         sv.gold += Math.round(e.gold * DS.BAL.gold); sv.kills++; G.gain.exp += e.exp; G.gain.gold += e.gold;
@@ -2152,6 +2154,7 @@ function bigCine(u, sim, sub) {
   return true;
 }
 DS.bigCine = bigCine;
+DS.showBoss = function (u) { if (u) showBoss(u); };      // 2.9 마지막 싸움 (final.js): 막이 바뀌면 보스 막대도
 // 비기 컷인: 필살기 컷인 띠를 붉게 — 큰 그림 · 보스 이름 · 비기 이름. 효과 「가볍게」 · 빠른 배속이면 더 짧고 수수하게
 function bossCut(u, S) {
   var sg = $('#s-game'); if (!sg || !G.view) return;

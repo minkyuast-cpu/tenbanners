@@ -156,6 +156,7 @@ P.add = function (s) {
   u.gcd = 2 + this.rand() * 2; u.seen = 0; u.acc = 0;
   this.units.push(u); this.byId[u.id] = u; this.place(u); this._ver++;
   this.emit({ t: 'spawn', id: u.id });
+  if (u.fin === 'herald' && !this.fin && DS.FinalCtl && DS.FINAL && DS.FINAL.on) this.fin = new DS.FinalCtl(this, u);      // 2.9 마지막 싸움 (final.js): 30번의 다섯 막을 엔진 안에서 (엔진 시간 · 엔진 난수만)
   return u;
 };
 P.spawnGroup = function (g) {
@@ -263,6 +264,7 @@ P.step = function (u, j) {
   var c = this.stepCost(u, j);
   if (u.gauge < c) { this.wait(u); return false; }
   var o = this.occ[j], w = this.w, fx = u.x, fy = u.y, x = j % w, y = (j - x) / w;
+  if (u.leash) { var L = u.leash, d1 = Math.abs(x - L.x) + Math.abs(y - L.y); if (d1 > L.r && d1 > Math.abs(fx - L.x) + Math.abs(fy - L.y)) { this.wait(u, 0.25); return false; } }      // 2.9 사슬: 매인 자리에서 r 칸 밖으로는 나서지 않는다
   if (isBig(u)) {      // 2.3.0 큰 몸: 몸 전체가 들어갈 때만 (자리 바꾸기 없음)
     if (!this.fits(u, x, y)) { this.wait(u, 0.2); return false; }
     this.moveTo(u, x, y); if (x !== fx) u.face = x > fx ? 1 : -1;
@@ -408,7 +410,7 @@ P.rouse = function (e) {
   this.combat = true;
 };
 P.hurt = function (v, dmg, src, o) {
-  if (v.dead) return;
+  if (v.dead || v.veil) return;      // 2.9 veil: 막 사이에 물러나 있는 이 (30번 무릎 꿇은 먼동) — 맞지 않는다
   o = o || {};
   this._hv = (this._hv || 0) + 1;
   var sb = v.buffs && v.buffs.shd;      // 2.2.6 보호막 (버프 shd — p 가 남은 막는 양): 피해를 먼저 받아 낸다
@@ -419,6 +421,7 @@ P.hurt = function (v, dmg, src, o) {
     if (dmg <= 0) { if (src && src.ult && src !== v && o.type !== 'reflect') src.uc = Math.min(100, (src.uc || 0) + DS.ULT.hitGain * this.ultUp(src)); return; }
   }
   v.hp -= dmg; this.lastHit = this.t;
+  if (v.fin && this.fin) this.fin.hurt(this, v);      // 2.9 마지막 싸움: 막의 문턱 (그 아래로는 다음 막이 와야 내려간다)
   if (v.enr && !v.enraged && v.hp > 0 && v.hp <= v.mhp * v.enr.th) this.enrage(v);      // 2.3.0 격노
   if (src && src.side === 'enemy' && v.side === 'ally') src.prov = this.t + 6;      // 우리를 때린 적은 멀어도 내버려 두지 않는다
   if (v.ult && dmg > 0) v.uc = Math.min(100, (v.uc || 0) + dmg / (v.mhp || 1) * DS.ULT.hurtGain * this.ultUp(v));      // r32: 맞으면 필살 게이지가 조금 더 찬다
@@ -451,7 +454,8 @@ P.kill = function (v, by) {
   v.dead = true; v.deadT = this.t; v.hp = 0; this.unplace(v); this._ver++;
   if (v.rsv || v.rsvU) { v.rsv = null; v.rsvU = false; }      // 2.2.3: 쓰러지면 예약도 거둔다
   this.emit({ t: 'die', id: v.id, by: by ? by.id : null });
-  if (this.std) this.std.died(this, v, by);      // 2.8 마지막 물결 (stand.js): 쓰러진 우리 사람은 그 싸움에서만 빠진다. 따르던 가문원은 남은 가주에게, 끝은 물결이 정한다
+  if (this.std) this.std.died(this, v, by);
+  if (this.fin) this.fin.died(this, v, by);      // 2.9 마지막 싸움: 왕이 쓰러지면 새벽 · 쏟아진 어스름 세기      // 2.8 마지막 물결 (stand.js): 쓰러진 우리 사람은 그 싸움에서만 빠진다. 따르던 가문원은 남은 가주에게, 끝은 물결이 정한다
   if (by && by.fx && !by.dead && by.side !== v.side) {
     if (by.fx.killHp) this.heal(by, by.mhp * by.fx.killHp);
     if (by.fx.killGauge) by.gauge = Math.min(100, by.gauge + by.fx.killGauge);
@@ -579,6 +583,7 @@ P.victims = function (u, S, tiles) {
   if (!tiles) list = this.units.filter(function (v) { return !v.dead; });
   else { list = []; tiles.forEach(function (t) { var v = self.occ[t[1] * self.w + t[0]]; if (v && !v.dead && list.indexOf(v) < 0) list.push(v); }); }
   return list.filter(function (v) {
+    if (v.veil) return false;
     if (wantAlly ? v.side !== u.side : v.side === u.side) return false;
     if (S.mercOnly && v.role !== 'merc' && v.role !== 'summon') return false;
     return true;
@@ -1066,7 +1071,7 @@ P.engage = function (u, v, r0, r1, fire, max) {
   return true;
 };
 P.foes = function (u) {   // 싸움이 붙은 상대
-  return this.units.filter(function (v) { return !v.dead && v.side !== u.side && (u.side === 'enemy' || v.aggro); });
+  return this.units.filter(function (v) { return !v.dead && !v.veil && v.side !== u.side && (u.side === 'enemy' || v.aggro); });
 };
 P.friends = function (u) { return this.units.filter(function (v) { return !v.dead && v.side === u.side && v.role !== 'shade'; }); };      // 2.5.0: 그림자(이름 부르기)는 고침 · 가호의 대상이 아니다 (shade.js)
 // 살아 있는 아군 목록. 명부가 바뀔 때(등장·쓰러짐·이탈)만 다시 만든다 — 적 하나하나가 생각할 때마다 전체를 거르던 것을 줄인다. 돌려받은 배열은 고치지 않는다.
@@ -1965,6 +1970,7 @@ P.enemySkill = function (u, allies) {
 
 P.think = function (u) {
   u.idle = false;
+  if (u.veil) { this.wait(u, 0.3); return; }
   if (u.side === 'enemy') return this.aiEnemy(u);
   if (u.role === 'shade' && this.aiShade) return this.aiShade(u);      // 2.5.0 이름 부르기의 그림자 (shade.js)
   if (u.role === 'cmd') {
@@ -2008,7 +2014,8 @@ P.tick = function (dt) {
     if (this.t - this.swp >= 3) { this.swp = this.t; this.sweep(); }
     if (this.shd && this.shadeTick) this.shadeTick();      // 2.5.0: 이름 부르기 — 자동이면 위태로울 때 스스로 (shade.js)
   }
-  if (this.std) { this.std.tick(this, dt); if (this.result) return; }      // 2.8 마지막 물결 (stand.js): 물결을 부르고 센다 (엔진 시간 · 엔진 난수만)
+  if (this.std) { this.std.tick(this, dt); if (this.result) return; }
+  if (this.fin) { this.fin.tick(this, dt); if (this.result) return; }      // 2.9 마지막 싸움: 막을 넘기고 막마다의 공격을 건다      // 2.8 마지막 물결 (stand.js): 물결을 부르고 센다 (엔진 시간 · 엔진 난수만)
   var peace = !this.combat;
   for (i = 0; i < us.length; i++) {
     u = us[i]; if (u.dead) continue;
