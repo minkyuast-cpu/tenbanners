@@ -5905,6 +5905,12 @@ html body .ov.bldov > .sheet { width: 100%; height: 100%; max-width: none; max-h
 @keyframes gmTake { 0% { transform: scale(1); } 40% { transform: scale(1.15); box-shadow: 0 0 24px rgba(255, 226, 160, .7); } 100% { transform: scale(1); } }
 html.calm .giftmail *, .ov.gmov.calm .giftmail * { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .giftmail * { animation: none !important; } }
+
+.giftbtn { position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); top: calc(env(safe-area-inset-top, 0px) + 112px); z-index: 30; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; border-radius: 99px; border: 1px solid #e0c088; background: linear-gradient(180deg, rgba(60, 44, 24, .95), rgba(30, 22, 12, .95)); color: #ffe2a0; font-weight: 700; font-size: 13px; box-shadow: 0 0 0 0 rgba(255, 226, 160, .5); animation: gbPulse 1.8s ease-in-out infinite; }
+.giftbtn .gb-env { width: 18px; height: 13px; border-radius: 2px; background: linear-gradient(180deg, #f4e6c4, #dcc596); position: relative; } .giftbtn .gb-env::after { content: ''; position: absolute; inset: 0 0 auto; height: 8px; background: #cdb37c; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.giftbtn b { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: #c0392b; color: #fff; font-size: 11px; line-height: 16px; text-align: center; }
+@keyframes gbPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 226, 160, .45); } 50% { box-shadow: 0 0 0 6px rgba(255, 226, 160, 0); } }
+html.calm .giftbtn { animation: none; } @media (prefers-reduced-motion: reduce) { .giftbtn { animation: none; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -6918,10 +6924,18 @@ for (var ux in DS.ULT_BASE) DS.SK_ALIAS[ux] = DS.ULT_BASE[ux];
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.7.3';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.5.3';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.7.4';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.5.4';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.7.4', date: '2026-11-28', tag: '선물', title: '뚝배기의 은총',
+    lead: '새로 시작하는 맹주님께 영웅 모집권 10장을 드립니다.',
+    items: [
+      ['선물', '새로 시작하면 「뚝배기의 은총」 우편이 옵니다. 왼쪽 위 봉투 단추를 누르거나, 1번 시나리오를 깨고 마을에 돌아오면 열립니다. 받기를 누르면 영웅 모집권 10장이 들어옵니다.'],
+      ['변경', '받지 않은 우편이 있으면 화면 왼쪽 위에 봉투 단추가 뜹니다. 우편은 다른 창을 가리지 않도록, 창이 모두 닫혔을 때 열립니다.'],
+      ['안내', '영웅관에서 모집권으로 첫 동료들을 모을 수 있습니다. 모집권은 값이 오르지 않습니다.'],
+      ['고침', '현황 탭의 「접속 중」이 잘 뜨지 않던 것을 고쳤습니다. 접속해 있는 동안 2분마다 기록을 다시 올려, 5분 안에 들어온 사람은 「접속 중」으로 보입니다. 웹 판에서 로그인한 사람만 현황에 올라갑니다.']
+    ] },
   { ver: '2.7.3', date: '2026-11-27', tag: '선물', title: '모집권 50장 선물 · 이야기를 대본처럼',
     lead: '대사가 뚝뚝 끊기고 무슨 이야기인지 잘 전해지지 않던 것을 고쳤습니다.',
     items: [
@@ -15572,16 +15586,22 @@ DS.returneePerk = function (r) {
 // 저장에 특전을 적용한다. late = 이미 진행 중인 저장에 뒤늦게 드리는 경우
 // 2.7.3 운영진 선물 우편: 이 판이 나올 때 이미 플레이하던 저장(마지막으로 저장한 판이 그보다 옛것)에 한 번 — 새로 시작한 판에는 오지 않는다.
 //   s.pmail = 받기 전의 우편 [{ id, t, b, tk }] · s.gotMail = 받은 우편 id. 화면은 이어하기 뒤 DS.showGiftMail 로 연다 (받기를 눌러야 들어간다)
-DS.GIFT_MAIL = [{ id: 'thanks273', before: '2.7.3', t: '감사의 선물', b: '전민을 플레이해 주셔서 고맙습니다. 열 가문을 지켜 온 맹주님께 영웅 모집권 50장을 보냅니다. 앞으로도 잘 부탁드립니다.', tk: 50, from: '운영진' }];
+DS.GIFT_MAIL = [{ id: 'ttuk274', fresh: 1, t: '뚝배기의 은총', b: '새로 깃발을 든 맹주님, 어서 오세요. 첫 싸움에서 뚝배기가 깨지지 않기를 빌며 영웅 모집권 10장을 보냅니다. 든든한 동료부터 모으세요.', tk: 10, from: '운영진' },      // 2.7.4: 새로 시작하는 판에 (DS.giftFresh)
+  { id: 'thanks273', before: '2.7.3', t: '감사의 선물', b: '전민을 플레이해 주셔서 고맙습니다. 열 가문을 지켜 온 맹주님께 영웅 모집권 50장을 보냅니다. 앞으로도 잘 부탁드립니다.', tk: 50, from: '운영진' }];
 DS.giftMail = function (s) {
   if (!s || !s.chars) return false;
   var got = Array.isArray(s.gotMail) ? s.gotMail : (s.gotMail = []), pm = Array.isArray(s.pmail) ? s.pmail : [], add = false, v = vnum(s.ver);
   DS.GIFT_MAIL.forEach(function (g) {
-    if (!v || v >= vnum(g.before) || got.indexOf(g.id) >= 0 || pm.some(function (m) { return m && m.id === g.id; })) return;
+    if (g.fresh || !v || v >= vnum(g.before) || got.indexOf(g.id) >= 0 || pm.some(function (m) { return m && m.id === g.id; })) return;
     pm.push({ id: g.id, t: g.t, b: g.b, tk: g.tk, from: g.from }); add = true;
   });
   if (pm.length) s.pmail = pm; else delete s.pmail;
   return add;
+};
+DS.giftFresh = function (s) {      // 2.7.4: 새로 시작한 판 (화면의 「새로 시작」만 부른다 — 봇 · 시험의 DS.newSave 는 받지 않는다)
+  if (!s) return false; var pm = Array.isArray(s.pmail) ? s.pmail : [], got = Array.isArray(s.gotMail) ? s.gotMail : [], add = false;
+  DS.GIFT_MAIL.forEach(function (g) { if (g.fresh && got.indexOf(g.id) < 0 && !pm.some(function (m) { return m && m.id === g.id; })) { pm.push({ id: g.id, t: g.t, b: g.b, tk: g.tk, from: g.from }); add = true; } });
+  if (pm.length) s.pmail = pm; return add;
 };
 DS.giftTake = function (s, id) {      // 받기: 모집권을 더하고 받은 것으로 적는다. 돌려주는 것: 받은 모집권 수
   if (!s || !Array.isArray(s.pmail)) return 0;
@@ -35059,8 +35079,21 @@ DS.showGiftMail = function (done) {
   o.onclose = function () { if (G.save && G.save.pmail && G.save.pmail.length) DS.showGiftMail(done); else if (done) done(); };
   return o;
 };
+// 2.7.4 선물 우편: 봉투 단추(왼쪽 위, 받을 우편이 있을 때만) · 한 번은 저절로 열린다 — 다른 창 · 이야기 · 시나리오 · 싸움이 없을 때만
+function giftQuiet() { var s = G.save; return !!(s && Array.isArray(s.pmail) && s.pmail.length && !G.quiet && !G.scn && !G.ending && !(G.sim && G.sim.combat) && !document.querySelector('#app .ov:not(.ghost)') && !(DS.cineBusy && DS.cineBusy()) && !!(G.zone && G.zone.town) && !coachOn()); }      // 마을에서만, 조작 안내(코치)가 떠 있지 않을 때
+function coachOn() { var k = document.querySelector('.coach'); return !!(k && !k.hidden && k.offsetParent !== null && (k.textContent || '').trim()); }
+var giftAutoN = 0;
+function giftEarly() { var s = G.save; return !!(s && s.pmail && s.pmail.every(function (m) { var g = (DS.GIFT_MAIL || []).filter(function (x) { return x.id === m.id; })[0]; return g && g.fresh; }) && !(s.cleared && s.cleared[1])); }      // 새로 시작한 판의 첫 우편은 1번을 깨고 마을에 돌아왔을 때 (도입 · 조작 안내 · 첫 걸음을 가리지 않게) — 그동안은 봉투 단추
+DS.giftAuto = function () { if (giftAutoN > 0) return; if (giftEarly()) { setTimeout(DS.giftAuto, 4000); return; } if (!giftQuiet()) { if (G.save && G.save.pmail) setTimeout(DS.giftAuto, 2500); return; } giftAutoN = 1; DS.showGiftMail(null); };
+setInterval(function () {
+  var app = document.getElementById('app'); if (!app) return;
+  var s = G.save, show = !!(s && Array.isArray(s.pmail) && s.pmail.length && G.running && !G.scn && !G.ending), b = document.getElementById('giftBtn');
+  if (!show) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('button'); b.id = 'giftBtn'; b.className = 'giftbtn'; b.setAttribute('aria-label', '우편 받기'); b.innerHTML = '<i class="gb-env" aria-hidden="true"></i><span>우편</span><b class="num"></b>'; b.addEventListener('click', function () { A('tap'); if (!document.querySelector('.ov.gmov')) DS.showGiftMail(null); }); app.appendChild(b); }
+  var n = String(s.pmail.length); if (b.querySelector('b').textContent !== n) b.querySelector('b').textContent = n;
+}, 700);
 DS.showNews = function () {
-  var s = G.save; if (s && Array.isArray(s.pmail) && s.pmail.length && !document.querySelector('.ov.gmov')) { DS.showGiftMail(function () { DS.showNews(); }); return; }      // 2.7.3: 선물 우편 먼저
+  var s = G.save; if (DS.giftAuto) setTimeout(DS.giftAuto, 1500);      // 2.7.4: 선물 우편은 소식이 걷히고 다른 창이 없을 때 (다른 창을 가리지 않는다)
   if (!s || !s.news || !s.news.length) return;
   var list = s.news.slice(); s.news = []; U.persist(); A('coin');
   overlay('<div class="result"><p class="eyebrow">v' + DS.VERSION + '</p><h2>소식</h2><ul class="loot">' + list.map(function (l) { return '<li class="hl">' + esc(l) + '</li>'; }).join('') + '</ul>' +
@@ -37270,14 +37303,16 @@ function newGame(hasSave, r) {
     if (DS.GRAND_HOUSES && DS.GRAND_HOUSES[ghI] && DS.allySet) { try { DS.allySet(G.save, DS.GRAND_HOUSES[ghI][0]); } catch (x) {} }      // 2.1.0: 고른 이름은 연맹의 이름 (맹주의 가문은 병과의 가문명)
     if (G.save.opt) G.save.opt.ghAsked = 1;
     if (r) DS.grantReturnee(G.save, r, false);
+    if (DS.giftFresh) DS.giftFresh(G.save);      // 2.7.4: 뚝배기의 은총 (도입이 끝나면 우편이 열린다)
     DS.Save.setMeta({ seenVer: DS.VERSION });
     U.persist();
     DS.startGame();
     // 도입: 시나리오팀의 글(LORE.prologue, 회귀자는 prologueR)이 있으면 그것으로 — 마지막 줄이 조작 안내다. 없으면 예전 문장
     var L0 = LORE(), lore = r && L0.prologueR && L0.prologueR.length ? L0.prologueR : L0.prologue;
     var pro = lore && lore.length ? lore : ['마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.'];      // 글은 lore.js prologue
-    if (DS.stagePrologue) DS.stagePrologue(pro, perk ? function () { showPerk(perk, null); } : null, '전민 열 가문의 시대');      // 2.6.0: 도입의 무대 (stage.js) — 검은 화면 · 밤 언덕의 열 깃발 · 단톡방 말풍선. 조작 안내(전장 메모)는 코치 표시로
-    else story(pro, perk ? function () { showPerk(perk, null); } : null, '전민 열 가문의 시대');
+    var after = function () { if (perk) showPerk(perk, null); if (DS.giftAuto) setTimeout(DS.giftAuto, 4500); };      // 2.7.4: 선물 우편은 도입과 조작 안내가 지나간 뒤, 다른 창이 없을 때 (DS.giftAuto) · 늘 왼쪽 위 봉투 단추로도 연다
+    if (DS.stagePrologue) DS.stagePrologue(pro, after, '전민 열 가문의 시대');      // 2.6.0: 도입의 무대 (stage.js) — 검은 화면 · 밤 언덕의 열 깃발 · 단톡방 말풍선. 조작 안내(전장 메모)는 코치 표시로
+    else story(pro, after, '전민 열 가문의 시대');
   });
 }
 function boot() {
@@ -41840,7 +41875,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
 if (typeof window === 'undefined' || typeof document === 'undefined') return;
-var LIVE = 300000, BEAT = 180000, RKEY = 'tenbanners_fb_redirect';
+var LIVE = 300000, BEAT = 120000, RKEY = 'tenbanners_fb_redirect';
 var host = location.hostname, local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(host);
 var emu = local && /[?&]emu=1(&|$)/.test(location.search);      // 시험용: 이 컴퓨터의 Firebase 에뮬레이터에 붙는다 (?emu=1, localhost 에서만)
 var cfg = window.FIREBASE_CONFIG || (emu ? { apiKey: 'demo-key', authDomain: 'demo-tenbanners.firebaseapp.com', projectId: 'demo-tenbanners' } : null);
@@ -41942,6 +41977,7 @@ var BE = DS.OnlineBE = {
 function beat() {
   var o = O();
   if (document.hidden || !pubOn() || !o.uid || !o.db || o.pubErr === 'denied') return;
+  if (o.pubNow) { try { o.pubNow(); } catch (e) {} return; }      // 2.7.4: 기록 전체를 다시 올려 at 을 새로 한다 (규칙이 받아 주는 꼴 그대로)
   try { o.db.doc('players/' + o.uid).update({ seen: Date.now() }).catch(function () {}); } catch (e) {}
 }
 document.addEventListener('visibilitychange', function () { if (!document.hidden && S.beat) beat(); });
@@ -42379,6 +42415,8 @@ function pubWrite() {
     redraw();
   });
 }
+// 2.7.4: 「접속 중」 표시용 — 바뀐 것이 없어도 기록을 다시 올려 at 을 새로 한다. 예전의 seen 고치기(update)는 보안 규칙에 막혀 한 번도 들어가지 않았다 (현황에 seen 이 있는 문서가 없었다)
+O.pubNow = function () { if (!canWrite() || !pubOn() || O.pubErr === 'denied' || O.pubBusy) return; if (Date.now() - O.lastPubAt < 60000) return; pubWrite(); };
 function safeCall(f) { try { return Promise.resolve(f()); } catch (e) { return Promise.reject({ code: 'invalid_argument', message: String(e && e.message) }); } }
 function presence(on) {
   if (BE.presence) { try { BE.presence(O, on); } catch (e) {} return; }
