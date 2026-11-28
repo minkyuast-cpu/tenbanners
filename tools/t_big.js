@@ -97,7 +97,7 @@ module.exports = async (page, shot, L) => {
       if (!sc.boss) return; var Bd = D.BOSSES[sc.boss]; if (!Bd.sz && !(Bd.phase2 && D.BOSSES[Bd.phase2].sz)) return;
       var bs = D.buildScenario(sc, 6, 'inf'), Sx = new D.Sim({ map: bs.map, units: bs.units, mk: bs.mk, objective: bs.objective, seed: 3, mode: 'scn', inv: {} }), bo = Sx.units.filter(function (u) { return u.role === 'boss'; })[0];
       var ok = !!bo && inv(Sx) === 0 && (!Bd.sz || (bo.fw === Bd.sz[0] && bo.fh === Bd.sz[1])) && Sx.fits(bo, bo.x, bo.y);
-      if (Bd.phase2) { Sx.kill(bo, null); var p2 = Sx.units.filter(function (u) { return u.role === 'boss' && !u.dead; })[0]; ok = ok && !!p2 && p2.fw === D.BOSSES[Bd.phase2].sz[0] && inv(Sx) === 0; }
+      if (Bd.phase2) { if (Sx.fin) D.finSkip(Sx, 3); else Sx.kill(bo, null); var p2 = Sx.units.filter(function (u) { return u.role === 'boss' && !u.dead && !u.veil; })[0]; ok = ok && !!p2 && p2.fw === D.BOSSES[Bd.phase2].sz[0] && inv(Sx) === 0; }
       pl.push((sc.pit ? 'p' + sc.pit : sc.id) + (ok ? '' : '!'));
     });
     out.place = pl;

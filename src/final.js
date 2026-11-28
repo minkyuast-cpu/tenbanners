@@ -82,7 +82,7 @@ if (bs0) DS.buildScenario = function (s, a, b, c) {
   r.units = r.units.filter(function (u) { return u.grp !== 'g2'; });      // 셋째 초소는 싸움터 안이라 뺀다 (어스름은 막 ②에 쏟아진다)
   r.units.forEach(function (u) {
     if (u.grp === 'g1') u.y -= 2;      // 둘째 초소는 무너진 벽 너머 싸움터 들머리로 (첫 초소와 떨어져 하나씩 붙는다)
-    if (u.obj && u.type === 'herald') { u.fin = 'herald'; u.finMobs = (s.mobs || []).slice(); u.phase2 = null; u.x = F.kneel.x; u.y = F.kneel.y; }
+    if (u.obj && u.type === 'herald') { u.fin = 'herald'; u.finMobs = (s.mobs || []).slice(); if (s.gen >= 2) u.finGen = s.gen; u.phase2 = null; u.x = F.kneel.x; u.y = F.kneel.y; }
   });
   r.fin = 1;
   return r;
@@ -96,7 +96,7 @@ function Ctl(sim, h) {
   this.cnt = null; this.tp = null; this.zi = 0; this.last = -99; this.done = false; this.log = [[1, 0]]; this.n = { hand: 0, judge: 0, rain: 0, zone: 0, tp: 0, blast: 0, ward: 0 };
   this.mobs = (h.finMobs && h.finMobs.length ? h.finMobs : ['demon', 'gargoyle', 'ghost', 'darkMage']).filter(function (m) { return EN[m]; });
   if (!this.mobs.length) this.mobs = ['demon'];
-  this.L = h.L;
+  this.L = h.L; this.gen = h.finGen || 1;
   var ks = null; try { ks = sim.mk(null, { boss: 'duskking', x: 0, y: 0, grp: 'boss', L: h.L }); } catch (x) { ks = null; }
   this.more = !!(ks && ks.finMore);      // 다음 세대의 비틀기 「어스름이 더 쏟아진다」 (legacy.js)
   h.leash = { x: F.gate.x, y: F.gate.y, r: F.p1.leash }; h.phase2 = null; h.chain = 3;
@@ -188,11 +188,11 @@ CP.go = function (sim, n) {
 CP.turn = function (sim, h) {
   if (h.exp || h.gold) { var re = { t: 'reward', exp: h.exp || 0, gold: h.gold || 0, L: h.L, x: h.x, y: h.y, boss: true, type: h.type }; if (sim.mode === 'scn') re.mode = 'scn'; sim.emit(re); }      // 먼동을 풀어 준 몫 (예전에 쓰러뜨리던 몫과 같다)
   var cm = sim.cmds(), hero = (sim.heroId && sim.byId[sim.heroId] && !sim.byId[sim.heroId].dead) ? sim.byId[sim.heroId] : cm[0], base = hero || h, P = F.p5;
-  h.side = 'ally'; h.role = 'summon'; h.type = 'dawn'; h.name = '먼동'; h.title = ''; h.sprite = 'elder_mundong'; h.pal = null; h.big = false; h.boss = false;
+  h.side = 'ally'; h.role = 'summon'; h.type = 'dawn'; h.name = this.gen >= 2 ? '먼동의 메아리' : '먼동'; h.title = ''; h.sprite = 'elder_mundong'; h.pal = null; h.big = false; h.boss = false;
   h.owner = base.id; h.veil = false; h.obj = false; h.leash = null; h.fin = 'dawn'; h.chain = 0; h.exp = 0; h.gold = 0;
   h.mhp = h.hp = Math.max(1, Math.round((base.mhp || 100) * P.dawnHp)); h.atk = Math.round((base.atk || 10) * P.dawnK); h.mag = Math.round(Math.max(base.mag || 0, base.atk || 0) * P.dawnK);
   h.def = base.def || 0; h.res = base.res || 0; h.spd = 11; h.mv = 1; h.mt = 'foot'; h.rng = [1, 3]; h.atkKind = 'bolt'; h.dtype = 'magic'; h.kind = 'mage'; h.tags = [];
-  h.heal = P.heal; h.skills = []; h.buffs = {}; h.st = {}; h.cd = {}; h.gauge = 60; h.busy = F.lull; h.aggro = false; h.order = null; h.casting = null; h.auto = true; h.mn = '먼동';
+  h.heal = P.heal; h.skills = []; h.buffs = {}; h.st = {}; h.cd = {}; h.gauge = 60; h.busy = F.lull; h.aggro = false; h.order = null; h.casting = null; h.auto = true; h.mn = h.name;
   this.did = h.id; sim._ver++; sim.reDanger();
   sim.emit({ t: 'spawn', id: h.id }); sim.emit({ t: 'finJoin', id: h.id });
 };
@@ -343,7 +343,15 @@ DS.finOf = function (sim) { return sim && sim.fin ? sim.fin : null; };
 
 // ════════ ── 화면 (브라우저에서만) ── ════════
 if (typeof document === 'undefined') return;
-var G = DS.G, TX = function () { return DS.FINAL_TXT || { ph: {}, who: {}, hint: {} }; };
+var G = DS.G;
+function TX() {      // 다음 세대의 장이면 그 대의 글을 얹는다 (그림자 · 메아리)
+  var T = DS.FINAL_TXT || { ph: {}, who: {}, hint: {} }, sim = S && S.sim, gen = sim && sim.fin ? sim.fin.gen : 1;
+  if (!(gen >= 2) || !T.gen) return T;
+  var o = {}, k; for (k in T) o[k] = T[k];
+  o.who = {}; for (k in T.who) o.who[k] = T.who[k]; for (k in T.gen.who || {}) o.who[k] = T.gen.who[k];
+  o.ph = {}; for (k in T.ph) { var P = {}, q; for (q in T.ph[k]) P[q] = T.ph[k][q]; var Gp = T.gen.ph && T.gen.ph[k]; if (Gp) for (q in Gp) P[q] = Gp[q]; o.ph[k] = P; }
+  return o;
+}
 function U() { return DS.ui || {}; }
 function calm() { return !!(DS.calmFx && DS.calmFx()); }
 function lite() { return !!(DS.fxLite && DS.fxLite()); }
@@ -513,6 +521,15 @@ if (VP) VP.drawFin = function (g, L, dt) {
     return;
   }
   if (L === 1) {
+    // 문틈: 막 ②부터 문짝 사이가 갈라져 어스름이 새어 나온다 (막 ⑤ · 동틀 녘에는 금빛)
+    if (ph >= 2) {
+      var gold = ph >= 5, gc = gold ? '255,226,170' : '190,150,255', pa = cm ? 0.7 : 0.55 + 0.35 * Math.sin(t * (gold ? 2 : 4));
+      for (i = 0; i < 2; i++) {
+        var sx0 = (F.gate.x + i) * 16, sy0 = F.gate.y * 16;
+        for (var yy = 0; yy < 16; yy += 2) { var jx = ((yy * 7 + i * 3) % 5) - 2; g.fillStyle = 'rgba(' + gc + ',' + pa.toFixed(2) + ')'; g.fillRect(sx0 + jx - 1, sy0 + yy, 2, 2); }
+        g.fillStyle = 'rgba(' + gc + ',' + (pa * 0.22).toFixed(2) + ')'; g.fillRect(sx0 - 6, sy0 + 16, 12, 6); g.fillRect(sx0 - 3, sy0 + 22, 6, 5);
+      }
+    }
     // 어스름의 사슬: 매인 자리에서 먼동까지 (끊어진 만큼 줄어든다)
     if (h && hv && !h.dead && h.chain > 0 && ph < 5) {
       var n = Math.min(F.anchors.length, h.chain), hx = hv.x * 16 + 8, hy = hv.y * 16 + 6;
