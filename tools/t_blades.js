@@ -18,9 +18,12 @@ module.exports = async (page, shot, L, X) => {
     await shot('town_' + z);
   }
   // 문을 누르면 열린다 (가게와 같은 길)
-  const door = await ev(() => { var v = DS.G.view, p = DS.G.zone.pois.filter(function (p) { return p.kind === 'blades'; })[0], s = v.screenOf(p.x, p.y), r = document.querySelector('#cv').getBoundingClientRect(); return { x: r.left + s.x, y: r.top + s.y }; });
-  await page.mouse.click(door.x, door.y);
-  let opened = false; for (let i = 0; i < 40 && !opened; i++) { await sleep(300); opened = await ev(() => !!document.querySelector('.ov.bldsh')); }
+  let opened = false;
+  for (let tr = 0; tr < 3 && !opened; tr++) {      // 화면이 따라 움직이는 사이에 누른 자리가 어긋날 수 있다 — 자리를 다시 재서 세 번까지
+    const door = await ev(() => { var v = DS.G.view, p = DS.G.zone.pois.filter(function (p) { return p.kind === 'blades'; })[0], s = v.screenOf(p.x, p.y), r = document.querySelector('#cv').getBoundingClientRect(); return { x: r.left + s.x, y: r.top + s.y }; });
+    await page.mouse.click(door.x, door.y);
+    for (let i = 0; i < 25 && !opened; i++) { await sleep(300); opened = await ev(() => !!document.querySelector('.ov.bldsh')); }
+  }
   A(opened, 'tapping the 칼무덤 door opens its window');
   // ── 창 ──
   let w = await ev(() => { var o = document.querySelector('.ov.bldsh'); return { title: o.querySelector('header h3').textContent, line: o.querySelector('.bldline').textContent, fl: o.querySelector('.bldfl').textContent, pity: o.querySelector('.bldpity b').textContent, b1: o.querySelector('[data-bpull="1"]').innerText.replace(/\s+/g, ' '), b10: o.querySelector('[data-bpull="10"]').innerText.replace(/\s+/g, ' '), dis: [].map.call(o.querySelectorAll('[data-bpull]'), function (b) { return b.disabled; }), dex: !!o.querySelector('[data-bdex]'), keep: (o.querySelector('.f26keep') || {}).innerText || '', sw: document.documentElement.scrollWidth, txt: o.innerText }; });

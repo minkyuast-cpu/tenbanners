@@ -359,7 +359,7 @@ module.exports = async (page, shot, L) => {
   });
   A(c.x8 && c.tkPv === 10 && c.tk === 10 && c.rtk === 10 && c.heirL <= 70 && !c.fz, 'an 8단 맹주 hands over: 남긴 뜻 모집권 +10 (once), the heir does not inherit 8단 (Lv ' + c.heirL + ')');
   A(!c.again && c.chain === null, 'no chaining: the fresh 맹주 cannot hand over again within a year (tickets and heirloom steps cannot be farmed back-to-back)');
-  A(c.fail === null && c.same && c.alive && /스무 해 창/.test(c.pass), 'if succession fails midway the save is restored untouched (the 맹주 lives); not offered inside the 스무 해 window (' + c.pass + ')');
+  A(c.fail === null && c.same && c.alive && /(스무 해|평화의) 창/.test(c.pass), 'if succession fails midway the save is restored untouched (the 맹주 lives); not offered inside the peace window (' + c.pass + ')');
   // 「사건 연출 끔」: 연출 없이 바로 끝 창으로 (흐름이 끊기지 않는다)
   await ev(() => { var s = DS.G.save; s.opt.cine = 'off'; DS.NK.hold = 300; DS.NK.lock = 50; DS.heroInfo(); }); await sleep(400);
   await ev(() => document.querySelector('[data-nk]').click()); await sleep(300);
