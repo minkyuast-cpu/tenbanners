@@ -646,7 +646,7 @@ function standEv(e) {      // 돌려주는 것: 이 사건을 여기서 다 다�
     case 'reward': return true;
     case 'lose': case 'win': return true;
     case 'stdWave':
-      if (DS.standOnWave) DS.standOnWave(sv, S.std, e);
+      if (DS.standOnWave) DS.standOnWave(sv, S.std, e); if (DS.standRageWatch) DS.standRageWatch();
       vban('wave', DS.standWaveTitle ? DS.standWaveTitle(e.n) : '물결 ' + e.n, DS.standWaveLine ? DS.standWaveLine(e.n, e) : '', calm() ? 1300 : 1700); A('warn');
       if (e.n >= 6 && !calm()) setTimeout(function () { A('heart'); }, 500);
       if (e.n === 4) DS.Audio.bgm('boss');
@@ -664,6 +664,7 @@ function standEv(e) {      // 돌려주는 것: 이 사건을 여기서 다 다�
       setInfo(T.rest || '숨을 고른다', Math.round(e.dur * 1000)); if (DS.Audio.duck) DS.Audio.duck(6, Math.round(e.dur * 900));
       return true;
     case 'stdPress': toast(T.press || '다음 물결이 밀려온다', 2400); return true;
+    case 'stdEnrage': if (DS.standOnRage) DS.standOnRage(S.std, e); return true;      // 2.9.1 광폭
     case 'stdFall': return true;
     case 'stdEnd':
       DS.standNote(sv, S.std); if (!S.fin) { S.fin = performance.now(); dangerOff(); if (DS.standFinale) DS.standFinale(sv, S.std, standLeave); updateQuest(); }

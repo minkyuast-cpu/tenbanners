@@ -5863,3 +5863,11 @@ html.calm .giftbtn { animation: none; } @media (prefers-reduced-motion: reduce) 
 .result.stdres.high .std-sky { background: radial-gradient(ellipse at 50% -10%, rgba(255, 196, 120, .35), transparent 60%); }
 #quest.stdq b { color: #f6cf57; padding: 2px 8px; border: 1px solid rgba(246, 207, 87, .45); border-radius: var(--r-xs); background: rgba(60, 44, 10, .5); }
 @keyframes erIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }      /* 2.9: 이름 지우기 띠는 걷었다 — 이름 부르기 창(#shadepick)이 이 등장을 쓴다 */
+/* 2.9.1 마지막 물결 광폭: 목표 줄 밑의 초 세기 */
+html body #app#app #stdrage { position: absolute; left: 50%; top: 120px; z-index: 28; transform: translateX(-50%); display: none; padding: 3px 12px; border-radius: 999px; pointer-events: none; white-space: nowrap;
+  font: 600 var(--fs-s)/1.3 var(--f-ui); color: #f0e6ff; background: rgba(18, 10, 28, .82); border: 1px solid #6c5a8a; }
+html body #app#app #stdrage.on { display: block; }
+html body #app#app #stdrage.warn { border-color: #ffb347; color: #ffe1b0; }
+html body #app#app #stdrage.hot { border-color: #ff4d6d; color: #ffd0d8; background: rgba(60, 6, 16, .88); animation: stdRageP 1.1s ease-in-out infinite; }
+@keyframes stdRageP { 50% { box-shadow: 0 0 10px 1px rgba(255, 60, 90, .55); } }
+@media (prefers-reduced-motion: reduce) { html body #app#app #stdrage.hot { animation: none; } }

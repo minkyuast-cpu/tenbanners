@@ -1635,8 +1635,8 @@ V.drawBig = function (g, v) {
   var shH = Math.max(9, fhP * 0.72); g.drawImage(shT, ax - 4, ay + fhP - shH + 1, fwP + 8, shH);
   if (boss && dq < 0) {      // 보스 테: 몸 둘레를 도는 점선 (붉은 땅에서는 금빛) · 격노하면 붉은 바닥이 숨 쉰다
     var bc = this.hot ? '#ffd75e' : '#ff4d6d', per = 2 * (fwP + fhP) + 8, N = Math.round(per / 3), off = (t * 9) % 3;
-    if (u.enraged) { g.globalAlpha = v.alpha * (0.14 + 0.1 * Math.sin(t * 7)); g.fillStyle = '#ff2a3a'; g.fillRect(ax + 1, ay + 1, fwP - 2, fhP - 2); }
-    g.fillStyle = u.enraged ? '#ff2a3a' : bc;
+    if (u.enraged || u.stdE) { g.globalAlpha = v.alpha * (0.14 + 0.1 * Math.sin(t * 7)); g.fillStyle = '#ff2a3a'; g.fillRect(ax + 1, ay + 1, fwP - 2, fhP - 2); }
+    g.fillStyle = u.enraged || u.stdE ? '#ff2a3a' : bc;
     for (i = 0; i < N; i++) {
       var d = (i * 3 + off) % per, px2, py2, x0 = ax - 1, y0 = ay - 1, w0 = fwP + 2, h0 = fhP + 2;
       if (d < w0) { px2 = x0 + d; py2 = y0; } else if (d < w0 + h0) { px2 = x0 + w0; py2 = y0 + d - w0; } else if (d < 2 * w0 + h0) { px2 = x0 + w0 - (d - w0 - h0); py2 = y0 + h0; } else { px2 = x0; py2 = y0 + h0 - (d - 2 * w0 - h0); }
@@ -1654,7 +1654,7 @@ V.drawBig = function (g, v) {
   var dx0, dy0, cw, ch, top;
   if (cv) {
     dx0 = Math.round(ax + lx) - cv.ox; dy0 = Math.round(ay + ly + bob) - cv.oy; cw = cv.lw; ch = cv.lh; top = dy0 + (cv.pad || 0);
-    if (u.enraged && !white && dq < 0) {      // 격노: 붉은 윤곽이 숨 쉰다 (가볍게: 한 겹)
+    if ((u.enraged || u.stdE) && !white && dq < 0) {      // 격노 · 2.9.1 마지막 물결의 광폭: 붉은 윤곽이 숨 쉰다 (가볍게: 한 겹)
       var rc = preScaled(DS.bigCanvas(u, { pose: pose, flip: flip, tint: '#ff3a4a' }), this.k * this.dpr);
       if (rc) { g.globalAlpha = v.alpha * (0.45 + 0.25 * Math.sin(t * 6)); g.drawImage(rc, dx0 - 1.5, dy0 - 1.5, cw + 3, ch + 2); if (!lite) { g.globalAlpha *= 0.5; g.drawImage(rc, dx0 - 2.5, dy0 - 2.5, cw + 5, ch + 3); } }      // 한두 겹 (큰 그림을 네 번 그리면 느린 폰에서 무겁다)
     }
@@ -1678,7 +1678,7 @@ V.drawBig = function (g, v) {
     var show = u.side === 'ally' || u.aggro || hp < 1;
     if (show) {
       g.fillStyle = K; g.fillRect(x0 - 1, by - 1, bw + 2, 5);
-      g.fillStyle = u.side === 'ally' ? '#7fcf6a' : u.enraged ? '#ff2a3a' : '#e0525e'; g.fillRect(x0, by, Math.ceil(bw * hp), 2);
+      g.fillStyle = u.side === 'ally' ? '#7fcf6a' : u.enraged || u.stdE ? '#ff2a3a' : '#e0525e'; g.fillRect(x0, by, Math.ceil(bw * hp), 2);
       if (v.hpL == null || hp >= v.hpL) { v.hpL = hp; v.hpHit = t; } else if (t - v.hpHit > 0.35) v.hpL = Math.max(hp, v.hpL - (t - (v.hpLt || t)) * 0.9);
       v.hpLt = t;
       if (v.hpL > hp + 0.002) { g.fillStyle = '#ffffff'; g.fillRect(x0 + Math.ceil(bw * hp), by, Math.max(0.5, Math.ceil(bw * v.hpL) - Math.ceil(bw * hp)), 2); }

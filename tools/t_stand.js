@@ -39,6 +39,18 @@ module.exports = async function (page, shot, L) {
   c = await ev(() => { const sim = DS.G.sim, std = DS.G.stand.std, bs = sim.units.filter(u => u.side === 'enemy' && u.std === 'b' && u.stdW === 1), ms = sim.units.filter(u => !u.dead && u.side === 'enemy' && u.std === 'm'); return { n: std.n, b: bs.length, m: (std.made[1] || 0) + std.q.filter(x => x.n === 1).length, q: document.querySelector('#quest').innerText, B: DS.standB(1), M: DS.standM(1) }; });
   A(c.n === 1 && c.b === c.B && c.m === c.M && /물결 1/.test(c.q), 'wave 1: ' + c.b + ' boss, ' + c.m + ' monsters (B ' + c.B + ', M ' + c.M + '), the HUD reads 「' + c.q + '」');
   await ev(() => { DS.G.pause = false; }); await sleep(900); await shot('wave1'); await ev(() => { DS.G.pause = true; });
+  // 2.9.1 광폭: 적은 10단 10레벨 고정 · 35초 안에 못 막으면 1단계 (그 물결의 적 공격 +20%) · 목표 줄 밑에 초 세기
+  c = await ev(() => { const sim = DS.G.sim, b = sim.units.filter(u => !u.dead && u.side === 'enemy' && u.std === 'b' && u.stdW === 1)[0], ch = document.querySelector('#stdrage'); return { L: b && b.L, chip: ch ? ch.innerText : '', on: !!(ch && ch.classList.contains('on')) }; });
+  A(c.L === 100 && c.on && /광폭까지 \d+초/.test(c.chip), 'enemies are level 100 regardless of the party (boss L ' + c.L + '), the chip reads 「' + c.chip + '」');
+  c = await ev(() => { const sim = DS.G.sim, std = sim.std, wv = std.open[std.open.length - 1], bs = sim.units.filter(u => !u.dead && u.side === 'enemy' && u.stdW === 1); window.__rg = bs.map(u => [u.id, u.atk, u.mag]); wv.t0 = sim.t - DS.STAND.rage.lim - 0.1; bs.forEach(u => { u.busy = 3; }); return bs.length; });
+  await ev(() => { DS.G.pause = false; }); await sleep(450); await ev(() => { DS.G.pause = true; });
+  c = await ev(() => { const sim = DS.G.sim, std = sim.std, vb = document.querySelector('#vban'), ch = document.querySelector('#stdrage'), r = window.__rg.map(x => { const u = sim.byId[x[0]]; return u && !u.dead ? [u.stdE, +(u.atk / Math.max(1, x[1])).toFixed(2)] : null; }).filter(Boolean); return { e: std.rg[1], r, vb: vb && !vb.hidden ? vb.className + ' ' + vb.innerText : '', chip: ch ? ch.innerText : '', hot: !!(ch && ch.classList.contains('hot')) }; });
+  A(c.e === 1 && c.r.length && c.r.every(x => x[0] === 1 && x[1] >= 1.17 && x[1] <= 1.23) && /rage/.test(c.vb) && /광폭화 1단계/.test(c.vb) && /20%/.test(c.vb) && c.hot && /광폭 1단계/.test(c.chip), 'after 35s wave 1 enrages: stage ' + c.e + ', atk x' + (c.r[0] || [])[1] + ', banner 「' + c.vb.replace(/\s+/g, ' ') + '」, chip 「' + c.chip + '」');
+  await shot('rage1');
+  c = await ev(() => { const sim = DS.G.sim, std = sim.std, wv = std.open[std.open.length - 1]; wv.t0 = sim.t - DS.STAND.rage.lim - DS.STAND.rage.every * 2 - 0.1; return 1; });
+  await ev(() => { DS.G.pause = false; }); await sleep(450); await ev(() => { DS.G.pause = true; });
+  c = await ev(() => { const sim = DS.G.sim, r = window.__rg.map(x => { const u = sim.byId[x[0]]; return u && !u.dead ? [u.stdE, +(u.atk / Math.max(1, x[1])).toFixed(2)] : null; }).filter(Boolean); return { e: sim.std.rg[1], r }; });
+  A(c.e === 3 && c.r.every(x => x[0] === 3 && x[1] >= 1.56 && x[1] <= 1.64), 'two more steps later: stage ' + c.e + ', atk x' + (c.r[0] || [])[1] + ' (+60%)');
   // 물결을 억지로 넘긴다: 보스만 쓰러뜨리면 그 물결을 막은 것 · 남은 무리는 다음 물결로 이어진다
   const force = async (n) => ev((n) => {
     const sim = DS.G.sim, std = sim.std;

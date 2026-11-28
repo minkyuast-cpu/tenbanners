@@ -351,6 +351,6 @@ module.exports = async (page, shot, L) => {
   A(f225.allies === 3 && f225.t >= 4, '2.2.5 save fights in the field with 3 out (' + f225.allies + ' houses, ' + f225.t + ' s)');
   await ev(() => { DS.G.sim.hunt = false; DS.G.save.opt.hunt = false; DS.ui.closeAll(); });
   const notes = await ev(() => DS.NOTES[0].ver + ' ' + DS.NOTES[0].title + ' / ' + DS.VERSION + ' / ' + DS.BUILD);
-  A(/^2\.9\.0 [^/]+ \/ 2\.9\.0 \/ 7\.7\.0$/.test(notes), 'version ' + notes);
+  A(/^2\.9\.1 [^/]+ \/ 2\.9\.1 \/ 7\.7\.1$/.test(notes), 'version ' + notes);
   console.log('smoke done');
 };
