@@ -228,6 +228,10 @@ module.exports = async function (page, shot, L) {
     DS.LG.ranks.forEach(function (r, i) { chk(r.line, 'legacy.rank' + i, 44); });
     Object.keys(DS.LG_BOON).forEach(function (k) { chk(DS.LG_BOON[k].line, 'legacy.boon.' + k, 44); chk(fill(DS.LG_BOON[k].d, { v: 3 }), 'legacy.boonD.' + k, 44); });
     DS.LG_TWIST.forEach(function (t) { chk(t.say, 'legacy.twist' + t.g + '.say', 44); chk(t.note, 'legacy.twist' + t.g + '.note', 44); });
+    // 2.9 30번 마지막 싸움의 막 넘김 (띠 · 말풍선 · 알림 줄): 줄표 없이 · 「위력」 없이
+    (function (T) { if (!T) { bad.push('막 넘김 글 없음'); return; } [1, 2, 3, 4, 5].forEach(function (n) { var P = T.ph[n]; if (!P) { bad.push('막 글 없음 ' + n); return; } chk(P.t, 'final.' + n + '.t', 12); chk(P.sub, 'final.' + n + '.sub', 34); P.l.forEach(function (l, i) { chk(l[1], 'final.' + n + '.l' + i, 34); }); chk(T.hint[n], 'final.' + n + '.hint', 60); });
+      ['count', 'countSub', 'ward', 'blast', 'tp', 'dawnDown', 'dawnBreak', 'dawnSub', 'rest'].forEach(function (k) { chk(fill(T[k], { n: 9 }), 'final.' + k, 34); });
+      JSON.stringify(T).split('"').forEach(function (t) { if (/[—–]|위력/.test(t)) bad.push('막 넘김 글의 줄표 · 위력 | ' + t); }); })(DS.FINAL_TXT);
     // 필살기의 한 줄 (타고난 것 · 윗길)
     Object.keys(DS.ULTS).forEach(function (k) { if (DS.ULTS[k].fl != null) chk(DS.ULTS[k].fl, 'ult.' + k, 34); });
     Object.keys(DS.ULTX || {}).forEach(function (k) { var X = DS.SKILLS[DS.ULTX[k]] || DS.SKILLS[k]; if (X && X.fl != null) chk(X.fl, 'ultx.' + k, 34); });

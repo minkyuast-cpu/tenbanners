@@ -25,7 +25,7 @@ var F = DS.FINAL = {
   p2: { waves: 2, per: 6, more: 1.5, gap: 9, dur: 30, live: 10, hands: 3, hand0: 2.5, hand: 5.5, mobHp: 0.55, mobAtk: 0.45, dL: 2 },
   p3: { hp: 3.9, atk: 0.7, mag: 0.95, skills: ['fin_breath', 'fin_sum', 'b_dark', 'e_smash'], judge0: 5, judge: 13, rows: 2 },
   p4: { to: 0.5, judge: 18, tp0: 3, tp: 12, tpWarn: 1.2, rain0: 2, rain: 9, rainN: 7, zone0: 1, zone: 6.5, zoneMax: 3, cover: 0.3 },
-  p5: { to: 0.2, cd0: 1.5, cd: 12, again: 16, wardAt: 2.5, ward: 0.25, wardDur: 6, blast: 0.55, dawnHp: 1.6, dawnK: 1.0, heal: 0.6 }
+  p5: { to: 0.2, cd0: 1.5, cd: 12, again: 16, wardAt: 2.5, ward: 0.25, wardDur: 6, blast: 0.66, dawnHp: 1.6, dawnK: 1.0, heal: 0.6 }
 };
 // 싸움터 (13 × 20 · 출발 칸 y16~19 · x3~9 는 비워 둔다). 맨 위가 문(세 짝 · 기둥 p), 가운데 줄에 무너진 벽, 아래는 다가가는 길
 var MAP = DS.FINAL_MAP = [
@@ -56,15 +56,15 @@ var SIDE = [[1, 3], [11, 3], [1, 6], [11, 6], [4, 1], [8, 1], [1, 8], [11, 8]]; 
 // ── 기술 (막의 공격은 이 표의 효과로 풀린다 — 화면의 그림은 아래 「기술 그림」) ──
 var NEW_SK = {
   fin_arc:    { name: '사슬 칼', tick: 45, tg: 'self', area: 'r2', side: 'enemy', cast: 1.5, fx: 'slash', ai: 'near', near: 2, cd: 8, eff: [{ t: 'dmg', m: 1.05, type: 'magic' }, { t: 'knock', n: 1 }] },
-  fin_hand:   { name: '어스름의 손', tick: 0, tg: 'tile', area: 'single', fx: 'dark', fall: { delay: 1.4, hold: 0 }, eff: [{ t: 'dmg', m: 0.7, type: 'magic' }, { t: 'status', s: 'slow', dur: 3 }] },
-  fin_judge:  { name: '멸망의 줄', tick: 0, tg: 'row', fx: 'dark', bult: true, cast: 2.6, eff: [{ t: 'dmg', m: 1.65, type: 'magic' }] },
-  fin_breath: { name: '어스름 숨', tick: 50, tg: 'dir', len: 5, cone: true, cast: 1.8, fx: 'dark', cd: 10, minN: 1, eff: [{ t: 'dmg', m: 1.35, type: 'magic' }, { t: 'gauge', v: -25 }] },
+  fin_hand:   { name: '어스름의 손', tick: 0, tg: 'tile', area: 'single', fx: 'dark', fall: { delay: 1.4, hold: 0 }, eff: [{ t: 'dmg', m: 0.85, type: 'magic' }, { t: 'status', s: 'slow', dur: 3 }] },
+  fin_judge:  { name: '멸망의 줄', tick: 0, tg: 'row', fx: 'dark', bult: true, cast: 2.6, eff: [{ t: 'dmg', m: 2.1, type: 'magic' }] },
+  fin_breath: { name: '어스름 숨', tick: 50, tg: 'dir', len: 5, cone: true, cast: 1.8, fx: 'dark', cd: 10, minN: 1, eff: [{ t: 'dmg', m: 1.5, type: 'magic' }, { t: 'gauge', v: -25 }] },
   fin_sum:    { name: '이름 없는 그림자', tick: 50, tg: 'self', fx: 'dark', ai: 'summon', cap: 4, cd: 17, eff: [{ t: 'summon', type: 'nameless', n: 2 }] },
-  fin_rain:   { name: '검은 별비', tick: 0, tg: 'tile', area: 'single', fx: 'meteor', fall: { delay: 1.7, hold: 0 }, eff: [{ t: 'dmg', m: 1.5, type: 'magic' }] },
+  fin_rain:   { name: '검은 별비', tick: 0, tg: 'tile', area: 'single', fx: 'meteor', fall: { delay: 1.7, hold: 0 }, eff: [{ t: 'dmg', m: 1.75, type: 'magic' }] },
   fin_end:    { name: '마지막 어스름', tick: 0, tg: 'self', area: 'all', side: 'enemy', fx: 'dark', bult: true, eff: [] },
   fin_ward:   { name: '새벽 방패', tick: 0, tg: 'self', area: 'all', side: 'ally', fx: 'holy', eff: [] }
 };
-for (var zi = 0; zi < 4; zi++) NEW_SK['fin_dusk' + zi] = { name: '번지는 어스름', tick: 0, tg: 'tile', fx: 'dark', eff: [], zone: { dur: 14, every: 1, k: 'dark', to: 'foe', dz: 1, eff: [{ t: 'dmg', m: 0.32, type: 'magic' }, { t: 'gauge', v: -6 }] } };
+for (var zi = 0; zi < 4; zi++) NEW_SK['fin_dusk' + zi] = { name: '번지는 어스름', tick: 0, tg: 'tile', fx: 'dark', eff: [], zone: { dur: 14, every: 1, k: 'dark', to: 'foe', dz: 1, eff: [{ t: 'dmg', m: 0.4, type: 'magic' }, { t: 'gauge', v: -6 }] } };
 for (var k in NEW_SK) SK[k] = NEW_SK[k];
 DS.FIN_SK = Object.keys(NEW_SK);
 // 이름 없는 그림자: 이름이 지워진 자리에 남은 것 (왕이 부른다 · 약하지만 끈질기다)
@@ -166,7 +166,7 @@ CP.go = function (sim, n) {
     s.skills = F.p3.skills.filter(function (x) { return SK[x]; }).concat(extra);
     s.obj = true; s.fin = 'king'; s.phase2 = null; delete s.enr;
     if (F.p3.hp !== 1) s.hp = s.mhp = Math.max(1, Math.round(s.mhp * F.p3.hp));
-    s.atk = Math.round(s.atk * F.p3.atk); s.mag = Math.round(s.mag * F.p3.mag);      // 평타(물리)는 무디게, 예고하는 마법은 그대로 — 아픈 것은 보이는 공격이 되게
+    s.atk = Math.round(s.atk * F.p3.atk); s.mag = Math.round(s.mag * F.p3.mag);      // 평타(물리)는 무디게, 예고하는 마법은 그대로 — 큰 피해는 보이는 공격에서 오게
     var nu = sim.add(s);
     if (nu) { nu.aggro = true; nu.gauge = 30; nu.busy = F.lull; this.kid = nu.id; focus = nu.id; }
     else { this.done = true; sim.win(); return; }      // 설 자리가 없다 (일어나지 않는다 — 그래도 판이 멈추지 않게)

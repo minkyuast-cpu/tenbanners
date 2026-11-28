@@ -18,6 +18,7 @@ function fight(s, seed) {
   const specs = D.partySpecs(s), pos = D.formation(specs, b.start); let first = null;
   specs.forEach((u, i) => { u.x = pos[i][0]; u.y = pos[i][1]; u.auto = true; const nu = sim.add(u); if (nu && nu.role === 'cmd' && !first) first = nu; });
   sim.leader = first && first.id; sim.hunt = true;
+  if (D.shadeArm && !process.env.NOSHADE) D.shadeArm(sim, s);      // 봇처럼 이름 부르기를 걸어 둔다 (가주가 위태로우면 스스로)
   let res = null, fell = 0, dead = 0, why = '', last = {}, cur = '';
   if (process.env.WHY) {      // 물러난 까닭: 마지막 몇 대 (때린 쪽 · 기술 · 최대 체력에 대한 몫)
     const r0 = sim.resolve; sim.resolve = function (u, id) { const c0 = cur; cur = id; try { return r0.apply(this, arguments); } finally { cur = c0; } };
