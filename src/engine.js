@@ -1894,7 +1894,7 @@ P.aiEnemy = function (u) {
   }
   if (this.dodge(u)) return;
   if (u.skills.length && u.gcd <= 0 && this.enemySkill(u, allies)) { u.owe = false; u.actT = this.t + (u.casting ? u.casting.dur : 0); return; }
-  var v = this.pickTarget(u, allies), save = u.role === 'boss' && DS.BAL && DS.BAL.bossCast && this.bossSave(u);
+  var v = this.pickTarget(u, allies), save = (u.role === 'boss' || u.std === 'h') && DS.BAL && DS.BAL.bossCast && this.bossSave(u);      // 2.9.1 마지막 물결의 이름 잃은 영웅도 기술을 아껴 쓴다
   if (v) this.engage(u, v, 1, this.reach(u), function () { if (save) { this.wait(u, 0.2); return true; } if (u.gauge >= this.atkCost(u)) { u.owe = true; u.actT = this.t; } return this.attack(u, v); });
   else this.wait(u, 0.3);
 };

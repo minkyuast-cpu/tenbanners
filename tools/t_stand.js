@@ -47,6 +47,16 @@ module.exports = async function (page, shot, L) {
   c = await ev(() => { const sim = DS.G.sim, std = sim.std, vb = document.querySelector('#vban'), ch = document.querySelector('#stdrage'), r = window.__rg.map(x => { const u = sim.byId[x[0]]; return u && !u.dead ? [u.stdE, +(u.atk / Math.max(1, x[1])).toFixed(2)] : null; }).filter(Boolean); return { e: std.rg[1], r, vb: vb && !vb.hidden ? vb.className + ' ' + vb.innerText : '', chip: ch ? ch.innerText : '', hot: !!(ch && ch.classList.contains('hot')) }; });
   A(c.e === 1 && c.r.length && c.r.every(x => x[0] === 1 && x[1] >= 1.17 && x[1] <= 1.23) && /rage/.test(c.vb) && /광폭화 1단계/.test(c.vb) && /20%/.test(c.vb) && c.hot && /광폭 1단계/.test(c.chip), 'after 35s wave 1 enrages: stage ' + c.e + ', atk x' + (c.r[0] || [])[1] + ', banner 「' + c.vb.replace(/\s+/g, ' ') + '」, chip 「' + c.chip + '」');
   await shot('rage1');
+  // 2.9.1 이름 잃은 영웅: 우리와 같은 병과의 10단 10레벨이 적으로 · 치는 기술만 · 쓰러뜨리지 않아도 물결은 막힌다
+  await ev(() => { window.__toasts = []; const t0 = DS.ui.toast; DS.ui.toast = function (m) { window.__toasts.push(String(m)); return t0.apply(this, arguments); }; });
+  c = await ev(() => { const sim = DS.G.sim, std = sim.std, H = []; ['mag', 'sha', 'inf'].forEach((cl, i) => { const u = DS.standHeroSpec(cl, DS.standK(1, 1)); u.id = 'shT' + i; const p = std.spot(sim); u.x = p.x; u.y = 3 + i; u.stdW = 1; const nu = sim.add(u); if (nu) { nu.busy = 2; H.push(nu); std.h++; sim.emit({ t: 'stdHero', id: nu.id, n: 1, k: i, first: i === 0 }); } });
+    const SK = DS.SKILLS; return H.map(u => ({ side: u.side, L: u.L, nm: u.name, cls: u.cls, sk: u.skills, ok: u.skills.length > 0 && u.skills.every(k => SK[k].eff[0].t === 'dmg' && !SK[k].eff.some(e => e.t === 'summon')), ch: u.ch, look: u.look })); });
+  A(c.length === 3 && c.every(h => h.side === 'enemy' && h.L === 100 && /^이름 잃은 /.test(h.nm) && h.ok && h.ch == null && h.look && h.look[1] === 10), 'nameless heroes join the foes: ' + c.map(h => h.nm + ' [' + h.sk.join(',') + ']').join(' / '));
+  await ev(() => { DS.G.pause = false; }); await sleep(2300);
+  c = await ev(() => ({ toast: window.__toasts.join(' / '), live: DS.G.sim.units.filter(u => !u.dead && u.std === 'h').length }));
+  await ev(() => { DS.G.pause = true; });
+  A(/이름을 잃은 영웅/.test(c.toast), 'the first nameless hero is announced: 「' + c.toast.replace(/\s+/g, ' ').slice(0, 60) + '」');
+  await shot('heroes');
   c = await ev(() => { const sim = DS.G.sim, std = sim.std, wv = std.open[std.open.length - 1]; wv.t0 = sim.t - DS.STAND.rage.lim - DS.STAND.rage.every * 2 - 0.1; return 1; });
   await ev(() => { DS.G.pause = false; }); await sleep(450); await ev(() => { DS.G.pause = true; });
   c = await ev(() => { const sim = DS.G.sim, r = window.__rg.map(x => { const u = sim.byId[x[0]]; return u && !u.dead ? [u.stdE, +(u.atk / Math.max(1, x[1])).toFixed(2)] : null; }).filter(Boolean); return { e: sim.std.rg[1], r }; });
@@ -68,7 +78,7 @@ module.exports = async function (page, shot, L) {
   for (let k = 2; k <= 4; k++) {
     const before = await force(k);
     await ev(() => { DS.G.pause = false; }); await sleep(250); await ev(() => { DS.G.pause = true; });
-    c = await ev((k) => { const sim = DS.G.sim, std = sim.std, bs = sim.units.filter(u => u.side === 'enemy' && u.std === 'b' && u.stdW === k), pl = std.plan[k], made = (std.made[k] || 0) + std.q.filter(x => x.n === k).length, old = sim.units.filter(u => !u.dead && u.side === 'enemy' && u.std === 'm' && u.stdW < k).length + std.q.filter(x => x.n < k).length; return { n: std.n, w: std.w, b: bs.length, made, carry: pl.carry, old, B: DS.standB(k), M: DS.standM(k), st: DS.G.save.eg.stand }; }, k);
+    c = await ev((k) => { const sim = DS.G.sim, std = sim.std, bs = sim.units.filter(u => u.side === 'enemy' && u.std === 'b' && u.stdW === k), pl = std.plan[k], made = (std.made[k] || 0) + std.q.filter(x => x.n === k).length, old = sim.units.filter(u => !u.dead && u.side === 'enemy' && (u.std === 'm' || u.std === 'h') && u.stdW < k).length + std.q.filter(x => x.n < k).length; return { n: std.n, w: std.w, b: bs.length, made, carry: pl.carry, old, B: DS.standB(k), M: DS.standM(k), st: DS.G.save.eg.stand }; }, k);
     A(c.n === k && c.w === k - 1 && c.b === c.B && c.made === c.M && c.carry === before.live && c.carry > 0 && c.old > 0 && c.st.w === k - 1, 'wave ' + k + ': ' + c.b + ' bosses (B ' + c.B + '), ' + c.made + ' new monsters (M ' + c.M + ') on top of ' + c.carry + ' left over from earlier waves, marker w ' + c.st.w + (c.carry > 0 ? '' : ' ' + JSON.stringify({ before: before, c: c })));
   }
   // 숨 돌리기: 조금만 돌아온다 (10%)

@@ -24,6 +24,7 @@ var ST = DS.STAND = {
   rest: 4.5,                            // 물결 사이 숨 돌리기 (엔진 초)
   heal: 0.10, mana: 0.10,               // 숨 돌릴 때 돌아오는 몫 (최대치의 비율) · 필살 게이지는 그대로 이어진다
   tmax: 150,                            // 한 물결이 이보다 길면 다음 물결이 그냥 온다 (그 물결의 보스가 다 쓰러져야 막은 것으로 센다)
+  hero: { from: 2, p0: 0.4, pW: 0.05, pMax: 0.8, two: 8, three: 13, hp: 2.5, atk: 0.8, cls: ['inf', 'cav', 'fly', 'mar', 'pike', 'arc', 'cle', 'mon', 'mag', 'sha'] },      // 2.9.1 이름 잃은 영웅: 물결 from 부터 가끔 (확률 p0 + pW·n, 많아야 pMax) 10단 10레벨 영웅이 적으로 섞인다. two · three 번째 물결부터 둘 · 셋까지
   bigEvery: 5,                          // 다섯째 물결마다 첫 보스는 큰 몸으로 (큰 몸이 있는 보스면)
   allies: 24,                           // 우리 편 상한 (가주 먼저, 그다음 가문원 레벨 순)
   waveMax: 99, simMax: 7200             // 안전 (엔진 초)
@@ -73,6 +74,22 @@ function pool() { if (POOL) return POOL; POOL = []; (DS.SCENARIOS || []).forEach
 function mobsOf(boss) { var sc = (DS.SCENARIOS || []).filter(function (s) { return s.boss === boss; })[0]; return sc && sc.mobs && sc.mobs.length ? sc.mobs : ['demon', 'gargoyle', 'ghost', 'darkMage']; }
 function bigOk(boss) { var B = DS.BOSSES[boss]; return !!(B && B.sz && (B.sz[0] > 1 || B.sz[1] > 1)); }
 DS.standPool = function () { return pool().slice(); };
+// 2.9.1 이름 잃은 영웅: 우리와 같은 병과의 10단 10레벨 (그 단의 기본 장비). 소환 · 아군에게 거는 기술은 빼고, 치는 기술만 쓴다 (엔진의 적 AI)
+function heroSkills(list) { var SK = DS.SKILLS || {}; return list.filter(function (k) { var S = SK[k]; return S && S.eff && S.eff[0] && S.eff[0].t === 'dmg' && !S.eff.some(function (e) { return e.t === 'summon'; }) && /^(enemy|tile|self|dir)$/.test(S.tg); }); }
+DS.standHeroN = function (n, r1, r2, r3) {
+  var H = ST.hero; if (n < H.from) return 0;
+  if (r1 >= Math.min(H.pMax, H.p0 + H.pW * n)) return 0;
+  return 1 + (n >= H.two && r2 < 0.5 ? 1 : 0) + (n >= H.three && r3 < 0.5 ? 1 : 0);
+};
+DS.standHeroSpec = function (cls, k) {
+  var ref = { id: -1, cls: cls, L: ST.Lbase, st: '' }; DS.stdGear(ref, DS.tierOfL(ST.Lbase));
+  var u = DS.cmdSpec(ref, false, null), H = ST.hero, tn = DS.tierName(cls, DS.tierOfL(ST.Lbase));
+  delete u.ch; delete u.hero; delete u.st; delete u.owner;
+  u.side = 'enemy'; u.role = 'mob'; u.std = 'h'; u.stdCls = cls; u.name = fillT(TX.heroN, { t: tn }); u.mn = u.name;
+  u.mhp = u.hp = Math.round(u.mhp * H.hp * k); u.atk = Math.round(u.atk * H.atk * k); u.mag = Math.round(u.mag * H.atk * k);
+  u.mp = u.mmp = 9999; u.skills = heroSkills(u.skills || []); u.exp = 0; u.gold = 0; u.aggro = true;
+  return u;
+};
 var EVEN = {};
 function bossEven(id) { if (EVEN[id] == null) { var u = DS.enemySpec(null, ST.Lbase, { boss: id, diff: 1, small: true }); EVEN[id] = Math.max(0.7, Math.min(1.6, ST.bossRef / Math.max(1, u.mhp))); } return EVEN[id]; }
 
@@ -100,7 +117,7 @@ function Std(s, sim, specs, o) {
   this.g = DS.egGen ? DS.egGen(s) : 1; this.Lp = specs.length ? sum / specs.length : 1;
   this.n = 0; this.w = 0; this.b = 0; this.k = 0; this.open = []; this.q = []; this.qT = 0;
   this.next = sim.t + (o.first != null ? o.first : ST.first); this.restEnd = 0; this.done = false; this.over = 0; this.t0 = sim.t;
-  this.last = ''; this.lastId = ''; this.fall = []; this.prev = null; this.names = {}; this.rest = false; this.made = {}; this.plan = {}; this.rg = {};
+  this.last = ''; this.lastId = ''; this.fall = []; this.prev = null; this.names = {}; this.rest = false; this.made = {}; this.plan = {}; this.rg = {}; this.h = 0; this.hk = 0; this.hid = 0;
   var self = this; specs.forEach(function (u) { self.names[u.id] = u.stdN || u.name || ''; });
 }
 DS.StandCtl = Std;
@@ -134,6 +151,12 @@ SP.wave = function (sim) {
     mobsOf(id).forEach(function (m) { if (mobs.indexOf(m) < 0) mobs.push(m); });
   }
   for (i = 0; i < M; i++) this.q.push({ type: mobs[Math.floor(sim.rand() * mobs.length)], n: n });
+  var HN = DS.standHeroN(n, sim.rand(), sim.rand(), sim.rand()), HC = ST.hero.cls;
+  for (i = 0; i < HN; i++) {      // 2.9.1 이름 잃은 영웅 (물결을 막는 데 쓰러뜨릴 필요는 없다. 무리처럼 다음 물결로 이어진다)
+    var hp = this.spot(sim), hu = DS.standHeroSpec(HC[Math.floor(sim.rand() * HC.length)], DS.standK(n, this.g));
+    hu.id = 'sh' + (++this.hid); hu.x = hp.x; hu.y = hp.y; hu.stdW = n; hu.grp = 'w' + n;
+    var hn = sim.add(hu); if (hn) { hn.aggro = true; hn.busy = 1.2 + i * 0.4; hn.gauge = 50; this.h++; sim.emit({ t: 'stdHero', id: hn.id, n: n, k: i, first: this.h === 1 }); }
+  }
   this.plan[n] = { b: wv.left, m: M, carry: carry };
   if (wv.left) this.open.push(wv); else this.cleared(sim, wv);
   this.rest = false;
@@ -188,6 +211,7 @@ SP.died = function (sim, v, by) {
       this.b++;
       for (var i = 0; i < this.open.length; i++) { var wv = this.open[i], j = wv.ids.indexOf(v.id); if (j >= 0) { wv.left--; if (wv.left <= 0) this.cleared(sim, wv); break; } }
     } else if (v.std === 'm') this.k++;
+    else if (v.std === 'h') { this.k++; this.hk++; }
     return;
   }
   if (v.side !== 'ally' || (v.role !== 'cmd' && v.role !== 'merc') || this.done) return;
@@ -303,6 +327,7 @@ var TX = DS.STAND_TXT = {
   quitB: '내려놓기', quitH: '칼을 내려놓을까?', quitP: '지금까지 막은 물결 {w}번이 이 대의 기록이 된다. 다시 싸울 수 없다.', quitY: '내려놓는다', quitN: '더 싸운다',
   quest: '물결 {n} · 막은 물결 {w} · 남은 이 {k}명', questRest: '숨 돌리기 · 막은 물결 {w} · 남은 이 {k}명', questEnd: '막은 물결 {w}',
   wave: '물결 {n}',
+  heroN: '이름 잃은 {t}', heroF: '이름을 잃은 영웅이 어스름 편에 섰다', heroT: '이름 잃은 영웅',
   rageT: '광폭화 {e}단계', rageS: '물결 {n}의 적이 {p}% 더 세게 친다', rageF: '광폭 {e}',
   rageIn: '광폭까지 {s}초', rageNext: '광폭 {e}단계 · 다음 단계까지 {s}초', rageMax: '광폭 {e}단계 · 끝까지 거세다',
   waveL: ['문틈이 운다', '아직 가볍다. 아직은', '발밑이 울린다', '보스가 둘이다', '하늘이 어두워진다', '숨이 차오른다', '방패에 금이 간다', '어스름이 웃는다', '이름을 부르며 버틴다',
@@ -498,6 +523,12 @@ function rageChip() {
 DS.standRageChip = rageChip;
 var rageIv = null;
 DS.standRageWatch = function () { if (rageIv) clearInterval(rageIv); rageIv = setInterval(function () { if (!rageChip()) { clearInterval(rageIv); rageIv = null; } }, 250); };
+// 2.9.1 이름 잃은 영웅이 섞였다: 머리 위 이름 · 처음 한 번은 알림
+DS.standOnHero = function (std, e) {
+  var sim = G.sim, u = sim && sim.byId[e.id]; if (!u) return;
+  if (G.view) G.view.float(u.x, u.y, u.name, '#c79bff', { dy: -24, life: 2.4, delay: 0.4 + e.k * 0.3 });
+  if (e.first) setTimeout(function () { U.toast(TX.heroF, 2600); }, 1900);
+};
 // 확인 창에 한 칸 (endgame.js confirmHtml 이 부른다)
 DS.standConfirm = function (s) { var C = DS.standCount(s); return { h: TX.cH, L: TX.cL.map(function (t) { return fillT(t, { k: C.all, c: C.cmd, m: C.kin, lo: DS.standYW(ST.minY), hi: DS.standYW(ST.maxY) }); }) }; };
 

@@ -1462,6 +1462,7 @@ V.drawUnit = function (g, v) {
   if (v.ds && this.drawDeath) { this.drawDeath(g, v); return; }      // r16 fx: 죽음 장면
   if (v.gone) return;
   if (v.u.shade && !v.shdIn) { var a0 = v.alpha, gx = v.x * 16 + 8, gy = v.y * 16 + 5; g.globalAlpha = a0 * (0.32 + 0.1 * Math.sin(this.time * 2.2 + v.bob)); g.drawImage(glowTex('#c9d3ff'), gx - 15, gy - 15, 30, 30); v.shdIn = 1; v.alpha = a0 * (0.72 + 0.08 * Math.sin(this.time * 3 + v.bob)); try { this.drawUnit(g, v); } finally { v.alpha = a0; v.shdIn = 0; g.globalAlpha = 1; } return; }      // 2.5.0 이름 부르기의 그림자: 비쳐 보이고 숨 쉬듯 흔들린다 (아래 blit 이 흰빛을 덧씌운다)
+  if (v.u.std === 'h' && !(v.ds)) { var ha = v.alpha, hx = v.x * 16 + 8, hy = v.y * 16 + 7; g.globalAlpha = ha * (0.45 + 0.15 * Math.sin(this.time * 3 + v.bob)); g.drawImage(glowTex('#9a4dff'), hx - 14, hy - 14, 28, 28); g.globalAlpha = ha; }      // 2.9.1 이름 잃은 영웅: 발밑에 어스름빛
   if (fpBig(v.u) && this.drawBig) { this.drawBig(g, v); return; }      // 2.3.0 큰 몸 (art5 · 아래 V.drawBig)
   var u = v.u, t = this.time, px = v.x * 16, py = v.y * 16;
   if (px - this.cam.x < -40 || py - this.cam.y < -40 || px - this.cam.x > this.W / this.k + 40 || py - this.cam.y > this.H / this.k + 40) return;

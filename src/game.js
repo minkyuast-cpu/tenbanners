@@ -665,6 +665,7 @@ function standEv(e) {      // 돌려주는 것: 이 사건을 여기서 다 다�
       return true;
     case 'stdPress': toast(T.press || '다음 물결이 밀려온다', 2400); return true;
     case 'stdEnrage': if (DS.standOnRage) DS.standOnRage(S.std, e); return true;      // 2.9.1 광폭
+    case 'stdHero': if (DS.standOnHero) DS.standOnHero(S.std, e); return true;      // 2.9.1 이름 잃은 영웅
     case 'stdFall': return true;
     case 'stdEnd':
       DS.standNote(sv, S.std); if (!S.fin) { S.fin = performance.now(); dangerOff(); if (DS.standFinale) DS.standFinale(sv, S.std, standLeave); updateQuest(); }
