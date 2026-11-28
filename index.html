@@ -5885,6 +5885,14 @@ html.calm .giftbtn { animation: none; } @media (prefers-reduced-motion: reduce) 
 .result.stdres.high .std-sky { background: radial-gradient(ellipse at 50% -10%, rgba(255, 196, 120, .35), transparent 60%); }
 #quest.stdq b { color: #f6cf57; padding: 2px 8px; border: 1px solid rgba(246, 207, 87, .45); border-radius: var(--r-xs); background: rgba(60, 44, 10, .5); }
 @keyframes erIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }      /* 2.9: 이름 지우기 띠는 걷었다 — 이름 부르기 창(#shadepick)이 이 등장을 쓴다 */
+/* 2.9.1 마지막 물결 광폭: 목표 줄 밑의 초 세기 */
+html body #app#app #stdrage { position: absolute; left: 50%; top: 120px; z-index: 28; transform: translateX(-50%); display: none; padding: 3px 12px; border-radius: 999px; pointer-events: none; white-space: nowrap;
+  font: 600 var(--fs-s)/1.3 var(--f-ui); color: #f0e6ff; background: rgba(18, 10, 28, .82); border: 1px solid #6c5a8a; }
+html body #app#app #stdrage.on { display: block; }
+html body #app#app #stdrage.warn { border-color: #ffb347; color: #ffe1b0; }
+html body #app#app #stdrage.hot { border-color: #ff4d6d; color: #ffd0d8; background: rgba(60, 6, 16, .88); animation: stdRageP 1.1s ease-in-out infinite; }
+@keyframes stdRageP { 50% { box-shadow: 0 0 10px 1px rgba(255, 60, 90, .55); } }
+@media (prefers-reduced-motion: reduce) { html body #app#app #stdrage.hot { animation: none; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -6898,10 +6906,19 @@ for (var ux in DS.ULT_BASE) DS.SK_ALIAS[ux] = DS.ULT_BASE[ux];
 // 열 개의 깃발 — 판(버전)과 공지사항. 패치 노트는 이 파일 한 곳에서 관리하고, 빌드할 때 CHANGELOG.md 로도 뽑는다.
 // 새 판을 낼 때: ① DS.VERSION 을 올리고 ② DS.NOTES 맨 위에 항목을 더하고 ③ 저장 구조가 바뀌면 save.js 의 MIGRATE 에 한 단계를 더한다.
 var DS = globalThis.DS = globalThis.DS || {};
-DS.VERSION = '2.9.0';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
-DS.BUILD = '7.7.0';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
+DS.VERSION = '2.9.1';      // 공개 버전 (최초 배포). 패치마다 1.0.1, 1.1.0 … 으로 올린다
+DS.BUILD = '7.7.1';        // 내부 빌드 번호 — 저장 호환 비교(save.js needNewer)에만 쓴다. 공개 버전을 올릴 때 함께 올린다
 // kind: 새로 | 변경 | 고침 | 선물 | 안내
 DS.NOTES = [
+  { ver: '2.9.1', date: '2026-11-28', tag: '변경', title: '거센 물결',
+    lead: '마지막 물결이 훨씬 어려워졌습니다. 10단 셋이 함께 서도 버겁도록 맞췄고, 오래 끌면 적이 광폭해집니다.',
+    items: [
+      ['변경', '적의 레벨은 우리 편과 상관없이 10단 10레벨에 고정됩니다. 첫 물결의 보스부터 제대로 셉니다.'],
+      ['변경', '보스마다 체력을 고르게 맞추고, 보스의 체력과 공격을 크게 올렸습니다. 초반 판의 보스라고 약하지 않습니다.'],
+      ['새로', '광폭화: 한 물결을 35초 안에 막지 못하면 그 물결의 적이 광폭해집니다. 12초마다 한 단계씩 올라, 단계마다 공격이 20%씩 세집니다.'],
+      ['새로', '목표 줄 밑에 광폭까지 남은 초가 뜨고, 광폭해지면 붉은 띠와 함께 단계가 표시됩니다. 광폭한 적은 붉게 빛납니다.'],
+      ['안내', '봇 기준으로 막는 물결이 스무 번 남짓에서 일곱, 여덟 번 정도로 줄었습니다. 평화도 그만큼 짧아집니다.']
+    ] },
   { ver: '2.9.0', date: '2026-11-28', tag: '변경', title: '마지막 새벽',
     lead: '30번 어스름의 문 결전이 다섯 막짜리 큰 싸움으로 바뀌었습니다. 헷갈리던 「이름 지우기」는 없앴습니다.',
     items: [
@@ -25031,8 +25048,8 @@ V.drawBig = function (g, v) {
   var shH = Math.max(9, fhP * 0.72); g.drawImage(shT, ax - 4, ay + fhP - shH + 1, fwP + 8, shH);
   if (boss && dq < 0) {      // 보스 테: 몸 둘레를 도는 점선 (붉은 땅에서는 금빛) · 격노하면 붉은 바닥이 숨 쉰다
     var bc = this.hot ? '#ffd75e' : '#ff4d6d', per = 2 * (fwP + fhP) + 8, N = Math.round(per / 3), off = (t * 9) % 3;
-    if (u.enraged) { g.globalAlpha = v.alpha * (0.14 + 0.1 * Math.sin(t * 7)); g.fillStyle = '#ff2a3a'; g.fillRect(ax + 1, ay + 1, fwP - 2, fhP - 2); }
-    g.fillStyle = u.enraged ? '#ff2a3a' : bc;
+    if (u.enraged || u.stdE) { g.globalAlpha = v.alpha * (0.14 + 0.1 * Math.sin(t * 7)); g.fillStyle = '#ff2a3a'; g.fillRect(ax + 1, ay + 1, fwP - 2, fhP - 2); }
+    g.fillStyle = u.enraged || u.stdE ? '#ff2a3a' : bc;
     for (i = 0; i < N; i++) {
       var d = (i * 3 + off) % per, px2, py2, x0 = ax - 1, y0 = ay - 1, w0 = fwP + 2, h0 = fhP + 2;
       if (d < w0) { px2 = x0 + d; py2 = y0; } else if (d < w0 + h0) { px2 = x0 + w0; py2 = y0 + d - w0; } else if (d < 2 * w0 + h0) { px2 = x0 + w0 - (d - w0 - h0); py2 = y0 + h0; } else { px2 = x0; py2 = y0 + h0 - (d - 2 * w0 - h0); }
@@ -25050,7 +25067,7 @@ V.drawBig = function (g, v) {
   var dx0, dy0, cw, ch, top;
   if (cv) {
     dx0 = Math.round(ax + lx) - cv.ox; dy0 = Math.round(ay + ly + bob) - cv.oy; cw = cv.lw; ch = cv.lh; top = dy0 + (cv.pad || 0);
-    if (u.enraged && !white && dq < 0) {      // 격노: 붉은 윤곽이 숨 쉰다 (가볍게: 한 겹)
+    if ((u.enraged || u.stdE) && !white && dq < 0) {      // 격노 · 2.9.1 마지막 물결의 광폭: 붉은 윤곽이 숨 쉰다 (가볍게: 한 겹)
       var rc = preScaled(DS.bigCanvas(u, { pose: pose, flip: flip, tint: '#ff3a4a' }), this.k * this.dpr);
       if (rc) { g.globalAlpha = v.alpha * (0.45 + 0.25 * Math.sin(t * 6)); g.drawImage(rc, dx0 - 1.5, dy0 - 1.5, cw + 3, ch + 2); if (!lite) { g.globalAlpha *= 0.5; g.drawImage(rc, dx0 - 2.5, dy0 - 2.5, cw + 5, ch + 3); } }      // 한두 겹 (큰 그림을 네 번 그리면 느린 폰에서 무겁다)
     }
@@ -25074,7 +25091,7 @@ V.drawBig = function (g, v) {
     var show = u.side === 'ally' || u.aggro || hp < 1;
     if (show) {
       g.fillStyle = K; g.fillRect(x0 - 1, by - 1, bw + 2, 5);
-      g.fillStyle = u.side === 'ally' ? '#7fcf6a' : u.enraged ? '#ff2a3a' : '#e0525e'; g.fillRect(x0, by, Math.ceil(bw * hp), 2);
+      g.fillStyle = u.side === 'ally' ? '#7fcf6a' : u.enraged || u.stdE ? '#ff2a3a' : '#e0525e'; g.fillRect(x0, by, Math.ceil(bw * hp), 2);
       if (v.hpL == null || hp >= v.hpL) { v.hpL = hp; v.hpHit = t; } else if (t - v.hpHit > 0.35) v.hpL = Math.max(hp, v.hpL - (t - (v.hpLt || t)) * 0.9);
       v.hpLt = t;
       if (v.hpL > hp + 0.002) { g.fillStyle = '#ffffff'; g.fillRect(x0 + Math.ceil(bw * hp), by, Math.max(0.5, Math.ceil(bw * v.hpL) - Math.ceil(bw * hp)), 2); }
@@ -31325,7 +31342,7 @@ function standEv(e) {      // 돌려주는 것: 이 사건을 여기서 다 다�
     case 'reward': return true;
     case 'lose': case 'win': return true;
     case 'stdWave':
-      if (DS.standOnWave) DS.standOnWave(sv, S.std, e);
+      if (DS.standOnWave) DS.standOnWave(sv, S.std, e); if (DS.standRageWatch) DS.standRageWatch();
       vban('wave', DS.standWaveTitle ? DS.standWaveTitle(e.n) : '물결 ' + e.n, DS.standWaveLine ? DS.standWaveLine(e.n, e) : '', calm() ? 1300 : 1700); A('warn');
       if (e.n >= 6 && !calm()) setTimeout(function () { A('heart'); }, 500);
       if (e.n === 4) DS.Audio.bgm('boss');
@@ -31343,6 +31360,7 @@ function standEv(e) {      // 돌려주는 것: 이 사건을 여기서 다 다�
       setInfo(T.rest || '숨을 고른다', Math.round(e.dur * 1000)); if (DS.Audio.duck) DS.Audio.duck(6, Math.round(e.dur * 900));
       return true;
     case 'stdPress': toast(T.press || '다음 물결이 밀려온다', 2400); return true;
+    case 'stdEnrage': if (DS.standOnRage) DS.standOnRage(S.std, e); return true;      // 2.9.1 광폭
     case 'stdFall': return true;
     case 'stdEnd':
       DS.standNote(sv, S.std); if (!S.fin) { S.fin = performance.now(); dangerOff(); if (DS.standFinale) DS.standFinale(sv, S.std, standLeave); updateQuest(); }
@@ -38417,9 +38435,10 @@ var ST = DS.STAND = {
   boss0: 1, bossEvery: 3, bossMax: 6,   // B(n) = min(bossMax, boss0 + floor((n - 1) / bossEvery))
   mob0: 4, mobPer: 2, mobMax: 60,       // M(n) = min(mobMax, mob0 + mobPer · n)
   live: 34,                             // 한꺼번에 서 있는 적 (넘는 몫은 줄을 서서 자리가 나면 들어온다)
-  dL: -10, LperW: 1, Lmax: 100,         // 적 레벨 = 우리 평균 레벨 + dL + LperW · (n - 1)
-  k0: 0.75, kW: 0.025,                  // 적 세기 = (k0 + kW · (n - 1)) × 대마다 배율 (DS.EG.step · cap, 장 시나리오와 같다)
-  bossHp: 1.0, bossAtk: 1.0,            // 보스 체력 · 공격 손잡이
+  Lbase: 100, Lmax: 100,                // 2.9.1 적 레벨은 우리와 상관없이 10단 10레벨(100)에 고정 (첫 물결의 보스부터 10단 셋이 버거워야 한다)
+  k0: 1.2, kW: 0.06,                    // 적 세기 = (k0 + kW · (n - 1)) × 대마다 배율 (DS.EG.step · cap, 장 시나리오와 같다)
+  rage: { lim: 35, every: 12, per: 0.2, max: 10 },      // 2.9.1 광폭화: 한 물결이 lim 초를 넘으면 1단계, 그 뒤 every 초마다 한 단계. 단계마다 그 물결의 적 공격 · 마공 +20% (보스가 다 쓰러지면 멈춘다)
+  bossHp: 2.0, bossAtk: 1.3, bossRef: 3000,      // 보스 체력 · 공격 손잡이 · 2.9.1 보스마다 체력을 고르게 (10단 10레벨에서 bossRef 에 맞춘다. 첫 판 보스라고 약하지 않게)
   mobHp: 0.35, mobAtk: 0.45,            // 무리 체력 · 공격 손잡이 (무리는 많다. 하나하나는 가볍게)
   first: 2.5,                           // 첫 물결까지 (엔진 초)
   rest: 4.5,                            // 물결 사이 숨 돌리기 (엔진 초)
@@ -38440,7 +38459,9 @@ DS.standB = function (n) { return Math.min(ST.bossMax, ST.boss0 + Math.floor((n 
 DS.standM = function (n) { return Math.min(ST.mobMax, ST.mob0 + ST.mobPer * n); };
 function genK(g) { var C = DS.EG || { step: 0.35, cap: 2 }; return Math.min(C.cap, 1 + C.step * (Math.max(1, g) - 1)); }
 DS.standK = function (n, g) { return (ST.k0 + ST.kW * (n - 1)) * genK(g || 1); };
-DS.standL = function (n, Lp) { return Math.max(1, Math.min(ST.Lmax, Math.round(Lp + ST.dL + ST.LperW * (n - 1)))); };
+DS.standL = function () { return Math.max(1, Math.min(ST.Lmax, ST.Lbase)); };
+DS.standRage = function (dt) { var Q = ST.rage; return dt < Q.lim ? 0 : Math.min(Q.max, 1 + Math.floor((dt - Q.lim) / Q.every)); };      // 물결이 시작된 지 dt 초: 광폭 단계
+DS.standRageAt = function (e) { var Q = ST.rage; return e <= 0 ? Q.lim : Q.lim + Q.every * e; };      // e+1 단계가 되는 때 (물결 시작부터 초)
 
 // ── 싸움터: 어스름의 문 앞. 위(가까운 쪽이 문)에서, 그리고 양옆 틈에서 온다. 우리는 가운데를 지킨다 ──
 var MAP = [
@@ -38472,6 +38493,8 @@ function pool() { if (POOL) return POOL; POOL = []; (DS.SCENARIOS || []).forEach
 function mobsOf(boss) { var sc = (DS.SCENARIOS || []).filter(function (s) { return s.boss === boss; })[0]; return sc && sc.mobs && sc.mobs.length ? sc.mobs : ['demon', 'gargoyle', 'ghost', 'darkMage']; }
 function bigOk(boss) { var B = DS.BOSSES[boss]; return !!(B && B.sz && (B.sz[0] > 1 || B.sz[1] > 1)); }
 DS.standPool = function () { return pool().slice(); };
+var EVEN = {};
+function bossEven(id) { if (EVEN[id] == null) { var u = DS.enemySpec(null, ST.Lbase, { boss: id, diff: 1, small: true }); EVEN[id] = Math.max(0.7, Math.min(1.6, ST.bossRef / Math.max(1, u.mhp))); } return EVEN[id]; }
 
 // ── 누가 싸우는가 ──
 function nameOfCmd(s, ch, who) { try { if (ch.id === +s.hero) return s.name || DS.charName(ch); return (who && (who.ttl || who.n)) || DS.charName(ch); } catch (x) { return ''; } }
@@ -38497,7 +38520,7 @@ function Std(s, sim, specs, o) {
   this.g = DS.egGen ? DS.egGen(s) : 1; this.Lp = specs.length ? sum / specs.length : 1;
   this.n = 0; this.w = 0; this.b = 0; this.k = 0; this.open = []; this.q = []; this.qT = 0;
   this.next = sim.t + (o.first != null ? o.first : ST.first); this.restEnd = 0; this.done = false; this.over = 0; this.t0 = sim.t;
-  this.last = ''; this.lastId = ''; this.fall = []; this.prev = null; this.names = {}; this.rest = false; this.made = {}; this.plan = {};
+  this.last = ''; this.lastId = ''; this.fall = []; this.prev = null; this.names = {}; this.rest = false; this.made = {}; this.plan = {}; this.rg = {};
   var self = this; specs.forEach(function (u) { self.names[u.id] = u.stdN || u.name || ''; });
 }
 DS.StandCtl = Std;
@@ -38524,7 +38547,7 @@ SP.wave = function (sim) {
   var n = ++this.n, B = DS.standB(n), M = DS.standM(n), carry = this.liveFoes(sim), wv = { n: n, ids: [], left: 0, t0: sim.t }, mobs = [], i, self = this;
   for (i = 0; i < B; i++) {
     var id = this.pick(sim), big = i === 0 && n % ST.bigEvery === 0 && bigOk(id), g = GATE[i % GATE.length];
-    var u = this.mk(sim, null, { boss: id, L: Math.min(ST.Lmax, DS.standL(n, this.Lp) + 1), x: g[0], y: g[1], small: !big, hm: ST.bossHp, am: ST.bossAtk });
+    var u = this.mk(sim, null, { boss: id, L: DS.standL(n), x: g[0], y: g[1], small: !big, hm: ST.bossHp * bossEven(id), am: ST.bossAtk });
     u.std = 'b'; u.stdBig = big ? 1 : 0;
     var nu = sim.add(u);
     if (nu) { nu.aggro = true; nu.busy = 1.0 + i * 0.35; nu.gauge = 30; wv.ids.push(nu.id); wv.left++; sim.emit({ t: 'stdBoss', id: nu.id, n: n, k: i, big: !!big }); }
@@ -38539,8 +38562,19 @@ SP.wave = function (sim) {
 SP.spawn = function (sim, it) {
   var p = this.spot(sim), u = this.mk(sim, it.type, { x: p.x, y: p.y, grp: 'w' + it.n, hm: ST.mobHp, am: ST.mobAtk });
   u.std = 'm'; u.stdW = it.n;
-  var nu = sim.add(u); if (nu) { nu.aggro = true; nu.busy = 0.25 + sim.rand() * 0.3; nu.gauge = 40; this.made[it.n] = (this.made[it.n] || 0) + 1; }
+  var nu = sim.add(u); if (nu) { nu.aggro = true; nu.busy = 0.25 + sim.rand() * 0.3; nu.gauge = 40; this.made[it.n] = (this.made[it.n] || 0) + 1; if (this.rg[it.n]) this.rageOn(nu, this.rg[it.n]); }
   return nu;
+};
+// 광폭: 그 단계로 끌어올린다 (격노로 이미 오른 몫은 그대로 두고, 단계의 몫만 바꾼다)
+SP.rageOn = function (u, e) {
+  var o = u.stdE || 0; if (e <= o || u.dead) return;
+  var f = (1 + ST.rage.per * e) / (1 + ST.rage.per * o);
+  u.atk = Math.round(u.atk * f); u.mag = Math.round(u.mag * f); u.stdE = e;
+};
+SP.rage = function (sim, n, e) {
+  this.rg[n] = e; var self = this;
+  sim.units.forEach(function (u) { if (!u.dead && u.side === 'enemy' && u.stdW === n) self.rageOn(u, e); });
+  sim.emit({ t: 'stdEnrage', n: n, e: e, p: Math.round(ST.rage.per * e * 100) });
 };
 SP.cleared = function (sim, wv) {
   this.w++;
@@ -38562,6 +38596,7 @@ SP.tick = function (sim, dt) {
     while (room-- > 0 && this.q.length) this.spawn(sim, this.q.shift());
   }
   if (this.next != null && t >= this.next && this.n < ST.waveMax) { this.next = null; this.wave(sim); }
+  for (var oi = 0; oi < this.open.length; oi++) { var ow = this.open[oi], re = DS.standRage(t - ow.t0); if (re > (this.rg[ow.n] || 0)) this.rage(sim, ow.n, re); }      // 2.9.1 광폭: 막지 못한 물결은 시간이 갈수록 거세진다
   var cur = this.open.length ? this.open[this.open.length - 1] : null;
   if (cur && cur.n === this.n && this.next == null && t - cur.t0 >= ST.tmax) { this.next = t; sim.emit({ t: 'stdPress', n: this.n + 1 }); }      // 너무 오래 끌면 다음 물결이 그냥 온다
   if (t - this.t0 > ST.simMax) this.end(sim, null);
@@ -38688,6 +38723,8 @@ var TX = DS.STAND_TXT = {
   quitB: '내려놓기', quitH: '칼을 내려놓을까?', quitP: '지금까지 막은 물결 {w}번이 이 대의 기록이 된다. 다시 싸울 수 없다.', quitY: '내려놓는다', quitN: '더 싸운다',
   quest: '물결 {n} · 막은 물결 {w} · 남은 이 {k}명', questRest: '숨 돌리기 · 막은 물결 {w} · 남은 이 {k}명', questEnd: '막은 물결 {w}',
   wave: '물결 {n}',
+  rageT: '광폭화 {e}단계', rageS: '물결 {n}의 적이 {p}% 더 세게 친다', rageF: '광폭 {e}',
+  rageIn: '광폭까지 {s}초', rageNext: '광폭 {e}단계 · 다음 단계까지 {s}초', rageMax: '광폭 {e}단계 · 끝까지 거세다',
   waveL: ['문틈이 운다', '아직 가볍다. 아직은', '발밑이 울린다', '보스가 둘이다', '하늘이 어두워진다', '숨이 차오른다', '방패에 금이 간다', '어스름이 웃는다', '이름을 부르며 버틴다',
           '물결이 겹친다', '칼이 무거워진다', '발이 땅에 붙는다', '어스름이 숨을 들이쉰다', '그래도 선다', '문틈이 넓어진다', '누가 아직 서 있나', '셀 수가 없다', '한 번만 더',
           '눈을 감아도 보인다', '끝이 없다'],
@@ -38703,7 +38740,7 @@ var TX = DS.STAND_TXT = {
   rBest: '가문의 기록이다. 지난 기록은 {b}번.', rBest1: '가문의 첫 기록이다.', rBestKeep: '가문의 기록은 {n}대째의 {b}번.', rLate: '싸우는 도중에 끝났다. 그때까지 막은 물결로 적는다.', rGo: '계속',
   rMeta: '이 대의 마지막 물결은 이미 치렀다. 그때의 기록으로 이어 간다.',
   // 확인 창
-  cH: '마지막 물결', cL: ['싸우는 이 {k}명. 맹주와 가주 {c}, 가문원 {m}.', '물결마다 보스와 무리가 는다. 한 대에 한 번뿐이다.', '쓰러져도 죽지 않는다. 그 싸움에서만 빠진다.', '막은 물결만큼 평화가 이어진다. {lo}에서 {hi}까지.'],
+  cH: '마지막 물결', cL: ['싸우는 이 {k}명. 맹주와 가주 {c}, 가문원 {m}.', '물결마다 보스와 무리가 는다. 한 대에 한 번뿐이다.', '한 물결을 35초 안에 막지 못하면 적이 광폭해진다. 12초마다 한 단계씩, 20%씩 더 세진다.', '쓰러져도 죽지 않는다. 그 싸움에서만 빠진다.', '막은 물결만큼 평화가 이어진다. {lo}에서 {hi}까지.'],
   // 연대기
   chron: '{a}{이가} 어스름의 문 앞에서 물결을 {ww} 막았다. 평화 {yw}.', chron0: '{a}{이가} 어스름의 문 앞에 섰다. 물결은 금방 넘쳤다. 평화 {yw}.',
   poster: '물결 {w}', posterBest: '마지막 물결 최고'
@@ -38763,7 +38800,7 @@ DS.standIntroLines = function (s) {
   if (kin) out.push('아이들도 칼을 들었다. 칼을 쥐는 것은 오늘이 마지막이다.');
   out.push(say('hero', '물결을 막는 만큼, 아이들이 칼 없이 자랍니다.'));
   out.push(say('chat', g > 1 ? '지난 대는 몇 번 막았더라. 장부 펴 봐라.' : 'ㅋㅋ 몇 번 막나 보자. 내기 건다.'));
-  out.push(say('memo', '물결마다 보스와 무리가 는다. 그 물결의 보스를 모두 쓰러뜨리면 막은 것이다. 남은 무리는 다음 물결에 섞인다. 쓰러진 이는 이 싸움에서만 빠진다.'));
+  out.push(say('memo', '물결마다 보스와 무리가 는다. 그 물결의 보스를 모두 쓰러뜨리면 막은 것이다. 35초 안에 못 막으면 그 물결의 적이 광폭해져 갈수록 세게 친다. 쓰러진 이는 이 싸움에서만 빠진다.'));
   return out;
 };
 // 끝난 뒤: 기록이 평화의 해가 된다
@@ -38856,6 +38893,31 @@ DS.standOnWave = function (s, std, e) { var st = DS.standOf(s); if (st && st.on)
   var mar = G.sim && G.sim.units.filter(function (u) { return !u.dead && u.side === 'ally' && u.role === 'cmd' && u.cls === 'mar'; })[0];
   if (mar && e.n % 5 === 0 && G.view && G.view.bark) G.view.bark(mar.id, fillT(TX.mar[(e.n / 5 - 1) % TX.mar.length], { n: e.n }), 2.6);
 };
+// 2.9.1 광폭: 띠 · 보스 머리 위 글 · 목표 줄 밑의 초 세기 (game.js 가 stdEnrage 에 부른다)
+DS.standOnRage = function (std, e) {
+  var v = { e: e.e, n: e.n, p: e.p };
+  if (DS.vban) DS.vban('rage', fillT(TX.rageT, v), fillT(TX.rageS, v), calm() ? 1100 : 1500);
+  U.A(e.e >= 3 ? 'slam' : 'warn');
+  var sim = G.sim; if (sim && G.view) sim.units.forEach(function (u) { if (!u.dead && u.side === 'enemy' && u.std === 'b' && u.stdW === e.n) G.view.float(u.x + ((u.fw || 1) - 1) / 2, u.y, fillT(TX.rageF, v), '#ff4d6d', { dy: -26, life: 1.8 }); });
+  if (G.view && !calm()) G.view.rageHit = 1;
+  rageChip();
+};
+function rageChip() {
+  var sg = document.getElementById('s-game'), std = G.stand && G.stand.std, sim = G.sim, el = document.getElementById('stdrage');
+  if (!sg || !std || !sim || sim.std !== std || std.done || G.stand.fin) { if (el) el.remove(); return false; }
+  var cur = std.open.length ? std.open[std.open.length - 1] : null;
+  if (!cur || std.rest) { if (el) el.className = ''; return true; }
+  if (!el) { el = document.createElement('div'); el.id = 'stdrage'; el.setAttribute('aria-live', 'off'); sg.appendChild(el); }
+  var q = document.getElementById('quest'), sgr = sg.getBoundingClientRect(); if (q) { var r = q.getBoundingClientRect(); el.style.top = Math.round(r.bottom - sgr.top + 4) + 'px'; }
+  var dt = sim.t - cur.t0, e = std.rg[cur.n] || 0, Q = ST.rage, left = Math.max(0, Math.ceil(DS.standRageAt(e) - dt)), t;
+  if (e >= Q.max) t = fillT(TX.rageMax, { e: e }); else if (e > 0) t = fillT(TX.rageNext, { e: e, s: left }); else t = fillT(TX.rageIn, { s: left });
+  if (el.textContent !== t) el.textContent = t;
+  el.className = 'on' + (e > 0 ? ' hot' : left <= 10 ? ' warn' : '');
+  return true;
+}
+DS.standRageChip = rageChip;
+var rageIv = null;
+DS.standRageWatch = function () { if (rageIv) clearInterval(rageIv); rageIv = setInterval(function () { if (!rageChip()) { clearInterval(rageIv); rageIv = null; } }, 250); };
 // 확인 창에 한 칸 (endgame.js confirmHtml 이 부른다)
 DS.standConfirm = function (s) { var C = DS.standCount(s); return { h: TX.cH, L: TX.cL.map(function (t) { return fillT(t, { k: C.all, c: C.cmd, m: C.kin, lo: DS.standYW(ST.minY), hi: DS.standYW(ST.maxY) }); }) }; };
 
@@ -38867,6 +38929,7 @@ if (VP) {
   VP.drawStand = function (g, dt) {
     var std = this.std; if (!std) return;
     var cm = calm(), W = this.W, H = this.H, n = std.n || 0, sim = this.sim;
+    if (this.rageHit > 0) { this.rageHit = Math.max(0, this.rageHit - dt * 1.6); g.fillStyle = 'rgba(160,10,30,' + (this.rageHit * 0.28).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }      // 2.9.1 광폭: 붉게 번쩍
     var want = Math.min(0.42, 0.028 * n) + (std.done ? 0.3 : 0);
     this.stdDark = (this.stdDark || 0) + (want - (this.stdDark || 0)) * Math.min(1, dt * 1.5);
     var live = 0, tot = 0; if (sim) sim.units.forEach(function (u) { if (u.side === 'ally' && (u.role === 'cmd' || u.role === 'merc')) { tot++; if (!u.dead) live++; } });
