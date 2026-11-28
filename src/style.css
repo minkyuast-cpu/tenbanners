@@ -5883,3 +5883,9 @@ html body .ov.bldov > .sheet { width: 100%; height: 100%; max-width: none; max-h
 @keyframes gmTake { 0% { transform: scale(1); } 40% { transform: scale(1.15); box-shadow: 0 0 24px rgba(255, 226, 160, .7); } 100% { transform: scale(1); } }
 html.calm .giftmail *, .ov.gmov.calm .giftmail * { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .giftmail * { animation: none !important; } }
+
+.giftbtn { position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); top: calc(env(safe-area-inset-top, 0px) + 112px); z-index: 30; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; border-radius: 99px; border: 1px solid #e0c088; background: linear-gradient(180deg, rgba(60, 44, 24, .95), rgba(30, 22, 12, .95)); color: #ffe2a0; font-weight: 700; font-size: 13px; box-shadow: 0 0 0 0 rgba(255, 226, 160, .5); animation: gbPulse 1.8s ease-in-out infinite; }
+.giftbtn .gb-env { width: 18px; height: 13px; border-radius: 2px; background: linear-gradient(180deg, #f4e6c4, #dcc596); position: relative; } .giftbtn .gb-env::after { content: ''; position: absolute; inset: 0 0 auto; height: 8px; background: #cdb37c; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.giftbtn b { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: #c0392b; color: #fff; font-size: 11px; line-height: 16px; text-align: center; }
+@keyframes gbPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 226, 160, .45); } 50% { box-shadow: 0 0 0 6px rgba(255, 226, 160, 0); } }
+html.calm .giftbtn { animation: none; } @media (prefers-reduced-motion: reduce) { .giftbtn { animation: none; } }

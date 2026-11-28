@@ -425,16 +425,22 @@ DS.returneePerk = function (r) {
 // 저장에 특전을 적용한다. late = 이미 진행 중인 저장에 뒤늦게 드리는 경우
 // 2.7.3 운영진 선물 우편: 이 판이 나올 때 이미 플레이하던 저장(마지막으로 저장한 판이 그보다 옛것)에 한 번 — 새로 시작한 판에는 오지 않는다.
 //   s.pmail = 받기 전의 우편 [{ id, t, b, tk }] · s.gotMail = 받은 우편 id. 화면은 이어하기 뒤 DS.showGiftMail 로 연다 (받기를 눌러야 들어간다)
-DS.GIFT_MAIL = [{ id: 'thanks273', before: '2.7.3', t: '감사의 선물', b: '전민을 플레이해 주셔서 고맙습니다. 열 가문을 지켜 온 맹주님께 영웅 모집권 50장을 보냅니다. 앞으로도 잘 부탁드립니다.', tk: 50, from: '운영진' }];
+DS.GIFT_MAIL = [{ id: 'ttuk274', fresh: 1, t: '뚝배기의 은총', b: '새로 깃발을 든 맹주님, 어서 오세요. 첫 싸움에서 뚝배기가 깨지지 않기를 빌며 영웅 모집권 10장을 보냅니다. 든든한 동료부터 모으세요.', tk: 10, from: '운영진' },      // 2.7.4: 새로 시작하는 판에 (DS.giftFresh)
+  { id: 'thanks273', before: '2.7.3', t: '감사의 선물', b: '전민을 플레이해 주셔서 고맙습니다. 열 가문을 지켜 온 맹주님께 영웅 모집권 50장을 보냅니다. 앞으로도 잘 부탁드립니다.', tk: 50, from: '운영진' }];
 DS.giftMail = function (s) {
   if (!s || !s.chars) return false;
   var got = Array.isArray(s.gotMail) ? s.gotMail : (s.gotMail = []), pm = Array.isArray(s.pmail) ? s.pmail : [], add = false, v = vnum(s.ver);
   DS.GIFT_MAIL.forEach(function (g) {
-    if (!v || v >= vnum(g.before) || got.indexOf(g.id) >= 0 || pm.some(function (m) { return m && m.id === g.id; })) return;
+    if (g.fresh || !v || v >= vnum(g.before) || got.indexOf(g.id) >= 0 || pm.some(function (m) { return m && m.id === g.id; })) return;
     pm.push({ id: g.id, t: g.t, b: g.b, tk: g.tk, from: g.from }); add = true;
   });
   if (pm.length) s.pmail = pm; else delete s.pmail;
   return add;
+};
+DS.giftFresh = function (s) {      // 2.7.4: 새로 시작한 판 (화면의 「새로 시작」만 부른다 — 봇 · 시험의 DS.newSave 는 받지 않는다)
+  if (!s) return false; var pm = Array.isArray(s.pmail) ? s.pmail : [], got = Array.isArray(s.gotMail) ? s.gotMail : [], add = false;
+  DS.GIFT_MAIL.forEach(function (g) { if (g.fresh && got.indexOf(g.id) < 0 && !pm.some(function (m) { return m && m.id === g.id; })) { pm.push({ id: g.id, t: g.t, b: g.b, tk: g.tk, from: g.from }); add = true; } });
+  if (pm.length) s.pmail = pm; return add;
 };
 DS.giftTake = function (s, id) {      // 받기: 모집권을 더하고 받은 것으로 적는다. 돌려주는 것: 받은 모집권 수
   if (!s || !Array.isArray(s.pmail)) return 0;

@@ -192,6 +192,8 @@ function pubWrite() {
     redraw();
   });
 }
+// 2.7.4: 「접속 중」 표시용 — 바뀐 것이 없어도 기록을 다시 올려 at 을 새로 한다. 예전의 seen 고치기(update)는 보안 규칙에 막혀 한 번도 들어가지 않았다 (현황에 seen 이 있는 문서가 없었다)
+O.pubNow = function () { if (!canWrite() || !pubOn() || O.pubErr === 'denied' || O.pubBusy) return; if (Date.now() - O.lastPubAt < 60000) return; pubWrite(); };
 function safeCall(f) { try { return Promise.resolve(f()); } catch (e) { return Promise.reject({ code: 'invalid_argument', message: String(e && e.message) }); } }
 function presence(on) {
   if (BE.presence) { try { BE.presence(O, on); } catch (e) {} return; }

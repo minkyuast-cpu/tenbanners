@@ -10,7 +10,7 @@ var DS = globalThis.DS = globalThis.DS || {};
 (function () {
 'use strict';
 if (typeof window === 'undefined' || typeof document === 'undefined') return;
-var LIVE = 300000, BEAT = 180000, RKEY = 'tenbanners_fb_redirect';
+var LIVE = 300000, BEAT = 120000, RKEY = 'tenbanners_fb_redirect';
 var host = location.hostname, local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(host);
 var emu = local && /[?&]emu=1(&|$)/.test(location.search);      // 시험용: 이 컴퓨터의 Firebase 에뮬레이터에 붙는다 (?emu=1, localhost 에서만)
 var cfg = window.FIREBASE_CONFIG || (emu ? { apiKey: 'demo-key', authDomain: 'demo-tenbanners.firebaseapp.com', projectId: 'demo-tenbanners' } : null);
@@ -112,6 +112,7 @@ var BE = DS.OnlineBE = {
 function beat() {
   var o = O();
   if (document.hidden || !pubOn() || !o.uid || !o.db || o.pubErr === 'denied') return;
+  if (o.pubNow) { try { o.pubNow(); } catch (e) {} return; }      // 2.7.4: 기록 전체를 다시 올려 at 을 새로 한다 (규칙이 받아 주는 꼴 그대로)
   try { o.db.doc('players/' + o.uid).update({ seen: Date.now() }).catch(function () {}); } catch (e) {}
 }
 document.addEventListener('visibilitychange', function () { if (!document.hidden && S.beat) beat(); });

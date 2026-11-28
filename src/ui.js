@@ -1571,8 +1571,21 @@ DS.showGiftMail = function (done) {
   o.onclose = function () { if (G.save && G.save.pmail && G.save.pmail.length) DS.showGiftMail(done); else if (done) done(); };
   return o;
 };
+// 2.7.4 선물 우편: 봉투 단추(왼쪽 위, 받을 우편이 있을 때만) · 한 번은 저절로 열린다 — 다른 창 · 이야기 · 시나리오 · 싸움이 없을 때만
+function giftQuiet() { var s = G.save; return !!(s && Array.isArray(s.pmail) && s.pmail.length && !G.quiet && !G.scn && !G.ending && !(G.sim && G.sim.combat) && !document.querySelector('#app .ov:not(.ghost)') && !(DS.cineBusy && DS.cineBusy()) && !!(G.zone && G.zone.town) && !coachOn()); }      // 마을에서만, 조작 안내(코치)가 떠 있지 않을 때
+function coachOn() { var k = document.querySelector('.coach'); return !!(k && !k.hidden && k.offsetParent !== null && (k.textContent || '').trim()); }
+var giftAutoN = 0;
+function giftEarly() { var s = G.save; return !!(s && s.pmail && s.pmail.every(function (m) { var g = (DS.GIFT_MAIL || []).filter(function (x) { return x.id === m.id; })[0]; return g && g.fresh; }) && !(s.cleared && s.cleared[1])); }      // 새로 시작한 판의 첫 우편은 1번을 깨고 마을에 돌아왔을 때 (도입 · 조작 안내 · 첫 걸음을 가리지 않게) — 그동안은 봉투 단추
+DS.giftAuto = function () { if (giftAutoN > 0) return; if (giftEarly()) { setTimeout(DS.giftAuto, 4000); return; } if (!giftQuiet()) { if (G.save && G.save.pmail) setTimeout(DS.giftAuto, 2500); return; } giftAutoN = 1; DS.showGiftMail(null); };
+setInterval(function () {
+  var app = document.getElementById('app'); if (!app) return;
+  var s = G.save, show = !!(s && Array.isArray(s.pmail) && s.pmail.length && G.running && !G.scn && !G.ending), b = document.getElementById('giftBtn');
+  if (!show) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('button'); b.id = 'giftBtn'; b.className = 'giftbtn'; b.setAttribute('aria-label', '우편 받기'); b.innerHTML = '<i class="gb-env" aria-hidden="true"></i><span>우편</span><b class="num"></b>'; b.addEventListener('click', function () { A('tap'); if (!document.querySelector('.ov.gmov')) DS.showGiftMail(null); }); app.appendChild(b); }
+  var n = String(s.pmail.length); if (b.querySelector('b').textContent !== n) b.querySelector('b').textContent = n;
+}, 700);
 DS.showNews = function () {
-  var s = G.save; if (s && Array.isArray(s.pmail) && s.pmail.length && !document.querySelector('.ov.gmov')) { DS.showGiftMail(function () { DS.showNews(); }); return; }      // 2.7.3: 선물 우편 먼저
+  var s = G.save; if (DS.giftAuto) setTimeout(DS.giftAuto, 1500);      // 2.7.4: 선물 우편은 소식이 걷히고 다른 창이 없을 때 (다른 창을 가리지 않는다)
   if (!s || !s.news || !s.news.length) return;
   var list = s.news.slice(); s.news = []; U.persist(); A('coin');
   overlay('<div class="result"><p class="eyebrow">v' + DS.VERSION + '</p><h2>소식</h2><ul class="loot">' + list.map(function (l) { return '<li class="hl">' + esc(l) + '</li>'; }).join('') + '</ul>' +
@@ -3782,14 +3795,16 @@ function newGame(hasSave, r) {
     if (DS.GRAND_HOUSES && DS.GRAND_HOUSES[ghI] && DS.allySet) { try { DS.allySet(G.save, DS.GRAND_HOUSES[ghI][0]); } catch (x) {} }      // 2.1.0: 고른 이름은 연맹의 이름 (맹주의 가문은 병과의 가문명)
     if (G.save.opt) G.save.opt.ghAsked = 1;
     if (r) DS.grantReturnee(G.save, r, false);
+    if (DS.giftFresh) DS.giftFresh(G.save);      // 2.7.4: 뚝배기의 은총 (도입이 끝나면 우편이 열린다)
     DS.Save.setMeta({ seenVer: DS.VERSION });
     U.persist();
     DS.startGame();
     // 도입: 시나리오팀의 글(LORE.prologue, 회귀자는 prologueR)이 있으면 그것으로 — 마지막 줄이 조작 안내다. 없으면 예전 문장
     var L0 = LORE(), lore = r && L0.prologueR && L0.prologueR.length ? L0.prologueR : L0.prologue;
     var pro = lore && lore.length ? lore : ['마을 위쪽 출구로 나가세요. 왼쪽 아래를 누른 채 끌면 이동, 적을 누르면 공격.'];      // 글은 lore.js prologue
-    if (DS.stagePrologue) DS.stagePrologue(pro, perk ? function () { showPerk(perk, null); } : null, '전민 열 가문의 시대');      // 2.6.0: 도입의 무대 (stage.js) — 검은 화면 · 밤 언덕의 열 깃발 · 단톡방 말풍선. 조작 안내(전장 메모)는 코치 표시로
-    else story(pro, perk ? function () { showPerk(perk, null); } : null, '전민 열 가문의 시대');
+    var after = function () { if (perk) showPerk(perk, null); if (DS.giftAuto) setTimeout(DS.giftAuto, 4500); };      // 2.7.4: 선물 우편은 도입과 조작 안내가 지나간 뒤, 다른 창이 없을 때 (DS.giftAuto) · 늘 왼쪽 위 봉투 단추로도 연다
+    if (DS.stagePrologue) DS.stagePrologue(pro, after, '전민 열 가문의 시대');      // 2.6.0: 도입의 무대 (stage.js) — 검은 화면 · 밤 언덕의 열 깃발 · 단톡방 말풍선. 조작 안내(전장 메모)는 코치 표시로
+    else story(pro, after, '전민 열 가문의 시대');
   });
 }
 function boot() {
