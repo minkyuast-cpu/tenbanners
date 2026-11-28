@@ -21,8 +21,9 @@ var F = DS.FINAL = {
   lull: 1.6,                          // 막이 바뀔 때 적이 숨을 고르는 엔진 초 (화면은 따로 잠깐 멈춘다)
   rest: 0.12, restMp: 0.1,            // 막이 바뀔 때 우리 편이 돌리는 숨 (최대 체력 · 마나의 몫)
   gap: 2.2,                           // 막의 공격(줄 · 별비 · 손 · 옮겨 감)끼리 적어도 이만큼 띄운다 (엔진 초)
+  genHp: 0.85,                        // 다음 세대의 장(2대째부터): 먼동 · 왕의 체력 배율에 이만큼 더 (대마다 세기가 오르니 싸움 길이는 비슷하게)
   p1: { hp: 2.3, atk: 0.85, to: 0.5, leash: 3, skills: ['fin_arc', 'b_cross', 'b_curse'] },
-  p2: { waves: 2, per: 6, more: 1.5, gap: 9, dur: 30, live: 10, hands: 3, hand0: 2.5, hand: 5.5, mobHp: 0.55, mobAtk: 0.45, dL: 2 },
+  p2: { waves: 2, per: 6, more: 1.25, gap: 9, dur: 30, live: 10, hands: 3, hand0: 2.5, hand: 5.5, mobHp: 0.55, mobAtk: 0.45, dL: 2 },
   p3: { hp: 3.9, atk: 0.7, mag: 0.95, skills: ['fin_breath', 'fin_sum', 'b_dark', 'e_smash'], judge0: 5, judge: 13, rows: 2 },
   p4: { to: 0.5, judge: 18, tp0: 3, tp: 12, tpWarn: 1.2, rain0: 2, rain: 9, rainN: 7, zone0: 1, zone: 6.5, zoneMax: 3, cover: 0.3 },
   p5: { to: 0.2, cd0: 1.5, cd: 12, again: 16, wardAt: 2.5, ward: 0.25, wardDur: 6, blast: 0.66, dawnHp: 1.6, dawnK: 1.0, heal: 0.6 }
@@ -101,7 +102,8 @@ function Ctl(sim, h) {
   this.more = !!(ks && ks.finMore);      // 다음 세대의 비틀기 「어스름이 더 쏟아진다」 (legacy.js)
   h.leash = { x: F.gate.x, y: F.gate.y, r: F.p1.leash }; h.phase2 = null; h.chain = 3;
   h.skills = F.p1.skills.filter(function (k) { return SK[k]; });
-  if (F.p1.hp !== 1) h.hp = h.mhp = Math.max(1, Math.round(h.mhp * F.p1.hp));
+  var gk = (h.finGen || 1) >= 2 ? F.genHp : 1;
+  if (F.p1.hp !== 1 || gk !== 1) h.hp = h.mhp = Math.max(1, Math.round(h.mhp * F.p1.hp * gk));
   if (F.p1.atk !== 1) { h.atk = Math.round(h.atk * F.p1.atk); h.mag = Math.round(h.mag * F.p1.atk); }
 }
 DS.FinalCtl = Ctl;
@@ -165,7 +167,7 @@ CP.go = function (sim, n) {
     var extra = (s.skills || []).filter(function (x) { return BO.duskking.skills.indexOf(x) < 0 && F.p3.skills.indexOf(x) < 0; });      // 다음 세대의 비틀기로 더한 것 (그림자 부름 · 저주)
     s.skills = F.p3.skills.filter(function (x) { return SK[x]; }).concat(extra);
     s.obj = true; s.fin = 'king'; s.phase2 = null; delete s.enr;
-    if (F.p3.hp !== 1) s.hp = s.mhp = Math.max(1, Math.round(s.mhp * F.p3.hp));
+    s.hp = s.mhp = Math.max(1, Math.round(s.mhp * F.p3.hp * (this.gen >= 2 ? F.genHp : 1)));
     s.atk = Math.round(s.atk * F.p3.atk); s.mag = Math.round(s.mag * F.p3.mag);      // 평타(물리)는 무디게, 예고하는 마법은 그대로 — 큰 피해는 보이는 공격에서 오게
     var nu = sim.add(s);
     if (nu) { nu.aggro = true; nu.gauge = 30; nu.busy = F.lull; this.kid = nu.id; focus = nu.id; }
